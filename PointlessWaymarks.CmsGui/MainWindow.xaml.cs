@@ -508,8 +508,7 @@ public partial class MainWindow
         await UserSettingsUtilities.EnsureDbIsPresent(StatusContext.ProgressTracker());
 
         PointlessWaymarksLogTools.InitializeStaticLoggerAsEventLogger();
-        Log.Information(
-            $"Git Commit {ThisAssembly.Git.Commit} - Commit Date {ThisAssembly.Git.CommitDate} - Is Dirty {ThisAssembly.Git.IsDirty}");
+        Log.Information($"{ProgramInfoTools.GetEntryAssemblyBuildDate()}");
 
         StatusContext.RunFireAndForgetWithToastOnError(async () =>
         {

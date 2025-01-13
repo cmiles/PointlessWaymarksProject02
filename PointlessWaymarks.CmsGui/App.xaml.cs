@@ -1,6 +1,7 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Threading;
 using PointlessWaymarks.CmsData;
+using PointlessWaymarks.CommonTools;
 using Serilog;
 
 namespace PointlessWaymarks.CmsGui;
@@ -13,8 +14,7 @@ public partial class App
     public App()
     {
         PointlessWaymarksLogTools.InitializeStaticLoggerAsStartupLogger();
-        Log.Information(
-            $"Git Commit {ThisAssembly.Git.Commit} - Commit Date {ThisAssembly.Git.CommitDate} - Is Dirty {ThisAssembly.Git.IsDirty}");
+        Log.Information($"{ProgramInfoTools.GetEntryAssemblyBuildDate()}");
 
         DispatcherUnhandledException += OnDispatcherUnhandledException;
     }
