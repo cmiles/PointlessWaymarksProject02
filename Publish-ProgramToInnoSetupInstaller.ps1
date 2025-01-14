@@ -3,7 +3,16 @@ $baseName = "PointlessWaymarks.$program"
 
 $ErrorActionPreference = "Stop"
 
-$GitCommit = & git rev-parse --short HEAD
+$fossilCheckout = fossil info | Select-String -pattern "checkout:" | foreach { $_.Line.Substring(9, $_.Line.Length - 9).Trim() } | Select-Object -First 1
+
+$fossilStatusBrief = fossil status -b
+if ($fossilStatusBrief -match "dirty") {
+    $fossilStatusBrief = "(Uncommitted_Changes)"
+} else {
+    $fossilStatusBrief = ""
+}
+
+$fossilId = "$fossilCheckout_$fossilStatusBrief"
 
 dotnet clean .\PointlessWaymarks.sln -property:Configuration=Release -property:Platform=x64 -verbosity:minimal
 
@@ -36,7 +45,8 @@ $versionDate = New-Object DateTime($fileVersionInfo.FileMajorPart, $fileVersionI
 $publishVersion = "{0}-{1}-{2}-{3}-{4}" -f $versionDate.ToString("yyyy"), $versionDate.ToString("MM"), $versionDate.ToString("dd"), $versionHour.ToString("00"), $versionMinute.ToString("00")
 
 Write-Host "Publish Version: $publishVersion"
+Write-Host "Fossil Version: $fossilId"
 
-& 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' .\Publish-InnoSetupInstaller-$program.iss /DVersion=$publishVersion /DGitCommit=$GitCommit
+& "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" ".\Publish-InnoSetupInstaller-$program.iss" /DVersion=$publishVersion /DScmCommit=$fossilId
 
 if ($lastexitcode -ne 0) {throw ("Exec: " + $errorMessage) }

@@ -5,8 +5,6 @@ $ErrorActionPreference = "Stop"
 
 .\Tools-CopyReadmeToProjectSpecificReadme.ps1
 
-$GitCommit = & git rev-parse --short HEAD
-
 dotnet clean .\PointlessWaymarks.sln -property:Configuration=Release -property:Platform=x64 -verbosity:minimal
 
 dotnet restore .\PointlessWaymarks.sln -r win-x64 -verbosity:minimal
