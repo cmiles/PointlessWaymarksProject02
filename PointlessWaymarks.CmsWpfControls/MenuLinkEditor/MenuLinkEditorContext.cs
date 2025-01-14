@@ -219,7 +219,7 @@ public partial class MenuLinkEditorContext
         ContentTypeRssChoices.Add(new MenuLinkEditorContentTypeSearchListChoice
             { DisplayValue = "Image", BracketCode = BracketCodeSpecialPages.ImageRssBracketCode });
         ContentTypeRssChoices.Add(new MenuLinkEditorContentTypeSearchListChoice
-            { DisplayValue = "Index Page", BracketCode = BracketCodeSpecialPages.ImageRssBracketCode });
+            { DisplayValue = "Index Page", BracketCode = BracketCodeSpecialPages.IndexRssBracketCode });
         ContentTypeRssChoices.Add(new MenuLinkEditorContentTypeSearchListChoice
             { DisplayValue = "Line", BracketCode = BracketCodeSpecialPages.LinesRssBracketCode });
         ContentTypeRssChoices.Add(new MenuLinkEditorContentTypeSearchListChoice
