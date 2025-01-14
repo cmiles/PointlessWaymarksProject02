@@ -19,6 +19,6 @@
 */.idea
 *.args.json
 *launchSettings.json
-README_*.md
+*README_*.md
 nuget.exe
 BuildTools/PointlessWaymarks.PublishReadmeHelper.exe
