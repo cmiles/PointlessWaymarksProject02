@@ -2,8 +2,8 @@
   #define Version = '1902-07-02-00-00-00';
 #endif
 
-#ifndef GitCommit
-  #define GitCommit = '???';
+#ifndef ScmCommit
+  #define ScmCommit = '???';
 #endif
 
 #define MyAppPublisher "Charles Miles"
@@ -47,5 +47,5 @@ Filename: "{app}\{#MyAppExeName}"; Description: "Launch application"; Flags: pos
 [Code]
 procedure PublishVersionAfterInstall();
 begin
-  SaveStringToFile(ExpandConstant('{app}\PublishVersion--{#Version}.txt'), ExpandConstant('({#GitCommit})'), False);
+  SaveStringToFile(ExpandConstant('{app}\PublishVersion--{#Version}.txt'), ExpandConstant('({#ScmCommit})'), False);
 end;
