@@ -81,6 +81,7 @@ public partial class BatchListContext
 
         var toRun = translatedMessage.Match(ProcessDataUpdateNotification,
             ProcessProgressNotification,
+            _ => Task.CompletedTask,
             x =>
             {
                 Log.Error("Data Notification Failure. Error Note {0}. Status Control Context Id {1}", x.ErrorMessage,
@@ -178,7 +179,6 @@ public partial class BatchListContext
 
         var listItem = Items.SingleOrDefault(x => x.Statistics.BatchId == arg.BatchId);
         if (listItem is not null) await listItem.Statistics.Refresh();
-        ;
     }
 
     [BlockingCommand]
@@ -202,7 +202,8 @@ public partial class BatchListContext
 
         foreach (var loopBatch in job.Batches.OrderByDescending(x => x.CreatedOn))
         {
-            StatusContext.Progress($"Batch List - {++batchLoadCounter} of {job.Batches.Count} - Creating Entry for Batch Id {loopBatch.Id}");
+            StatusContext.Progress(
+                $"Batch List - {++batchLoadCounter} of {job.Batches.Count} - Creating Entry for Batch Id {loopBatch.Id}");
             batchList.Add(await BatchListListItem.CreateInstance(loopBatch));
         }
 

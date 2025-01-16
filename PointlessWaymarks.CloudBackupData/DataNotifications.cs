@@ -1,4 +1,3 @@
-using System.Text;
 using OneOf;
 using PointlessWaymarks.CloudBackupData.Models;
 using PointlessWaymarks.CommonTools;
@@ -63,7 +62,20 @@ public static class DataNotifications
             $"Progress|{cleanedSender.Replace("|", " ")}|{processId}|{jobPersistentId}|{batchId}|{cleanedProgress.Replace("|", " ")}");
     }
 
-    public static OneOf<InterProcessDataNotification, InterProcessProgressNotification, InterProcessError>
+    public static void PublishRunFinishedNotification(string sender, int processId, string progress,
+        Guid jobPersistentId,
+        int? batchId)
+    {
+        if (SuspendNotifications) return;
+
+        var cleanedSender = string.IsNullOrWhiteSpace(sender) ? "No Sender Specified" : sender.TrimNullToEmpty();
+
+        SendMessageQueue.Enqueue(
+            $"FinishedRun|{cleanedSender.Replace("|", " ")}|{processId}|{jobPersistentId}|{batchId}|Finished Run");
+    }
+
+    public static OneOf<InterProcessDataNotification, InterProcessProgressNotification, InterProcessFinishedNotification
+            , InterProcessError>
         TranslateDataNotification(string received)
     {
         if (string.IsNullOrWhiteSpace(received))
@@ -73,10 +85,7 @@ public static class DataNotifications
         {
             var parsedString = received.Split("|").ToList();
 
-            if (!parsedString.Any()
-                || parsedString.Count is not 6
-                || !(parsedString[0].Equals("Data") || parsedString[0].Equals("Progress"))
-               )
+            if (!parsedString.Any() || parsedString.Count is not 6)
                 return new InterProcessError
                 {
                     ErrorMessage = $"Data appears to be in the wrong format - {received}"
@@ -91,7 +100,6 @@ public static class DataNotifications
                     JobPersistentId = Guid.Parse(parsedString[4]),
                     BatchId = int.TryParse(parsedString[5], out var parsedBatchId) ? parsedBatchId : null
                 };
-
             if (parsedString[0].Equals("Progress"))
                 return new InterProcessProgressNotification
                 {
@@ -101,6 +109,20 @@ public static class DataNotifications
                     BatchId = int.TryParse(parsedString[4], out var parsedBatchId) ? parsedBatchId : null,
                     ProgressMessage = parsedString[5]
                 };
+            if (parsedString[0].Equals("FinishedRun"))
+                return new InterProcessFinishedNotification
+                {
+                    Sender = parsedString[1],
+                    ProcessId = int.Parse(parsedString[2]),
+                    JobPersistentId = Guid.Parse(parsedString[3]),
+                    BatchId = int.TryParse(parsedString[4], out var parsedBatchId) ? parsedBatchId : null,
+                    ProgressMessage =
+                        $"Finished Run - Job {Guid.Parse(parsedString[3])} - Batch {(parsedBatchId is 0 ? "(None Given)" : parsedBatchId.ToString())}"
+                };
+            return new InterProcessError
+            {
+                ErrorMessage = $"Data appears to be in the wrong format - {received}"
+            };
         }
         catch (Exception e)
         {
@@ -118,6 +140,15 @@ public record InterProcessDataNotification
     public Guid JobPersistentId { get; init; }
     public string? Sender { get; init; }
     public DataNotificationUpdateType UpdateType { get; init; }
+}
+
+public record InterProcessFinishedNotification
+{
+    public int? BatchId { get; init; }
+    public Guid JobPersistentId { get; init; }
+    public int ProcessId { get; init; }
+    public string ProgressMessage { get; init; } = string.Empty;
+    public string? Sender { get; init; }
 }
 
 public record InterProcessProgressNotification
@@ -151,6 +182,7 @@ public enum DataNotificationContentType
     CloudCopy,
     CloudDelete,
     CloudUpload,
-    Unknown,
-    Progress
+
+    Unknown
+    //Progress,
 }

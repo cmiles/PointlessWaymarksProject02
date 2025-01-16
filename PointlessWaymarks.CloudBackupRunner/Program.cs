@@ -196,6 +196,7 @@ public static class Program
             Log.Error(
                 $"Cloud Credentials are not Valid? Access Key is blank {string.IsNullOrWhiteSpace(cloudCredentials.username)}, Password is blank {string.IsNullOrWhiteSpace(cloudCredentials.password)}");
             Log.Information("Cloud Backup Runner - Finished Run");
+            DataNotifications.PublishRunFinishedNotification("CloudBackupRunner", Environment.ProcessId, "Run Finished", backupJob.PersistentId, null);
             await Log.CloseAndFlushAsync();
             return -1;
         }
@@ -218,6 +219,7 @@ public static class Program
                 Log.Error(
                     "Service URL is not Valid? Service URL is Blank.");
                 Log.Information("Cloud Backup Runner - Finished Run");
+                DataNotifications.PublishRunFinishedNotification("CloudBackupRunner", Environment.ProcessId, "Run Finished", backupJob.PersistentId, null);
                 await Log.CloseAndFlushAsync();
                 return -1;
             }
@@ -325,6 +327,7 @@ public static class Program
                         .Information(
                             "Comparing Local Files to the Cloud File Cache Files produced no backup actions - Nothing To Do, Stopping");
                     Log.Information("Cloud Backup Runner - Finished Run");
+                    DataNotifications.PublishRunFinishedNotification("CloudBackupRunner", Environment.ProcessId, "Run Finished", backupJob.PersistentId, batch.Id);
                     return 0;
                 }
             }
@@ -377,6 +380,7 @@ public static class Program
                 backupJob.Id,
                 batchInformation.Batch.Id);
             Log.Information("Cloud Backup Runner - Finished Run");
+            DataNotifications.PublishRunFinishedNotification("CloudBackupRunner", Environment.ProcessId, "Run Finished", backupJob.PersistentId, batchInformation.Batch.Id);
             await Log.CloseAndFlushAsync();
             return 0;
         }
@@ -411,6 +415,7 @@ public static class Program
         finally
         {
             Log.Information("Cloud Backup Runner - Finished Run");
+            DataNotifications.PublishRunFinishedNotification("CloudBackupRunner", Environment.ProcessId, "Run Finished", backupJob.PersistentId, batchInformation.Batch.Id);
             await Log.CloseAndFlushAsync();
         }
 

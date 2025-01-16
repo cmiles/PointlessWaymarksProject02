@@ -36,8 +36,9 @@ public partial class BatchListListItem
         var translatedMessage = DataNotifications.TranslateDataNotification(eventArgs.Message.ToString());
 
         var toRun = translatedMessage.Match(ProcessDataUpdateNotification,
-            x => Task.CompletedTask,
-            x => Task.CompletedTask
+            _ => Task.CompletedTask,
+            _ => Task.CompletedTask,
+            _ => Task.CompletedTask
         );
 
         if (toRun is not null) await toRun;

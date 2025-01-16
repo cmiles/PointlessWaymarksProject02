@@ -208,6 +208,7 @@ public partial class JobListContext
 
         var toRun = translatedMessage.Match(ProcessDataUpdateNotification,
             ProcessProgressNotification,
+            _ => Task.CompletedTask,
             x =>
             {
                 StatusContext.ToastError(x.ErrorMessage);

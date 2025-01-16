@@ -48,6 +48,7 @@ public partial class ProgressTrackerContext
 
         var toRun = translatedMessage.Match(null,
             ProcessProgressNotification,
+            _ => Task.CompletedTask,
             x =>
             {
                 Log.Error("Data Notification Failure. Error Note {0}. Status Control Context Id {1}",
