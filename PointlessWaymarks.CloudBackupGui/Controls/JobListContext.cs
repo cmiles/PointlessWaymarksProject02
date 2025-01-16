@@ -124,11 +124,20 @@ public partial class JobListContext
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
+        statusContext.Progress("Starting Job List Setup");
+
         var factoryStatusContext = statusContext;
+
+        statusContext.Progress("Reading Settings");
+
         var settings = CloudBackupGuiSettingTools.ReadSettings();
+
+        statusContext.Progress("Checking Database File");
 
         if (string.IsNullOrWhiteSpace(settings.DatabaseFile) || !File.Exists(settings.DatabaseFile))
         {
+            statusContext.Progress("No Database File Found - Creating New Database");
+
             var newDb = UniqueFileTools.UniqueFile(
                 FileLocationHelpers.DefaultStorageDirectory(), "PointlessWaymarks-CloudBackup.db");
             settings.DatabaseFile = newDb!.FullName;
@@ -139,6 +148,8 @@ public partial class JobListContext
         }
 
         await ThreadSwitcher.ResumeForegroundAsync();
+
+        statusContext.Progress("Setting Up Items...");
 
         var initialItems = new ObservableCollection<JobListListItem>();
 
@@ -491,9 +502,13 @@ public partial class JobListContext
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
+        StatusContext.Progress("Starting List Refresh");
+
         DataNotifications.NewDataNotificationChannel().MessageReceived -= OnDataNotificationReceived;
 
         var db = await CloudBackupContext.CreateInstance();
+
+        StatusContext.Progress("Getting Jobs");
 
         var jobs = await db.BackupJobs.ToListAsync();
 
@@ -503,7 +518,11 @@ public partial class JobListContext
 
         Items.Clear();
 
-        foreach (var x in jobs) Items.Add(await JobListListItem.CreateInstance(x));
+        foreach (var x in jobs)
+        {
+            StatusContext.Progress($"Adding Job {x.Name}");
+            Items.Add(await JobListListItem.CreateInstance(x));
+        }
 
         if (previousSelectedItemPersistentId != null)
             SelectedJob = Items.SingleOrDefault(y => y.PersistentId == previousSelectedItemPersistentId);
@@ -576,6 +595,8 @@ public partial class JobListContext
 
         if (!dbCheck.success) return;
 
+        StatusContext.Progress("Getting Jobs from Database");
+
         var jobs = await dbCheck.context!.BackupJobs.ToListAsync();
 
         await ThreadSwitcher.ResumeForegroundAsync();
@@ -583,6 +604,7 @@ public partial class JobListContext
         foreach (var x in jobs)
             try
             {
+                StatusContext.Progress($"Creating List Item for {x.Name}");
                 Items.Add(await JobListListItem.CreateInstance(x));
             }
             catch (Exception e)
