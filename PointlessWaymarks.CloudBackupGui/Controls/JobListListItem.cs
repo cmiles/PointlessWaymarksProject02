@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Timers;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
 using Microsoft.EntityFrameworkCore;
 using PointlessWaymarks.CloudBackupData;
 using PointlessWaymarks.CloudBackupData.Models;
@@ -9,6 +10,7 @@ using PointlessWaymarks.CloudBackupData.Reports;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
+using SkiaSharp;
 using TinyIpc.Messaging;
 using Timer = System.Timers.Timer;
 
@@ -17,7 +19,7 @@ namespace PointlessWaymarks.CloudBackupGui.Controls;
 [NotifyPropertyChanged]
 public partial class JobListListItem
 {
-    private readonly Timer _progressTimer = new(240000);
+    private readonly Timer _progressTimer = new(60000);
     private DateTime? _lastLatestBatchRefresh;
 
     private JobListListItem(BackupJob job)
@@ -62,7 +64,10 @@ public partial class JobListListItem
                 // labels to fit the available space, 
                 // when you need to force the axis to show all the labels then you must: 
                 ForceStepToMin = true,
-                MinStep = 1
+                MinStep = 1,
+                SeparatorsPaint = new SolidColorPaint(SKColors.LightGray),
+                TicksAtCenter = true,
+                SeparatorsAtCenter = false,
             }
         ];
 
@@ -96,7 +101,7 @@ public partial class JobListListItem
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         var toReturn = new JobListListItem(job);
-        await toReturn.RefreshLatestBatch();
+        await toReturn.RefreshData();
 
         return toReturn;
     }
@@ -108,8 +113,9 @@ public partial class JobListListItem
         var translatedMessage = DataNotifications.TranslateDataNotification(eventArgs.Message.ToString());
 
         var toRun = translatedMessage.Match(ProcessDataUpdateNotification,
-            x => Task.CompletedTask,
-            x => Task.CompletedTask
+            _ => Task.CompletedTask,
+            ProcessJobFinishedNotification,
+            _ => Task.CompletedTask
         );
 
         if (toRun is not null) await toRun;
@@ -135,7 +141,7 @@ public partial class JobListListItem
         if (interProcessUpdateNotification.JobPersistentId != PersistentId) return;
 
         if (interProcessUpdateNotification is { ContentType: DataNotificationContentType.CloudTransferBatch })
-            await RefreshLatestBatch();
+            await RefreshData();
 
         if (interProcessUpdateNotification is { ContentType: DataNotificationContentType.CloudUpload } or
             { ContentType: DataNotificationContentType.CloudCopy } or
@@ -143,11 +149,16 @@ public partial class JobListListItem
         {
             if (LatestBatch != null) LatestBatch.LatestCloudActivity = DateTime.Now;
             if (_lastLatestBatchRefresh == null || (DateTime.Now - _lastLatestBatchRefresh.Value).TotalSeconds >= 60)
-                await RefreshLatestBatch();
+                await RefreshData();
         }
     }
 
-    public async Task RefreshLatestBatch()
+    private async Task ProcessJobFinishedNotification(InterProcessFinishedNotification interProcessUpdateNotification)
+    {
+        await RefreshData();
+    }
+
+    public async Task RefreshData()
     {
         _lastLatestBatchRefresh = DateTime.Now;
 
@@ -182,7 +193,8 @@ public partial class JobListListItem
             {
                 Name = "Activity",
                 Values = JobActivity.Activity.Select(x => x.ActivitySize).ToList(),
-                YToolTipLabelFormatter = x => x.Model.ToString("N0")
+                YToolTipLabelFormatter = x => x.Model.ToString("N0"),
+                Fill = new SolidColorPaint(SKColors.DarkGreen)
             }
         ];
 
@@ -204,7 +216,8 @@ public partial class JobListListItem
                     LatestBatch.UploadsCompleteSize, LatestBatch.UploadsNotCompletedSize,
                     LatestBatch.UploadsWithErrorNoteSize
                 ],
-                YToolTipLabelFormatter = x => x.Model.ToString("N0")
+                YToolTipLabelFormatter = x => x.Model.ToString("N0"),
+                Fill = new SolidColorPaint(SKColors.DeepSkyBlue)
             },
             new ColumnSeries<double>
             {
@@ -214,7 +227,8 @@ public partial class JobListListItem
                     LatestBatch.CopiesCompleteSize, LatestBatch.CopiesNotCompletedSize,
                     LatestBatch.CopiesWithErrorNoteSize
                 ],
-                YToolTipLabelFormatter = x => x.Model.ToString("N0")
+                YToolTipLabelFormatter = x => x.Model.ToString("N0"),
+                Fill = new SolidColorPaint(SKColors.RoyalBlue)
             },
             new ColumnSeries<double>
             {
@@ -224,8 +238,8 @@ public partial class JobListListItem
                     LatestBatch.DeletesCompleteSize, LatestBatch.DeletesNotCompletedSize,
                     LatestBatch.DeletesWithErrorNoteSize
                 ],
-                YToolTipLabelFormatter = x => x.Model.ToString("N0")
-            }
+                YToolTipLabelFormatter = x => x.Model.ToString("N0"),
+                Fill = new SolidColorPaint(SKColors.DimGray ) }
         ];
     }
 
@@ -233,7 +247,7 @@ public partial class JobListListItem
     {
         if (LatestBatch == null)
         {
-            await RefreshLatestBatch();
+            await RefreshData();
             return;
         }
 
