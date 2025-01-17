@@ -1,3 +1,4 @@
+using Amazon.Runtime.Internal.Util;
 using Microsoft.EntityFrameworkCore;
 using PointlessWaymarks.CloudBackupData;
 using PointlessWaymarks.CloudBackupData.Batch;
@@ -328,6 +329,7 @@ public static class Program
                             "Comparing Local Files to the Cloud File Cache Files produced no backup actions - Nothing To Do, Stopping");
                     Log.Information("Cloud Backup Runner - Finished Run");
                     DataNotifications.PublishRunFinishedNotification("CloudBackupRunner", Environment.ProcessId, "Run Finished", backupJob.PersistentId, batch.Id);
+                    await Log.CloseAndFlushAsync();
                     return 0;
                 }
             }
@@ -364,6 +366,7 @@ public static class Program
                 .Information(
                     "Comparing Local Files to the Cloud File Cache Files produced no backup actions - Nothing To Do, Stopping");
             Log.Information("Cloud Backup Runner - Finished Run");
+            await Log.CloseAndFlushAsync();
             return 0;
         }
 
@@ -386,6 +389,8 @@ public static class Program
         }
 
         progress.BatchId = batchInformation.Batch.Id;
+
+        var returnValue = 0;
 
         try
         {
@@ -410,7 +415,7 @@ public static class Program
                 .SetAutomationLogoNotificationIconUrl().SetErrorReportAdditionalInformationMarkdown(
                     EmbeddedResourceTools.GetEmbeddedResourceText("README.md")).Error(e);
 
-            return -1;
+            returnValue = -1;
         }
         finally
         {
@@ -419,6 +424,6 @@ public static class Program
             await Log.CloseAndFlushAsync();
         }
 
-        return 0;
+        return returnValue;
     }
 }
