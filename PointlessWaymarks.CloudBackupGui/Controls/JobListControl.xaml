@@ -273,7 +273,7 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
-                                <WrapPanel Margin="8" Orientation="Horizontal">
+                                <WrapPanel Margin="8,8,48,8" Orientation="Horizontal">
                                     <TextBox
                                         FontWeight="Bold"
                                         Style="{StaticResource ReadOnlyTextBoxStyle}"
@@ -381,8 +381,8 @@
                                     <TabItem Header="Progress and Details">
                                         <Grid>
                                             <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto" />
                                                 <RowDefinition Height="*" />
+                                                <RowDefinition Height="Auto" />
                                                 <RowDefinition Height="Auto" />
                                             </Grid.RowDefinitions>
                                             <GroupBox
@@ -485,7 +485,7 @@
                                     ToolTip="{Binding ProgressString}"
                                     Visibility="{Binding ProgressString, Converter={StaticResource NullOrWhiteSpaceStringToCollapsed}}">
                                     <TextBlock
-                                        Margin="10,2,10,3"
+                                        Margin="6,2,6,3"
                                         Background="LawnGreen"
                                         Opacity=".7"
                                         ToolTip="{Binding ProgressString}">
