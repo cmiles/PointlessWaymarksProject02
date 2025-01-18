@@ -42,9 +42,15 @@ public partial class ScriptJobRunListContext
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
+        var factoryStatusContext = await StatusControlContext.CreateInstance(statusContext);
+
+        factoryStatusContext.Progress($"Setting Db for a Run List - Has Run Filter: {runFilter is not null}");
+
         var db = await PowerShellRunnerDbContext.CreateInstance(databaseFile);
         var key = await ObfuscationKeyHelpers.GetObfuscationKey(databaseFile);
         var dbId = await PowerShellRunnerDbQuery.DbId(databaseFile);
+
+        factoryStatusContext.Progress($"Querying and Filtering Runs");
 
         var filteredRuns = jobFilter.Any()
             ? await db.ScriptJobRuns.Where(x => jobFilter.Contains(x.ScriptJobPersistentId))
@@ -65,6 +71,8 @@ public partial class ScriptJobRunListContext
 
         var runList = new List<ScriptJobRunGuiView>();
 
+        factoryStatusContext.Progress($"Creating Gui Views for Runs - {filterDescription}");
+
         foreach (var loopRun in filteredRuns)
             runList.Add(ScriptJobRunGuiView.CreateInstance(loopRun,
                 possibleJobs.SingleOrDefault(x => x.PersistentId == loopRun.ScriptJobPersistentId), key));
@@ -74,7 +82,6 @@ public partial class ScriptJobRunListContext
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        var factoryStatusContext = await StatusControlContext.CreateInstance(statusContext);
 
         var factoryContext = new ScriptJobRunListContext
         {
