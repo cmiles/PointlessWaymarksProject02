@@ -11,6 +11,20 @@ public static class PowerShellRunnerDbQuery
     public const string ObfuscationService = "https://pointlesswaymarks.powershellrunner.private";
     public const string ObfuscationServiceAccountSettingsKey = "ObfuscationServiceAccountSettingsKey";
 
+    public static async Task<PowerShellRunnerDayStatistics> DayStatistics(string dbFileName)
+    {
+        var frozenStart = DateTime.Now.Date;
+        var returnStats = new PowerShellRunnerDayStatistics { Day = frozenStart };
+        var db = await PowerShellRunnerDbContext.CreateInstance(dbFileName);
+        var runs = db.ScriptJobRuns
+            .Where(x => x.CompletedOnUtc != null && x.CompletedOnUtc.Value >= frozenStart.ToUniversalTime())
+            .ToList();
+        returnStats.Success = runs.Count(x => !x.Errors);
+        returnStats.Error = runs.Count(x => x.Errors);
+        returnStats.Running = runs.Count(x => x.CompletedOnUtc is null);
+        return returnStats;
+    }
+
     public static async Task<Guid> DbId(this PowerShellRunnerDbContext context)
     {
         var keyValuePair = await context.PowerShellRunnerSettings.SingleAsync(x => x.Key == DbPersistentIdSettingsKey);
@@ -45,7 +59,10 @@ public static class PowerShellRunnerDbQuery
             db.ScriptJobRuns.RemoveRange(runsToDelete);
             await db.SaveChangesAsync();
 
-            Log.ForContext("JobPersistentId", loopJobs.PersistentId).ForContext(nameof(runsToDelete), runsToDelete.SafeObjectDump()).Information("Deleting {0} ScriptJobRuns from '{1}' because they are older than {2} (UTC)", runsToDelete.Count, loopJobs.Name, deleteBefore);
+            Log.ForContext("JobPersistentId", loopJobs.PersistentId)
+                .ForContext(nameof(runsToDelete), runsToDelete.SafeObjectDump()).Information(
+                    "Deleting {0} ScriptJobRuns from '{1}' because they are older than {2} (UTC)", runsToDelete.Count,
+                    loopJobs.Name, deleteBefore);
 
             foreach (var loopDeleteRuns in runsToDelete)
                 DataNotifications.PublishRunDataNotification($"Automated Deletes for Runs Before {deleteBefore:G}",
@@ -89,6 +106,46 @@ public static class PowerShellRunnerDbQuery
         return (await context.ObfuscationAccountName())!;
     }
 
+    public static async Task<List<PowerShellRunnerPreviousDayStatistics>> PreviousDayStatistics(string dbFileName,
+        int daysBack,
+        List<PowerShellRunnerPreviousDayStatistics> existingData)
+    {
+        var frozenStart = DateTime.Now.AddDays(-1);
+        var returnList = new List<PowerShellRunnerPreviousDayStatistics>();
+
+        for (var i = 0; i <= daysBack; i++)
+            returnList.Add(new PowerShellRunnerPreviousDayStatistics { Day = frozenStart.AddDays(-i).Date });
+
+        var db = await PowerShellRunnerDbContext.CreateInstance(dbFileName);
+
+        existingData = existingData.OrderByDescending(x => x.Day).Skip(1).ToList();
+
+        var minUtc = returnList.Min(y => y.Day).ToUniversalTime();
+
+        var timeLimitedRuns = await db.ScriptJobRuns
+            .Where(x => x.CompletedOnUtc != null &&
+                        x.CompletedOnUtc >= minUtc).ToListAsync();
+
+        foreach (var loopStats in returnList)
+        {
+            var possibleExistingData = existingData.SingleOrDefault(x => x.Day == loopStats.Day);
+
+            if (possibleExistingData != null)
+            {
+                loopStats.Success = possibleExistingData.Success;
+                loopStats.Error = possibleExistingData.Error;
+                continue;
+            }
+
+            var runs = timeLimitedRuns.Where(x => x.CompletedOnUtc != null && x.CompletedOnUtc.Value.ToLocalTime().Date == loopStats.Day).ToList();
+
+            loopStats.Success = runs.Count(x => !x.Errors);
+            loopStats.Error = runs.Count(x => x.Errors);
+        }
+
+        return returnList.OrderByDescending(x => x.Day).ToList();
+    }
+
     private static async Task SetNewObfuscationAccountName(this PowerShellRunnerDbContext context)
     {
         await context.PowerShellRunnerSettings.Where(x => x.Key == ObfuscationServiceAccountSettingsKey)
@@ -108,7 +165,7 @@ public static class PowerShellRunnerDbQuery
         var existingKey =
             await context.PowerShellRunnerSettings.FirstOrDefaultAsync(x => x.Key == DbPersistentIdSettingsKey);
 
-        if (existingKey != null && Guid.TryParse(existingKey.Value, out var keyValue)) return;
+        if (existingKey != null && Guid.TryParse(existingKey.Value, out _)) return;
 
         await context.PowerShellRunnerSettings.Where(x => x.Key == DbPersistentIdSettingsKey).ExecuteDeleteAsync();
 

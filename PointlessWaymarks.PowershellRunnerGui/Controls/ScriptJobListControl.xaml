@@ -12,6 +12,7 @@
     xmlns:runspaces="clr-namespace:System.Management.Automation.Runspaces;assembly=System.Management.Automation"
     xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
     xmlns:utility="clr-namespace:PointlessWaymarks.WpfCommon.Utility;assembly=PointlessWaymarks.WpfCommon"
+    xmlns:wpf="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
     d:DataContext="{d:DesignInstance local:ScriptJobListContext}"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -130,6 +131,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <GroupBox
             Grid.Row="0"
@@ -166,12 +168,13 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <WrapPanel Margin="38,4,4,4">
+                <WrapPanel Margin="44,6,4,4">
                     <WrapPanel.Resources>
                         <Style TargetType="CheckBox">
-                            <Setter Property="Margin" Value="14,4,0,0"></Setter>
+                            <Setter Property="Margin" Value="14,4,0,0" />
                         </Style>
                     </WrapPanel.Resources>
                     <CheckBox IsChecked="{Binding FilterForScheduled}">Scheduled</CheckBox>
@@ -181,8 +184,10 @@
                     <CheckBox IsChecked="{Binding FilterForLastRunSuccess}">Last Run Success</CheckBox>
                     <CheckBox IsChecked="{Binding FilterForRunning}">Running</CheckBox>
                 </WrapPanel>
-                <ListBox Grid.Row="1"
-                    Margin="0,4,0,0"
+                <Rectangle Grid.Row="1" Height="1" Fill="LightGray" HorizontalAlignment="Stretch" Margin="1,8,1,1" />
+                <ListBox
+                    Grid.Row="2"
+                    Margin="0,0,0,0"
                     behaviors:MultiSelectBehavior.SynchronizedSelectedItems="{Binding SelectedItems}"
                     ItemsSource="{Binding Items}"
                     SelectedItem="{Binding SelectedItem}"
@@ -507,6 +512,26 @@
             </Grid>
         </GroupBox>
         <Border Grid.Row="1" Style="{StaticResource ActionPanelBorderStyle}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <wpf:CartesianChart
+                    Height="120"
+                    Series="{Binding DayStatisticsSeries}"
+                    XAxes="{Binding DayStatisticsXAxis}"
+                    YAxes="{Binding DayStatisticsYAxis}" />
+                <wpf:CartesianChart
+                    Grid.Column="1"
+                    Height="120"
+                    Series="{Binding PreviousDaysStatisticsSeries}"
+                    XAxes="{Binding PreviousDaysStatisticsXAxis}"
+                    YAxes="{Binding PreviousDaysStatisticsYAxis}" />
+            </Grid>
+
+        </Border>
+        <Border Grid.Row="2" Style="{StaticResource ActionPanelBorderStyle}">
             <WrapPanel HorizontalAlignment="Center" Orientation="Horizontal">
                 <Button
                     Command="{Binding RefreshListCommand}"

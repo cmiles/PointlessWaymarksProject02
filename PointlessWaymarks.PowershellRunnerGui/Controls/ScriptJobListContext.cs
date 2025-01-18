@@ -3,6 +3,9 @@ using System.ComponentModel;
 using System.Windows.Data;
 using CronExpressionDescriptor;
 using Cronos;
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
 using Microsoft.EntityFrameworkCore;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
@@ -12,6 +15,7 @@ using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.ColumnSort;
 using PointlessWaymarks.WpfCommon.Status;
 using Serilog;
+using SkiaSharp;
 
 namespace PointlessWaymarks.PowerShellRunnerGui.Controls;
 
@@ -26,10 +30,44 @@ public partial class ScriptJobListContext
     public ScriptJobListContext()
     {
         PropertyChanged += OnPropertyChanged;
+
+        PreviousDaysStatisticsXAxis =
+        [
+            new Axis()
+        ];
+
+        PreviousDaysStatisticsYAxis =
+        [
+            new Axis
+            {
+                MinLimit = 0
+            }
+        ];
+
+        DayStatisticsXAxis =
+        [
+            new Axis
+            {
+                Labels = null,
+                ShowSeparatorLines = false,
+                TextSize = 0
+            }
+        ];
+
+        DayStatisticsYAxis =
+        [
+            new Axis
+            {
+                MinLimit = 0
+            }
+        ];
     }
 
     public required string DatabaseFile { get; set; }
-    public NotificationCatcher? DataNotificationsProcessor { get; set; }
+    public PowerShellRunnerDayStatistics? DayStatistics { get; set; }
+    public ISeries<int>[]? DayStatisticsSeries { get; set; }
+    public Axis[] DayStatisticsXAxis { get; set; }
+    public Axis[] DayStatisticsYAxis { get; set; }
     public bool FilterForLastRunError { get; set; }
     public bool FilterForLastRunSuccess { get; set; }
     public bool FilterForNotScheduled { get; set; }
@@ -37,11 +75,16 @@ public partial class ScriptJobListContext
     public bool FilterForScheduled { get; set; }
     public bool FilterForScheduleDisabled { get; set; }
     public required ObservableCollection<ScriptJobListListItem> Items { get; set; }
+    public NotificationCatcher? JobDataNotificationsProcessor { get; set; }
     public required ColumnSortControlContext ListSort { get; set; }
+    public List<PowerShellRunnerPreviousDayStatistics> PreviousDaysStatistics { get; set; } = [];
+    public ISeries<int>[]? PreviousDaysStatisticsSeries { get; set; }
+    public Axis[] PreviousDaysStatisticsXAxis { get; set; }
+    public Axis[] PreviousDaysStatisticsYAxis { get; set; }
+    public NotificationCatcher? RunDataNotificationsProcessor { get; set; }
     public ScriptJobListListItem? SelectedItem { get; set; }
     public List<ScriptJobListListItem> SelectedItems { get; set; } = [];
     public required StatusControlContext StatusContext { get; set; }
-
     public string? UserFilterText { get; set; }
 
     public static async Task<ScriptJobListContext> CreateInstance(StatusControlContext? statusContext,
@@ -87,9 +130,14 @@ public partial class ScriptJobListContext
         factoryContext.BuildCommands();
         await factoryContext.RefreshList();
 
-        factoryContext.DataNotificationsProcessor = new NotificationCatcher
+        factoryContext.JobDataNotificationsProcessor = new NotificationCatcher
         {
             JobDataNotification = factoryContext.ProcessJobDataUpdateNotification
+        };
+
+        factoryContext.JobDataNotificationsProcessor = new NotificationCatcher
+        {
+            RunDataNotification = factoryContext.ProcessRunDataUpdateNotification
         };
 
         factoryContext.UpdateCronExpressionInformation();
@@ -328,6 +376,7 @@ public partial class ScriptJobListContext
             var toRemove = Items.Where(x => x.DbEntry.PersistentId == interProcessUpdateNotification.JobPersistentId)
                 .ToList();
             toRemove.ForEach(x => Items.Remove(x));
+            StatusContext.RunFireAndForgetNonBlockingTask(RefreshDayStatistics);
             return;
         }
 
@@ -357,8 +406,77 @@ public partial class ScriptJobListContext
             Items.Add(toAdd);
 
             StatusContext.RunFireAndForgetNonBlockingTask(FilterList);
+            StatusContext.RunFireAndForgetNonBlockingTask(RefreshDayStatistics);
         }
     }
+
+    private async Task ProcessRunDataUpdateNotification(
+        DataNotifications.InterProcessRunDataNotification interProcessUpdateNotification)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (interProcessUpdateNotification.DatabaseId != _dbId) return;
+
+        await RefreshDayStatistics();
+    }
+
+    public async Task RefreshDayStatistics()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var frozenLocalToday = DateTime.Now.Date;
+
+        var dayStatisticsPartial = await PowerShellRunnerDbQuery.DayStatistics(_databaseFile);
+        dayStatisticsPartial.Scheduled = Items.Count(x => x.NextRun.Date == frozenLocalToday);
+
+        DayStatistics = dayStatisticsPartial;
+
+        DayStatisticsXAxis =
+        [
+            new Axis
+            {
+                Labels = frozenLocalToday.ToString("M/d").AsList(),
+                ShowSeparatorLines = false
+            }
+        ];
+
+        DayStatisticsSeries =
+        [
+            new ColumnSeries<int>
+            {
+                Name = "Success",
+                Values = DayStatistics.Success.AsList(),
+                MaxBarWidth = 20,
+                Padding = 4,
+                Fill = new SolidColorPaint(SKColors.RoyalBlue)
+            },
+            new ColumnSeries<int>
+            {
+                Name = "Error",
+                Values = DayStatistics.Error.AsList(),
+                MaxBarWidth = 20,
+                Padding = 4,
+                Fill = new SolidColorPaint(SKColors.Red)
+            },
+            new ColumnSeries<int>
+            {
+                Name = "Scheduled",
+                Values = DayStatistics.Scheduled.AsList(),
+                MaxBarWidth = 20,
+                Padding = 4,
+                Fill = new SolidColorPaint(SKColors.DarkGreen)
+            },
+            new ColumnSeries<int>
+            {
+                Name = "Running",
+                Values = DayStatistics.Running.AsList(),
+                MaxBarWidth = 20,
+                Padding = 4,
+                Fill = new SolidColorPaint(SKColors.LawnGreen)
+            }
+        ];
+    }
+
 
     [BlockingCommand]
     public async Task RefreshList()
@@ -381,6 +499,43 @@ public partial class ScriptJobListContext
 
         await ListContextSortHelpers.SortList(
             ListSort.SortDescriptions(), Items);
+
+        await RefreshDayStatistics();
+        await RefreshPreviousDayStatistics();
+    }
+
+    public async Task RefreshPreviousDayStatistics()
+    {
+        PreviousDaysStatistics =
+            await PowerShellRunnerDbQuery.PreviousDayStatistics(_databaseFile, 20, PreviousDaysStatistics);
+
+        PreviousDaysStatisticsXAxis =
+        [
+            new Axis
+            {
+                Labels = PreviousDaysStatistics.Select(x => x.Day.ToString("M/d")).ToList()
+            }
+        ];
+
+        PreviousDaysStatisticsSeries =
+        [
+            new ColumnSeries<int>
+            {
+                Name = "Success",
+                Values = PreviousDaysStatistics.Select(x => x.Success).ToList(),
+                MaxBarWidth = 16,
+                Padding = 4,
+                Fill = new SolidColorPaint(SKColors.RoyalBlue)
+            },
+            new ColumnSeries<int>
+            {
+                Name = "Error",
+                Values = PreviousDaysStatistics.Select(x => x.Error).ToList(),
+                MaxBarWidth = 16,
+                Padding = 4,
+                Fill = new SolidColorPaint(SKColors.Red)
+            }
+        ];
     }
 
     [NonBlockingCommand]
@@ -470,8 +625,15 @@ public partial class ScriptJobListContext
         try
         {
             while (await _cronNextTimer.WaitForNextTickAsync())
+            {
                 if (!StatusContext.BlockUi)
                     UpdateCronExpressionInformation();
+                if (DayStatistics is not null && DayStatistics.Day != DateTime.Now.Date)
+                {
+                    StatusContext.RunFireAndForgetNonBlockingTask(RefreshDayStatistics);
+                    StatusContext.RunFireAndForgetNonBlockingTask(RefreshPreviousDayStatistics);
+                }
+            }
         }
         catch (Exception e)
         {

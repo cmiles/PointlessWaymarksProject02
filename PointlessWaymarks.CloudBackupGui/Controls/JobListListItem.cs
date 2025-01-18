@@ -35,14 +35,7 @@ public partial class JobListListItem
 
         JobActivityXAxis =
         [
-            new Axis
-            {
-                // By default the axis tries to optimize the number of 
-                // labels to fit the available space, 
-                // when you need to force the axis to show all the labels then you must: 
-                ForceStepToMin = true,
-                MinStep = 1
-            }
+            new Axis ()
         ];
 
         JobActivityYAxis =
