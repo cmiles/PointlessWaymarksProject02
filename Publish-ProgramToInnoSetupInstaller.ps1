@@ -3,16 +3,20 @@ $baseName = "PointlessWaymarks.$program"
 
 $ErrorActionPreference = "Stop"
 
-$fossilCheckout = fossil info | Select-String -pattern "checkout:" | foreach { $_.Line.Substring(9, $_.Line.Length - 9).Trim() } | Select-Object -First 1
+$fossilCheckout = fossil info | Select-String -Pattern "checkout:" | ForEach-Object { $_.Line.Substring(9, $_.Line.Length - 9).Trim().Split(' ')[0] } | Select-Object -First 1
 
 $fossilStatusBrief = fossil status -b
 if ($fossilStatusBrief -match "dirty") {
-    $fossilStatusBrief = "(Uncommitted_Changes)"
+    $fossilStatusBrief = "Uncommitted_Changes"
 } else {
     $fossilStatusBrief = ""
 }
 
-$fossilId = "$fossilCheckout_$fossilStatusBrief"
+Write-Host "Fossil Version: $fossilCheckout"
+Write-Host "Fossil Status Brief: $fossilStatusBrief"
+
+$fossilId = "$fossilCheckout`_$fossilStatusBrief"
+Write-Host "Fossil Id: $fossilId"
 
 dotnet clean .\PointlessWaymarks.sln -property:Configuration=Release -property:Platform=x64 -verbosity:minimal
 
@@ -45,7 +49,6 @@ $versionDate = New-Object DateTime($fileVersionInfo.FileMajorPart, $fileVersionI
 $publishVersion = "{0}-{1}-{2}-{3}-{4}" -f $versionDate.ToString("yyyy"), $versionDate.ToString("MM"), $versionDate.ToString("dd"), $versionHour.ToString("00"), $versionMinute.ToString("00")
 
 Write-Host "Publish Version: $publishVersion"
-Write-Host "Fossil Version: $fossilId"
 
 & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" ".\Publish-InnoSetupInstaller-$program.iss" /DVersion=$publishVersion /DScmCommit=$fossilId
 
