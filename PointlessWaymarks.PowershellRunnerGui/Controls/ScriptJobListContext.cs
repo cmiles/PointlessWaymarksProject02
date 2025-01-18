@@ -96,6 +96,8 @@ public partial class ScriptJobListContext
 
         var dbId = await PowerShellRunnerDbQuery.DbId(databaseFile);
 
+        factoryStatusContext.Progress("Starting to Set Up the Job List");
+
         var factoryContext = new ScriptJobListContext
         {
             StatusContext = factoryStatusContext,
@@ -128,6 +130,8 @@ public partial class ScriptJobListContext
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         factoryContext.BuildCommands();
+
+        factoryStatusContext.Progress("Getting Job List Data");
         await factoryContext.RefreshList();
 
         factoryContext.JobDataNotificationsProcessor = new NotificationCatcher
@@ -140,9 +144,15 @@ public partial class ScriptJobListContext
             RunDataNotification = factoryContext.ProcessRunDataUpdateNotification
         };
 
+        factoryStatusContext.Progress("Updating Cron Information Part 1");
+
         factoryContext.UpdateCronExpressionInformation();
 
+        factoryStatusContext.Progress("Updating Cron Information Part 2");
+
         _ = factoryContext.UpdateCronNextRun();
+
+        factoryStatusContext.Progress("Sorting List");
 
         await ListContextSortHelpers.SortList(
             factoryContext.ListSort.SortDescriptions(), factoryContext.Items);

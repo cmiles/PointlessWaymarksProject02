@@ -52,9 +52,11 @@ public partial class CustomScriptRunnerContext
         StatusControlContext? statusContext,
         string databaseFile)
     {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
         var factoryStatusContext = await StatusControlContext.CreateInstance(statusContext);
 
-        await ThreadSwitcher.ResumeBackgroundAsync();
+        factoryStatusContext.Progress("Setting Up the Custom Script Runner");
 
         var dbId = await PowerShellRunnerDbQuery.DbId(databaseFile);
 

@@ -29,9 +29,11 @@ public partial class ScriptProgressContext
         _databaseFile = databaseFile;
         _dbId = await PowerShellRunnerDbQuery.DbId(databaseFile);
 
-        await ThreadSwitcher.ResumeForegroundAsync();
-
         var factoryStatusContext = await StatusControlContext.CreateInstance(statusContext);
+
+        factoryStatusContext.Progress("Setting up the Script Progress Context");
+
+        await ThreadSwitcher.ResumeForegroundAsync();
 
         var factoryContext = new ScriptProgressContext
         {

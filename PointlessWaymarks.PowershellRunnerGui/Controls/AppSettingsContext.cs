@@ -36,6 +36,8 @@ public partial class AppSettingsContext
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
+        statusContext.Progress("Setting Up the App Settings Context");
+
         var factorySettings = PowerShellRunnerGuiSettingTools.ReadSettings();
 
         var factoryContext = new AppSettingsContext
