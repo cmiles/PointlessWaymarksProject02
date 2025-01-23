@@ -61,8 +61,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PointlessWaymarks.FeedReade
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PointlessWaymarks.FeedReader.Tests", "PointlessWaymarks.FeedReader.Tests\PointlessWaymarks.FeedReader.Tests.csproj", "{DD9DD01B-C1F7-4E8F-8B8F-F00534A9ABC1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PointlessWaymarks.PublishReadmeHelper", "PointlessWaymarks.PublishReadmeHelper\PointlessWaymarks.PublishReadmeHelper.csproj", "{6FF96150-1179-4A1C-8F07-9C4D11948D2A}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PointlessWaymarks.CommonTools", "PointlessWaymarksTools\PointlessWaymarks.CommonTools\PointlessWaymarks.CommonTools.csproj", "{095975E0-6F2C-4EBB-ACC1-02986F6238DF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PointlessWaymarks.LlamaAspects", "PointlessWaymarksTools\PointlessWaymarks.LlamaAspects\PointlessWaymarks.LlamaAspects.csproj", "{9628DCF0-C071-49F6-9698-2EDD4C9CE68A}"
@@ -241,12 +239,6 @@ Global
 		{DD9DD01B-C1F7-4E8F-8B8F-F00534A9ABC1}.LamaDebug|x64.Build.0 = LamaDebug|x64
 		{DD9DD01B-C1F7-4E8F-8B8F-F00534A9ABC1}.Release|x64.ActiveCfg = Release|x64
 		{DD9DD01B-C1F7-4E8F-8B8F-F00534A9ABC1}.Release|x64.Build.0 = Release|x64
-		{6FF96150-1179-4A1C-8F07-9C4D11948D2A}.Debug|x64.ActiveCfg = Debug|x64
-		{6FF96150-1179-4A1C-8F07-9C4D11948D2A}.Debug|x64.Build.0 = Debug|x64
-		{6FF96150-1179-4A1C-8F07-9C4D11948D2A}.LamaDebug|x64.ActiveCfg = LamaDebug|x64
-		{6FF96150-1179-4A1C-8F07-9C4D11948D2A}.LamaDebug|x64.Build.0 = LamaDebug|x64
-		{6FF96150-1179-4A1C-8F07-9C4D11948D2A}.Release|x64.ActiveCfg = Release|x64
-		{6FF96150-1179-4A1C-8F07-9C4D11948D2A}.Release|x64.Build.0 = Release|x64
 		{095975E0-6F2C-4EBB-ACC1-02986F6238DF}.Debug|x64.ActiveCfg = Debug|x64
 		{095975E0-6F2C-4EBB-ACC1-02986F6238DF}.Debug|x64.Build.0 = Debug|x64
 		{095975E0-6F2C-4EBB-ACC1-02986F6238DF}.LamaDebug|x64.ActiveCfg = LamaDebug|x64

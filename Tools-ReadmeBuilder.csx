@@ -1,17 +1,7 @@
-var directory = string.Empty;
-
-if (args.Length < 1 || string.IsNullOrEmpty(args[0])) directory = Environment.CurrentDirectory;
-
-var searchDirectory = new DirectoryInfo(directory);
+var searchDirectory = new DirectoryInfo(Environment.CurrentDirectory);
 
 Console.Write(
     $"Pointless Waymarks README.md -> Project Specific README_[project] running in {searchDirectory.FullName}");
-
-if (!searchDirectory.Exists)
-{
-    Console.WriteLine($"Directory '{directory}' could not be found - quitting.");
-    return;
-}
 
 var mainReadme = new FileInfo(Path.Combine(searchDirectory.FullName, "README-Fossil.md"));
 
@@ -59,7 +49,7 @@ Console.WriteLine($"Scanning {subDirectories.Length} SubDirectories.");
 foreach (var subDirectory in subDirectories)
     try
     {
-        Console.WriteLine(subDirectory.FullName);
+
 
         var possibleReadme = new FileInfo(Path.Combine(subDirectory.FullName, "README.md"));
 
@@ -83,7 +73,8 @@ foreach (var subDirectory in subDirectories)
                      """;
 
                 await File.WriteAllTextAsync(Path.Combine(subDirectory.FullName, "README.md"), gitMirrorInformation);
-
+				
+				Console.WriteLine(subDirectory.FullName);
                 Console.WriteLine(
                     "  Found the main README-Fossil.md - prepended mirror message and wrote to README.md");
                 Console.WriteLine();
@@ -93,11 +84,7 @@ foreach (var subDirectory in subDirectories)
         }
 
 
-        if (!possibleReadme.Exists)
-        {
-            Console.WriteLine($"    No README.md found");
-            continue;
-        }
+        if (!possibleReadme.Exists) continue;
 
         var readmeName = string.Join("-", subDirectory.Name.Split(".")[1..]);
 
@@ -119,8 +106,4 @@ foreach (var subDirectory in subDirectories)
     catch (Exception e)
     {
         Console.WriteLine($"!!! Error - continuing...{Environment.NewLine}{e}");
-    }
-    finally
-    {
-        Console.WriteLine();
     }
