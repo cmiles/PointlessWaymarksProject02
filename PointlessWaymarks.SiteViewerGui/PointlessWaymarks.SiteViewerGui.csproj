@@ -14,7 +14,7 @@
     </ItemGroup>
 
     <PropertyGroup>
-        <GitVersion>false</GitVersion>
+        
         <Version>$([System.DateTime]::UtcNow.ToString("yyyy.M.d.Hmm"))</Version>
         <AssemblyVersion>$([System.DateTime]::UtcNow.ToString("yyyy.M.d.Hmm"))</AssemblyVersion>
         <FileVersion>$([System.DateTime]::UtcNow.ToString("yyyy.M.d.Hmm"))</FileVersion>
