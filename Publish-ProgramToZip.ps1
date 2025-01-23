@@ -3,7 +3,7 @@ $baseName = "PointlessWaymarks.$program"
 
 $ErrorActionPreference = "Stop"
 
-.\Tools-CopyReadmeToProjectSpecificReadme.ps1
+dotnet script .\Tools-ReadmeBuilder.csx
 
 dotnet clean .\PointlessWaymarks.sln -property:Configuration=Release -property:Platform=x64 -verbosity:minimal
 
