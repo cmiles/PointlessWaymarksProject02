@@ -53,13 +53,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PointlessWaymarks.CloudBack
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PointlessWaymarks.CloudBackupRunner", "PointlessWaymarks.CloudBackupRunner\PointlessWaymarks.CloudBackupRunner.csproj", "{5E9084D4-527E-464E-B133-5AEEEE60211A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PointlessWaymarks.FeedReaderData", "PointlessWaymarks.FeedReaderData\PointlessWaymarks.FeedReaderData.csproj", "{4AB7FD0B-FE11-48E1-B692-E4040A985F9D}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PointlessWaymarks.FeedReaderGui", "PointlessWaymarks.FeedReaderGui\PointlessWaymarks.FeedReaderGui.csproj", "{50010631-8773-4150-87B1-22534FD7F8FA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PointlessWaymarks.FeedReader", "PointlessWaymarks.FeedReader\PointlessWaymarks.FeedReader.csproj", "{B2074BE3-4AF7-4680-BC4E-52EF7667A7A6}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PointlessWaymarks.FeedReader.Tests", "PointlessWaymarks.FeedReader.Tests\PointlessWaymarks.FeedReader.Tests.csproj", "{DD9DD01B-C1F7-4E8F-8B8F-F00534A9ABC1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PointlessWaymarks.FeedReader.Tests", "PointlessWaymarksTools\PointlessWaymarks.FeedReader.Tests\PointlessWaymarks.FeedReader.Tests.csproj", "{DD9DD01B-C1F7-4E8F-8B8F-F00534A9ABC1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PointlessWaymarks.CommonTools", "PointlessWaymarksTools\PointlessWaymarks.CommonTools\PointlessWaymarks.CommonTools.csproj", "{095975E0-6F2C-4EBB-ACC1-02986F6238DF}"
 EndProject
@@ -93,6 +89,10 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PointlessWaymarks.ScriptB64Runner", "PointlessWaymarks.ScriptB64Runner\PointlessWaymarks.ScriptB64Runner.csproj", "{9F4CA688-0E36-4BEE-ACD4-1F596AC1FE81}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PointlessWaymarks.SpatialTools.Tests", "PointlessWaymarksTools\PointlessWaymarks.SpatialTools.Tests\PointlessWaymarks.SpatialTools.Tests.csproj", "{95B78D6F-724D-499D-85FB-CCEC031BC9A9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PointlessWaymarks.FeedReader", "PointlessWaymarksTools\PointlessWaymarks.FeedReader\PointlessWaymarks.FeedReader.csproj", "{EA7D2F5F-B51B-484B-A5CC-824EBCA84A2F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PointlessWaymarks.FeedReaderData", "PointlessWaymarks.FeedReaderData\PointlessWaymarks.FeedReaderData.csproj", "{1E998F17-E3E0-4401-B0E7-B395FB142509}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -215,24 +215,12 @@ Global
 		{5E9084D4-527E-464E-B133-5AEEEE60211A}.LamaDebug|x64.Build.0 = LamaDebug|x64
 		{5E9084D4-527E-464E-B133-5AEEEE60211A}.Release|x64.ActiveCfg = Release|x64
 		{5E9084D4-527E-464E-B133-5AEEEE60211A}.Release|x64.Build.0 = Release|x64
-		{4AB7FD0B-FE11-48E1-B692-E4040A985F9D}.Debug|x64.ActiveCfg = Debug|x64
-		{4AB7FD0B-FE11-48E1-B692-E4040A985F9D}.Debug|x64.Build.0 = Debug|x64
-		{4AB7FD0B-FE11-48E1-B692-E4040A985F9D}.LamaDebug|x64.ActiveCfg = LamaDebug|x64
-		{4AB7FD0B-FE11-48E1-B692-E4040A985F9D}.LamaDebug|x64.Build.0 = LamaDebug|x64
-		{4AB7FD0B-FE11-48E1-B692-E4040A985F9D}.Release|x64.ActiveCfg = Release|x64
-		{4AB7FD0B-FE11-48E1-B692-E4040A985F9D}.Release|x64.Build.0 = Release|x64
 		{50010631-8773-4150-87B1-22534FD7F8FA}.Debug|x64.ActiveCfg = Debug|x64
 		{50010631-8773-4150-87B1-22534FD7F8FA}.Debug|x64.Build.0 = Debug|x64
 		{50010631-8773-4150-87B1-22534FD7F8FA}.LamaDebug|x64.ActiveCfg = LamaDebug|x64
 		{50010631-8773-4150-87B1-22534FD7F8FA}.LamaDebug|x64.Build.0 = LamaDebug|x64
 		{50010631-8773-4150-87B1-22534FD7F8FA}.Release|x64.ActiveCfg = Release|x64
 		{50010631-8773-4150-87B1-22534FD7F8FA}.Release|x64.Build.0 = Release|x64
-		{B2074BE3-4AF7-4680-BC4E-52EF7667A7A6}.Debug|x64.ActiveCfg = Debug|x64
-		{B2074BE3-4AF7-4680-BC4E-52EF7667A7A6}.Debug|x64.Build.0 = Debug|x64
-		{B2074BE3-4AF7-4680-BC4E-52EF7667A7A6}.LamaDebug|x64.ActiveCfg = LamaDebug|x64
-		{B2074BE3-4AF7-4680-BC4E-52EF7667A7A6}.LamaDebug|x64.Build.0 = LamaDebug|x64
-		{B2074BE3-4AF7-4680-BC4E-52EF7667A7A6}.Release|x64.ActiveCfg = Release|x64
-		{B2074BE3-4AF7-4680-BC4E-52EF7667A7A6}.Release|x64.Build.0 = Release|x64
 		{DD9DD01B-C1F7-4E8F-8B8F-F00534A9ABC1}.Debug|x64.ActiveCfg = Debug|x64
 		{DD9DD01B-C1F7-4E8F-8B8F-F00534A9ABC1}.Debug|x64.Build.0 = Debug|x64
 		{DD9DD01B-C1F7-4E8F-8B8F-F00534A9ABC1}.LamaDebug|x64.ActiveCfg = LamaDebug|x64
@@ -323,11 +311,24 @@ Global
 		{95B78D6F-724D-499D-85FB-CCEC031BC9A9}.LamaDebug|x64.Build.0 = LamaDebug|x64
 		{95B78D6F-724D-499D-85FB-CCEC031BC9A9}.Release|x64.ActiveCfg = Release|x64
 		{95B78D6F-724D-499D-85FB-CCEC031BC9A9}.Release|x64.Build.0 = Release|x64
+		{EA7D2F5F-B51B-484B-A5CC-824EBCA84A2F}.Debug|x64.ActiveCfg = Debug|x64
+		{EA7D2F5F-B51B-484B-A5CC-824EBCA84A2F}.Debug|x64.Build.0 = Debug|x64
+		{EA7D2F5F-B51B-484B-A5CC-824EBCA84A2F}.LamaDebug|x64.ActiveCfg = LamaDebug|x64
+		{EA7D2F5F-B51B-484B-A5CC-824EBCA84A2F}.LamaDebug|x64.Build.0 = LamaDebug|x64
+		{EA7D2F5F-B51B-484B-A5CC-824EBCA84A2F}.Release|x64.ActiveCfg = Release|x64
+		{EA7D2F5F-B51B-484B-A5CC-824EBCA84A2F}.Release|x64.Build.0 = Release|x64
+		{1E998F17-E3E0-4401-B0E7-B395FB142509}.Debug|x64.ActiveCfg = Debug|x64
+		{1E998F17-E3E0-4401-B0E7-B395FB142509}.Debug|x64.Build.0 = Debug|x64
+		{1E998F17-E3E0-4401-B0E7-B395FB142509}.LamaDebug|x64.ActiveCfg = LamaDebug|x64
+		{1E998F17-E3E0-4401-B0E7-B395FB142509}.LamaDebug|x64.Build.0 = LamaDebug|x64
+		{1E998F17-E3E0-4401-B0E7-B395FB142509}.Release|x64.ActiveCfg = Release|x64
+		{1E998F17-E3E0-4401-B0E7-B395FB142509}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{DD9DD01B-C1F7-4E8F-8B8F-F00534A9ABC1} = {2F5AF64D-0D0F-4A6B-A1D9-E0CF751447C1}
 		{095975E0-6F2C-4EBB-ACC1-02986F6238DF} = {2F5AF64D-0D0F-4A6B-A1D9-E0CF751447C1}
 		{9628DCF0-C071-49F6-9698-2EDD4C9CE68A} = {2F5AF64D-0D0F-4A6B-A1D9-E0CF751447C1}
 		{70C126D0-484A-4438-9452-75AF744B0C12} = {2F5AF64D-0D0F-4A6B-A1D9-E0CF751447C1}
@@ -335,6 +336,7 @@ Global
 		{67E06F75-F83B-4FCC-851C-F98A2ED4155A} = {2F5AF64D-0D0F-4A6B-A1D9-E0CF751447C1}
 		{3F6B7793-5CAB-43BE-A7A4-D2CAA867AE8B} = {2F5AF64D-0D0F-4A6B-A1D9-E0CF751447C1}
 		{95B78D6F-724D-499D-85FB-CCEC031BC9A9} = {2F5AF64D-0D0F-4A6B-A1D9-E0CF751447C1}
+		{EA7D2F5F-B51B-484B-A5CC-824EBCA84A2F} = {2F5AF64D-0D0F-4A6B-A1D9-E0CF751447C1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {75AFFEC9-7D18-4CFC-B893-5FA77C6942C8}
