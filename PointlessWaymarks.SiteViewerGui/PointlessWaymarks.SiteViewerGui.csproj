@@ -30,7 +30,7 @@
         <PackageReference Include="Dragablz" Version="0.0.3.234" />
         <PackageReference Include="Jot" Version="2.1.17" />
         <PackageReference Include="Metalama.Framework" Version="2025.0.8" />
-        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2980" />
+        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3079-prerelease" />
         <PackageReference Include="Microsoft.Web.WebView2.DevToolsProtocolExtension" Version="1.0.2901" />
         <PackageReference Include="ModernWpfUI" Version="0.9.6" />
     </ItemGroup>

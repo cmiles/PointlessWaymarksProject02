@@ -8,7 +8,7 @@
         <PackageReference Include="Metalama.Framework" Version="2025.0.8" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.1" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.1" />
-        <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.4.6" />
+        <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.5.0" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\PointlessWaymarksTools\PointlessWaymarks.CommonTools\PointlessWaymarks.CommonTools.csproj" />

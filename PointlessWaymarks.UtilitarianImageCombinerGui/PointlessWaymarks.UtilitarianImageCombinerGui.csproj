@@ -28,8 +28,8 @@
         <PackageReference Include="Jot" Version="2.1.17" />
         <PackageReference Include="Metalama.Framework" Version="2025.0.8" />
         <PackageReference Include="Metalama.Patterns.Observability" Version="2025.0.8" />
-        <PackageReference Include="Microsoft.Playwright" Version="1.49.0" />
-        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2980" />
+        <PackageReference Include="Microsoft.Playwright" Version="1.50.0" />
+        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3079-prerelease" />
     </ItemGroup>
 
     <ItemGroup>
