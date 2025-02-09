@@ -1,1 +1,0 @@
-xstyler -r -d .\
