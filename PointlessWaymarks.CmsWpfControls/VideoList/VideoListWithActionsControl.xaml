@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     x:Class="PointlessWaymarks.CmsWpfControls.VideoList.VideoListWithActionsControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -30,6 +30,10 @@
                 <MenuItem Command="{Binding ListContext.SelectedToExcelCommand}" Header="Selected To Excel" />
                 <MenuItem Command="{Binding ListContext.ImportFromExcelFileCommand}" Header="Import From Excel File" />
                 <MenuItem Command="{Binding ListContext.ImportFromOpenExcelInstanceCommand}" Header="Import From Open Excel Application" />
+            </MenuItem>
+            <MenuItem Header="Reports">
+                <MenuItem Command="{Binding ReportVideoMetadataCommand}" Header="Selected - Metadata to Html" />
+                <MenuItem Command="{Binding VideoMetadataFromPickedFileCommand}" Header="Metadata to Html - Pick File" />
             </MenuItem>
             <MenuItem Header="Email">
                 <MenuItem Command="{Binding EmailHtmlToClipboardCommand}" Header="Selected To Html Email on Clipboard" />

@@ -1,10 +1,14 @@
+using System.IO;
 using System.Windows;
+using Ookii.Dialogs.Wpf;
+using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentHtml.VideoHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
+using PointlessWaymarks.WpfCommon.FileMetadataDisplay;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
 
@@ -91,7 +95,8 @@ public partial class VideoListWithActionsContext
             await ContentListContext.CreateInstance(factoryStatusContext, new VideoListLoader(100),
                 [Db.ContentTypeDisplayStringForVideo], windowStatus);
 
-        return new VideoListWithActionsContext(factoryStatusContext, windowStatus, factoryListContext, loadInBackground);
+        return new VideoListWithActionsContext(factoryStatusContext, windowStatus, factoryListContext,
+            loadInBackground);
     }
 
     [BlockingCommand]
@@ -115,6 +120,28 @@ public partial class VideoListWithActionsContext
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         await ListContext.LoadData();
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNotOneSelectedListItems]
+    private async Task ReportVideoMetadata()
+    {
+        var singleSelected = SelectedListItems().First();
+
+        if (string.IsNullOrWhiteSpace(singleSelected.DbEntry.OriginalFileName))
+        {
+            await StatusContext.ToastError("Original File Name is Blank? This is unusual...");
+            return;
+        }
+
+        var archiveFile = new FileInfo(Path.Combine(
+            UserSettingsSingleton.CurrentSettings().LocalMediaArchiveVideoDirectory().ToString(),
+            singleSelected.DbEntry.OriginalFileName));
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        var metadataWindow = await FileMetadataDisplayWindow.CreateInstance(archiveFile.FullName);
+        await metadataWindow.PositionWindowAndShowOnUiThread();
     }
 
     public List<VideoListListItem> SelectedListItems()
@@ -150,6 +177,25 @@ public partial class VideoListWithActionsContext
             await StatusContext.ToastWarning("Not all Videos had a main image - some bracket codes are text links...");
         else
             await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+    }
+
+    [BlockingCommand]
+    private async Task VideoMetadataFromPickedFile()
+    {
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        var dialog = new VistaOpenFileDialog { Multiselect = false, Filter = "All files (*.*)|*.*" };
+
+        if (!(dialog.ShowDialog() ?? false)) return;
+
+        var selectedFile = dialog.FileName;
+
+        if (string.IsNullOrWhiteSpace(selectedFile)) return;
+        if (!File.Exists(selectedFile)) return;
+        var file = new FileInfo(selectedFile);
+
+        var metadataWindow = await FileMetadataDisplayWindow.CreateInstance(file.FullName);
+        await metadataWindow.PositionWindowAndShowOnUiThread();
     }
 
     [BlockingCommand]
