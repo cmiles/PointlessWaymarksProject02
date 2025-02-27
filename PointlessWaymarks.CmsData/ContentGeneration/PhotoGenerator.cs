@@ -61,12 +61,34 @@ public static class PhotoGenerator
         await htmlContext.WriteLocalHtml().ConfigureAwait(false);
     }
 
+    public static List<string> SupportedPhotoFileExtensions()
+    {
+        return new List<string> { ".JPG", ".JPEG" };
+    }
+
+    public static List<string> SupportedPhotoFileConversionExtensions()
+    {
+        return new List<string> { ".WEBP", ".PNG", ".BMP", ".TIF" };
+    }
+
+    public static bool PhotoFileTypeConversionIsSupported(FileInfo toCheck)
+    {
+        if (toCheck is not { Exists: true }) return false;
+        return SupportedPhotoFileConversionExtensions().Contains(toCheck.Extension.ToUpperInvariant());
+    }
+
     public static bool PhotoFileTypeIsSupported(FileInfo toCheck)
     {
         if (toCheck is not { Exists: true }) return false;
-        return toCheck.Extension.ToUpperInvariant().Contains("JPG") ||
-               toCheck.Extension.ToUpperInvariant().Contains("JPEG");
+        return SupportedPhotoFileExtensions().Contains(toCheck.Extension.ToUpperInvariant());
     }
+
+    public static bool PhotoFileTypeIsSupportedOrConversionIsSupported(FileInfo toCheck)
+    {
+        if (toCheck is not { Exists: true }) return false;
+        return PhotoFileTypeIsSupported(toCheck) || PhotoFileTypeConversionIsSupported(toCheck);
+    }
+
 
     public static async Task<(GenerationReturn generationReturn, PhotoMetadata? metadata)> PhotoMetadataFromFile(
         FileInfo selectedFile, bool skipAdditionalTagDiscovery = false, IProgress<string>? progress = null)

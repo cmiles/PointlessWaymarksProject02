@@ -657,8 +657,6 @@ public partial class PhotoListWithActionsContext
 
         var metadataWindow = await FileMetadataDisplayWindow.CreateInstance(archiveFile.FullName);
         await metadataWindow.PositionWindowAndShowOnUiThread();
-
-        //await FileMetadataReport.AllFileMetadataToHtmlDocumentAndOpen(archiveFile, StatusContext);
     }
 
     [NonBlockingCommand]

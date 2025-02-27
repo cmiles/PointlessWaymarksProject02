@@ -320,7 +320,7 @@ public static class PictureResizing
             }
         }
 
-        var resizer = new MagicScalerImageResizer();
+        var resizer = new MagicScalerImageProcessor();
 
         return await resizer.ResizeTo(toResize, width, quality, "For-Display", true, progress).ConfigureAwait(false);
     }
@@ -351,7 +351,7 @@ public static class PictureResizing
             }
         }
 
-        var resizer = new MagicScalerImageResizer();
+        var resizer = new MagicScalerImageProcessor();
 
         return await resizer.ResizeTo(toResize, width, quality, "Sized", true, progress).ConfigureAwait(false);
     }

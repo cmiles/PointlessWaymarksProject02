@@ -414,7 +414,7 @@ public partial class ImageContentEditorContext : IHasChanges, IHasValidationIssu
             return;
         }
         
-        await MagicScalerImageResizer.Rotate(SelectedFile, rotationType);
+        await MagicScalerImageProcessor.Rotate(SelectedFile, rotationType);
         ResizeSelectedFile = true;
         
         StatusContext.RunFireAndForgetNonBlockingTask(SelectedFileChanged);

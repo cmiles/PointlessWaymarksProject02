@@ -595,7 +595,7 @@ Photo Content Notes:
             return;
         }
 
-        await MagicScalerImageResizer.Rotate(SelectedFile, rotationType);
+        await MagicScalerImageProcessor.Rotate(SelectedFile, rotationType);
         ResizeSelectedFile = true;
 
         StatusContext.RunFireAndForgetNonBlockingTask(SelectedFileChanged);

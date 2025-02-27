@@ -27,11 +27,32 @@ public static class ImageGenerator
         await htmlContext.WriteLocalHtml().ConfigureAwait(false);
     }
 
+    public static List<string> SupportedImageFileExtensions()
+    {
+        return new List<string> { ".JPG", ".JPEG" };
+    }
+
+    public static List<string> SupportedImageFileConversionExtensions()
+    {
+        return new List<string> { ".WEBP", ".PNG", ".BMP", ".TIF" };
+    }
+
+    public static bool ImageFileTypeConversionIsSupported(FileInfo toCheck)
+    {
+        if (toCheck is not { Exists: true }) return false;
+        return SupportedImageFileConversionExtensions().Contains(toCheck.Extension.ToUpperInvariant());
+    }
+
     public static bool ImageFileTypeIsSupported(FileInfo toCheck)
     {
         if (toCheck is not { Exists: true }) return false;
-        return toCheck.Extension.ToUpperInvariant().Contains("JPG") ||
-               toCheck.Extension.ToUpperInvariant().Contains("JPEG");
+        return SupportedImageFileExtensions().Contains(toCheck.Extension.ToUpperInvariant());
+    }
+
+    public static bool ImageFileTypeIsSupportedOrConversionIsSupported(FileInfo toCheck)
+    {
+        if (toCheck is not { Exists: true }) return false;
+        return ImageFileTypeIsSupported(toCheck) || ImageFileTypeConversionIsSupported(toCheck);
     }
 
     public static async Task<(GenerationReturn generationReturn, ImageMetadata? metadata)> ImageMetadataFromFile(
