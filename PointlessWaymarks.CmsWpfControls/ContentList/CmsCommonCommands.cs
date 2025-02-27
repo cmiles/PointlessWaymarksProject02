@@ -5,6 +5,7 @@ using Ookii.Dialogs.Wpf;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.CommonHtml;
 using PointlessWaymarks.CmsData.ContentGeneration;
+using PointlessWaymarks.CmsData.ImageHelpers;
 using PointlessWaymarks.CmsWpfControls.AllContentList;
 using PointlessWaymarks.CmsWpfControls.ContentMap;
 using PointlessWaymarks.CmsWpfControls.FileContentEditor;
@@ -270,7 +271,11 @@ public partial class CmsCommonCommands
 
         StatusContext.Progress("Starting Image load.");
 
-        var dialog = new VistaOpenFileDialog { Multiselect = true, Filter = "jpg files (*.jpg;*.jpeg)|*.jpg;*.jpeg" };
+        var supportedExtensions = ImageGenerator.SupportedImageFileConversionExtensions();
+        var filterExtensions = string.Join(";", supportedExtensions.Select(ext => $"*{ext.ToLower()}"));
+        var fileFilter = $"Supported files ({filterExtensions})|{filterExtensions}";
+
+        var dialog = new VistaOpenFileDialog { Multiselect = true, Filter = fileFilter };
 
         if (!(dialog.ShowDialog() ?? false)) return;
 
@@ -296,23 +301,32 @@ public partial class CmsCommonCommands
 
         selectedFileInfos = selectedFileInfos.Where(x => x.Exists).ToList();
 
-        if (!selectedFileInfos.Any(ImageGenerator.ImageFileTypeIsSupported))
+        if (!selectedFileInfos.Any(ImageGenerator.ImageFileTypeIsSupportedOrConversionIsSupported))
         {
             await StatusContext.ToastError("None of the files appear to be supported file types...");
             return;
         }
 
-        if (selectedFileInfos.Any(x => !ImageGenerator.ImageFileTypeIsSupported(x)))
+        if (selectedFileInfos.Any(x => !ImageGenerator.ImageFileTypeIsSupportedOrConversionIsSupported(x)))
             await StatusContext.ToastWarning(
-                $"Skipping - not supported - {string.Join(", ", selectedFileInfos.Where(x => !ImageGenerator.ImageFileTypeIsSupported(x)))}");
+                $"Skipping - not supported - {string.Join(", ", selectedFileInfos.Where(x => !ImageGenerator.ImageFileTypeIsSupportedOrConversionIsSupported(x)))}");
 
-        foreach (var loopFile in selectedFileInfos.Where(ImageGenerator.ImageFileTypeIsSupported))
+        foreach (var loopFile in
+                 selectedFileInfos.Where(ImageGenerator.ImageFileTypeIsSupportedOrConversionIsSupported))
         {
             cancellationToken.ThrowIfCancellationRequested();
 
+            var convertedFile = loopFile;
+
+            if (ImageGenerator.ImageFileTypeConversionIsSupported(loopFile))
+            {
+                var jpgFile = await MagicScalerImageProcessor.ConvertToJpeg(loopFile);
+                convertedFile = jpgFile ?? throw new Exception($"Could not process {loopFile} into a jpg?");
+            }
+
             await ThreadSwitcher.ResumeForegroundAsync();
 
-            var editor = await ImageContentEditorWindow.CreateInstance(initialImage: loopFile);
+            var editor = await ImageContentEditorWindow.CreateInstance(initialImage: convertedFile);
             editor.PositionWindowAndShow();
 
             StatusContext.Progress($"New Image Editor - {loopFile.FullName} ");
@@ -615,7 +629,11 @@ public partial class CmsCommonCommands
 
         StatusContext.Progress("Starting photo load.");
 
-        var dialog = new VistaOpenFileDialog { Multiselect = true, Filter = "jpg files (*.jpg;*.jpeg)|*.jpg;*.jpeg" };
+        var supportedExtensions = PhotoGenerator.SupportedPhotoFileConversionExtensions();
+        var filterExtensions = string.Join(";", supportedExtensions.Select(ext => $"*{ext.ToLower()}"));
+        var fileFilter = $"Supported files ({filterExtensions})|{filterExtensions}";
+
+        var dialog = new VistaOpenFileDialog { Multiselect = true, Filter = fileFilter };
 
         if (!(dialog.ShowDialog() ?? false)) return;
 
@@ -642,17 +660,18 @@ public partial class CmsCommonCommands
 
         selectedFileInfos = selectedFileInfos.Where(x => x.Exists).ToList();
 
-        if (!selectedFileInfos.Any(PhotoGenerator.PhotoFileTypeIsSupported))
+        if (!selectedFileInfos.Any(PhotoGenerator.PhotoFileTypeIsSupportedOrConversionIsSupported))
         {
             await StatusContext.ToastError("None of the files appear to be supported file types...");
             return;
         }
 
-        if (selectedFileInfos.Any(x => !PhotoGenerator.PhotoFileTypeIsSupported(x)))
+        if (selectedFileInfos.Any(x => !PhotoGenerator.PhotoFileTypeIsSupportedOrConversionIsSupported(x)))
             await StatusContext.ToastWarning(
-                $"Skipping - not supported - {string.Join(", ", selectedFileInfos.Where(x => !PhotoGenerator.PhotoFileTypeIsSupported(x)))}");
+                $"Skipping - not supported - {string.Join(", ", selectedFileInfos.Where(x => !PhotoGenerator.PhotoFileTypeIsSupportedOrConversionIsSupported(x)))}");
 
-        var validFiles = selectedFileInfos.Where(PhotoGenerator.PhotoFileTypeIsSupported).ToList();
+        var validFiles = selectedFileInfos.Where(PhotoGenerator.PhotoFileTypeIsSupportedOrConversionIsSupported)
+            .ToList();
 
         var loopCount = 0;
 
@@ -667,9 +686,17 @@ public partial class CmsCommonCommands
 
             await ThreadSwitcher.ResumeBackgroundAsync();
 
+            var convertedFile = loopFile;
+
+            if (PhotoGenerator.PhotoFileTypeConversionIsSupported(loopFile))
+            {
+                var jpgFile = await MagicScalerImageProcessor.ConvertToJpeg(loopFile);
+                convertedFile = jpgFile ?? throw new Exception($"Could not process {loopFile} into a jpg?");
+            }
+
             if (autoSaveAndClose)
             {
-                var photoFile = loopFile;
+                var photoFile = convertedFile;
 
                 var (metaGenerationReturn, metaContent) = await
                     PhotoGenerator.PhotoMetadataToNewPhotoContent(photoFile, StatusContext.ProgressTracker());
@@ -722,7 +749,7 @@ public partial class CmsCommonCommands
             }
             else
             {
-                var editor = await PhotoContentEditorWindow.CreateInstance(loopFile);
+                var editor = await PhotoContentEditorWindow.CreateInstance(convertedFile);
                 await editor.PositionWindowAndShowOnUiThread();
             }
 

@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Threading;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CommonTools;
@@ -13,6 +14,7 @@ public partial class App
 {
     public App()
     {
+        //RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
         PointlessWaymarksLogTools.InitializeStaticLoggerAsStartupLogger();
         Log.Information($"{ProgramInfoTools.GetEntryAssemblyBuildDate()}");
 

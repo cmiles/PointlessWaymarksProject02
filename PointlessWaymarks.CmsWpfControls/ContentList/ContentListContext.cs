@@ -8,11 +8,14 @@ using GongSolutions.Wpf.DragDrop;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 using Microsoft.EntityFrameworkCore;
+using PhotoSauce.MagicScaler;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.CommonHtml;
+using PointlessWaymarks.CmsData.ContentGeneration;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
+using PointlessWaymarks.CmsData.ImageHelpers;
 using PointlessWaymarks.CmsWpfControls.AllContentList;
 using PointlessWaymarks.CmsWpfControls.ContentMap;
 using PointlessWaymarks.CmsWpfControls.FileContentEditor;
@@ -43,7 +46,8 @@ using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
 using Serilog;
 using TinyIpc.Messaging;
-using AppEvents_SheetPivotTableAfterValueChangeEventHandler = Microsoft.Office.Interop.Excel.AppEvents_SheetPivotTableAfterValueChangeEventHandler;
+using AppEvents_SheetPivotTableAfterValueChangeEventHandler =
+    Microsoft.Office.Interop.Excel.AppEvents_SheetPivotTableAfterValueChangeEventHandler;
 using ColumnSortControlContext = PointlessWaymarks.WpfCommon.ColumnSort.ColumnSortControlContext;
 using IDataObject = System.Windows.IDataObject;
 
@@ -63,6 +67,10 @@ public partial class ContentListContext : IDragSource, IDropTarget
         ".WAV",
         ".JPG",
         ".JPEG",
+        ".WEBP",
+        ".BMP",
+        ".PNG",
+        ".TIF",
         ".GPX",
         ".TCX",
         ".FIT",
@@ -188,7 +196,8 @@ public partial class ContentListContext : IDragSource, IDropTarget
 
     public void Drop(IDropInfo dropInfo)
     {
-        var files = DragAndDropFilesHelper.DroppedFiles(dropInfo, FileLocationTools.TempStorageDirectory(), true, _validDragAndDropFileExtensions);
+        var files = DragAndDropFilesHelper.DroppedFiles(dropInfo, FileLocationTools.TempStorageDirectory(), true,
+            _validDragAndDropFileExtensions);
 
         StatusContext.RunBlockingTask(async () =>
             await TryOpenEditorsForDroppedFiles(files));
@@ -997,7 +1006,7 @@ public partial class ContentListContext : IDragSource, IDropTarget
         }
 
         var fileContentExtensions = new List<string> { ".PDF", ".MPG", ".MPEG", ".FLAC", ".MP3", ".WAV" };
-        var pictureContentExtensions = new List<string> { ".JPG", ".JPEG" };
+        var pictureContentExtensions = new List<string> { ".JPG", ".JPEG", ".WEBP", ".BMP", ".PNG", ".TIF" };
         var lineContentExtensions = new List<string> { ".GPX", ".TCX", ".FIT" };
         var videoContentExtensions = new List<string> { ".MP4", ".OGG", ".WEBM" };
 
@@ -1036,15 +1045,24 @@ public partial class ContentListContext : IDragSource, IDropTarget
 
             if (pictureContentExtensions.Contains(Path.GetExtension(loopFile).ToUpperInvariant()))
             {
+                var convertedFile = loopFile;
+
+                if (PhotoGenerator.PhotoFileTypeConversionIsSupported(new FileInfo(loopFile)))
+                {
+                    var jpgFile = await MagicScalerImageProcessor.ConvertToJpeg(new FileInfo(loopFile));
+                    if (jpgFile is null) throw new Exception($"Could not process {loopFile} into a jpg?");
+                    convertedFile = jpgFile.FullName;
+                }
+
                 string make;
                 string model;
 
                 try
                 {
-                    var exifDirectory = ImageMetadataReader.ReadMetadata(loopFile).OfType<ExifIfd0Directory>()
+                    var exifDirectory = ImageMetadataReader.ReadMetadata(convertedFile).OfType<ExifIfd0Directory>()
                         .FirstOrDefault();
 
-                    var exifSubIfdDirectory = ImageMetadataReader.ReadMetadata(loopFile).OfType<ExifSubIfdDirectory>()
+                    var exifSubIfdDirectory = ImageMetadataReader.ReadMetadata(convertedFile).OfType<ExifSubIfdDirectory>()
                         .FirstOrDefault();
 
                     make = exifDirectory?.GetDescription(ExifDirectoryBase.TagMake) ??
@@ -1061,16 +1079,16 @@ public partial class ContentListContext : IDragSource, IDropTarget
                 if (!string.IsNullOrWhiteSpace(make) || !string.IsNullOrWhiteSpace(model))
                     StatusContext.RunNonBlockingTask(async () =>
                     {
-                        await PhotoContentEditorWindow.CreateInstance(new FileInfo(loopFile), true);
+                        await PhotoContentEditorWindow.CreateInstance(new FileInfo(convertedFile), true);
 
-                        await StatusContext.ToastSuccess($"{Path.GetFileName(loopFile)} sent to Photo Editor");
+                        await StatusContext.ToastSuccess($"{Path.GetFileName(convertedFile)} sent to Photo Editor");
                     });
                 else
                     StatusContext.RunNonBlockingTask(async () =>
                     {
-                        await ImageContentEditorWindow.CreateInstance(null, new FileInfo(loopFile), true);
+                        await ImageContentEditorWindow.CreateInstance(null, new FileInfo(convertedFile), true);
 
-                        await StatusContext.ToastSuccess($"{Path.GetFileName(loopFile)} sent to Image Editor");
+                        await StatusContext.ToastSuccess($"{Path.GetFileName(convertedFile)} sent to Image Editor");
                     });
 
                 continue;

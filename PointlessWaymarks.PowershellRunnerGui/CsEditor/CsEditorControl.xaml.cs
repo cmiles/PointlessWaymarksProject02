@@ -73,7 +73,7 @@ public partial class CsEditorControl
 public class ScriptRunnerRoslynHost(
     IEnumerable<Assembly>? additionalAssemblies = null,
     RoslynHostReferences? references = null,
-    ImmutableArray<string>? disabledDiagnostics = null)
+    ImmutableHashSet<string>? disabledDiagnostics = null)
     : RoslynHost(additionalAssemblies, references, disabledDiagnostics)
 {
     private bool _addedAnalyzers;
