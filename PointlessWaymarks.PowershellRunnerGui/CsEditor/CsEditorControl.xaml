@@ -75,7 +75,10 @@
                     Visibility="{Binding HasValidationIssues, Converter={StaticResource BooleanToVisibility}}" />
             </StackPanel>
         </StackPanel>
-        <TextBox x:Name="CsCodeEditor" Grid.Row="1" Text="{Binding UserValue, UpdateSourceTrigger=PropertyChanged}">
-        </TextBox>
+        <TextBox
+            x:Name="CsCodeEditor"
+            Grid.Row="1"
+            Text="{Binding UserValue, UpdateSourceTrigger=PropertyChanged}"
+            TextWrapping="Wrap" />
     </Grid>
 </UserControl>
