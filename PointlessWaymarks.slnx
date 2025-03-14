@@ -1,0 +1,133 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="LamaDebug" />
+    <BuildType Name="Release" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Folder Name="/PointlessWaymarksTools/">
+    <File Path="PointlessWaymarksTools/README.md" />
+    <Project Path="PointlessWaymarksTools/PointlessWaymarks.CommonTools/PointlessWaymarks.CommonTools.csproj">
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="PointlessWaymarksTools/PointlessWaymarks.FeedReader.Tests/PointlessWaymarks.FeedReader.Tests.csproj">
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="PointlessWaymarksTools/PointlessWaymarks.FeedReader/PointlessWaymarks.FeedReader.csproj">
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="PointlessWaymarksTools/PointlessWaymarks.LlamaAspects/PointlessWaymarks.LlamaAspects.csproj">
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="PointlessWaymarksTools/PointlessWaymarks.SpatialTools.Tests/PointlessWaymarks.SpatialTools.Tests.csproj">
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="PointlessWaymarksTools/PointlessWaymarks.SpatialTools/PointlessWaymarks.SpatialTools.csproj">
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="PointlessWaymarksTools/PointlessWaymarks.VaultfuscationTools/PointlessWaymarks.VaultfuscationTools.csproj">
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="PointlessWaymarksTools/PointlessWaymarks.WindowsTools/PointlessWaymarks.WindowsTools.csproj">
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="PointlessWaymarksTools/PointlessWaymarks.WpfCommon/PointlessWaymarks.WpfCommon.csproj">
+      <Platform Project="x64" />
+    </Project>
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="DevNotes.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="global.json" />
+    <File Path="PointlessWaymarksTools/PointlessWaymarks.SpatialTools/PointlessWaymarks.SpatialTools.csproj" />
+    <File Path="PointlessWaymarksTools/PointlessWaymarks.WpfCommon/PointlessWaymarks.WpfCommon.csproj" />
+    <File Path="README-Fossil.md" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="PointlessWaymarks.CloudBackupData/PointlessWaymarks.CloudBackupData.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.CloudBackupGui/PointlessWaymarks.CloudBackupGui.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.CloudBackupRunner/PointlessWaymarks.CloudBackupRunner.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.CloudBackupTests/PointlessWaymarks.CloudBackupTests.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.CmsData/PointlessWaymarks.CmsData.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.CmsGui/PointlessWaymarks.CmsGui.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.CmsTask.GarminConnectGpxImport/PointlessWaymarks.CmsTask.GarminConnectGpxImport.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.CmsTask.MemoriesEmail/PointlessWaymarks.CmsTask.MemoriesEmail.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.CmsTask.PhotoPickup/PointlessWaymarks.CmsTask.PhotoPickup.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.CmsTask.PublishSiteToS3/PointlessWaymarks.CmsTask.PublishSiteToS3.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.CmsTests/PointlessWaymarks.CmsTests.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.CmsWpfControls/PointlessWaymarks.CmsWpfControls.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.ExcelInteropExtensions/PointlessWaymarks.ExcelInteropExtensions.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.FeatureIntersectionTags/PointlessWaymarks.FeatureIntersectionTags.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.FeedReaderData/PointlessWaymarks.FeedReaderData.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.FeedReaderGui/PointlessWaymarks.FeedReaderGui.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.GeoTaggingService/PointlessWaymarks.GeoTaggingService.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.GeoToolsGui/PointlessWaymarks.GeoToolsGui.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.PowerShellRunnerData/PointlessWaymarks.PowerShellRunnerData.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.PowerShellRunnerGui/PointlessWaymarks.PowerShellRunnerGui.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.PressSharper.UnitTests/PointlessWaymarks.PressSharper.UnitTests.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.PressSharper/PointlessWaymarks.PressSharper.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.ScriptB64Runner/PointlessWaymarks.ScriptB64Runner.csproj">
+    <BuildType Solution="LamaDebug|*" Project="Debug" />
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.SiteViewerGui/PointlessWaymarks.SiteViewerGui.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.UtilitarianImage/PointlessWaymarks.UtilitarianImage.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.UtilitarianImageCombiner/PointlessWaymarks.UtilitarianImageCombiner.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.UtilitarianImageCombinerGui/PointlessWaymarks.UtilitarianImageCombinerGui.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="PointlessWaymarks.UtilitarianImageTests/PointlessWaymarks.UtilitarianImageTests.csproj">
+    <Platform Project="x64" />
+  </Project>
+</Solution>
