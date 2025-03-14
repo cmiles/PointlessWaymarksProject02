@@ -5,15 +5,15 @@ $ErrorActionPreference = "Stop"
 
 dotnet script .\Tools-ReadmeBuilder.csx
 
-dotnet clean .\PointlessWaymarks.sln -property:Configuration=Release -property:Platform=x64 -verbosity:minimal
+dotnet clean .\PointlessWaymarks.slnx -property:Configuration=Release -property:Platform=x64 -verbosity:minimal
 
-dotnet restore .\PointlessWaymarks.sln -r win-x64 -verbosity:minimal
+dotnet restore .\PointlessWaymarks.slnx -r win-x64 -verbosity:minimal
 
 $vsWhere = "{0}\Microsoft Visual Studio\Installer\vswhere.exe" -f ${env:ProgramFiles(x86)}
 
 $msBuild = & $vsWhere -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
 
-& $msBuild .\PointlessWaymarks.sln -property:Configuration=Release -property:Platform=x64 -verbosity:minimal
+& $msBuild .\PointlessWaymarks.slnx -property:Configuration=Release -property:Platform=x64 -verbosity:minimal
 
 if ($lastexitcode -ne 0) {throw ("Exec: " + $errorMessage) }
 
