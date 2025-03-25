@@ -1,9 +1,7 @@
-using System.Text.Json.Nodes;
+using System.Text;
 using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Presentation;
-using Jint.Parser;
 using KellermanSoftware.CompareNetObjects;
-using KellermanSoftware.CompareNetObjects.Reports;
+using KellermanSoftware.CompareNetObjects.TypeComparers;
 using Microsoft.Office.Interop.Excel;
 using PointlessWaymarks.CmsData.ContentGeneration;
 using PointlessWaymarks.CmsData.Database;
@@ -167,7 +165,7 @@ public static class ContentImport
 
             var toAdd = new ContentImportValueParse<PointDetail?> { StringValue = stringValue };
             returnList.Add(toAdd);
-            
+
             var splitList = stringValue.RemoveNewLines().TrimNullToEmpty().Split("||")
                 .Select(x => x.TrimNullToEmpty()).ToList();
 
@@ -304,7 +302,7 @@ public static class ContentImport
 
             dbEntry.ContentId = Guid.NewGuid();
             //To help with new content creation - this could result in a user wanting to import older 
-            //older created dates not getting a warning that they didn't get the value into the sheet,
+            //created dates not getting a warning that they didn't get the value into the sheet,
             //but I think overall this is a nice helper.
             if (dbEntry.CreatedOn == DateTime.MinValue)
                 dbEntry.CreatedOn = DateTime.Now;
@@ -380,10 +378,7 @@ public static class ContentImport
             Guid contentId = importResult.processContent.ContentId;
             int contentDbId = importResult.processContent.Id;
 
-            if (contentId == Guid.Parse("00000000-0000-0000-0000-000000000001"))
-            {
-                continue;
-            }
+            if (contentId == Guid.Parse("00000000-0000-0000-0000-000000000001")) continue;
 
             string differenceString;
 
@@ -401,6 +396,8 @@ public static class ContentImport
                 {
                     Config = { MembersToIgnore = ["LastUpdatedBy"], MaxDifferences = 100 }
                 };
+                compareLogic.Config.CustomComparers.Add(
+                    new StringComparerWithNewLineTypeIgnore(RootComparerFactory.GetRootComparer()));
                 ComparisonResult comparisonResult =
                     compareLogic.Compare(currentDbEntry, importResult.processContent);
 
@@ -411,7 +408,7 @@ public static class ContentImport
                     continue;
                 }
 
-                var friendlyReport = new UserFriendlyReport();
+                var friendlyReport = new UserFriendlyGuiChangeBlock();
                 differenceString = friendlyReport.OutputString(comparisonResult.Differences);
 
                 if (string.IsNullOrWhiteSpace(importResult.processContent.LastUpdatedBy))
@@ -483,7 +480,8 @@ public static class ContentImport
                     updateList);
         }
 
-        return new ContentImportResults(errorNotes.Any(), string.Join(Environment.NewLine+Environment.NewLine, errorNotes), updateList);
+        return new ContentImportResults(errorNotes.Any(),
+            string.Join(Environment.NewLine + Environment.NewLine, errorNotes), updateList);
     }
 
     public static async Task<ContentImportResults> ImportFromFile(string fileName,
@@ -501,16 +499,18 @@ public static class ContentImport
 
         var translated = new List<ContentImportRow>();
 
-        foreach (var loopRows in tableRange.Rows())
-        {
-            var valuesToAdd = new List<string>();
+        if (tableRange is not null)
+            foreach (var loopRows in tableRange.Rows())
+            {
+                var valuesToAdd = new List<string>();
 
-            foreach (var loopCells in loopRows.Cells()) valuesToAdd.Add(loopCells.Value.ToString() ?? string.Empty);
+                foreach (var loopCells in loopRows.Cells()) valuesToAdd.Add(loopCells.Value.ToString() ?? string.Empty);
 
-            translated.Add(new ContentImportRow(valuesToAdd, $"Row {loopRows.RowNumber()}"));
-        }
+                translated.Add(new ContentImportRow(valuesToAdd, $"Row {loopRows.RowNumber()}"));
+            }
 
-        progress?.Report($"Excel Import - {fileName} - Range {tableRange.RangeAddress.ToStringRelative(true)}");
+        progress?.Report(
+            $"Excel Import - {fileName} - Range {tableRange?.RangeAddress.ToStringRelative(true) ?? "(?Null Table Range?)"}");
 
         return await ImportContentTable(translated, progress).ConfigureAwait(false);
     }
@@ -903,10 +903,150 @@ public static class ContentImport
         return returnString;
     }
 
-    public record ContentImportResults(bool HasError, string? ErrorNotes,
+    public record ContentImportResults(
+        bool HasError,
+        string? ErrorNotes,
         List<ContentImportUpdateSuggestion> ToUpdate);
 
     public record ContentImportRow(List<string> Values, string RowIdentifier);
 
     public record ContentImportUpdateSuggestion(string? Title, string? DifferenceNotes, dynamic? ToUpdate);
+
+
+    /// <summary>
+    ///     This is for use with the Compare-Net-Objects library - see:
+    ///     - https://github.com/GregFinzer/Compare-Net-Objects/wiki/Custom-Comparers
+    ///     - The StringComparer Class in the Compare-Net-Objects project
+    ///     Adding this class to the compareLogic.Config.CustomComparers collection will
+    ///     allow for comparisons of string with \r\n, \r and \n all treated as equivalent
+    ///     This is useful is comparisons of strings from other editors such as Excel that
+    ///     may change line endings in ways this program doesn't care about.
+    /// </summary>
+    public class StringComparerWithNewLineTypeIgnore : BaseTypeComparer
+    {
+        /// <summary>
+        ///     Constructor that takes a root comparer
+        /// </summary>
+        /// <param name="rootComparer"></param>
+        public StringComparerWithNewLineTypeIgnore(RootComparer rootComparer) : base(rootComparer)
+        {
+        }
+
+        /// <summary>
+        ///     Compare two strings
+        /// </summary>
+        public override void CompareType(CompareParms parms)
+        {
+            if (parms.Config.TreatStringEmptyAndNullTheSame
+                && ((parms.Object1 == null && parms.Object2 != null && parms.Object2.ToString() == string.Empty)
+                    || (parms.Object2 == null && parms.Object1 != null && parms.Object1.ToString() == string.Empty)))
+                return;
+
+            if (OneOfTheStringsIsNull(parms)) return;
+
+            var string1 = parms.Object1 as string;
+            var string2 = parms.Object2 as string;
+
+            if (parms.Config.IgnoreStringLeadingTrailingWhitespace)
+            {
+                string1 = string1!.Trim();
+                string2 = string2!.Trim();
+            }
+
+            string1 = string1!.Replace("\r\n", "\n").Replace("\r", "\n");
+            string2 = string2!.Replace("\r\n", "\n").Replace("\r", "\n");
+
+            if (!parms.Config.CaseSensitive)
+            {
+                if (!string.Equals(string1, string2, StringComparison.OrdinalIgnoreCase)) AddDifference(parms);
+            }
+            else if (string1 != string2)
+            {
+                AddDifference(parms);
+            }
+        }
+
+        /// <summary>
+        ///     Returns true if both objects are a string or if one is a string and one is a null
+        /// </summary>
+        /// <param name="type1">The type of the first object</param>
+        /// <param name="type2">The type of the second object</param>
+        /// <returns></returns>
+        public override bool IsTypeMatch(Type? type1, Type? type2)
+        {
+            return (TypeHelper.IsString(type1) && TypeHelper.IsString(type2))
+                   || (TypeHelper.IsString(type1) && type2 == null)
+                   || (TypeHelper.IsString(type2) && type1 == null);
+        }
+
+        private bool OneOfTheStringsIsNull(CompareParms compareParameters)
+        {
+            if (compareParameters.Object1 == null || compareParameters.Object2 == null)
+            {
+                AddDifference(compareParameters);
+                return true;
+            }
+
+            return false;
+        }
+    }
+
+    /// <summary>
+    ///     Use this with the output of the Compare-Net-Objects library to get a more program
+    ///     appropriate output of the differences.
+    /// </summary>
+    public class UserFriendlyGuiChangeBlock
+    {
+        private string FormatProperty(Difference difference)
+        {
+            var shortItem = difference.GetShortItem();
+            var stringBuilder = new StringBuilder(shortItem.Length);
+            var separator = new[] { '.' };
+            foreach (var input in shortItem.Split(separator, StringSplitOptions.RemoveEmptyEntries))
+            {
+                stringBuilder.Append(StringHelper.InsertSpaces(input));
+                stringBuilder.Append(" ");
+            }
+
+            return stringBuilder.ToString().Trim();
+        }
+
+        /// <summary>Output the differences to a string</summary>
+        /// <param name="differences">A list of differences</param>
+        /// <returns>A string</returns>
+        public string OutputString(List<Difference> differences)
+        {
+            var sb = new StringBuilder(differences.Count * 40);
+            TextWriter writer = new StringWriter(sb);
+            WriteItOut(differences, writer);
+            return sb.ToString();
+        }
+
+        private void WriteItOut(List<Difference> differences, TextWriter writer)
+        {
+            foreach (var difference in differences)
+            {
+                var differenceHasLineBreaks = difference.Object1Value.Contains('\n') ||
+                                              difference.Object1Value.Contains('\r') ||
+                                              difference.Object2Value.Contains('\n') ||
+                                              difference.Object2Value.Contains('\r');
+
+                writer.WriteLine($"- {FormatProperty(difference)}");
+                if (differenceHasLineBreaks)
+                {
+                    writer.WriteLine(
+                        $"  - From:  {Environment.NewLine}```{Environment.NewLine}{difference.Object1Value}{Environment.NewLine}```");
+                    writer.WriteLine(
+                        $"  - To:  {Environment.NewLine}```{Environment.NewLine}{difference.Object2Value}{Environment.NewLine}```");
+                }
+                else
+                {
+                    writer.WriteLine(
+                        $"  - From: {(string.IsNullOrEmpty(difference.Object1Value) ? string.Empty : $"`{difference.Object1Value}`")}");
+                    writer.WriteLine(
+                        $"  - To: {(string.IsNullOrEmpty(difference.Object2Value) ? string.Empty : $"`{difference.Object2Value}`")}");
+                }
+            }
+        }
+    }
 }

@@ -116,7 +116,7 @@ public static class ExcelHelpers
         
         var shouldContinue = await statusContext.ShowMessage("Confirm Import",
             $"Continue?{Environment.NewLine}{Environment.NewLine}{contentImportResult.ToUpdate.Count} updates from Excel {Environment.NewLine}" +
-            $"{string.Join(Environment.NewLine, contentImportResult.ToUpdate.Select(x => $"{Environment.NewLine}{x.Title}{Environment.NewLine}{x.DifferenceNotes}"))}",
+            $"{string.Join(Environment.NewLine, contentImportResult.ToUpdate.Select(x => $"{Environment.NewLine}**{x.Title}**{Environment.NewLine}{x.DifferenceNotes}"))}",
             ["Yes", "No"]);
         
         if (shouldContinue == "No") return;
