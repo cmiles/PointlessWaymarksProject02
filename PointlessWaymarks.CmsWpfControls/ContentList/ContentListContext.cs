@@ -593,6 +593,12 @@ public partial class ContentListContext : IDragSource, IDropTarget
                 searchFilterFunction = ContentListSearch.SearchClimb;
             else if (searchString.StartsWith("DESCENT:", StringComparison.InvariantCultureIgnoreCase))
                 searchFilterFunction = ContentListSearch.SearchDescent;
+            else if (searchString.StartsWith("LINE RECORDING STARTED ON", StringComparison.InvariantCultureIgnoreCase))
+                searchFilterFunction = ContentListSearch.SearchLineRecordingStartedOn;
+            else if (searchString.StartsWith("LINE RECORDING ENDED ON", StringComparison.InvariantCultureIgnoreCase))
+                searchFilterFunction = ContentListSearch.SearchLineRecordingEndedOn;
+            else if (searchString.StartsWith("CLIMB:", StringComparison.InvariantCultureIgnoreCase))
+                searchFilterFunction = ContentListSearch.SearchClimb;
             else if (searchString.StartsWith("IN ACTIVITY LOG:", StringComparison.InvariantCultureIgnoreCase))
                 searchFilterFunction = ContentListSearch.SearchIncludeInActivityLog;
             else if (searchString.StartsWith("ACTIVITY TYPE:", StringComparison.InvariantCultureIgnoreCase))

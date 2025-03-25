@@ -177,6 +177,16 @@ public partial class ListFilterBuilderContext
         [
             new ListFilterBuilderFilterAdd
             {
+                Description = "Recording Started On", AddFilterCommand = AddLineRecordingStartedOnFilterCommand,
+                AppliesTo = [Db.ContentTypeDisplayStringForLine]
+            },
+            new ListFilterBuilderFilterAdd
+            {
+                Description = "Recording Ended On", AddFilterCommand = AddLineRecordingEndedOnFilterCommand,
+                AppliesTo = [Db.ContentTypeDisplayStringForLine]
+            },
+            new ListFilterBuilderFilterAdd
+            {
                 Description = "Miles", AddFilterCommand = AddLineMilesFilterCommand,
                 AppliesTo = [Db.ContentTypeDisplayStringForLine]
             },
@@ -388,6 +398,18 @@ public partial class ListFilterBuilderContext
     {
         await AddSearchFilter(new NumericListFilterFieldBuilder
             { FieldTitle = "Min Elevation", NumberConverterFunction = x => int.TryParse(x, out _) });
+    }
+
+    [NonBlockingCommand]
+    public async Task AddLineRecordingStartedOnFilter()
+    {
+        await AddSearchFilter(new DateTimeListFilterFieldBuilder { FieldTitle = "Line Recording Started On" });
+    }
+
+    [NonBlockingCommand]
+    public async Task AddLineRecordingEndedOnFilter()
+    {
+        await AddSearchFilter(new DateTimeListFilterFieldBuilder { FieldTitle = "Line Recording Ended On" });
     }
 
     [NonBlockingCommand]

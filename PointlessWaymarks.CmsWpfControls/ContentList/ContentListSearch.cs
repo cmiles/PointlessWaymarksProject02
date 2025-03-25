@@ -476,6 +476,33 @@ public static class ContentListSearch
                 "Show Content References On Map"), searchResultModifier);
     }
 
+
+    public static ContentListSearchReturn SearchLineRecordingEndedOn(IContentListItem toFilter, string searchString,
+        Func<bool, bool> searchResultModifier)
+    {
+        if (toFilter is not LineListListItem lineItem)
+            return new ContentListSearchReturn(
+                new ContentListSearchFunctionReturn(false,
+                    "Line Recording Ended On Search on Item that is not a Line - Excluding"), searchResultModifier);
+
+        return new ContentListSearchReturn(
+            ContentListSearchFunctions.FilterDateTime(lineItem.DbEntry.RecordingEndedOn, searchString,
+                "Line Recording Ended On"), searchResultModifier);
+    }
+
+    public static ContentListSearchReturn SearchLineRecordingStartedOn(IContentListItem toFilter, string searchString,
+        Func<bool, bool> searchResultModifier)
+    {
+        if (toFilter is not LineListListItem lineItem)
+            return new ContentListSearchReturn(
+                new ContentListSearchFunctionReturn(false,
+                    "Line Recording Started On Search on Item that is not a Line - Excluding"), searchResultModifier);
+
+        return new ContentListSearchReturn(
+            ContentListSearchFunctions.FilterDateTime(lineItem.DbEntry.RecordingStartedOn, searchString,
+                "Line Recording Started On"), searchResultModifier);
+    }
+
     public static ContentListSearchReturn SearchMapIcon(IContentListItem toFilter, string searchString,
         Func<bool, bool> searchResultModifier)
     {
