@@ -20,8 +20,6 @@ public partial class ActivityLogMonthlySummaryWindow
     {
         InitializeComponent();
 
-        BuildCommands();
-
         DataContext = this;
     }
 
@@ -65,11 +63,15 @@ public partial class ActivityLogMonthlySummaryWindow
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        return new ActivityLogMonthlySummaryWindow
+        var toReturn = new ActivityLogMonthlySummaryWindow
         {
             StatusContext = await StatusControlContext.CreateInstance(),
             Items = new ObservableCollection<ActivityLogMonthlyStatRow>(statRows)
         };
+
+        toReturn.BuildCommands();
+
+        return toReturn;
     }
 
     public static async Task<ActivityLogMonthlySummaryWindow> CreateInstance(List<Guid> lineContentIds)
