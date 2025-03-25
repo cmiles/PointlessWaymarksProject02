@@ -538,7 +538,7 @@ public partial class ListFilterBuilderContext
     [NonBlockingCommand]
     public async Task AddShowInSearchSearchFilter()
     {
-        await AddSearchFilter(new BooleanListFilterFieldBuilder { FieldTitle = "ShowInSearch" });
+        await AddSearchFilter(new BooleanListFilterFieldBuilder { FieldTitle = "Show In Search" });
     }
 
     [NonBlockingCommand]
