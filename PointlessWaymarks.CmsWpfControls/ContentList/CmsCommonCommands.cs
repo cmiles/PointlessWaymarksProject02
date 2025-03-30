@@ -629,7 +629,7 @@ public partial class CmsCommonCommands
 
         StatusContext.Progress("Starting photo load.");
 
-        var supportedExtensions = PhotoGenerator.SupportedPhotoFileConversionExtensions();
+        var supportedExtensions = PhotoGenerator.SupportedPhotoFileExtensions();
         var filterExtensions = string.Join(";", supportedExtensions.Select(ext => $"*{ext.ToLower()}"));
         var fileFilter = $"Supported files ({filterExtensions})|{filterExtensions}";
 
@@ -660,17 +660,17 @@ public partial class CmsCommonCommands
 
         selectedFileInfos = selectedFileInfos.Where(x => x.Exists).ToList();
 
-        if (!selectedFileInfos.Any(PhotoGenerator.PhotoFileTypeIsSupportedOrConversionIsSupported))
+        if (!selectedFileInfos.Any(PhotoGenerator.PhotoFileTypeIsSupported))
         {
             await StatusContext.ToastError("None of the files appear to be supported file types...");
             return;
         }
 
-        if (selectedFileInfos.Any(x => !PhotoGenerator.PhotoFileTypeIsSupportedOrConversionIsSupported(x)))
+        if (selectedFileInfos.Any(x => !PhotoGenerator.PhotoFileTypeIsSupported(x)))
             await StatusContext.ToastWarning(
-                $"Skipping - not supported - {string.Join(", ", selectedFileInfos.Where(x => !PhotoGenerator.PhotoFileTypeIsSupportedOrConversionIsSupported(x)))}");
+                $"Skipping - not supported - {string.Join(", ", selectedFileInfos.Where(x => !PhotoGenerator.PhotoFileTypeIsSupported(x)))}");
 
-        var validFiles = selectedFileInfos.Where(PhotoGenerator.PhotoFileTypeIsSupportedOrConversionIsSupported)
+        var validFiles = selectedFileInfos.Where(PhotoGenerator.PhotoFileTypeIsSupported)
             .ToList();
 
         var loopCount = 0;

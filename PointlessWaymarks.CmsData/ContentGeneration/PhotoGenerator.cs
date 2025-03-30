@@ -61,14 +61,19 @@ public static class PhotoGenerator
         await htmlContext.WriteLocalHtml().ConfigureAwait(false);
     }
 
-    public static List<string> SupportedPhotoFileExtensions()
+    public static List<string> SupportedPhotoFileNativeExtensions()
     {
-        return new List<string> { ".JPG", ".JPEG" };
+        return [".JPG", ".JPEG"];
     }
 
     public static List<string> SupportedPhotoFileConversionExtensions()
     {
-        return new List<string> { ".WEBP", ".PNG", ".BMP", ".TIF" };
+        return [".BMP", ".PNG", ".TIF", ".WEBP"];
+    }
+
+    public static List<string> SupportedPhotoFileExtensions()
+    {
+        return SupportedPhotoFileNativeExtensions().Concat(SupportedPhotoFileConversionExtensions()).ToList();
     }
 
     public static bool PhotoFileTypeConversionIsSupported(FileInfo toCheck)
@@ -77,18 +82,17 @@ public static class PhotoGenerator
         return SupportedPhotoFileConversionExtensions().Contains(toCheck.Extension.ToUpperInvariant());
     }
 
+    public static bool PhotoFileTypeNativeIsSupported(FileInfo toCheck)
+    {
+        if (toCheck is not { Exists: true }) return false;
+        return SupportedPhotoFileNativeExtensions().Contains(toCheck.Extension.ToUpperInvariant());
+    }
+
     public static bool PhotoFileTypeIsSupported(FileInfo toCheck)
     {
         if (toCheck is not { Exists: true }) return false;
-        return SupportedPhotoFileExtensions().Contains(toCheck.Extension.ToUpperInvariant());
+        return PhotoFileTypeNativeIsSupported(toCheck) || PhotoFileTypeConversionIsSupported(toCheck);
     }
-
-    public static bool PhotoFileTypeIsSupportedOrConversionIsSupported(FileInfo toCheck)
-    {
-        if (toCheck is not { Exists: true }) return false;
-        return PhotoFileTypeIsSupported(toCheck) || PhotoFileTypeConversionIsSupported(toCheck);
-    }
-
 
     public static async Task<(GenerationReturn generationReturn, PhotoMetadata? metadata)> PhotoMetadataFromFile(
         FileInfo selectedFile, bool skipAdditionalTagDiscovery = false, IProgress<string>? progress = null)

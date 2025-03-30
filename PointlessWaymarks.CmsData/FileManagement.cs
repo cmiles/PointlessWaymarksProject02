@@ -424,12 +424,11 @@ public static class FileManagement
 
     public static async Task LogFileWriteAsync(string fileName)
     {
-        await Policy.Handle<Exception>().WaitAndRetryAsync(new[]
-            {
+        await Policy.Handle<Exception>().WaitAndRetryAsync([
                 TimeSpan.FromSeconds(1),
                 TimeSpan.FromSeconds(2),
                 TimeSpan.FromSeconds(4)
-            },
+            ],
             (_, _, retryCount, _) =>
                 Log.Debug("Sqlite Db Retry - LogFileWriteAsync {fileName}, Retry Count {retryCount}",
                     fileName,
@@ -1103,7 +1102,7 @@ public static class FileManagement
                 fileList.RemoveAll(x =>
                     x.Name.StartsWith(loopExistingContentDirectories.Name, StringComparison.OrdinalIgnoreCase));
                 fileList.RemoveAll(x => x.Name.StartsWith("Historic", StringComparison.OrdinalIgnoreCase));
-                fileList.RemoveAll(PhotoGenerator.PhotoFileTypeIsSupported);
+                fileList.RemoveAll(PhotoGenerator.PhotoFileTypeNativeIsSupported);
 
                 if (fileList.Any())
                     progress?.Report(

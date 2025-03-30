@@ -29,12 +29,12 @@ public static class ImageGenerator
 
     public static List<string> SupportedImageFileExtensions()
     {
-        return new List<string> { ".JPG", ".JPEG" };
+        return [".JPG", ".JPEG"];
     }
 
     public static List<string> SupportedImageFileConversionExtensions()
     {
-        return new List<string> { ".WEBP", ".PNG", ".BMP", ".TIF" };
+        return [".WEBP", ".PNG", ".BMP", ".TIF"];
     }
 
     public static bool ImageFileTypeConversionIsSupported(FileInfo toCheck)
