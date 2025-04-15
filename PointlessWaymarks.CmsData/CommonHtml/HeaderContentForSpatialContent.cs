@@ -28,6 +28,8 @@ public class HeaderContentForSpatialContent : IHeaderContentBasedAdditions
                 <script src="{UserSettingsSingleton.CurrentSettings().SiteResourcesUrl()}L.Control.Locate.min.js"></script>
                 <script src="{UserSettingsSingleton.CurrentSettings().SiteResourcesUrl()}leaflet.awesome-svg-markers.js"></script>
                 <link rel="stylesheet" href="{UserSettingsSingleton.CurrentSettings().SiteResourcesUrl()}leaflet.awesome-svg-markers.css" />
+                <link rel="stylesheet" href="{UserSettingsSingleton.CurrentSettings().SiteResourcesUrl()}leaflet.fullscreen.css" />
+                <script src="{UserSettingsSingleton.CurrentSettings().SiteResourcesUrl()}leaflet.fullscreen.min.js"></script>
                 <script src="{UserSettingsSingleton.CurrentSettings().SiteResourcesUrl()}pointless-waymarks-spatial-common.js"></script>
                 """;
     }

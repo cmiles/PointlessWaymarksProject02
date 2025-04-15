@@ -20,7 +20,7 @@ function openTopoMapLayer() {
             maxZoom: 22,
             id: "osmTopo",
             attribution:
-                'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+                'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org" target="_blank">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
         });
 }
 
@@ -30,7 +30,7 @@ function nationalBaseMapTopoImageMapLayer() {
             maxNativeZoom: 16,
             maxZoom: 22,
             id: "tnmImageTopo",
-            attribution: 'Tiles courtesy of the <a href="https://usgs.gov/">U.S. Geological Survey</a>'
+            attribution: 'Tiles courtesy of the <a href="https://usgs.gov/" target="_blank" >U.S. Geological Survey</a>'
         });
 }
 
@@ -40,7 +40,7 @@ function nationalBaseMapTopoMapLayer() {
             maxNativeZoom: 16,
             maxZoom: 22,
             id: "tnmTopo",
-            attribution: 'Tiles courtesy of the <a href="https://usgs.gov/">U.S. Geological Survey</a>'
+            attribution: 'Tiles courtesy of the <a href="https://usgs.gov/" target="_blank">U.S. Geological Survey</a>'
         });
 }
 
@@ -125,9 +125,9 @@ function popupHtmlContent(feature, linkUrl) {
             const isTitleLinkValid = titleLink && titleLink.trim() !== "" && titleLink !== currentUrlWithoutProtocol;
 
             if (isLinkUrlValid) {
-                popupHtml += `<a style="text-align: center;" href="${linkUrl}">${title}</a>`;
+                popupHtml += `<a style="text-align: center;" href="${linkUrl}" target="_blank">${title}</a>`;
             } else if (isTitleLinkValid) {
-                popupHtml += `<a style="text-align: center;" href="${titleLink}">${title}</a>`;
+                popupHtml += `<a style="text-align: center;" href="${titleLink}" target="_blank">${title}</a>`;
             } else {
                 popupHtml += `<p style="text-align: center;">${title}</p>`;
             }
@@ -211,7 +211,8 @@ async function standardMap(mapElement) {
         {
             layers: [tnmTopo],
             doubleClickZoom: false,
-            gestureHandling: true
+            gestureHandling: true,
+            fullscreenControl: true
         });
 
     let baseLayers = {
@@ -603,7 +604,7 @@ async function singlePointMapInitFromPointData(mapElement, pointData) {
 
 async function AddTextOrCircleMarkerToMap(map, pointToAdd) {
 
-    let popupContent = `<a href="${urlFromContent(pointToAdd)}">${pointToAdd.Content.Title}</a>`;
+    let popupContent = `<a href="${urlFromContent(pointToAdd)}" target="_blank">${pointToAdd.Content.Title}</a>`;
     if (pointToAdd.Content.MainPicture) {
         let response = await fetch(`/ContentData/${pointToAdd.Content.MainPicture}.json`);
         if (response.ok) {
@@ -646,7 +647,7 @@ async function AddMarkerToMap(map, pointToAdd, linkUrl) {
 
     let popupLinkUrl = (!linkUrl || linkUrl.trim() === "") ? urlFromContent(pointToAdd) : linkUrl;
 
-    let popupContent = `<a href="${popupLinkUrl}">${pointToAdd.Content.Title}</a>`;
+    let popupContent = `<a href="${popupLinkUrl}" target="_blank">${pointToAdd.Content.Title}</a>`;
     if (pointToAdd.Content.MainPicture) {
         let response = await fetch(`/ContentData/${pointToAdd.Content.MainPicture}.json`);
         if (response.ok) {
@@ -720,7 +721,7 @@ function AddOptionalLocationContentMarkerToMap(map, optionalLocationContent, con
 
     let popupLinkUrl = (!linkUrl || linkUrl.trim() === "") ? urlFromContent(optionalLocationContent) : linkUrl;
 
-    let popupContent = `<a href="${popupLinkUrl}">${optionalLocationContent.Content.Title}</a>`;
+    let popupContent = `<a href="${popupLinkUrl}" target="_blank">${optionalLocationContent.Content.Title}</a>`;
     if (optionalLocationContent.SmallPictureUrl) popupContent += `<p style="text-align: center;"><img src="${optionalLocationContent.SmallPictureUrl}"></img></p>`;
     if (optionalLocationContent.Content.Summary) popupContent += `<p>${optionalLocationContent.Content.Summary}</p>`;
 

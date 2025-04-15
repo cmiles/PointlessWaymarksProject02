@@ -47,6 +47,8 @@
         <None Remove="leaflet.js" />
         <None Remove="SiteResources\chart.min.js" />
         <None Remove="SiteResources\default.min.css" />
+        <None Remove="SiteResources\fullscreen%402x.png" />
+        <None Remove="SiteResources\fullscreen.png" />
         <None Remove="SiteResources\gsap.min.js" />
         <None Remove="SiteResources\highlight.min.js" />
         <None Remove="SiteResources\images\layers-2x.png" />
@@ -74,6 +76,9 @@
         <None Remove="SiteResources\leaflet-gesture-handling.min.js.map" />
         <None Remove="SiteResources\leaflet.awesome-svg-markers.css" />
         <None Remove="SiteResources\leaflet.awesome-svg-markers.js" />
+        <None Remove="SiteResources\leaflet.fullscreen.css" />
+        <None Remove="SiteResources\Leaflet.fullscreen.js" />
+        <None Remove="SiteResources\Leaflet.fullscreen.min.js" />
         <None Remove="SiteResources\leaflet.js.map" />
         <None Remove="SiteResources\location-arrow-solid.svg" />
         <None Remove="SiteResources\photoswipe-lightbox.esm.js" />
@@ -409,6 +414,8 @@
         <EmbeddedResource Include="favicon.ico" />
         <EmbeddedResource Include="SiteResources\chart.min.js" />
         <EmbeddedResource Include="SiteResources\default.min.css" />
+        <EmbeddedResource Include="SiteResources\fullscreen.png" />
+        <EmbeddedResource Include="SiteResources\fullscreen@2x.png" />
         <EmbeddedResource Include="SiteResources\gsap.min.js" />
         <EmbeddedResource Include="SiteResources\highlight.min.js" />
         <EmbeddedResource Include="SiteResources\images\layers-2x.png" />
@@ -437,6 +444,9 @@
         <EmbeddedResource Include="SiteResources\leaflet.awesome-svg-markers.css" />
         <EmbeddedResource Include="SiteResources\leaflet.awesome-svg-markers.js" />
         <EmbeddedResource Include="SiteResources\leaflet.css" />
+        <EmbeddedResource Include="SiteResources\leaflet.fullscreen.css" />
+        <EmbeddedResource Include="SiteResources\Leaflet.fullscreen.js" />
+        <EmbeddedResource Include="SiteResources\Leaflet.fullscreen.min.js" />
         <EmbeddedResource Include="SiteResources\leaflet.js" />
         <EmbeddedResource Include="SiteResources\leaflet.js.map" />
         <EmbeddedResource Include="SiteResources\location-arrow-solid.svg" />
