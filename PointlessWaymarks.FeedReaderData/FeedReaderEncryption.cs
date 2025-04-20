@@ -1,6 +1,4 @@
 using PointlessWaymarks.CommonTools;
-using PointlessWaymarks.VaultfuscationTools;
-using PointlessWaymarks.WindowsTools;
 
 namespace PointlessWaymarks.FeedReaderData;
 
@@ -35,7 +33,7 @@ public static class FeedReaderEncryption
     {
         var resourceKey = await FeedReaderBasicAuthEncryptionResourceKey(dbFileName);
         
-        var credentials = PasswordVaultTools.GetCredentials(resourceKey);
+        var credentials = CredentialVaultTools.GetCredentials("PwFeedReader", "BasicAuthEncryption", dbFileName);
         
         return credentials.password;
     }
