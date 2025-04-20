@@ -637,6 +637,7 @@
                             <TextBlock Text="{Binding DbEntry.DescentElevation, StringFormat='Descent: {0}\''}" />
                             <TextBlock Text="{Binding DbEntry.MaximumElevation, StringFormat='Max Elevation: {0}\''}" />
                             <TextBlock Text="{Binding DbEntry.MinimumElevation, StringFormat='Min Elevation: {0}\''}" />
+                            <TextBlock Text="{Binding DbEntry.ActivityType}" Visibility="{Binding DbEntry.ActivityType, Converter={StaticResource NullOrWhiteSpaceStringToCollapsed}}" />
                             <TextBlock Text="{Binding DbEntry, Converter={StaticResource LineRecordedOnToString}, StringFormat='Time: {0}'}" Visibility="{Binding DbEntry, Converter={StaticResource LineListHasRecordedOnVisibility}}" />
                         </WrapPanel>
                         <ContentPresenter Content="{StaticResource ContentListFolderAndCreatedAndUpdatedDisplay}" />
@@ -651,6 +652,14 @@
                                 </Style>
                             </WrapPanel.Resources>
                             <TextBlock Margin="0,3,4,0">Search:</TextBlock>
+                            <Button Content="{Binding DbEntry, Converter={StaticResource LineRecordedOnSearchLabel}}">
+                                <Button.InputBindings>
+                                    <MouseBinding
+                                        Command="{Binding ItemActions.SearchRecordedDatesForPhotoContentCommand}"
+                                        CommandParameter="{Binding DbEntry}"
+                                        MouseAction="LeftClick" />
+                                </Button.InputBindings>
+                            </Button>
                             <Button Content="{Binding DbEntry, Converter={StaticResource LineRecordedOnSearchLabel}}">
                                 <Button.InputBindings>
                                     <MouseBinding
