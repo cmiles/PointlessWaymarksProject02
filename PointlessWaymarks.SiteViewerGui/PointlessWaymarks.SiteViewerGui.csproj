@@ -29,8 +29,8 @@
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
         <PackageReference Include="Dragablz" Version="0.0.3.234" />
         <PackageReference Include="Jot" Version="2.1.17" />
-        <PackageReference Include="Metalama.Framework" Version="2025.0.10" />
-        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3179.45" />
+        <PackageReference Include="Metalama.Framework" Version="2025.1.9" />
+        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3296.44" />
         <PackageReference Include="Microsoft.Web.WebView2.DevToolsProtocolExtension" Version="1.0.2901" />
         <PackageReference Include="ModernWpfUI" Version="0.9.6" />
     </ItemGroup>
