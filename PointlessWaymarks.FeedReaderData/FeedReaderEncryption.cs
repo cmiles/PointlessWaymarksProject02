@@ -33,7 +33,7 @@ public static class FeedReaderEncryption
     {
         var resourceKey = await FeedReaderBasicAuthEncryptionResourceKey(dbFileName);
         
-        var credentials = CredentialVaultTools.GetCredentials("PwFeedReader", "BasicAuthEncryption", dbFileName);
+        var credentials = CredentialVaultTools.GetCredentials("PwFeedReader", "BasicAuthEncryption", await FeedReaderBasicAuthEncryptionResourceKey(dbFileName));
         
         return credentials.password;
     }

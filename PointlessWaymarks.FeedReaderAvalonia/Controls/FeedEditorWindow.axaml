@@ -1,0 +1,23 @@
+<Window
+    x:Class="PointlessWaymarks.FeedReaderAvalonia.Controls.FeedEditorWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:PointlessWaymarks.FeedReaderAvalonia.Controls"
+    xmlns:status="clr-namespace:PointlessWaymarks.AvaloniaCommon.Status;assembly=PointlessWaymarks.AvaloniaCommon"
+    xmlns:windowScreenShot="clr-namespace:PointlessWaymarks.AvaloniaCommon.WindowScreenShot;assembly=PointlessWaymarks.AvaloniaCommon"
+    Title="Feed Editor"
+    Width="700"
+    Height="800"
+    x:DataType="controls:FeedEditorWindow">
+    <Grid>
+        <Grid>
+            <controls:FeedEditorControl DataContext="{Binding FeedContext}" />
+            <status:StatusControl Grid.Row="0" DataContext="{Binding StatusContext}" />
+            <windowScreenShot:WindowScreenShotControl
+                Width="40"
+                Margin="2,2,2,6"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Bottom" />
+        </Grid>
+    </Grid>
+</Window>

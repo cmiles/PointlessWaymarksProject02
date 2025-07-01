@@ -1,9 +1,10 @@
-using PointlessWaymarks.LlamaAspects;
+
+using Metalama.Patterns.Observability;
 
 namespace PointlessWaymarks.FeedReaderData.Models;
 
-[NotifyPropertyChanged]
-public class SavedFeedItem
+[Observable]
+public partial class SavedFeedItem
 {
     public string? Author { get; set; } = string.Empty;
     public string? Content { get; set; } = string.Empty;

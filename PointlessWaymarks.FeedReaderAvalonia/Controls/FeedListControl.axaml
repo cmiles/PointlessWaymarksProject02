@@ -1,0 +1,63 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="using:PointlessWaymarks.FeedReaderAvalonia.Controls"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="PointlessWaymarks.FeedReaderAvalonia.Controls.FeedListControl">
+    <Design.DataContext>
+        <controls:FeedListControlViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*">
+        <Grid ColumnDefinitions="*,Auto,Auto" Margin="5">
+            <TextBox Grid.Column="0" 
+                     Text="{Binding FilterText}"
+                     Watermark="Filter feeds..."
+                     Margin="0,0,5,0"/>
+            
+            <ComboBox Grid.Column="1"
+                      Items="{Binding SortOptions}"
+                      SelectedItem="{Binding SelectedSortOption}"
+                      Margin="0,0,5,0"
+                      MinWidth="120"/>
+            
+            <CheckBox Grid.Column="2"
+                      Content="Show Active Only"
+                      IsChecked="{Binding ShowActiveOnly}"/>
+        </Grid>
+
+        <ListView Grid.Row="1"
+                  Items="{Binding Feeds}"
+                  SelectedItem="{Binding SelectedFeed}"
+                  Margin="5">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                        <Image Grid.Column="0"
+                               Source="{Binding Favicon}"
+                               Width="16"
+                               Height="16"
+                               Margin="0,0,10,0"/>
+                        
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="{Binding Name}"
+                                     FontWeight="Bold"/>
+                            <TextBlock Text="{Binding Url}"
+                                     Opacity="0.7"/>
+                        </StackPanel>
+                        
+                        <TextBlock Grid.Column="2"
+                                 Text="{Binding LastUpdated, StringFormat='Last Updated: {0:g}'}"
+                                 Margin="10,0"
+                                 Opacity="0.7"/>
+                        
+                        <TextBlock Grid.Column="3"
+                                 Text="{Binding ItemsCount, StringFormat='Items: {0}'}"
+                                 Opacity="0.7"/>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </Grid>
+</UserControl> 

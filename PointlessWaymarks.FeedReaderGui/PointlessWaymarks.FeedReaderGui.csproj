@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
@@ -22,13 +22,14 @@
     <ItemGroup>
         <PackageReference Include="FluentScheduler" Version="5.5.1" />
         <PackageReference Include="Jot" Version="2.1.17" />
-        <PackageReference Include="Metalama.Framework" Version="2025.0.10" />
-        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3179.45" />
+        <PackageReference Include="Metalama.Framework" Version="2025.1.9" />
+        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3296.44" />
         <PackageReference Include="Microsoft.Web.WebView2.DevToolsProtocolExtension" Version="1.0.2901" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\PointlessWaymarks.FeedReaderData\PointlessWaymarks.FeedReaderData.csproj" />
+        <ProjectReference Include="..\PointlessWaymarksTools\PointlessWaymarks.WindowsTools\PointlessWaymarks.WindowsTools.csproj" />
         <ProjectReference Include="..\PointlessWaymarksTools\PointlessWaymarks.WpfCommon\PointlessWaymarks.WpfCommon.csproj" />
     </ItemGroup>
 

@@ -1,0 +1,51 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PointlessWaymarks.FeedReaderAvalonia"
+        xmlns:controls="clr-namespace:PointlessWaymarks.FeedReaderAvalonia.Controls"
+        xmlns:markdownDisplay="clr-namespace:PointlessWaymarks.AvaloniaToolkit.MarkdownDisplay;assembly=PointlessWaymarks.AvaloniaToolkit"
+        xmlns:programUpdateMessage="clr-namespace:PointlessWaymarks.AvaloniaToolkit.ProgramUpdateMessage;assembly=PointlessWaymarks.AvaloniaToolkit"
+        xmlns:status="clr-namespace:PointlessWaymarks.AvaloniaToolkit.Status;assembly=PointlessWaymarks.AvaloniaToolkit"
+        xmlns:windowScreenShot="clr-namespace:PointlessWaymarks.AvaloniaToolkit.WindowScreenShot;assembly=PointlessWaymarks.AvaloniaToolkit"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="900"
+        x:Class="PointlessWaymarks.FeedReaderAvalonia.MainWindow"
+        Title="{Binding InfoTitle}"
+        Width="1200" Height="900">
+    <Grid>
+        <TabControl>
+            <TabItem Header="Feed Reader">
+                <controls:FeedItemListControl DataContext="{Binding FeedItemListTabContext}" />
+            </TabItem>
+            <TabItem Header="Feeds">
+                <controls:FeedListControl DataContext="{Binding FeedListTabContext}" />
+            </TabItem>
+            <TabItem Header="Saved Items">
+                <controls:SavedFeedItemListControl DataContext="{Binding SavedFeedItemListTabContext}" />
+            </TabItem>
+            <TabItem Header="App Settings">
+                <controls:AppSettingsControl DataContext="{Binding AppSettingsTabContext}" />
+            </TabItem>
+            <TabItem Header="About/Help">
+                <markdownDisplay:HelpDisplayControl DataContext="{Binding HelpTabContext}" />
+            </TabItem>
+        </TabControl>
+        <Menu Margin="400,2,4,0" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <MenuItem Width="90" FontWeight="Bold" Header="File">
+                <MenuItem Header="Choose New DB" Command="{Binding PickNewDatabaseCommand}" />
+                <MenuItem Header="Start New Database" Command="{Binding NewDatabaseCommand}" />
+            </MenuItem>
+        </Menu>
+        <programUpdateMessage:ProgramUpdateMessageControl
+            Width="400"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Top"
+            DataContext="{Binding UpdateMessageContext}" />
+        <status:StatusControl DataContext="{Binding StatusContext}" />
+        <windowScreenShot:WindowScreenShotControl
+            Width="40"
+            Margin="2"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Bottom" />
+    </Grid>
+</Window>

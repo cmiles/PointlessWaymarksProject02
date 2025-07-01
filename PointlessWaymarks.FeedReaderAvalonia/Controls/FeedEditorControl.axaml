@@ -1,0 +1,95 @@
+<UserControl
+    x:Class="PointlessWaymarks.FeedReaderAvalonia.Controls.FeedEditorControl"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:boolDataEntry="clr-namespace:PointlessWaymarks.AvaloniaCommon.BoolDataEntry;assembly=PointlessWaymarks.AvaloniaCommon"
+    xmlns:controls="using:PointlessWaymarks.FeedReaderAvalonia.Controls"
+    xmlns:conversionDataEntry="clr-namespace:PointlessWaymarks.AvaloniaCommon.ConversionDataEntry;assembly=PointlessWaymarks.AvaloniaCommon"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:gb="using:GroupBox.Avalonia.Controls"
+    xmlns:markdownDisplay="clr-namespace:PointlessWaymarks.AvaloniaCommon.MarkdownDisplay;assembly=PointlessWaymarks.AvaloniaCommon"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:stringDataEntry="clr-namespace:PointlessWaymarks.AvaloniaCommon.StringDataEntry;assembly=PointlessWaymarks.AvaloniaCommon"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="controls:FeedEditorContext"
+    mc:Ignorable="d">
+    <TabControl>
+        <!--  Editor Tab  -->
+        <TabItem Header="Editor">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <StackPanel>
+                    <stringDataEntry:StringDataEntryControl Margin="0,8,8,0" DataContext="{Binding UserNameEntry}" />
+                    <stringDataEntry:StringDataEntryMultiLineControl Margin="0,8,8,0" DataContext="{Binding UserNoteEntry}" />
+                    <stringDataEntry:StringDataEntryMultiLineControl Margin="0,8,8,0" DataContext="{Binding UserTagsEntry}" />
+                    <conversionDataEntry:ConversionDataEntryControl
+                        Margin="0,8,8,0"
+                        HorizontalAlignment="Left"
+                        DataContext="{Binding UserAutoMarkAfterDaysEntry}"
+                        ValueTextBoxWidth="60" />
+                    <conversionDataEntry:ConversionDataEntryControl
+                        Margin="0,8,8,0"
+                        HorizontalAlignment="Left"
+                        DataContext="{Binding UserAutoMarkReadMoreThanItemsEntry}"
+                        ValueTextBoxWidth="60" />
+                    <boolDataEntry:BoolDataEntryControl Margin="6,18,8,0" DataContext="{Binding UserUseBasicAuthEntry}" />
+                    <stringDataEntry:StringDataEntryControl Margin="0,8,8,0" DataContext="{Binding UserBasicAuthUsernameEntry}" />
+                    <stringDataEntry:StringDataEntryControl Margin="0,8,8,0" DataContext="{Binding UserBasicAuthPasswordEntry}" />
+                    <StackPanel Margin="24,24,16,8" Orientation="Vertical">
+                        <TextBlock Text="{Binding DbReaderFeedItem.FeedLastUpdatedDate, StringFormat='Feed Last Updated On: {0}', TargetNullValue='Feed Last Updated On: Unknown'}" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding DbReaderFeedItem.LastSuccessfulUpdate, StringFormat='Pointless Waymarks Last Successful Update: {0}', TargetNullValue='Pointless Waymarks Last Successful Update: Never'}" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding DbReaderFeedItem.CreatedOn, StringFormat='Pointless Waymarks Feed Entry Created On: {0}'}" TextWrapping="Wrap" />
+                        <TextBlock>
+                            <TextBlock.Text>
+                                <Binding Path="DbReadFeedItems" StringFormat="Current - Read {0}, Unread {1}, Kept {2}" />
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </StackPanel>
+                    <stringDataEntry:StringDataEntryMultiLineControl Margin="0,8,8,0" DataContext="{Binding UserUrlEntry}" />
+                </StackPanel>
+                <gb:GroupBox Grid.Row="1" Margin="4,12,6,4">
+                    <gb:GroupBox.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock VerticalAlignment="Center" FontWeight="Bold">URL Parse Result</TextBlock>
+                            <Button
+                                Margin="8,0,0,0"
+                                VerticalAlignment="Center"
+                                Command="{Binding UpdateUrlCheckCommand}">
+                                Refresh
+                            </Button>
+                        </StackPanel>
+                    </gb:GroupBox.Header>
+                    <Grid Margin="4">
+                        <TextBox
+                            VerticalAlignment="Stretch"
+                            AcceptsReturn="True"
+                            IsReadOnly="True"
+                            Text="{Binding UrlCheckMessage}"
+                            TextWrapping="Wrap" />
+                    </Grid>
+                </gb:GroupBox>
+                <Border Grid.Row="2" Margin="4,4,4,4">
+                    <WrapPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                        <Button
+                            Margin="4"
+                            Command="{Binding SaveAndCloseCommand}"
+                            Content="Save and Close" />
+                        <Button
+                            Margin="4"
+                            Command="{Binding SaveCommand}"
+                            Content="_Save" />
+                    </WrapPanel>
+                </Border>
+            </Grid>
+        </TabItem>
+        <!--  Help and Notes Tab  -->
+        <TabItem Header="Help and Notes">
+            <markdownDisplay:HelpDisplayControl DataContext="{Binding HelpContext}" />
+        </TabItem>
+    </TabControl>
+</UserControl>
