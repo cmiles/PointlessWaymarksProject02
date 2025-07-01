@@ -35,6 +35,7 @@
     <lineList:LineHasRecordedOnVisibilityConverter x:Key="LineListHasRecordedOnVisibility" />
     <lineList:LineRecordedOnSearchLabelConverter x:Key="LineRecordedOnSearchLabel" />
     <lineList:LineRecordedOnToStringConverter x:Key="LineRecordedOnToString" />
+    <lineList:LineHasRecordedOnVisibilityConverter x:Key="LineHasRecordedOnVisibility" />
     <pointList:MapMarkerColorConverter x:Key="MapMarkerColor" />
     <wpfHelpers:DbEntryHasLocationToCollapsedVisibilityConverter x:Key="DbEntryHasLocationToCollapsedVisibility" />
     <wpfConverter:MetersToFeetValueConverter x:Key="MetersToFeet" />
@@ -639,6 +640,8 @@
                             <TextBlock Text="{Binding DbEntry.MinimumElevation, StringFormat='Min Elevation: {0}\''}" />
                             <TextBlock Text="{Binding DbEntry.ActivityType}" Visibility="{Binding DbEntry.ActivityType, Converter={StaticResource NullOrWhiteSpaceStringToCollapsed}}" />
                             <TextBlock Text="{Binding DbEntry, Converter={StaticResource LineRecordedOnToString}, StringFormat='Time: {0}'}" Visibility="{Binding DbEntry, Converter={StaticResource LineListHasRecordedOnVisibility}}" />
+                            <TextBlock Text="{Binding DbEntry.RecordingStartedOn, StringFormat='Started On: {0:g}'}" Visibility="{Binding DbEntry.RecordingStartedOn, Converter={StaticResource NullToCollapsedVisibility}}"></TextBlock>
+                            <TextBlock Text="{Binding DbEntry.RecordingEndedOn, StringFormat='Ended On: {0:g}'}" Visibility="{Binding DbEntry.RecordingEndedOn, Converter={StaticResource NullToCollapsedVisibility}}"></TextBlock>
                         </WrapPanel>
                         <ContentPresenter Content="{StaticResource ContentListFolderAndCreatedAndUpdatedDisplay}" />
                         <WrapPanel
@@ -652,18 +655,18 @@
                                 </Style>
                             </WrapPanel.Resources>
                             <TextBlock Margin="0,3,4,0">Search:</TextBlock>
-                            <Button Content="{Binding DbEntry, Converter={StaticResource LineRecordedOnSearchLabel}}">
+                            <Button Content="{Binding DbEntry, Converter={StaticResource LineRecordedOnSearchLabel}}" Visibility="{Binding DbEntry, Converter={StaticResource LineHasRecordedOnVisibility}}">
                                 <Button.InputBindings>
                                     <MouseBinding
-                                        Command="{Binding ItemActions.SearchRecordedDatesForPhotoContentCommand}"
+                                        Command="{Binding ItemActions.SearchRecordedOnDaysForPhotoContentCommand}"
                                         CommandParameter="{Binding DbEntry}"
                                         MouseAction="LeftClick" />
                                 </Button.InputBindings>
                             </Button>
-                            <Button Content="{Binding DbEntry, Converter={StaticResource LineRecordedOnSearchLabel}}">
+                            <Button Content="Photos from Started/Ended On +/- 5'" Visibility="{Binding DbEntry, Converter={StaticResource LineHasRecordedOnVisibility}}">
                                 <Button.InputBindings>
                                     <MouseBinding
-                                        Command="{Binding ItemActions.SearchRecordedDatesForPhotoContentCommand}"
+                                        Command="{Binding ItemActions.SearchRecordedOnForPhotoContentCommand}"
                                         CommandParameter="{Binding DbEntry}"
                                         MouseAction="LeftClick" />
                                 </Button.InputBindings>
@@ -921,6 +924,12 @@
                                 <Button.Content>
                                     <TextBlock Text="{Binding DbEntry.PhotoCreatedOn, StringFormat='Photo: {0}', TargetNullValue='(No Photo Date)'}" />
                                 </Button.Content>
+                            </Button>
+                            <Button
+                                Command="{Binding DataContext.ContentUsingSelectedCommand, RelativeSource={RelativeSource AncestorType={x:Type ListBox}}}"
+                                CommandParameter="{Binding .}"
+                                Visibility="{Binding DbEntry, Converter={StaticResource DbEntryHasLocationToCollapsedVisibility}}">
+                                Content Using
                             </Button>
                             <Button ToolTip="Camera Make - click to search for other photos with this Camera Make">
                                 <Button.InputBindings>

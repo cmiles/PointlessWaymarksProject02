@@ -35,7 +35,7 @@ public static class RelatedContentReferenceHelpers
             if (trail.StartingPointContentId is not null) toAdd.Add(trail.StartingPointContentId.Value);
             if (trail.EndingPointContentId is not null) toAdd.Add(trail.EndingPointContentId.Value);
 
-            toSearch += trail.Bikes + trail.BikesNote + trail.Dogs + trail.DogsNote + trail.Fees + trail.FeesNote +
+            toSearch += trail.BikesNote + trail.DogsNote + trail.FeesNote +
                         trail.LocationArea + trail.OtherDetails + trail.TrailShape;
         }
 
@@ -73,6 +73,158 @@ public static class RelatedContentReferenceHelpers
         var dbEntries = toAdd.Select(x => new GenerationRelatedContent { ContentOne = sourceGuid, ContentTwo = x });
 
         await db.GenerationRelatedContents.AddRangeAsync(dbEntries).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     A costly heavy-handed database query that will find a given contentId in any of the content tables.
+    /// </summary>
+    /// <param name="contentId"></param>
+    /// <param name="progress"></param>
+    /// <returns></returns>
+    public static async Task<List<Guid>> FindContentUsing(Guid contentId, IProgress<string> progress)
+    {
+        var db = await Db.Context();
+
+        var returnList = new List<Guid>();
+
+        var guidString = contentId.ToString();
+
+        progress.Report("Searching File Content...");
+        var fileContentResults = (await db.FileContents.Where(x =>
+                (x.MainPicture != null && x.MainPicture.Value == contentId) ||
+                (x.BodyContent != null && x.BodyContent.Contains(guidString)) ||
+                (x.Summary != null && x.Summary.Contains(guidString)) ||
+                (x.UpdateNotes != null && x.UpdateNotes.Contains(guidString)))
+            .Select(x => x.ContentId).ToListAsync()).Where(x => x != contentId).ToList();
+        if(fileContentResults.Any()) progress.Report($"Found {fileContentResults.Count} references in Files");
+        returnList.AddRange(fileContentResults);
+        progress.Report($"Found {returnList.Distinct().Count()} total references after searching Files");
+
+        progress.Report("Searching GeoJson Content...");
+        var geoJsonContentResults = (await db.GeoJsonContents.Where(x =>
+                (x.MainPicture != null && x.MainPicture.Value == contentId) ||
+                (x.BodyContent != null && x.BodyContent.Contains(guidString)) ||
+                (x.Summary != null && x.Summary.Contains(guidString)) ||
+                (x.UpdateNotes != null && x.UpdateNotes.Contains(guidString)) ||
+                (x.GeoJson != null && x.GeoJson.Contains(guidString)))
+            .Select(x => x.ContentId).ToListAsync()).Where(x => x != contentId).ToList();
+        if(geoJsonContentResults.Any()) progress.Report($"Found {geoJsonContentResults.Count} references in GeoJson");
+        returnList.AddRange(geoJsonContentResults);
+        progress.Report($"Found {returnList.Distinct().Count()} total references after searching GeoJson");
+
+        progress.Report("Searching Line Content...");
+        var lineContentResults = (await db.LineContents.Where(x =>
+                (x.MainPicture != null && x.MainPicture.Value == contentId) ||
+                (x.BodyContent != null && x.BodyContent.Contains(guidString)) ||
+                (x.Summary != null && x.Summary.Contains(guidString)) ||
+                (x.UpdateNotes != null && x.UpdateNotes.Contains(guidString)))
+            .Select(x => x.ContentId).ToListAsync()).Where(x => x != contentId).ToList();
+        if(lineContentResults.Any()) progress.Report($"Found {lineContentResults.Count} references in Lines");
+        returnList.AddRange(lineContentResults);
+        progress.Report($"Found {returnList.Distinct().Count()} total references after searching Lines");
+
+        progress.Report("Searching Link Content...");
+        var linkContentResults = (await db.LinkContents.Where(x =>
+                (x.Comments != null && x.Comments.Contains(guidString)) ||
+                (x.Description != null && x.Description.Contains(guidString)))
+            .Select(x => x.ContentId).ToListAsync()).Where(x => x != contentId).ToList();
+        if(linkContentResults.Any()) progress.Report($"Found {linkContentResults.Count} references in Links");
+        returnList.AddRange(linkContentResults);
+        progress.Report($"Found {returnList.Distinct().Count()} total references after searching Links");
+
+        progress.Report("Searching Map Components...");
+        var mapComponentResults = (await db.MapComponents.Where(x =>
+                (x.Summary != null && x.Summary.Contains(guidString)) ||
+                (x.UpdateNotes != null && x.UpdateNotes.Contains(guidString)))
+            .Select(x => x.ContentId).ToListAsync()).Where(x => x != contentId).ToList();
+        if(mapComponentResults.Any()) progress.Report($"Found {mapComponentResults.Count} references in Map Components");
+        returnList.AddRange(mapComponentResults);
+        progress.Report($"Found {returnList.Distinct().Count()} total references after searching Map Components");
+
+        progress.Report("Searching Map Component Elements...");
+        var mapElementResults = (await db.MapComponentElements.Where(x => x.ElementContentId == contentId)
+            .Select(x => x.MapComponentContentId).ToListAsync()).Where(x => x != contentId).ToList();
+        if(mapElementResults.Any()) progress.Report($"Found {mapElementResults.Count} references in Map Elements");
+        returnList.AddRange(mapElementResults);
+        progress.Report($"Found {returnList.Distinct().Count()} total references after searching Map Elements");
+
+        progress.Report("Searching Note Content...");
+        var noteContentResults = (await db.NoteContents.Where(x =>
+                (x.BodyContent != null && x.BodyContent.Contains(guidString)) ||
+                (x.Summary != null && x.Summary.Contains(guidString)))
+            .Select(x => x.ContentId).ToListAsync()).Where(x => x != contentId).ToList();
+        if(noteContentResults.Any()) progress.Report($"Found {noteContentResults.Count} references in Notes");
+        returnList.AddRange(noteContentResults);
+        progress.Report($"Found {returnList.Distinct().Count()} total references after searching Notes");
+
+        progress.Report("Searching Photo Content...");
+        var photoContentResults = (await db.PhotoContents.Where(x =>
+                (x.MainPicture != null && x.MainPicture.Value == contentId) ||
+                (x.BodyContent != null && x.BodyContent.Contains(guidString)) ||
+                (x.Summary != null && x.Summary.Contains(guidString)) ||
+                (x.UpdateNotes != null && x.UpdateNotes.Contains(guidString)))
+            .Select(x => x.ContentId).ToListAsync()).Where(x => x != contentId).ToList();
+        if(photoContentResults.Any()) progress.Report($"Found {photoContentResults.Count} references in Photos");
+        returnList.AddRange(photoContentResults);
+        progress.Report($"Found {returnList.Distinct().Count()} total references after searching Photos");
+
+        progress.Report("Searching Point Content...");
+        var pointContentResults = (await db.PointContents.Where(x =>
+                (x.MainPicture != null && x.MainPicture.Value == contentId) ||
+                (x.BodyContent != null && x.BodyContent.Contains(guidString)) ||
+                (x.Summary != null && x.Summary.Contains(guidString)) ||
+                (x.UpdateNotes != null && x.UpdateNotes.Contains(guidString)))
+            .Select(x => x.ContentId).ToListAsync()).Where(x => x != contentId).ToList();
+        if(pointContentResults.Any()) progress.Report($"Found {pointContentResults.Count} references in Points");
+        returnList.AddRange(pointContentResults);
+        progress.Report($"Found {returnList.Distinct().Count()} total references after searching Points");
+
+        progress.Report("Searching Post Content...");
+        var postContentResults = (await db.PostContents.Where(x =>
+                (x.MainPicture != null && x.MainPicture.Value == contentId) ||
+                (x.BodyContent != null && x.BodyContent.Contains(guidString)) ||
+                (x.Summary != null && x.Summary.Contains(guidString)) ||
+                (x.UpdateNotes != null && x.UpdateNotes.Contains(guidString)))
+            .Select(x => x.ContentId).ToListAsync()).Where(x => x != contentId).ToList();
+        if(postContentResults.Any()) progress.Report($"Found {postContentResults.Count} references in Posts");
+        returnList.AddRange(postContentResults);
+        progress.Report($"Found {returnList.Distinct().Count()} total references after searching Posts");
+
+        progress.Report("Searching Trail Content...");
+        var trailContentResults = (await db.TrailContents.Where(x =>
+                (x.MainPicture != null && x.MainPicture.Value == contentId) ||
+                (x.LineContentId != null && x.LineContentId.Value == contentId) ||
+                (x.MapComponentId != null && x.MapComponentId.Value == contentId) ||
+                (x.StartingPointContentId != null && x.StartingPointContentId.Value == contentId) ||
+                (x.EndingPointContentId != null && x.EndingPointContentId.Value == contentId) ||
+                (x.BikesNote != null && x.BikesNote.Contains(guidString)) ||
+                (x.DogsNote != null && x.DogsNote.Contains(guidString)) ||
+                (x.FeesNote != null && x.FeesNote.Contains(guidString)) ||
+                (x.LocationArea != null && x.LocationArea.Contains(guidString)) ||
+                (x.OtherDetails != null && x.OtherDetails.Contains(guidString)) ||
+                (x.TrailShape != null && x.TrailShape.Contains(guidString)) ||
+                (x.BodyContent != null && x.BodyContent.Contains(guidString)) ||
+                (x.Summary != null && x.Summary.Contains(guidString)) ||
+                (x.UpdateNotes != null && x.UpdateNotes.Contains(guidString)))
+            .Select(x => x.ContentId).ToListAsync()).Where(x => x != contentId).ToList();
+        if(trailContentResults.Any()) progress.Report($"Found {trailContentResults.Count} references in Trails");
+        returnList.AddRange(trailContentResults);
+        progress.Report($"Found {returnList.Distinct().Count()} total references after searching Trails");
+
+        progress.Report("Searching Video Content...");
+        var videoContentResults = (await db.VideoContents.Where(x =>
+                (x.MainPicture != null && x.MainPicture.Value == contentId) ||
+                (x.BodyContent != null && x.BodyContent.Contains(guidString)) ||
+                (x.Summary != null && x.Summary.Contains(guidString)) ||
+                (x.UpdateNotes != null && x.UpdateNotes.Contains(guidString)))
+            .Select(x => x.ContentId).ToListAsync()).Where(x => x != contentId).ToList();
+        if(videoContentResults.Any()) progress.Report($"Found {videoContentResults.Count} references in Videos");
+        returnList.AddRange(videoContentResults);
+        progress.Report($"Found {returnList.Distinct().Count()} total references after searching Videos");
+
+        var distinctList = returnList.Distinct().ToList();
+        progress.Report($"Found {distinctList.Count} total distinct references.");
+        return distinctList;
     }
 
     public static async Task GenerateRelatedContentDbTable(DateTime generationVersion,

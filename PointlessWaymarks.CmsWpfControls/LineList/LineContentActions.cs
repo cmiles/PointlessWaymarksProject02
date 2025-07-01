@@ -239,7 +239,7 @@ public partial class LineContentActions : IContentActions<LineContent>
     }
 
     [NonBlockingCommand]
-    public async Task SearchRecordedDatesForPhotoContent(LineContent? lineContent)
+    public async Task SearchRecordedOnDaysForPhotoContent(LineContent? lineContent)
     {
         if (lineContent == null)
         {
@@ -247,8 +247,39 @@ public partial class LineContentActions : IContentActions<LineContent>
             return;
         }
 
-        await PhotoContentActions.RunReport(async () => await SearchRecordedDatesForPhotoContentFilter(lineContent),
-            $"Line {lineContent.Title ?? string.Empty} - {SearchRecordedDatesForPhotoContentDateRange(lineContent).start:M/d/yyyy hh:mm:ss tt} to {SearchRecordedDatesForPhotoContentDateRange(lineContent).end:M/d/yyyy hh:mm:ss tt}");
+        if (lineContent.RecordingStartedOnUtc is null || lineContent.RecordingEndedOnUtc is null)
+        {
+            await StatusContext.ToastError(
+                "Line doesn't have Recorded On dates to work with? - Can not search for Photo Content");
+            return;
+        }
+
+
+        var dateSearchStart = lineContent.RecordingStartedOnUtc.Value.ToLocalTime().Date.ToUniversalTime();
+        var dateSearchEnd = lineContent.RecordingEndedOnUtc.Value.ToLocalTime().Date.AddDays(1).ToUniversalTime();
+
+        await PhotoContentActions.RunReport(async () => await SearchRecordedOnDaysForPhotoContentFilter(lineContent),
+            $"Line {lineContent.Title ?? string.Empty} - {dateSearchStart.ToLocalTime():M/d/yyyy} to {dateSearchEnd.ToLocalTime():M/d/yyyy}");
+    }
+
+    [NonBlockingCommand]
+    public async Task SearchRecordedOnForPhotoContent(LineContent? lineContent)
+    {
+        if (lineContent == null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        if (lineContent.RecordingStartedOnUtc is null || lineContent.RecordingEndedOnUtc is null)
+        {
+            await StatusContext.ToastError(
+                "Line doesn't have Recorded On dates to work with? - Can not search for Photo Content");
+            return;
+        }
+            
+        await PhotoContentActions.RunReport(async () => await SearchRecordedOnForPhotoContentFilter(lineContent),
+            $"Line {lineContent.Title ?? string.Empty} - {lineContent.RecordingStartedOnUtc.Value.AddMinutes(-5):M/d/yyyy hh:mm:ss tt} to {lineContent.RecordingEndedOnUtc.Value.AddMinutes(5):M/d/yyyy hh:mm:ss tt}");
     }
 
     /// <summary>
@@ -267,17 +298,7 @@ public partial class LineContentActions : IContentActions<LineContent>
         return (dateSearchStart, dateSearchEnd);
     }
 
-    public static (DateTime start, DateTime end) SearchRecordedDatesForPhotoContentDateRangeUtc(LineContent content)
-    {
-        var dateSearchStart = content.RecordingStartedOnUtc?.Date ??
-                              content.RecordingEndedOnUtc?.Date ?? DateTime.Now.Date;
-        var dateSearchEnd = content.RecordingEndedOnUtc?.Date.AddDays(1) ??
-                            content.RecordingStartedOnUtc?.Date.AddDays(1) ?? DateTime.Now.Date.AddDays(1);
-
-        return (dateSearchStart, dateSearchEnd);
-    }
-
-    public async Task<List<object>> SearchRecordedDatesForPhotoContentFilter(LineContent? content)
+    public async Task<List<object>> SearchRecordedOnForPhotoContentFilter(LineContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -287,13 +308,14 @@ public partial class LineContentActions : IContentActions<LineContent>
             return [];
         }
 
-        if (content.RecordingStartedOn == null && content.RecordingEndedOn == null)
+        if (content.RecordingStartedOnUtc == null || content.RecordingEndedOnUtc == null)
         {
-            await StatusContext.ToastError("Line doesn't have Recorded On dates to work with?");
+            await StatusContext.ToastError("Line doesn't have Recorded On UTC dates to work with?");
             return [];
         }
 
-        var dateSearchRange = SearchRecordedDatesForPhotoContentDateRangeUtc(content);
+        var dateSearchStart = content.RecordingStartedOnUtc.Value.AddMinutes(-5);
+        var dateSearchEnd = content.RecordingEndedOnUtc.Value.AddMinutes(5);
 
         var db = await Db.Context();
 
@@ -301,8 +323,38 @@ public partial class LineContentActions : IContentActions<LineContent>
             (await db.PhotoContents
                 .Where(x =>
                     x.PhotoCreatedOnUtc != null
-                        ? x.PhotoCreatedOnUtc >= dateSearchRange.start && x.PhotoCreatedOnUtc <= dateSearchRange.end
-                        : x.PhotoCreatedOn >= dateSearchRange.start && x.PhotoCreatedOn <= dateSearchRange.end)
+                        ? x.PhotoCreatedOnUtc >= dateSearchStart && x.PhotoCreatedOnUtc <= dateSearchEnd
+                        : x.PhotoCreatedOn >= dateSearchStart.ToLocalTime() && x.PhotoCreatedOn <= dateSearchEnd.ToLocalTime())
+                .ToListAsync()).Cast<object>().ToList();
+    }
+
+    public async Task<List<object>> SearchRecordedOnDaysForPhotoContentFilter(LineContent? content)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (content == null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return [];
+        }
+
+        if (content.RecordingStartedOnUtc == null || content.RecordingEndedOnUtc == null)
+        {
+            await StatusContext.ToastError("Line doesn't have Recorded On UTC dates to work with?");
+            return [];
+        }
+
+        var dateSearchStart = content.RecordingStartedOnUtc.Value.ToLocalTime().Date.ToUniversalTime();
+        var dateSearchEnd = content.RecordingEndedOnUtc.Value.ToLocalTime().Date.AddDays(1).ToUniversalTime();
+
+        var db = await Db.Context();
+
+        return
+            (await db.PhotoContents
+                .Where(x =>
+                    x.PhotoCreatedOnUtc != null
+                        ? x.PhotoCreatedOnUtc >= dateSearchStart && x.PhotoCreatedOnUtc <= dateSearchEnd
+                        : x.PhotoCreatedOn >= dateSearchStart.ToLocalTime() && x.PhotoCreatedOn <= dateSearchEnd.ToLocalTime())
                 .ToListAsync()).Cast<object>().ToList();
     }
 

@@ -346,7 +346,6 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
         return item;
     }
 
-
     public static async Task<List<object>> PhotoTakenOnFilter(PhotoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -364,7 +363,6 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
                 .Where(x => x.PhotoCreatedOn >= dateTimeAfter && x.PhotoCreatedOn < dateTimeBefore).ToListAsync())
             .Cast<object>().ToList();
     }
-
 
     [NonBlockingCommand]
     public async Task PhotoTakenOnSearch(PhotoContent? content)

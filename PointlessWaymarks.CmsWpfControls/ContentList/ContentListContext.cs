@@ -8,7 +8,6 @@ using GongSolutions.Wpf.DragDrop;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 using Microsoft.EntityFrameworkCore;
-using PhotoSauce.MagicScaler;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.CommonHtml;
@@ -34,7 +33,6 @@ using PointlessWaymarks.CmsWpfControls.PicturesViewer;
 using PointlessWaymarks.CmsWpfControls.PointList;
 using PointlessWaymarks.CmsWpfControls.PostList;
 using PointlessWaymarks.CmsWpfControls.TrailList;
-using PointlessWaymarks.CmsWpfControls.Utility;
 using PointlessWaymarks.CmsWpfControls.Utility.Excel;
 using PointlessWaymarks.CmsWpfControls.VideoContentEditor;
 using PointlessWaymarks.CmsWpfControls.VideoList;
@@ -46,10 +44,7 @@ using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
 using Serilog;
 using TinyIpc.Messaging;
-using AppEvents_SheetPivotTableAfterValueChangeEventHandler =
-    Microsoft.Office.Interop.Excel.AppEvents_SheetPivotTableAfterValueChangeEventHandler;
 using ColumnSortControlContext = PointlessWaymarks.WpfCommon.ColumnSort.ColumnSortControlContext;
-using IDataObject = System.Windows.IDataObject;
 
 namespace PointlessWaymarks.CmsWpfControls.ContentList;
 
@@ -232,6 +227,40 @@ public partial class ContentListContext : IDragSource, IDropTarget
         Clipboard.SetText(finalString);
 
         await StatusContext.ToastSuccess("Bracket Codes copied to Clipboard");
+    }
+
+    [BlockingCommand]
+    public async Task ContentUsingSelected(IContentListItem? content)
+    {
+        if (content == null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        var contentId = content.Content().ContentId;
+        var contentTitle = content.Content().Title ?? "Unknown Content";
+
+        StatusContext.Progress($"Finding Content Referencing {contentTitle} - {contentId}");
+
+        var relatedContent =
+            await RelatedContentReferenceHelpers.FindContentUsing(contentId, StatusContext.ProgressTracker());
+
+        if (!relatedContent.Any())
+        {
+            await StatusContext.ToastWarning($"No related content found for {contentTitle}...", true);
+            return;
+        }
+
+        var reportLoader = new ContentListLoaderReport(async () =>
+            (await (await Db.Context()).ContentFromContentIds(relatedContent)).Cast<object>().ToList());
+
+        var newWindow =
+            await AllContentListWindow.CreateInstance(
+                await AllContentListWithActionsContext.CreateInstance(null, reportLoader));
+        newWindow.WindowTitle = $"Content Referencing {contentTitle}";
+
+        await newWindow.PositionWindowAndShowOnUiThread();
     }
 
     public static async Task<List<object>> CreatedOnDayFilter(DateTime? createdOn)
@@ -1068,7 +1097,8 @@ public partial class ContentListContext : IDragSource, IDropTarget
                     var exifDirectory = ImageMetadataReader.ReadMetadata(convertedFile).OfType<ExifIfd0Directory>()
                         .FirstOrDefault();
 
-                    var exifSubIfdDirectory = ImageMetadataReader.ReadMetadata(convertedFile).OfType<ExifSubIfdDirectory>()
+                    var exifSubIfdDirectory = ImageMetadataReader.ReadMetadata(convertedFile)
+                        .OfType<ExifSubIfdDirectory>()
                         .FirstOrDefault();
 
                     make = exifDirectory?.GetDescription(ExifDirectoryBase.TagMake) ??
