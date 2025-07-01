@@ -89,7 +89,7 @@ public class S3GeneratedSiteComparisonForAdditionsAndChanges
             }
 
             listRequest.ContinuationToken = response.NextContinuationToken;
-        } while (response.IsTruncated);
+        } while (response.IsTruncated ?? false);
 
         progress?.Report($"Found {awsObjects.Count} S3 Objects - starting file comparison");
 
