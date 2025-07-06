@@ -35,19 +35,31 @@ public static class RssBuilder
     {
         var rssDoc = RssDocument(channelTitle, items);
         using var stringWriter = new StringWriter();
-        try
-        {
-            rssDoc.Save(stringWriter);
-        }
-        catch (Exception ex)
-        {
-            throw;
-        }
+        rssDoc.Save(stringWriter);
+
         return stringWriter.ToString();
     }
 
+    public static XElement RssItemString(string? title, string? link, string? author, string? content,
+        DateTime createdOn,
+        string contentId)
+    {
+        var item = new XElement("item");
+        item.Add(new XElement("title", title.SanitizeForXml()));
+        item.Add(new XElement("link", link.SanitizeForXml()));
+        item.Add(new XElement("author", author.SanitizeForXml()));
+        if (!string.IsNullOrWhiteSpace(content))
+            item.Add(new XElement("description", new XCData(content.SanitizeForXml())));
+        item.Add(new XElement("pubDate", createdOn.ToString("R")));
+        var guidElement = new XElement("guid", contentId);
+        guidElement.Add(new XAttribute("isPermaLink", false));
+        item.Add(new XElement("guid", contentId));
+
+        return item;
+    }
+
     /// <summary>
-    /// Removes characters that are invalid in XML documents according to the XML 1.0 specification.
+    ///     Removes characters that are invalid in XML documents according to the XML 1.0 specification.
     /// </summary>
     /// <param name="input">The string to sanitize</param>
     /// <returns>A string with all invalid XML characters removed</returns>
@@ -63,26 +75,9 @@ public static class RssBuilder
                 c == '\x9' || // TAB
                 c == '\xA' || // LF
                 c == '\xD' || // CR
-                (c >= '\x20' && c <= '\xD7FF') || // Most regular characters
-                (c >= '\xE000' && c <= '\xFFFD')  // Private use area
+                c is >= '\x20' and <= '\xD7FF' || // Most regular characters
+                c is >= '\xE000' and <= '\xFFFD' // Private use area
         ).ToArray());
-    }
-
-    public static XElement RssItemString(string? title, string? link, string? author, string? content,
-        DateTime createdOn,
-        string contentId)
-    {
-        var item = new XElement("item");
-        item.Add(new XElement("title", title.SanitizeForXml()));
-        item.Add(new XElement("link", link.SanitizeForXml()));
-        item.Add(new XElement("author", author.SanitizeForXml()));
-        if (!string.IsNullOrWhiteSpace(content)) item.Add(new XElement("description", new XCData(content.SanitizeForXml())));
-        item.Add(new XElement("pubDate", createdOn.ToString("R")));
-        var guidElement = new XElement("guid", contentId);
-        guidElement.Add(new XAttribute("isPermaLink", false));
-        item.Add(new XElement("guid", contentId));
-
-        return item;
     }
 
     public static async void WriteContentCommonListRss(List<IContentCommon> content, FileInfo fileInfo,
@@ -114,7 +109,8 @@ public static class RssBuilder
                 itemDescription = $"<p>{HttpUtility.HtmlEncode(loopContent.Summary)}</p>" +
                                   $"<p>Read more at <a href=\"{contentUrl}\">{UserSettingsSingleton.CurrentSettings().SiteName}</a></p>";
 
-            items.Add(RssItemString(loopContent.Title, $"{contentUrl}", Tags.CreatedByAndUpdatedByNameList(loopContent), itemDescription,
+            items.Add(RssItemString(loopContent.Title, $"{contentUrl}", Tags.CreatedByAndUpdatedByNameList(loopContent),
+                itemDescription,
                 loopContent.CreatedOn, loopContent.ContentId.ToString()));
         }
 
