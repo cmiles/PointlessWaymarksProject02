@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Xml.Linq;
 using HtmlTags;
 using PointlessWaymarks.CmsData.CommonHtml;
@@ -80,7 +80,7 @@ public partial class LinkListPage
 
         await FileManagement.WriteAllTextToFileAndLog(localIndexFile.FullName,
             RssBuilder.RssFileString($"{UserSettingsSingleton.CurrentSettings().SiteName} - Link List",
-                items), Encoding.UTF8).ConfigureAwait(false);
+                items)).ConfigureAwait(false);
     }
 
     public async Task WriteLocalHtmlRssAndJson()

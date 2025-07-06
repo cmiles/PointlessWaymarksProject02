@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Web;
 using System.Xml.Linq;
 using PointlessWaymarks.CmsData.CommonHtml;
@@ -34,9 +34,9 @@ public static class RssBuilder
     public static string RssFileString(string channelTitle, List<XElement> items)
     {
         var rssDoc = RssDocument(channelTitle, items);
-        var rssMemoryStream = new MemoryStream();
-        rssDoc.Save(rssMemoryStream);
-        return Encoding.UTF8.GetString(rssMemoryStream.ToArray());
+        using var stringWriter = new StringWriter();
+        rssDoc.Save(stringWriter);
+        return stringWriter.ToString();
     }
 
     public static XElement RssItemString(string? title, string? link, string? author, string? content,
@@ -99,6 +99,6 @@ public static class RssBuilder
 
         await FileManagement.WriteAllTextToFileAndLogAsync(fileInfo.FullName,
             RssFileString($"{UserSettingsSingleton.CurrentSettings().SiteName} - {titleAdd}",
-                items), Encoding.UTF8).ConfigureAwait(false);
+                items)).ConfigureAwait(false);
     }
 }

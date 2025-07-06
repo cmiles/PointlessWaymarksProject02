@@ -498,6 +498,6 @@ public partial class IndexPage
 
         await FileManagement.WriteAllTextToFileAndLog(localIndexFile.FullName,
             RssBuilder.RssFileString($"{UserSettingsSingleton.CurrentSettings().SiteName}",
-                items), Encoding.UTF8).ConfigureAwait(false);
+                items)).ConfigureAwait(false);
     }
 }

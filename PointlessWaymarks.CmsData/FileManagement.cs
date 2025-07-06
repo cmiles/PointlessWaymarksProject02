@@ -1595,28 +1595,14 @@ public static class FileManagement
 
     public static async Task WriteAllTextToFileAndLog(string path, string contents)
     {
-        await File.WriteAllTextAsync(path, contents).ConfigureAwait(false);
-
-        await LogFileWriteAsync(path).ConfigureAwait(false);
-    }
-
-    public static async Task WriteAllTextToFileAndLog(string path, string contents, Encoding encoding)
-    {
-        await File.WriteAllTextAsync(path, contents, encoding).ConfigureAwait(false);
+        await File.WriteAllTextAsync(path, contents, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false)).ConfigureAwait(false);
 
         await LogFileWriteAsync(path).ConfigureAwait(false);
     }
 
     public static async Task WriteAllTextToFileAndLogAsync(string path, string contents)
     {
-        await File.WriteAllTextAsync(path, contents).ConfigureAwait(false);
-
-        await LogFileWriteAsync(path).ConfigureAwait(false);
-    }
-
-    public static async Task WriteAllTextToFileAndLogAsync(string path, string contents, Encoding encoding)
-    {
-        await File.WriteAllTextAsync(path, contents, encoding).ConfigureAwait(false);
+        await File.WriteAllTextAsync(path, contents, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false)).ConfigureAwait(false);
 
         await LogFileWriteAsync(path).ConfigureAwait(false);
     }
