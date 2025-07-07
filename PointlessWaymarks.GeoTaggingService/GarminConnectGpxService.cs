@@ -110,14 +110,7 @@ public class GarminConnectGpxService(string archiveDirectory, IRemoteGpxService 
 
             if (gpxFile is null) continue;
 
-            var gpx = GpxFile.Parse(await File.ReadAllTextAsync(gpxFile.FullName, cancellationToken),
-                new GpxReaderSettings
-                {
-                    BuildWebLinksForVeryLongUriValues = true,
-                    IgnoreBadDateTime = true,
-                    IgnoreUnexpectedChildrenOfTopLevelElement = true,
-                    IgnoreVersionAttribute = true
-                });
+            var gpx = await GpxTools.ReadGpxFile(gpxFile, progress);
 
             if (!gpx.Tracks.Any(t => t.Segments.SelectMany(y => y.Waypoints).Count() > 1)) continue;
 

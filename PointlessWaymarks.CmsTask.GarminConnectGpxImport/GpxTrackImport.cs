@@ -181,14 +181,7 @@ public class GpxTrackImport
 
         foreach (var loopFile in fileList.Where(x => x.gpxFileInfo != null))
         {
-            var gpxFile = GpxFile.Parse(await File.ReadAllTextAsync(loopFile.gpxFileInfo!.FullName),
-                new GpxReaderSettings
-                {
-                    BuildWebLinksForVeryLongUriValues = true,
-                    IgnoreBadDateTime = true,
-                    IgnoreUnexpectedChildrenOfTopLevelElement = true,
-                    IgnoreVersionAttribute = true
-                });
+            var gpxFile = await GpxTools.ReadGpxFile(loopFile.gpxFileInfo!);
 
             if (!gpxFile.Tracks.Any(t => t.Segments.SelectMany(y => y.Waypoints).Count() > 1)) continue;
 

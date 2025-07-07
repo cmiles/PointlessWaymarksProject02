@@ -712,12 +712,7 @@ public partial class GpxImportContext : IWebViewMessenger
         try
         {
             StatusContext.Progress($"Parsing GPX File {fileInfo.FullName}...");
-            gpxFile = GpxFile.Parse(await File.ReadAllTextAsync(fileInfo.FullName),
-                new GpxReaderSettings
-                {
-                    BuildWebLinksForVeryLongUriValues = true, IgnoreBadDateTime = true,
-                    IgnoreUnexpectedChildrenOfTopLevelElement = true, IgnoreVersionAttribute = true
-                });
+            gpxFile = await GpxTools.ReadGpxFile(fileInfo, StatusContext.ProgressTracker());
         }
         catch (Exception e)
         {

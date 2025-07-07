@@ -1,4 +1,5 @@
 using NetTopologySuite.IO;
+using PointlessWaymarks.SpatialTools;
 
 namespace PointlessWaymarks.GeoTaggingService;
 
@@ -37,14 +38,7 @@ public class FileListGpxService(List<FileInfo> listOfGpxFiles) : IGpxService
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var gpx = GpxFile.Parse(await File.ReadAllTextAsync(loopFile.file.FullName, cancellationToken),
-                new GpxReaderSettings
-                {
-                    BuildWebLinksForVeryLongUriValues = true,
-                    IgnoreBadDateTime = true,
-                    IgnoreUnexpectedChildrenOfTopLevelElement = true,
-                    IgnoreVersionAttribute = true
-                });
+            var gpx = await GpxTools.ReadGpxFile(loopFile.file, progress);
 
             if (!gpx.Tracks.Any(t => t.Segments.SelectMany(y => y.Waypoints).Count() > 1)) continue;
 
@@ -89,14 +83,7 @@ public class FileListGpxService(List<FileInfo> listOfGpxFiles) : IGpxService
         {
             if (++counter % 50 == 0) progress?.Report($"File List Gpx Service - {counter} of {existingGpxFiles.Count}");
 
-            var gpx = GpxFile.Parse(await File.ReadAllTextAsync(loopGpx.FullName),
-                new GpxReaderSettings
-                {
-                    BuildWebLinksForVeryLongUriValues = true,
-                    IgnoreBadDateTime = true,
-                    IgnoreUnexpectedChildrenOfTopLevelElement = true,
-                    IgnoreVersionAttribute = true
-                });
+            var gpx = await GpxTools.ReadGpxFile(loopGpx, progress);
 
             var allPoints = new List<GpxWaypoint>();
 
