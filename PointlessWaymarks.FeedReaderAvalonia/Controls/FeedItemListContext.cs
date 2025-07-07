@@ -21,6 +21,7 @@ using Avalonia.Data.Converters;
 using System.Globalization;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
+using PointlessWaymarks.AvaloniaCommon.LocalHtml;
 
 namespace PointlessWaymarks.FeedReaderAvalonia.Controls;
 
@@ -47,9 +48,10 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
     public string DisplayBasicAuthPassword { get; set; } = string.Empty;
     public string DisplayBasicAuthUsername { get; set; } = string.Empty;
     public string DisplayUrl { get; set; } = string.Empty;
+    public string RssViewDisplayUrl { get; set; } = string.Empty;
+    public Guid? RssViewPreviousId { get; set; }
     public List<Guid> FeedList { get; set; } = [];
-    public Func<Task<OneOf<Success<byte[]>, Error<string>>>>? ItemRssViewScreenshotFunction { get; set; }
-    public Func<Task<OneOf<Success<byte[]>, Error<string>>>>? ItemWebViewScreenshotFunction { get; set; }
+    public required AppPageServer PageServer { get; set; }
     public required ColumnSortControlContext ListSort { get; init; }
     public FeedItemListListItem? SelectedItem { get; set; }
     public List<FeedItemListListItem> SelectedItems { get; set; } = [];
@@ -57,6 +59,7 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
     public string UserAddFeedInput { get; set; } = string.Empty;
     public string UserFilterText { get; set; } = string.Empty;
     public required DataGridCollectionView ItemsView { get; set; }
+
     public FeedItemListListItem? SelectedListItem()
     {
         return SelectedItem;
@@ -84,33 +87,58 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
         foreach (var x in toRemove) Items.Remove(x);
     }
 
-    private async Task<string> ComposeFeedDisplayHtml(FeedItemListListItem? item)
+    private async Task ShowFeedDisplayHtml(FeedItemListListItem? item)
     {
-        if (item == null)
+        var newPageId = Guid.NewGuid();
+
+        if (RssViewPreviousId is not null)
         {
-            return await """<p>"No Valid Item?"</p>""".ToHtmlDocumentWithMinimalCss("Nothing...","");
+            PageServer.TryRemovePage(RssViewPreviousId.Value);
         }
 
-        var htmlBody = $"""
-                        <h3><a href="{item.DbItem.Link}">{item.DbItem.Title.HtmlEncode()}</a></h3>
-                        <h4>{item.DbReaderFeed.Name.HtmlEncode()}</h4>
-                        <hr />
-                        <p>{item.DbItem.Description}</p>
-                        <hr />
-                        {item.DbItem.Content}
-                        <hr />
-                        <ul>
-                         <li>Link: <a href="{item.DbItem.Link}">{item.DbItem.Link}</a></li>
-                         <li>Author: {item.DbItem.Author.HtmlEncode()}</li>
-                         <li>Created On: {item.DbItem.CreatedOn:F}</li>
-                         <li>Publishing Date: {item.DbItem.PublishingDate:F}</li>
-                         <li>Feed Item Id: {item.DbItem.FeedItemId.HtmlEncode()}</li>
-                         <li>Id: {item.DbItem.Id}</li>
-                         <li>Persistent Id: {item.DbItem.PersistentId}</li>
-                        </ul>
-                        """;
+        RssViewPreviousId = newPageId;
 
-        return await htmlBody.ToHtmlDocumentWithMinimalCss(item.DbItem.Title ?? "No Title", "");
+        if (item is null)
+        {
+            string feedDisplay =
+                await """
+                    <p>"No Valid Item?"</p>
+
+                    """
+                    .ToHtmlDocumentWithMinimalCss("Nothing...", "");
+
+            RssViewDisplayUrl = await PageServer.AddPage(newPageId, feedDisplay);
+            return;
+        }
+
+        try
+        {
+            var feedPage = await $"""
+                                  <h3><a href="{item.DbItem.Link}">{item.DbItem.Title.HtmlEncode()}</a></h3>
+                                  <h4>{item.DbReaderFeed.Name.HtmlEncode()}</h4>
+                                  <hr />
+                                  <p>{item.DbItem.Description}</p>
+                                  <hr />
+                                  {item.DbItem.Content}
+                                  <hr />
+                                  <ul>
+                                   <li>Link: <a href="{item.DbItem.Link}">{item.DbItem.Link}</a></li>
+                                   <li>Author: {item.DbItem.Author.HtmlEncode()}</li>
+                                   <li>Created On: {item.DbItem.CreatedOn:F}</li>
+                                   <li>Publishing Date: {item.DbItem.PublishingDate:F}</li>
+                                   <li>Feed Item Id: {item.DbItem.FeedItemId.HtmlEncode()}</li>
+                                   <li>Id: {item.DbItem.Id}</li>
+                                   <li>Persistent Id: {item.DbItem.PersistentId}</li>
+                                  </ul>
+                                  """.ToHtmlDocumentWithMinimalCss($"RSS - {item.DbItem.Title.HtmlEncode()}",
+                string.Empty);
+            RssViewDisplayUrl = await PageServer.AddPage(newPageId, feedPage);
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Error With ShowFeedDisplayHtml in FeedItemListContext");
+            RssViewDisplayUrl = await PageServer.ErrorPage(newPageId, e);
+        }
     }
 
     public static async Task<FeedItemListContext> CreateInstance(StatusControlContext statusContext, string dbFile,
@@ -132,6 +160,7 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
             FeedList = feedList ?? [],
             ShowUnread = showUnread,
             ContextDb = feedQueries,
+            PageServer = new AppPageServer(),
             ListSort = new ColumnSortControlContext
             {
                 Items =
@@ -238,7 +267,7 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
         }
 
         var cleanedFilterText = UserFilterText.Trim();
-        
+
         ItemsView.Filter = o =>
         {
             if (o is not FeedItemListListItem toFilter) return false;
@@ -265,7 +294,6 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         await UrlScreenShotHelper.GetUrlScreenShot(DisplayUrl, StatusContext);
-
     }
 
     [BlockingCommand]
@@ -273,18 +301,13 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (ItemRssViewScreenshotFunction == null)
+        if (string.IsNullOrWhiteSpace(RssViewDisplayUrl))
         {
-            await StatusContext.ToastError("Screenshot function not available...");
+            await StatusContext.ToastError("Rss View Display URL is blank - unable to take screenshot");
             return;
         }
 
-        var screenshotResult = await ItemRssViewScreenshotFunction();
-
-        if (screenshotResult.IsT0)
-            await WebViewToJpg.SaveByteArrayAsJpg(screenshotResult.AsT0.Value, string.Empty, StatusContext);
-        else
-            await StatusContext.ToastError(screenshotResult.AsT1.Value);
+        await UrlScreenShotHelper.GetUrlScreenShot(RssViewDisplayUrl, StatusContext);
     }
 
     [NonBlockingCommand]
@@ -392,7 +415,7 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
                     }
 
                     StatusContext.RunNonBlockingTask(async () =>
-                        await ComposeFeedDisplayHtml(SelectedItem));
+                        await ShowFeedDisplayHtml(SelectedItem));
                     DisplayUrl = string.IsNullOrWhiteSpace(SelectedItem?.DbItem.Link)
                         ? "about:blank"
                         : SelectedItem.DbItem.Link;
@@ -400,9 +423,7 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
                 catch (Exception exception)
                 {
                     Log.Error(exception, "Error With Display URL in the FeedItemListContext");
-                    await FeedDisplayPage.SetupDocumentWithMinimalCss($"""<h2>Exception</h2><p>{exception}</p>""",
-                        "Error");
-                    DisplayUrl = "about:blank";
+                    DisplayUrl = await PageServer.ErrorPage(exception);
                 }
             });
         }
@@ -464,26 +485,6 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
             ? await ContextDb.UpdateFeeds(FeedList, StatusContext.ProgressTracker())
             : await ContextDb.UpdateFeeds(StatusContext.ProgressTracker());
         foreach (var loopError in errors) await StatusContext.ToastError(loopError);
-    }
-
-
-    [BlockingCommand]
-    private async Task RssViewScreenshot()
-    {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (ItemRssViewScreenshotFunction == null)
-        {
-            await StatusContext.ToastError("Screenshot function not available...");
-            return;
-        }
-
-        var screenshotResult = await ItemRssViewScreenshotFunction();
-
-        if (screenshotResult.IsT0)
-            await WebViewToJpg.SaveByteArrayAsJpg(screenshotResult.AsT0.Value, string.Empty, StatusContext);
-        else
-            await StatusContext.ToastError(screenshotResult.AsT1.Value);
     }
 
     [NonBlockingCommand]
@@ -572,7 +573,6 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
         await ThreadSwitcher.ResumeForegroundAsync();
 
         await ClipboardHelper.TextToClipboardIfPossible(clipboardBlock.ToString(), StatusContext);
-
     }
 
     [NonBlockingCommand]
@@ -686,6 +686,5 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
         await ThreadSwitcher.ResumeForegroundAsync();
 
         await ClipboardHelper.TextToClipboardIfPossible(clipboardBlock.ToString(), StatusContext);
-
     }
 }

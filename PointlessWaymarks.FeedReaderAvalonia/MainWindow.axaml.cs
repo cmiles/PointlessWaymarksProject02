@@ -3,6 +3,8 @@ using System.IO;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using PointlessWaymarks.AvaloniaCommon;
+using PointlessWaymarks.AvaloniaCommon.AppToast;
+using PointlessWaymarks.AvaloniaCommon.LocalHtml;
 using PointlessWaymarks.AvaloniaCommon.MarkdownDisplay;
 using PointlessWaymarks.AvaloniaCommon.ProgramUpdateMessage;
 using PointlessWaymarks.AvaloniaCommon.Status;
@@ -41,8 +43,6 @@ public partial class MainWindow : Window
         if (Width < 900) Width = 900;
         if (Height < 650) Height = 650;
 
-        WindowInitialPositionHelpers.EnsureWindowIsVisible(this);
-
         var versionInfo =
             ProgramInfoTools.StandardAppInformationString(AppContext.BaseDirectory,
                 "Pointless Waymarks Feed Reader Beta");
@@ -63,6 +63,8 @@ public partial class MainWindow : Window
             HelpText,
             HelpMarkdown.CombinedAboutToolsAndPackages
         ]);
+
+        _ = new AppPageServer();
 
         StatusContext.RunFireAndForgetNonBlockingTask(async () =>
         {
