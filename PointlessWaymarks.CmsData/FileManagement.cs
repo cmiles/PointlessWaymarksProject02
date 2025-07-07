@@ -334,7 +334,7 @@ public static class FileManagement
 
     public static void CleanupTemporaryHtmlFiles()
     {
-        var temporaryDirectory = FileLocationTools.TempStorageHtmlDirectory();
+        var temporaryDirectory = FileLocationTools.TempStorageWebViewVirtualDomainDirectory();
 
         var allFiles = temporaryDirectory.GetFiles().ToList();
 
