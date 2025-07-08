@@ -287,14 +287,14 @@ public static class UserSettingsUtilities
         return $"{settings.SiteUrl()}/Files/{content.Folder}/{content.Slug}/{content.Slug}.html";
     }
 
-    public static string FilesRssUrl(this UserSettings settings)
-    {
-        return $"{settings.SiteUrl()}/Files/FileRss.xml";
-    }
-
     public static string FilesListUrl(this UserSettings settings)
     {
         return $"{settings.SiteUrl()}/Files/FileList.html";
+    }
+
+    public static string FilesRssUrl(this UserSettings settings)
+    {
+        return $"{settings.SiteUrl()}/Files/FileRss.xml";
     }
 
     public static UserSettingsGenerationValues GenerationValues(this UserSettings settings)
@@ -307,6 +307,11 @@ public static class UserSettingsUtilities
         return $"{settings.SiteUrl()}/GeoJson/Data/GeoJson-{content.ContentId}.json";
     }
 
+    public static string GeoJsonListUrl(this UserSettings settings)
+    {
+        return $"{settings.SiteUrl()}/GeoJson/GeoJsonList.html";
+    }
+
     public static string GeoJsonPageUrl(this UserSettings settings, GeoJsonContent content)
     {
         return $"{settings.SiteUrl()}/GeoJson/{content.Folder}/{content.Slug}/{content.Slug}.html";
@@ -316,23 +321,20 @@ public static class UserSettingsUtilities
     {
         return $"{settings.SiteUrl()}/GeoJson/GeoJsonRss.xml";
     }
-    public static string GeoJsonListUrl(this UserSettings settings)
-    {
-        return $"{settings.SiteUrl()}/GeoJson/GeoJsonList.html";
-    }
 
     public static string ImagePageUrl(this UserSettings settings, ImageContent content)
     {
         return $"{settings.SiteUrl()}/Images/{content.Folder}/{content.Slug}/{content.Slug}.html";
     }
 
-    public static string ImagesRssUrl(this UserSettings settings)
-    {
-        return $"{settings.SiteUrl()}/Images/ImageRss.xml";
-    }
     public static string ImagesListUrl(this UserSettings settings)
     {
         return $"{settings.SiteUrl()}/Images/ImageList.html";
+    }
+
+    public static string ImagesRssUrl(this UserSettings settings)
+    {
+        return $"{settings.SiteUrl()}/Images/ImageRss.xml";
     }
 
     public static string IndexPageUrl(this UserSettings settings)
@@ -360,14 +362,14 @@ public static class UserSettingsUtilities
         return $"{settings.SiteUrl()}/Lines/{content.Folder}/{content.Slug}/{content.Slug}.html";
     }
 
-    public static string LinesRssUrl(this UserSettings settings)
-    {
-        return $"{settings.SiteUrl()}/Lines/LineRss.xml";
-    }
-
     public static string LinesListUrl(this UserSettings settings)
     {
         return $"{settings.SiteUrl()}/Lines/LineList.html";
+    }
+
+    public static string LinesRssUrl(this UserSettings settings)
+    {
+        return $"{settings.SiteUrl()}/Lines/LineRss.xml";
     }
 
     public static string LinksListUrl(this UserSettings settings)
@@ -426,6 +428,18 @@ public static class UserSettingsUtilities
     {
         var directory =
             new DirectoryInfo(Path.Combine(settings.LocalMediaArchiveFullDirectory().FullName, "Images"));
+
+        if (!directory.Exists) directory.Create();
+
+        directory.Refresh();
+
+        return directory;
+    }
+
+    public static DirectoryInfo LocalMediaArchiveLinkDirectory(this UserSettings settings)
+    {
+        var directory =
+            new DirectoryInfo(Path.Combine(settings.LocalMediaArchiveFullDirectory().FullName, "Links"));
 
         if (!directory.Exists) directory.Create();
 
@@ -1363,14 +1377,14 @@ public static class UserSettingsUtilities
         return $"{settings.SiteUrl()}/Notes/{content.Folder}/{content.Slug}.html";
     }
 
-    public static string NotesRssUrl(this UserSettings settings)
-    {
-        return $"{settings.SiteUrl()}/Notes/NoteRss.xml";
-    }
-
     public static string NotesListUrl(this UserSettings settings)
     {
         return $"{settings.SiteUrl()}/Notes/NoteList.html";
+    }
+
+    public static string NotesRssUrl(this UserSettings settings)
+    {
+        return $"{settings.SiteUrl()}/Notes/NoteRss.xml";
     }
 
     public static async Task<string> PageUrl(this UserSettings settings, Guid contentGuid)
@@ -1403,14 +1417,14 @@ public static class UserSettingsUtilities
         return $"{settings.SiteUrl()}/Photos/{content.Folder}/{content.Slug}/{content.Slug}.html";
     }
 
-    public static string PhotosRssUrl(this UserSettings settings)
-    {
-        return $"{settings.SiteUrl()}/Photos/PhotoRss.xml";
-    }
-
     public static string PhotosListUrl(this UserSettings settings)
     {
         return $"{settings.SiteUrl()}/Photos/PhotoList.html";
+    }
+
+    public static string PhotosRssUrl(this UserSettings settings)
+    {
+        return $"{settings.SiteUrl()}/Photos/PhotoRss.xml";
     }
 
     public static string PicturePageUrl(this UserSettings settings, Guid contentGuid)
@@ -1446,13 +1460,14 @@ public static class UserSettingsUtilities
         return $"{settings.SiteUrl()}/Points/{content.Folder}/{content.Slug}/{content.Slug}.html";
     }
 
-    public static string PointsRssUrl(this UserSettings settings)
-    {
-        return $"{settings.SiteUrl()}/Points/PointRss.xml";
-    }
     public static string PointsListUrl(this UserSettings settings)
     {
         return $"{settings.SiteUrl()}/Points/PointList.html";
+    }
+
+    public static string PointsRssUrl(this UserSettings settings)
+    {
+        return $"{settings.SiteUrl()}/Points/PointRss.xml";
     }
 
     public static string PostPageUrl(this UserSettings settings, PostContent content)
@@ -1460,14 +1475,14 @@ public static class UserSettingsUtilities
         return $"{settings.SiteUrl()}/Posts/{content.Folder}/{content.Slug}/{content.Slug}.html";
     }
 
-    public static string PostsRssUrl(this UserSettings settings)
-    {
-        return $"{settings.SiteUrl()}/Posts/PostRss.xml";
-    }
-
     public static string PostsListUrl(this UserSettings settings)
     {
         return $"{settings.SiteUrl()}/Posts/PostList.html";
+    }
+
+    public static string PostsRssUrl(this UserSettings settings)
+    {
+        return $"{settings.SiteUrl()}/Posts/PostRss.xml";
     }
 
     public static async Task<UserSettings> ReadFromCurrentSettingsFile(IProgress<string>? progress = null)
@@ -1824,14 +1839,14 @@ public static class UserSettingsUtilities
         return $"{settings.SiteUrl()}/Trails/{content.Folder}/{content.Slug}/{content.Slug}.html";
     }
 
-    public static string TrailsRssUrl(this UserSettings settings)
-    {
-        return $"{settings.SiteUrl()}/Trails/TrailRss.xml";
-    }
-
     public static string TrailsListUrl(this UserSettings settings)
     {
         return $"{settings.SiteUrl()}/Trails/TrailList.html";
+    }
+
+    public static string TrailsRssUrl(this UserSettings settings)
+    {
+        return $"{settings.SiteUrl()}/Trails/TrailRss.xml";
     }
 
     public static IsValid ValidateLocalMediaArchive()
@@ -1891,13 +1906,14 @@ public static class UserSettingsUtilities
         return $"{settings.SiteUrl()}/Videos/VideoRss.xml";
     }
 
-    public static string VideosRssUrl(this UserSettings settings)
-    {
-        return $"{settings.SiteUrl()}/Videos/VideoRss.xml";
-    }
     public static string VideosListUrl(this UserSettings settings)
     {
         return $"{settings.SiteUrl()}/Videos/VideoList.html";
+    }
+
+    public static string VideosRssUrl(this UserSettings settings)
+    {
+        return $"{settings.SiteUrl()}/Videos/VideoRss.xml";
     }
 
     public static async Task WriteSettings(this UserSettings toWrite)

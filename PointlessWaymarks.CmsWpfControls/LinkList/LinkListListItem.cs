@@ -1,6 +1,9 @@
-﻿using PointlessWaymarks.CmsData.Database.Models;
+using System.IO;
+using PointlessWaymarks.CmsData;
+using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.LlamaAspects;
+using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.Utility;
 
 namespace PointlessWaymarks.CmsWpfControls.LinkList;
@@ -12,12 +15,15 @@ public partial class LinkListListItem : IContentListItem
     {
         DbEntry = dbEntry;
         ItemActions = itemActions;
+
+        ItemActions.StatusContext.RunFireAndForgetNonBlockingTask(LoadSnapshotImages);
     }
 
     public LinkContent DbEntry { get; set; }
     public LinkContentActions ItemActions { get; set; }
     public string LinkContentString { get; set; } = string.Empty;
     public bool ShowType { get; set; }
+    public List<LinkSnapshotImageItem> SnapshotImages { get; set; } = [];
 
     public IContentCommon Content()
     {
@@ -96,5 +102,28 @@ public partial class LinkListListItem : IContentListItem
     public static Task<LinkListListItem> CreateInstance(LinkContentActions itemActions)
     {
         return Task.FromResult(new LinkListListItem(itemActions, LinkContent.CreateInstance()));
+    }
+
+    public async Task LoadSnapshotImages()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var images =
+            new DirectoryInfo(UserSettingsSingleton.CurrentSettings().LocalMediaArchiveLinkDirectory().FullName)
+                .GetFiles($"{DbEntry.ContentId}--*.jpg");
+
+        if (!images.Any()) return;
+
+        var fileList = new List<LinkSnapshotImageItem>();
+
+        foreach (var loopImageFile in images)
+        {
+            var parts = Path.GetFileNameWithoutExtension(loopImageFile.Name).Split("--");
+            if (parts.Length < 2) continue;
+            var newEntry = new LinkSnapshotImageItem { FileName = loopImageFile.FullName, Description = parts[1] };
+            fileList.Add(newEntry);
+        }
+
+        SnapshotImages = fileList.OrderByDescending(x => x.Description).ToList();
     }
 }

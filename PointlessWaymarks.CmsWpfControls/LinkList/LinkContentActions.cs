@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using PointlessWaymarks.CmsData;
@@ -13,6 +14,7 @@ using PointlessWaymarks.CmsWpfControls.SitePreview;
 using PointlessWaymarks.CmsWpfControls.Utility;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
+using PointlessWaymarks.VisualWebWork;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
@@ -28,8 +30,6 @@ public partial class LinkContentActions : IContentActions<LinkContent>
         StatusContext = statusContext;
         BuildCommands();
     }
-
-    public StatusControlContext StatusContext { get; set; }
 
     public string DefaultBracketCode(LinkContent? content)
     {
@@ -133,7 +133,7 @@ public partial class LinkContentActions : IContentActions<LinkContent>
         await StatusContext.ToastSuccess($"Generated {settings.LinksListUrl()}");
     }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
+    public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
     public async Task ViewHistory(LinkContent? content)
@@ -213,6 +213,8 @@ public partial class LinkContentActions : IContentActions<LinkContent>
         await sitePreviewWindow.PositionWindowAndShowOnUiThread();
     }
 
+    public event PropertyChangedEventHandler? PropertyChanged;
+
     [NonBlockingCommand]
     public async Task CopyUrl(string? link)
     {
@@ -229,6 +231,55 @@ public partial class LinkContentActions : IContentActions<LinkContent>
         await StatusContext.ToastSuccess($"To Clipboard {link}");
     }
 
+    [BlockingCommand]
+    public async Task LinkSnapshotImage(LinkContent? content)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (content == null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(content.Url))
+        {
+            await StatusContext.ToastError("URL is blank...");
+            return;
+        }
+
+        try
+        {
+            var result = await PlaywrightScreenShot.CaptureScreenshot(content.Url, StatusContext.ProgressTracker());
+
+            if (!result.Success)
+            {
+                await StatusContext.ShowMessageWithOkButton("Error Save Web Page Image", result.Message);
+                return;
+            }
+
+            if (result.ImageBytes is null || !result.ImageBytes.Any())
+            {
+                await StatusContext.ShowMessageWithOkButton("Error Save Web Page Image",
+                    $"Image is blank? {result.Message}");
+                return;
+            }
+
+            var fileName =
+                Path.Combine(UserSettingsSingleton.CurrentSettings().LocalMediaArchiveLinkDirectory().FullName,
+                    $"{content.ContentId}--{DateTime.Now:yyyy-MM-dd-HHmm}.jpg");
+
+            await File.WriteAllBytesAsync(fileName, result.ImageBytes);
+
+            var ps = new ProcessStartInfo(fileName) { UseShellExecute = true, Verb = "open" };
+            Process.Start(ps);
+        }
+        catch (Exception e)
+        {
+            await StatusContext.ShowMessageWithOkButton("Error Save Web Page Image", e.ToString());
+        }
+    }
+
     public static async Task<LinkListListItem> ListItemFromDbItem(LinkContent content, LinkContentActions itemActions,
         bool showType)
     {
@@ -236,5 +287,18 @@ public partial class LinkContentActions : IContentActions<LinkContent>
         item.DbEntry = content;
         item.ShowType = showType;
         return item;
+    }
+
+    [BlockingCommand]
+    public async Task ViewLinkSnapshotImage(string? filename)
+    {
+        if (string.IsNullOrWhiteSpace(filename))
+        {
+            await StatusContext.ToastError("No file?");
+            return;
+        }
+
+        var ps = new ProcessStartInfo(filename) { UseShellExecute = true, Verb = "open" };
+        Process.Start(ps);
     }
 }

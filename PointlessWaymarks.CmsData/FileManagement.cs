@@ -496,7 +496,9 @@ public static class FileManagement
                 progress?.Report(
                     $"ContentData Directory Cleanup - Checking Existing File {fileCount} of {allContentDataFiles.Count}");
 
-            var contentId = Path.GetFileNameWithoutExtension(loopFiles.Name).StartsWith("Historic") ? Path.GetFileNameWithoutExtension(loopFiles.Name).Split("---").Last() : Path.GetFileNameWithoutExtension(loopFiles.Name);
+            var contentId = Path.GetFileNameWithoutExtension(loopFiles.Name).StartsWith("Historic")
+                ? Path.GetFileNameWithoutExtension(loopFiles.Name).Split("---").Last()
+                : Path.GetFileNameWithoutExtension(loopFiles.Name);
 
             if (Guid.TryParse(contentId, out var parsedGuid))
                 if (!allContentIds.Contains(parsedGuid))
@@ -949,6 +951,51 @@ public static class FileManagement
         progress?.Report("Ending Line Directory Cleanup");
     }
 
+    public static async Task RemoveLinkSnapshotMediaArchiveFilesNotInCurrentDatabase(IProgress<string>? progress)
+    {
+        progress?.Report("Starting Link Snapshot Media Archive Cleanup");
+
+        var db = await Db.Context().ConfigureAwait(false);
+        var siteLinkMediaArchiveDirectory =
+            UserSettingsSingleton.CurrentSettings().LocalMediaArchiveLinkDirectory();
+        var siteLinkSnapshotMediaArchiveFiles = siteLinkMediaArchiveDirectory.GetFiles().OrderBy(x => x.Name).ToList();
+
+        var dbGuids = db.LinkContents.Select(x => x.ContentId).OrderBy(x => x).ToList();
+
+
+        progress?.Report(
+            $"Found {siteLinkSnapshotMediaArchiveFiles.Count} Existing Link Snapshot Files in the Media Archive - Checking against {dbGuids.Count} Links in the Database");
+
+        foreach (var loopFiles in siteLinkSnapshotMediaArchiveFiles)
+        {
+            var nameParts = loopFiles.Name.Split("--");
+
+            if (nameParts.Length != 2)
+            {
+                progress?.Report($"Deleting {loopFiles.Name} - name not recognized as a snapshot.");
+                loopFiles.Delete();
+                continue;
+            }
+
+            if (!Guid.TryParse(nameParts[0], out var parsedId))
+            {
+                progress?.Report(
+                    $"Deleting {loopFiles.Name} - can't parse out the Content Id from the first part of the name.");
+                loopFiles.Delete();
+                continue;
+            }
+
+            if (!dbGuids.Contains(parsedId))
+            {
+                progress?.Report($"Deleting {loopFiles.Name}");
+                loopFiles.Delete();
+                continue;
+            }
+
+            progress?.Report($"Matched {loopFiles.Name} to Database");
+        }
+    }
+
     public static async Task RemoveMapHistoryDataDirectoryFilesNotInCurrentDb(IProgress<string>? progress)
     {
         var db = await Db.Context().ConfigureAwait(false);
@@ -981,6 +1028,7 @@ public static class FileManagement
         await RemoveFileMediaArchiveFilesNotInCurrentDatabase(progress).ConfigureAwait(false);
         await RemoveImageMediaArchiveFilesNotInCurrentDatabase(progress).ConfigureAwait(false);
         await RemovePhotoMediaArchiveFilesNotInCurrentDatabase(progress).ConfigureAwait(false);
+        await RemoveLinkSnapshotMediaArchiveFilesNotInCurrentDatabase(progress).ConfigureAwait(false);
     }
 
     public static async Task RemoveNoteDirectoriesNotFoundInCurrentDatabase(IProgress<string>? progress)
@@ -1171,7 +1219,7 @@ public static class FileManagement
         var dbNames = db.PhotoContents.Select(x => x.OriginalFileName).OrderBy(x => x).ToList();
 
         progress?.Report(
-            $"Found {sitePhotoMediaArchiveFiles.Count} Existing Photo Files in the Media Archive - Checking against {dbNames.Count} Photo Names  in the Database");
+            $"Found {sitePhotoMediaArchiveFiles.Count} Existing Photo Files in the Media Archive - Checking against {dbNames.Count} Photo Names in the Database");
 
         foreach (var loopFiles in sitePhotoMediaArchiveFiles)
         {
@@ -1341,6 +1389,26 @@ public static class FileManagement
         progress?.Report("Ending Post Directory Cleanup");
     }
 
+
+    public static async Task RemoveTagContentFilesNotInCurrentDatabase(IProgress<string>? progress)
+    {
+        progress?.Report("Starting Tag Directory Cleanup");
+
+        var tags = (await Db.TagSlugsAndContentList(true, false, progress).ConfigureAwait(false)).Select(x => x.tag)
+            .Distinct().ToList();
+
+        var tagFiles = UserSettingsSingleton.CurrentSettings().LocalSiteTagsDirectory().GetFiles("TagList-*.html")
+            .OrderBy(x => x.Name).ToList();
+
+        foreach (var loopFiles in tagFiles)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(loopFiles.Name);
+            var fileTag = fileName[8..];
+
+            if (!tags.Contains(fileTag)) loopFiles.Delete();
+        }
+    }
+
     public static async Task RemoveTrailDirectoriesNotFoundInCurrentDatabase(IProgress<string>? progress)
     {
         progress?.Report("Starting Directory Cleanup");
@@ -1416,26 +1484,6 @@ public static class FileManagement
         }
 
         progress?.Report("Ending Trail Directory Cleanup");
-    }
-
-
-    public static async Task RemoveTagContentFilesNotInCurrentDatabase(IProgress<string>? progress)
-    {
-        progress?.Report("Starting Tag Directory Cleanup");
-
-        var tags = (await Db.TagSlugsAndContentList(true, false, progress).ConfigureAwait(false)).Select(x => x.tag)
-            .Distinct().ToList();
-
-        var tagFiles = UserSettingsSingleton.CurrentSettings().LocalSiteTagsDirectory().GetFiles("TagList-*.html")
-            .OrderBy(x => x.Name).ToList();
-
-        foreach (var loopFiles in tagFiles)
-        {
-            var fileName = Path.GetFileNameWithoutExtension(loopFiles.Name);
-            var fileTag = fileName[8..];
-
-            if (!tags.Contains(fileTag)) loopFiles.Delete();
-        }
     }
 
     public static async Task RemoveVideoDirectoriesNotFoundInCurrentDatabase(IProgress<string>? progress)
@@ -1587,6 +1635,7 @@ public static class FileManagement
             settings.LocalMediaArchiveFullDirectory().CreateIfItDoesNotExist(),
             settings.LocalMediaArchiveFileDirectory().CreateIfItDoesNotExist(),
             settings.LocalMediaArchiveImageDirectory().CreateIfItDoesNotExist(),
+            settings.LocalMediaArchiveLinkDirectory().CreateIfItDoesNotExist(),
             settings.LocalMediaArchivePhotoDirectory().CreateIfItDoesNotExist(),
             settings.LocalMediaArchiveVideoDirectory().CreateIfItDoesNotExist(),
             settings.LocalMediaArchiveLogsDirectory().CreateIfItDoesNotExist()
@@ -1595,14 +1644,14 @@ public static class FileManagement
 
     public static async Task WriteAllTextToFileAndLog(string path, string contents)
     {
-        await File.WriteAllTextAsync(path, contents, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false)).ConfigureAwait(false);
+        await File.WriteAllTextAsync(path, contents, new UTF8Encoding(false)).ConfigureAwait(false);
 
         await LogFileWriteAsync(path).ConfigureAwait(false);
     }
 
     public static async Task WriteAllTextToFileAndLogAsync(string path, string contents)
     {
-        await File.WriteAllTextAsync(path, contents, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false)).ConfigureAwait(false);
+        await File.WriteAllTextAsync(path, contents, new UTF8Encoding(false)).ConfigureAwait(false);
 
         await LogFileWriteAsync(path).ConfigureAwait(false);
     }

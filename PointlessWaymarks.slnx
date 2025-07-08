@@ -28,6 +28,10 @@
     <Project Path="PointlessWaymarksTools/PointlessWaymarks.VaultfuscationTools/PointlessWaymarks.VaultfuscationTools.csproj">
       <Platform Project="x64" />
     </Project>
+    <Project Path="PointlessWaymarksTools/PointlessWaymarks.VisualWebWork/PointlessWaymarks.VisualWebWork.csproj">
+      <BuildType Solution="LamaDebug|*" Project="Release" />
+      <Platform Project="x64" />
+    </Project>
     <Project Path="PointlessWaymarksTools/PointlessWaymarks.WindowsTools/PointlessWaymarks.WindowsTools.csproj">
       <Platform Project="x64" />
     </Project>

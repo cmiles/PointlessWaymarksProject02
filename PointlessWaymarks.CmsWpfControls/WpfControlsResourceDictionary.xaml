@@ -40,6 +40,7 @@
     <wpfHelpers:DbEntryHasLocationToCollapsedVisibilityConverter x:Key="DbEntryHasLocationToCollapsedVisibility" />
     <wpfConverter:MetersToFeetValueConverter x:Key="MetersToFeet" />
     <optionalLocationEntry:HasValidLatLongVisibilityConverter x:Key="HasLatLong" />
+    <wpfConverter:IntegerGreaterThanZeroToVisibilityConverter x:Key="IntegerGreaterThanZeroToVisibility" />
 
     <Style x:Key="DataEntryComboBoxStyle" TargetType="ComboBox">
         <Setter Property="Margin" Value="6,0,0,0" />
@@ -640,8 +641,8 @@
                             <TextBlock Text="{Binding DbEntry.MinimumElevation, StringFormat='Min Elevation: {0}\''}" />
                             <TextBlock Text="{Binding DbEntry.ActivityType}" Visibility="{Binding DbEntry.ActivityType, Converter={StaticResource NullOrWhiteSpaceStringToCollapsed}}" />
                             <TextBlock Text="{Binding DbEntry, Converter={StaticResource LineRecordedOnToString}, StringFormat='Time: {0}'}" Visibility="{Binding DbEntry, Converter={StaticResource LineListHasRecordedOnVisibility}}" />
-                            <TextBlock Text="{Binding DbEntry.RecordingStartedOn, StringFormat='Started On: {0:g}'}" Visibility="{Binding DbEntry.RecordingStartedOn, Converter={StaticResource NullToCollapsedVisibility}}"></TextBlock>
-                            <TextBlock Text="{Binding DbEntry.RecordingEndedOn, StringFormat='Ended On: {0:g}'}" Visibility="{Binding DbEntry.RecordingEndedOn, Converter={StaticResource NullToCollapsedVisibility}}"></TextBlock>
+                            <TextBlock Text="{Binding DbEntry.RecordingStartedOn, StringFormat='Started On: {0:g}'}" Visibility="{Binding DbEntry.RecordingStartedOn, Converter={StaticResource NullToCollapsedVisibility}}" />
+                            <TextBlock Text="{Binding DbEntry.RecordingEndedOn, StringFormat='Ended On: {0:g}'}" Visibility="{Binding DbEntry.RecordingEndedOn, Converter={StaticResource NullToCollapsedVisibility}}" />
                         </WrapPanel>
                         <ContentPresenter Content="{StaticResource ContentListFolderAndCreatedAndUpdatedDisplay}" />
                         <WrapPanel
@@ -1238,6 +1239,33 @@
                             CommandParameter="{Binding DbEntry.Url}">
                             Copy Link
                         </Button>
+                        <Button
+                            Width="160"
+                            Height="20"
+                            VerticalAlignment="Center"
+                            Command="{Binding ItemActions.LinkSnapshotImageCommand}"
+                            CommandParameter="{Binding DbEntry}">
+                            Create Image Snapshot
+                        </Button>
+                        <Menu 
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Visibility="{Binding SnapshotImages.Count, Converter={StaticResource IntegerGreaterThanZeroToVisibility}, FallbackValue=Collapsed}">
+                            <MenuItem 
+                                Header="Click for Saved Snapshots" 
+                                BorderThickness="0"
+                                ItemsSource="{Binding SnapshotImages}">
+                                <MenuItem.ItemContainerStyle>
+                                    <Style TargetType="MenuItem">
+                                        <Setter Property="Command" Value="{Binding Path=DataContext.ItemActions.ViewLinkSnapshotImageCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" />
+                                        <Setter Property="CommandParameter" Value="{Binding FileName}" />
+                                        <Setter Property="Header" Value="{Binding Description}" />
+                                    </Style>
+                                </MenuItem.ItemContainerStyle>
+                            </MenuItem>
+                        </Menu>
                     </WrapPanel>
                 </StackPanel>
                 <ContentPresenter
