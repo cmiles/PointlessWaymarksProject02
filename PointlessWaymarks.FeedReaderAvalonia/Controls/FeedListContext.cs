@@ -1,10 +1,14 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Reactive;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text;
 using System.Text.RegularExpressions;
-using Windows.ApplicationModel.DataTransfer;
-using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
+using DynamicData;
+using DynamicData.Binding;
 using Microsoft.EntityFrameworkCore;
 using PointlessWaymarks.AvaloniaCommon;
 using PointlessWaymarks.AvaloniaCommon.ColumnSort;
@@ -15,15 +19,13 @@ using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.FeedReaderData;
 using Serilog;
 using TinyIpc.Messaging;
-using Avalonia.Controls.ApplicationLifetimes;
-using Windows.Storage;
 
 namespace PointlessWaymarks.FeedReaderAvalonia.Controls;
 
 [NotifyPropertyChanged]
 [GenerateStatusCommands]
-public partial class FeedListContext : IStandardListWithContext<FeedListListItem>
-{
+public partial class FeedListContext {
+
     public required FeedQueries ContextDb { get; init; }
     public DataNotificationsWorkQueue? DataNotificationsProcessor { get; set; }
     public required ColumnSortControlContext ListSort { get; init; }
@@ -31,6 +33,29 @@ public partial class FeedListContext : IStandardListWithContext<FeedListListItem
     public List<FeedListListItem> SelectedItems { get; set; } = [];
     public string UserAddFeedInput { get; set; } = string.Empty;
     public string UserFilterText { get; set; } = string.Empty;
+
+    // Read-only observable collection for UI binding
+    public required ReadOnlyObservableCollection<FeedListListItem> Items { get; init; }
+
+
+    private readonly SourceList<FeedListListItem> _sourceItems = new();
+    private readonly IDisposable _dynamicDataConnection;
+    // Use BehaviorSubject to emit filter predicates as an Observable
+    private readonly BehaviorSubject<Func<FeedListListItem, bool>> _filterPredicate =
+        new(item => true); // Start with a filter that shows everything
+
+    public FeedListContext()
+    {
+        // Set up DynamicData transformations with observable filter
+        _dynamicDataConnection = _sourceItems.Connect()
+            // This overload takes an Observable of filter predicates
+            .Filter(_filterPredicate)
+            .Sort(SortExpressionComparer<FeedListListItem>.Ascending(x => x.DbReaderFeed.Name))
+            .Bind(out var items)
+            .Subscribe();
+
+        Items = items;
+    }
 
     public FeedListListItem? SelectedListItem()
     {
@@ -43,11 +68,10 @@ public partial class FeedListContext : IStandardListWithContext<FeedListListItem
     }
 
     public required StatusControlContext StatusContext { get; set; }
-    public required ObservableCollection<FeedListListItem> Items { get; init; }
 
     public async Task AddNewFeeds()
     {
-        var existingItemIds = Items.Select(x => x.DbReaderFeed.PersistentId);
+        var existingItemIds = _sourceItems.Items.Select(x => x.DbReaderFeed.PersistentId).ToList();
 
         var db = await ContextDb.GetInstance();
 
@@ -70,14 +94,12 @@ public partial class FeedListContext : IStandardListWithContext<FeedListListItem
                 ?.AllFeedItemsCount ?? 0;
             loopItem.UnreadItemsCount = unReadFeedCounts
                 .SingleOrDefault(x => x.FeedPersistentId == loopItem.DbReaderFeed.PersistentId)?.UnreadItemsCount ?? 0;
-            Items.Add(loopItem);
         }
 
         if (newItems.Any())
         {
-            await ListContextSortHelpers.SortList(ListSort.SortDescriptions(), Items);
-
-            await FilterList();
+            _sourceItems.AddRange(newItems);
+            await ApplySorting();
         }
     }
 
@@ -93,12 +115,9 @@ public partial class FeedListContext : IStandardListWithContext<FeedListListItem
         await ContextDb.ArchiveFeed(SelectedItem.DbReaderFeed.PersistentId, StatusContext.ProgressTracker());
     }
 
-
     public static async Task<FeedListContext> CreateInstance(StatusControlContext statusContext, string dbFile)
     {
         await ThreadSwitcher.ResumeForegroundAsync();
-
-        var newItems = new ObservableCollection<FeedListListItem>();
 
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -107,8 +126,8 @@ public partial class FeedListContext : IStandardListWithContext<FeedListListItem
         var newContext = new FeedListContext
         {
             StatusContext = statusContext,
-            Items = newItems,
             ContextDb = feedQueries,
+            Items = new ReadOnlyObservableCollection<FeedListListItem>([]),
             ListSort = new ColumnSortControlContext
             {
                 Items =
@@ -219,27 +238,44 @@ public partial class FeedListContext : IStandardListWithContext<FeedListListItem
 
     private async Task FilterList()
     {
-        if (!Items.Any()) return;
-
         await ThreadSwitcher.ResumeForegroundAsync();
 
         if (string.IsNullOrWhiteSpace(UserFilterText))
         {
-            ((CollectionView)CollectionViewSource.GetDefaultView(Items)).Filter = _ => true;
-            return;
+            // Emit a filter predicate that accepts everything
+            _filterPredicate.OnNext(_ => true);
         }
-
-        var cleanedFilterText = UserFilterText.Trim();
-
-        ((CollectionView)CollectionViewSource.GetDefaultView(Items)).Filter = o =>
+        else
         {
-            if (o is not FeedListListItem toFilter) return false;
+            var cleanedFilterText = UserFilterText.Trim();
 
-            return toFilter.DbReaderFeed.Name.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase)
-                   || toFilter.DbReaderFeed.Tags.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase)
-                   || toFilter.DbReaderFeed.Note.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase)
-                   || toFilter.DbReaderFeed.Url.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase);
-        };
+            // Emit a new filter predicate with the current search criteria
+            _filterPredicate.OnNext(item =>
+                item.DbReaderFeed.Name.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase) ||
+                item.DbReaderFeed.Tags.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase) ||
+                item.DbReaderFeed.Note.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase) ||
+                item.DbReaderFeed.Url.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    private async Task ApplySorting()
+    {
+        var sortDescriptions = ListSort.SortDescriptions();
+        if (!sortDescriptions.Any())
+            return;
+
+        // Build a comparer based on the sort descriptions
+        IComparer<FeedListListItem> comparer = new SortDescriptionComparer<FeedListListItem>(sortDescriptions);
+
+        // Get all items to sort
+        var items = _sourceItems.Items.OrderBy(x => x, comparer).ToList();
+
+        // Re-add the sorted items
+        _sourceItems.Edit(innerList =>
+        {
+            innerList.Clear();
+            innerList.AddRange(items);
+        });
     }
 
     [BlockingCommand]
@@ -247,28 +283,45 @@ public partial class FeedListContext : IStandardListWithContext<FeedListListItem
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        var openDialog = new VistaOpenFileDialog
-        {
-            Title = "Open Link File",
-            Filter = "Link File|*.txt",
-            DefaultExt = ".txt",
-            Multiselect = false,
-            InitialDirectory = FeedReaderGuiSettingTools.GetLastDirectory().FullName,
-            CheckPathExists = true,
-            CheckFileExists = true,
-            ValidateNames = true
-        };
-
-        var result = openDialog.ShowDialog();
-
-        if (result != true) return;
-
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        var openFile = new FileInfo(openDialog.FileName);
+        // Get access to the storage provider from the application
+        var desktopLifetime =
+            (IClassicDesktopStyleApplicationLifetime)Avalonia.Application.Current!.ApplicationLifetime!;
 
-        var urlTextBlock = await File.ReadAllTextAsync(openFile.FullName);
+        // Configure and show the file picker
+        var files = await desktopLifetime.MainWindow!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Open Link File",
+            FileTypeFilter =
+            [
+                new FilePickerFileType("Text Files")
+                {
+                    Patterns = ["*.txt"],
+                    MimeTypes = ["text/plain"]
+                }
+            ],
+            AllowMultiple = false,
+            SuggestedStartLocation = await desktopLifetime.MainWindow!.StorageProvider
+                .TryGetFolderFromPathAsync(FeedReaderGuiSettingTools.GetLastDirectory().FullName)
+        });
 
+        // Check if a file was selected
+        if (files.Count == 0) return;
+
+        var file = files[0];
+
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        // Read the file contents
+        string urlTextBlock;
+        await using (var stream = await file.OpenReadAsync())
+        using (var reader = new StreamReader(stream))
+        {
+            urlTextBlock = await reader.ReadToEndAsync();
+        }
+
+        // Process URLs - this part remains mostly unchanged
         var urls = Regex.Split(urlTextBlock, "\r\n|\r|\n").ToList();
         urls.RemoveAll(string.IsNullOrWhiteSpace);
 
@@ -289,90 +342,6 @@ public partial class FeedListContext : IStandardListWithContext<FeedListListItem
             addResult.Switch(_ => StatusContext.ToastSuccess($"Added {loopUrl}"),
                 x => StatusContext.ToastError(x.Value));
         }
-    }
-
-    [NonBlockingCommand]
-    public async Task MarkAllRead(FeedListListItem? listItem)
-    {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (listItem?.DbReaderFeed == null) return;
-
-        await ContextDb.FeedAllItemsRead(listItem.DbReaderFeed.PersistentId, true);
-    }
-
-    [NonBlockingCommand]
-    [StopAndWarnIfNoSelectedListItem]
-    public async Task MarkAllReadForSelectedItem()
-    {
-        await ContextDb.FeedAllItemsRead(SelectedListItem()!.DbReaderFeed.PersistentId, true);
-    }
-
-    [NonBlockingCommand]
-    public async Task MarkAllUnRead(FeedListListItem? listItem)
-    {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (listItem?.DbReaderFeed == null) return;
-
-        await ContextDb.FeedAllItemsRead(listItem.DbReaderFeed.PersistentId, false);
-    }
-
-    [NonBlockingCommand]
-    [StopAndWarnIfNoSelectedListItem]
-    public async Task MarkAllUnReadForSelectedItem()
-    {
-        await ContextDb.FeedAllItemsRead(SelectedListItem()!.DbReaderFeed.PersistentId, false);
-    }
-
-    [NonBlockingCommand]
-    [StopAndWarnIfNoSelectedListItems]
-    public async Task MarkdownLinksForSelectedItems()
-    {
-        var clipboardBlock = new StringBuilder();
-
-        foreach (var loopItems in SelectedListItems())
-            clipboardBlock.AppendLine($"[{loopItems.DbReaderFeed.Name ?? "No Name"}]({loopItems.DbReaderFeed.Url})");
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(clipboardBlock.ToString());
-    }
-
-    [NonBlockingCommand]
-    [StopAndWarnIfNoSelectedListItems]
-    public async Task NamesForSelectedItems()
-    {
-        var clipboardBlock = new StringBuilder();
-
-        foreach (var loopItems in SelectedListItems())
-            clipboardBlock.AppendLine($"{loopItems.DbReaderFeed.Name ?? "(No Name)"}");
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(clipboardBlock.ToString());
-    }
-
-    [BlockingCommand]
-    public async Task NewFeedEditorFromUrl()
-    {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (string.IsNullOrEmpty(UserAddFeedInput))
-        {
-            await StatusContext.ToastWarning("Feed to Add is Blank?");
-            return;
-        }
-
-        var feedItem = await ContextDb.TryGetFeed(UserAddFeedInput, StatusContext.ProgressTracker());
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        var window = await FeedEditorWindow.CreateInstance(feedItem, ContextDb.DbFileFullName);
-
-        window.PositionWindowAndShow();
-
-        UserAddFeedInput = string.Empty;
     }
 
     private void OnDataNotificationReceived(object? sender, TinyMessageReceivedEventArgs e)
@@ -396,10 +365,17 @@ public partial class FeedListContext : IStandardListWithContext<FeedListListItem
             {
                 await ThreadSwitcher.ResumeForegroundAsync();
 
-                var toRemove = Items
-                    .Where(x => interProcessUpdateNotification.ContentIds.Contains(x.DbReaderFeed.PersistentId))
-                    .ToList();
-                toRemove.ForEach(x => Items.Remove(x));
+                _sourceItems.Edit(innerList =>
+                {
+                    var toRemove = innerList
+                        .Where(x => interProcessUpdateNotification.ContentIds.Contains(x.DbReaderFeed.PersistentId))
+                        .ToList();
+                    foreach (var item in toRemove)
+                    {
+                        innerList.Remove(item);
+                    }
+                });
+
                 return;
             }
 
@@ -414,25 +390,6 @@ public partial class FeedListContext : IStandardListWithContext<FeedListListItem
                 await UpdateReadCount(interProcessUpdateNotification.ContentIds));
     }
 
-    [NonBlockingCommand]
-    public async Task RefreshFeeds()
-    {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        var errors = await ContextDb.UpdateFeeds(StatusContext.ProgressTracker());
-        foreach (var loopError in errors) await StatusContext.ToastError(loopError);
-    }
-
-    [NonBlockingCommand]
-    [StopAndWarnIfNoSelectedListItem]
-    public async Task RefreshSelectedFeed()
-    {
-        var errors =
-            await ContextDb.UpdateFeeds(SelectedListItem()!.DbReaderFeed.PersistentId.AsList(),
-                StatusContext.ProgressTracker());
-        foreach (var loopError in errors) await StatusContext.ToastError(loopError);
-    }
-
     public async Task Setup()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -441,46 +398,13 @@ public partial class FeedListContext : IStandardListWithContext<FeedListListItem
 
         await AddNewFeeds();
 
-        ListSort.SortUpdated += (_, list) =>
-            StatusContext.RunFireAndForgetNonBlockingTask(() => ListContextSortHelpers.SortList(list, Items));
+        ListSort.SortUpdated += (_, _) =>
+            StatusContext.RunFireAndForgetNonBlockingTask(ApplySorting);
 
         PropertyChanged += OnPropertyChanged;
 
         DataNotificationsProcessor = new DataNotificationsWorkQueue { Processor = DataNotificationReceived };
         DataNotifications.NewDataNotificationChannel().MessageReceived += OnDataNotificationReceived;
-    }
-
-    [NonBlockingCommand]
-    [StopAndWarnIfNoSelectedListItems]
-    public async Task TitleAndUrlForSelectedItems()
-    {
-        var clipboardBlock = new StringBuilder();
-
-        foreach (var loopItems in SelectedListItems())
-            clipboardBlock.AppendLine($"{loopItems.DbReaderFeed.Name ?? "(No Name)"} - {loopItems.DbReaderFeed.Url}");
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(clipboardBlock.ToString());
-    }
-
-    [BlockingCommand]
-    public async Task TryAddFeed()
-    {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (string.IsNullOrEmpty(UserAddFeedInput))
-        {
-            await StatusContext.ToastWarning("Feed to Add is Blank?");
-            return;
-        }
-
-        var result = await ContextDb.TryAddFeed(UserAddFeedInput, StatusContext.ProgressTracker());
-
-        result.Switch(_ => StatusContext.ToastSuccess($"Added Feed for {UserAddFeedInput}"),
-            error => StatusContext.ToastError(error.Value));
-
-        UserAddFeedInput = string.Empty;
     }
 
     private async Task UpdateFeedListItems(List<Guid> toUpdate)
@@ -493,35 +417,48 @@ public partial class FeedListContext : IStandardListWithContext<FeedListListItem
         {
             await ThreadSwitcher.ResumeBackgroundAsync();
 
-            var listItem =
-                Items.SingleOrDefault(x => x.DbReaderFeed.PersistentId == loopContentIds);
-            var dbFeedItem = db.Feeds.SingleOrDefault(x =>
-                x.PersistentId == loopContentIds);
+            var dbFeedItem = db.Feeds.SingleOrDefault(x => x.PersistentId == loopContentIds);
 
-            //If there is no database item remove it if it exists in the Gui Items and 
-            //continue
+            //If there is no database item remove it if it exists in the items and continue
             if (dbFeedItem == null)
             {
-                if (listItem != null)
+                await ThreadSwitcher.ResumeForegroundAsync();
+
+                _sourceItems.Edit(innerList =>
                 {
-                    await ThreadSwitcher.ResumeForegroundAsync();
-                    Items.Remove(listItem);
-                }
+                    var itemToRemove = innerList.SingleOrDefault(x => x.DbReaderFeed.PersistentId == loopContentIds);
+                    if (itemToRemove != null)
+                    {
+                        innerList.Remove(itemToRemove);
+                    }
+                });
 
                 continue;
             }
 
-            //Update the existing list item - if there isn't one fall thru
-            //to the code below and add one.
-            if (listItem != null)
+            await ThreadSwitcher.ResumeForegroundAsync();
+
+            // Find the existing item
+            var existingItem = _sourceItems.Items.SingleOrDefault(x => x.DbReaderFeed.PersistentId == loopContentIds);
+
+            if (existingItem != null)
             {
-                await ThreadSwitcher.ResumeForegroundAsync();
-                listItem.DbReaderFeed = dbFeedItem;
+                // Update existing item
+                _sourceItems.Edit(innerList =>
+                {
+                    var index = innerList.IndexOf(existingItem);
+                    if (index >= 0)
+                    {
+                        innerList.RemoveAt(index);
+                        existingItem.DbReaderFeed = dbFeedItem;
+                        innerList.Insert(index, existingItem);
+                    }
+                });
             }
             else
             {
-                await ThreadSwitcher.ResumeForegroundAsync();
-                Items.Add(new FeedListListItem { DbReaderFeed = dbFeedItem });
+                // Add new item
+                _sourceItems.Add(new FeedListListItem { DbReaderFeed = dbFeedItem });
             }
         }
     }
@@ -541,51 +478,75 @@ public partial class FeedListContext : IStandardListWithContext<FeedListListItem
             var totalItems = await db.FeedItems.CountAsync(x => x.FeedPersistentId == loopFeedId);
             var unReadItems = await db.FeedItems.CountAsync(x => x.FeedPersistentId == loopFeedId && !x.MarkedRead);
 
-            var item = Items.SingleOrDefault(x => x.DbReaderFeed.PersistentId == loopFeedId);
+            await ThreadSwitcher.ResumeForegroundAsync();
 
-            if (item == null) return;
+            var item = _sourceItems.Items.SingleOrDefault(x => x.DbReaderFeed.PersistentId == loopFeedId);
 
-            item.ItemsCount = totalItems;
-            item.UnreadItemsCount = unReadItems;
+            if (item == null) continue;
+
+            // Update the counts and refresh the item
+            _sourceItems.Edit(innerList =>
+            {
+                var index = innerList.IndexOf(item);
+                if (index >= 0)
+                {
+                    innerList.RemoveAt(index);
+                    item.ItemsCount = totalItems;
+                    item.UnreadItemsCount = unReadItems;
+                    innerList.Insert(index, item);
+                }
+            });
         }
     }
 
-    [NonBlockingCommand]
-    [StopAndWarnIfNoSelectedListItems]
-    public async Task UrlsForSelectedItems()
+    // Helper class for custom sorting
+    private class SortDescriptionComparer<T> : IComparer<T>
     {
-        var clipboardBlock = new StringBuilder();
+        private readonly List<SortDescription> _sortDescriptions;
 
-        foreach (var loopItems in SelectedListItems()) clipboardBlock.AppendLine($"{loopItems.DbReaderFeed.Url}");
+        public SortDescriptionComparer(List<SortDescription> sortDescriptions)
+        {
+            _sortDescriptions = sortDescriptions;
+        }
 
-        await ThreadSwitcher.ResumeForegroundAsync();
+        public int Compare(T? x, T? y)
+        {
+            if (x == null && y == null) return 0;
+            if (x == null) return -1;
+            if (y == null) return 1;
 
-        Clipboard.SetText(clipboardBlock.ToString());
+            foreach (var sort in _sortDescriptions)
+            {
+                var propertyInfo = typeof(T).GetProperty(sort.PropertyName);
+                if (propertyInfo == null) continue;
+
+                var xValue = propertyInfo.GetValue(x);
+                var yValue = propertyInfo.GetValue(y);
+
+                int result;
+                if (xValue == null && yValue == null)
+                    result = 0;
+                else if (xValue == null)
+                    result = -1;
+                else if (yValue == null)
+                    result = 1;
+                else if (xValue is IComparable comparable)
+                    result = comparable.CompareTo(yValue);
+                else
+                    result = 0;
+
+                if (result != 0)
+                    return sort.Direction == ListSortDirection.Ascending ? result : -result;
+            }
+
+            return 0;
+        }
     }
 
-    [NonBlockingCommand]
-    public async Task ViewFeedItems(FeedListListItem? listItem, bool showReadItems)
+    // Update the finalizer to dispose of the BehaviorSubject
+    ~FeedListContext()
     {
-        if (listItem?.DbReaderFeed == null) return;
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        var window = await FeedItemListWindow.CreateInstance(ContextDb.DbFileFullName,
-            listItem.DbReaderFeed.PersistentId.AsList(), showReadItems);
-        window.PositionWindowAndShow();
-    }
-
-    [NonBlockingCommand]
-    [StopAndWarnIfNoSelectedListItem]
-    public async Task ViewReadFeedItemsForSelectedItem()
-    {
-        await ViewFeedItems(SelectedListItem(), true);
-    }
-
-    [NonBlockingCommand]
-    [StopAndWarnIfNoSelectedListItem]
-    public async Task ViewUnreadFeedItemsForSelectedItem()
-    {
-        await ViewFeedItems(SelectedListItem(), false);
+        _dynamicDataConnection?.Dispose();
+        _filterPredicate?.Dispose();
     }
 }

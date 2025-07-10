@@ -1,7 +1,6 @@
-using System.ComponentModel;
-using System.IO;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Metalama.Patterns.Observability;
 using PointlessWaymarks.AvaloniaCommon;
 using PointlessWaymarks.AvaloniaCommon.AppToast;
 using PointlessWaymarks.AvaloniaCommon.LocalHtml;
@@ -11,13 +10,15 @@ using PointlessWaymarks.AvaloniaCommon.Status;
 using PointlessWaymarks.AvaloniaCommon.Utility;
 using PointlessWaymarks.AvaloniaLlamaAspects;
 using PointlessWaymarks.CommonTools;
-using PointlessWaymarks.FeedReaderData;
 using PointlessWaymarks.FeedReaderAvalonia.Controls;
+using PointlessWaymarks.FeedReaderData;
 using Serilog;
+using System.ComponentModel;
+using System.IO;
 
 namespace PointlessWaymarks.FeedReaderAvalonia;
 
-[NotifyPropertyChanged]
+[Observable]
 [GenerateStatusCommands]
 public partial class MainWindow : Window
 {
@@ -126,11 +127,11 @@ public partial class MainWindow : Window
                 {
                     Title = "Open Database",
                     AllowMultiple = false,
-                    Filters = new List<FileDialogFilter>
-                    {
-                        new() { Name = "Database files", Extensions = new List<string> { "db" } },
-                        new() { Name = "All files", Extensions = new List<string> { "*" } }
-                    },
+                    Filters =
+                    [
+                        new() { Name = "Database files", Extensions = ["db"] },
+                        new() { Name = "All files", Extensions = ["*"] }
+                    ],
                     Directory = FeedReaderGuiSettingTools.GetLastDirectory().FullName
                 };
 
@@ -210,11 +211,11 @@ public partial class MainWindow : Window
         AppSettingsTabContext = new AppSettingsContext(StatusContext);
     }
 
-    protected override void OnClosing(CancelEventArgs e)
-    {
-        base.OnClosing(e);
-        Log.CloseAndFlush();
-    }
+    //protected override void OnClosing(CancelEventArgs e)
+    //{
+    //    base.OnClosing(e);
+    //    Log.CloseAndFlush();
+    //}
 
     [BlockingCommand]
     public async Task NewDatabase()
@@ -224,7 +225,7 @@ public partial class MainWindow : Window
         var dialog = new OpenFolderDialog
         {
             Title = "New Db Directory",
-            Directory = FileLocationHelpers.DefaultStorageDirectory()
+            Directory = FileLocationHelpers.DefaultStorageDirectory().FullName
         };
 
         var result = await dialog.ShowAsync(this);
@@ -258,7 +259,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var newFile = UniqueFileTools.UniqueFile(result, $"{baseFile}.db");
+        var newFile = UniqueFileTools.UniqueFile(new DirectoryInfo(result), $"{baseFile}.db");
 
         if (newFile == null)
         {
@@ -278,11 +279,11 @@ public partial class MainWindow : Window
         {
             Title = "Open Database",
             AllowMultiple = false,
-            Filters = new List<FileDialogFilter>
-            {
-                new() { Name = "Database files", Extensions = new List<string> { "db" } },
-                new() { Name = "All files", Extensions = new List<string> { "*" } }
-            },
+            Filters =
+            [
+                new() { Name = "Database files", Extensions = ["db"] },
+                new() { Name = "All files", Extensions = ["*"] }
+            ],
             Directory = FeedReaderGuiSettingTools.GetLastDirectory().FullName
         };
 

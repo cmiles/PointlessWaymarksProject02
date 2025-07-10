@@ -1,15 +1,16 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Reactive;
+using System.Reactive.Subjects;
 using System.Text;
-using Windows.ApplicationModel.DataTransfer;
-using Avalonia.Collections;
+using DynamicData;
+using DynamicData.Binding;
 using FluentScheduler;
 using Microsoft.EntityFrameworkCore;
-using OneOf;
-using OneOf.Types;
 using PointlessWaymarks.AvaloniaCommon;
 using PointlessWaymarks.AvaloniaCommon.ColumnSort;
+using PointlessWaymarks.AvaloniaCommon.LocalHtml;
 using PointlessWaymarks.AvaloniaCommon.Status;
 using PointlessWaymarks.AvaloniaCommon.Utility;
 using PointlessWaymarks.AvaloniaLlamaAspects;
@@ -17,31 +18,18 @@ using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.FeedReaderData;
 using Serilog;
 using TinyIpc.Messaging;
-using Avalonia.Data.Converters;
-using System.Globalization;
-using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Platform.Storage;
-using PointlessWaymarks.AvaloniaCommon.LocalHtml;
 
 namespace PointlessWaymarks.FeedReaderAvalonia.Controls;
 
-public class FeedItemListMarkedReadOpacityConverter : IValueConverter
-{
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        return (bool)value ? 0.4 : 1.0;
-    }
-
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
-}
-
 [NotifyPropertyChanged]
 [GenerateStatusCommands]
-public partial class FeedItemListContext : IStandardListWithContext<FeedItemListListItem>
+public partial class FeedItemListContext
 {
+    // DynamicData source and connections
+    private readonly SourceList<FeedItemListListItem> _sourceItems = new();
+    private readonly IDisposable _dynamicDataConnection;
+    private readonly BehaviorSubject<Func<FeedItemListListItem, bool>> _filterPredicate = new(item => true);
+
     public bool AutoMarkRead { get; set; } = true;
     public required FeedQueries ContextDb { get; init; }
     public DataNotificationsWorkQueue? DataNotificationsProcessor { get; set; }
@@ -58,7 +46,21 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
     public bool ShowUnread { get; set; }
     public string UserAddFeedInput { get; set; } = string.Empty;
     public string UserFilterText { get; set; } = string.Empty;
-    public required DataGridCollectionView ItemsView { get; set; }
+
+    // Read-only observable collection for UI binding
+    public required ReadOnlyObservableCollection<FeedItemListListItem> Items { get; init; }
+
+    public FeedItemListContext()
+    {
+        // Set up DynamicData transformations
+        _dynamicDataConnection = _sourceItems.Connect()
+            .Filter(_filterPredicate)
+            .Sort(SortExpressionComparer<FeedItemListListItem>.Descending(x => x.DbItem.PublishingDate))
+            .Bind(out var items)
+            .Subscribe();
+
+        Items = items;
+    }
 
     public FeedItemListListItem? SelectedListItem()
     {
@@ -71,20 +73,25 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
     }
 
     public required StatusControlContext StatusContext { get; set; }
-    public required ObservableCollection<FeedItemListListItem> Items { get; init; }
 
     [NonBlockingCommand]
     public async Task ClearReadItems()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        var toRemove = Items.Where(x => x.DbItem.MarkedRead).ToList();
+        var toRemove = _sourceItems.Items.Where(x => x.DbItem.MarkedRead).ToList();
 
         if (!toRemove.Any()) return;
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        foreach (var x in toRemove) Items.Remove(x);
+        _sourceItems.Edit(innerList =>
+        {
+            foreach (var item in toRemove)
+            {
+                innerList.Remove(item);
+            }
+        });
     }
 
     private async Task ShowFeedDisplayHtml(FeedItemListListItem? item)
@@ -141,21 +148,19 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
         }
     }
 
+    // This creates an instance of the context with a properly initialized ReadOnlyObservableCollection
     public static async Task<FeedItemListContext> CreateInstance(StatusControlContext statusContext, string dbFile,
         List<Guid>? feedList = null, bool showUnread = false)
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        var factoryItemsList = new ObservableCollection<FeedItemListListItem>();
-
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         var feedQueries = new FeedQueries() { DbFileFullName = dbFile };
 
-        var newContext = new FeedItemListContext
+        var context = new FeedItemListContext
         {
-            Items = factoryItemsList,
-            ItemsView = new DataGridCollectionView(factoryItemsList),
+            Items = new ReadOnlyObservableCollection<FeedItemListListItem>([]),
             StatusContext = statusContext,
             FeedList = feedList ?? [],
             ShowUnread = showUnread,
@@ -197,9 +202,9 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
             }
         };
 
-        await newContext.Setup();
+        await context.Setup();
 
-        return newContext;
+        return context;
     }
 
     private async Task DataNotificationReceived(TinyMessageReceivedEventArgs eventArgs)
@@ -256,37 +261,48 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
 
     private async Task FilterList()
     {
-        if (!Items.Any()) return;
+        if (!_sourceItems.Items.Any()) return;
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
         if (string.IsNullOrWhiteSpace(UserFilterText))
         {
-            ItemsView.Filter = _ => true;
+            _filterPredicate.OnNext(_ => true);
             return;
         }
 
         var cleanedFilterText = UserFilterText.Trim();
 
-        ItemsView.Filter = o =>
-        {
-            if (o is not FeedItemListListItem toFilter) return false;
-
-            return toFilter.DbReaderFeed.Name.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase)
-                   || toFilter.DbReaderFeed.Tags.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase)
-                   || toFilter.DbReaderFeed.Note.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase)
-                   || (toFilter.DbItem.Title?.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase) ??
-                       false)
-                   || (toFilter.DbItem.Author?.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase) ??
-                       false)
-                   || (toFilter.DbItem.Link?.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase) ??
-                       false)
-                   || (toFilter.DbItem.Description?.Contains(cleanedFilterText,
-                       StringComparison.OrdinalIgnoreCase) ?? false)
-                ;
-        };
+        _filterPredicate.OnNext(item =>
+            item.DbReaderFeed.Name.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase) ||
+            item.DbReaderFeed.Tags.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase) ||
+            item.DbReaderFeed.Note.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase) ||
+            (item.DbItem.Title?.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (item.DbItem.Author?.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (item.DbItem.Link?.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (item.DbItem.Description?.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase) ?? false)
+        );
     }
 
+    private async Task ApplySorting()
+    {
+        var sortDescriptions = ListSort.SortDescriptions();
+        if (!sortDescriptions.Any())
+            return;
+
+        // Build a comparer based on the sort descriptions
+        IComparer<FeedItemListListItem> comparer = new SortDescriptionComparer<FeedItemListListItem>(sortDescriptions);
+
+        // Sort the items
+        var items = _sourceItems.Items.OrderBy(x => x, comparer).ToList();
+
+        // Re-add the sorted items
+        _sourceItems.Edit(innerList =>
+        {
+            innerList.Clear();
+            innerList.AddRange(items);
+        });
+    }
 
     [BlockingCommand]
     private async Task ItemWebViewScreenshot()
@@ -452,9 +468,16 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
             {
                 await ThreadSwitcher.ResumeForegroundAsync();
 
-                var toRemove = Items
-                    .Where(x => interProcessUpdateNotification.ContentIds.Contains(x.DbItem.PersistentId)).ToList();
-                toRemove.ForEach(x => Items.Remove(x));
+                _sourceItems.Edit(innerList =>
+                {
+                    var toRemove = innerList
+                        .Where(x => interProcessUpdateNotification.ContentIds.Contains(x.DbItem.PersistentId))
+                        .ToList();
+                    foreach (var item in toRemove)
+                    {
+                        innerList.Remove(item);
+                    }
+                });
                 return;
             }
 
@@ -467,10 +490,10 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
         {
             var feedsToUpdate = FeedList.Any()
                 ? FeedList.Intersect(interProcessUpdateNotification.ContentIds).ToList()
-                : Items.Select(x => x.DbReaderFeed.PersistentId).ToList();
+                : _sourceItems.Items.Select(x => x.DbReaderFeed.PersistentId).ToList();
             if (!feedsToUpdate.Any()) return;
 
-            var toUpdate = Items.Where(x => feedsToUpdate.Contains(x.DbItem.FeedPersistentId))
+            var toUpdate = _sourceItems.Items.Where(x => feedsToUpdate.Contains(x.DbItem.FeedPersistentId))
                 .Select(x => x.DbItem.PersistentId).ToList();
             await UpdateFeedItems(toUpdate);
         }
@@ -508,19 +531,27 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
         var initialItems = await initialItemFilter.OrderByDescending(x => x.PublishingDate)
             .ThenBy(x => x.Title).ToListAsync();
 
+        var feedItems = new List<FeedItemListListItem>();
+        foreach (var loopItems in initialItems)
+        {
+            feedItems.Add(new FeedItemListListItem
+            {
+                DbItem = loopItems,
+                DbReaderFeed = db.Feeds.Single(x => x.PersistentId == loopItems.FeedPersistentId)
+            });
+        }
+
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        foreach (var loopItems in initialItems)
-            Items.Add(new FeedItemListListItem
-            {
-                DbItem = loopItems, DbReaderFeed = db.Feeds.Single(x => x.PersistentId == loopItems.FeedPersistentId)
-            });
+        // Add all items at once for better performance
+        _sourceItems.AddRange(feedItems);
 
-        await ListContextSortHelpers.SortList(ListSort.SortDescriptions(), Items);
+        // Apply initial sorting and filtering
+        await ApplySorting();
         await FilterList();
 
         ListSort.SortUpdated += (_, list) =>
-            StatusContext.RunNonBlockingTask(() => ListContextSortHelpers.SortList(list, Items));
+            StatusContext.RunNonBlockingTask(() => ApplySorting());
 
         PropertyChanged += OnPropertyChanged;
         DataNotificationsProcessor = new DataNotificationsWorkQueue { Processor = DataNotificationReceived };
@@ -619,53 +650,55 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
         {
             await ThreadSwitcher.ResumeBackgroundAsync();
 
-            var listItem =
-                Items.SingleOrDefault(x => x.DbItem.PersistentId == loopContentIds);
-            var dbFeedItem = db.FeedItems.SingleOrDefault(x =>
-                x.PersistentId == loopContentIds);
+            var listItem = _sourceItems.Items.SingleOrDefault(x => x.DbItem.PersistentId == loopContentIds);
+            var dbFeedItem = db.FeedItems.SingleOrDefault(x => x.PersistentId == loopContentIds);
 
-            //If there is no database item remove it if it exists in the Gui Items and 
-            //continue
+            //If there is no database item remove it if it exists in the items and continue
             if (dbFeedItem == null)
             {
                 if (listItem != null)
                 {
                     await ThreadSwitcher.ResumeForegroundAsync();
-                    Items.Remove(listItem);
+                    _sourceItems.Remove(listItem);
                 }
 
                 continue;
             }
 
-            var dbFeed = db.Feeds.SingleOrDefault(x =>
-                x.PersistentId == dbFeedItem.FeedPersistentId);
+            var dbFeed = db.Feeds.SingleOrDefault(x => x.PersistentId == dbFeedItem.FeedPersistentId);
 
-            //If the Feed is not in the Db remove the item from the Gui
-            //Display if it exists - the assumption here is that the data
-            //is either in the process of changing or needs a cleanup - an
-            //absent feed means all FeedItems should have been purged.
+            //If the Feed is not in the Db remove the item from the collection
             if (dbFeed == null)
             {
                 if (listItem != null)
                 {
                     await ThreadSwitcher.ResumeForegroundAsync();
-                    Items.Remove(listItem);
+                    _sourceItems.Remove(listItem);
                 }
 
                 continue;
             }
 
-            //Update the existing list item - if there isn't one fall thru
-            //to the code below and add one.
+            await ThreadSwitcher.ResumeForegroundAsync();
+
+            //Update the existing list item - if there isn't one add a new one
             if (listItem != null)
             {
-                listItem.DbItem = dbFeedItem;
-                listItem.DbReaderFeed = dbFeed;
+                _sourceItems.Edit(innerList =>
+                {
+                    var index = innerList.IndexOf(listItem);
+                    if (index >= 0)
+                    {
+                        innerList.RemoveAt(index);
+                        listItem.DbItem = dbFeedItem;
+                        listItem.DbReaderFeed = dbFeed;
+                        innerList.Insert(index, listItem);
+                    }
+                });
             }
             else
             {
-                await ThreadSwitcher.ResumeForegroundAsync();
-                Items.Add(new FeedItemListListItem { DbReaderFeed = dbFeed, DbItem = dbFeedItem });
+                _sourceItems.Add(new FeedItemListListItem { DbReaderFeed = dbFeed, DbItem = dbFeedItem });
             }
         }
 
@@ -686,5 +719,73 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
         await ThreadSwitcher.ResumeForegroundAsync();
 
         await ClipboardHelper.TextToClipboardIfPossible(clipboardBlock.ToString(), StatusContext);
+    }
+
+    // Helper class for custom sorting
+    private class SortDescriptionComparer<T> : IComparer<T>
+    {
+        private readonly List<SortDescription> _sortDescriptions;
+
+        public SortDescriptionComparer(List<SortDescription> sortDescriptions)
+        {
+            _sortDescriptions = sortDescriptions;
+        }
+
+        public int Compare(T? x, T? y)
+        {
+            if (x == null && y == null) return 0;
+            if (x == null) return -1;
+            if (y == null) return 1;
+
+            foreach (var sort in _sortDescriptions)
+            {
+                // Handle nested property paths like "DbItem.PublishingDate"
+                var value1 = GetPropertyValue(x, sort.PropertyName);
+                var value2 = GetPropertyValue(y, sort.PropertyName);
+
+                int result;
+                if (value1 == null && value2 == null)
+                    result = 0;
+                else if (value1 == null)
+                    result = -1;
+                else if (value2 == null)
+                    result = 1;
+                else if (value1 is IComparable comparable)
+                    result = comparable.CompareTo(value2);
+                else
+                    result = 0;
+
+                if (result != 0)
+                    return sort.Direction == ListSortDirection.Ascending ? result : -result;
+            }
+
+            return 0;
+        }
+
+        private static object? GetPropertyValue(object obj, string propertyPath)
+        {
+            var properties = propertyPath.Split('.');
+            var value = obj;
+
+            foreach (var property in properties)
+            {
+                var propInfo = value.GetType().GetProperty(property);
+                if (propInfo == null)
+                    return null;
+
+                value = propInfo.GetValue(value);
+                if (value == null)
+                    return null;
+            }
+
+            return value;
+        }
+    }
+
+    // Remember to dispose the connection when the context is no longer needed
+    ~FeedItemListContext()
+    {
+        _dynamicDataConnection?.Dispose();
+        _filterPredicate?.Dispose();
     }
 }

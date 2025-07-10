@@ -1,11 +1,13 @@
 using Avalonia.Controls;
+using Metalama.Patterns.Observability;
 using PointlessWaymarks.AvaloniaCommon;
 using PointlessWaymarks.AvaloniaCommon.Status;
+using PointlessWaymarks.AvaloniaCommon.Utility;
 using PointlessWaymarks.AvaloniaLlamaAspects;
 
 namespace PointlessWaymarks.FeedReaderAvalonia.Controls;
 
-[NotifyPropertyChanged]
+[Observable]
 [StaThreadConstructorGuard]
 public partial class FeedListWindow : Window
 {
