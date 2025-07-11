@@ -22,7 +22,7 @@
         <PackageReference Include="Metalama.Framework" Version="2025.1.10" />
         <PackageReference Include="Microsoft.Recognizers.Text.DateTime" Version="1.8.13" />
         <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3351.48" />
-        <PackageReference Include="System.Runtime.Caching" Version="9.0.6" />
+        <PackageReference Include="System.Runtime.Caching" Version="9.0.7" />
     </ItemGroup>
 
     <ItemGroup>
