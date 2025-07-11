@@ -18,7 +18,9 @@ public static class NewContentModels
             CreatedBy = UserSettingsSingleton.CurrentSettings().DefaultCreatedBy,
             FeedOn = created,
             ContentVersion = Db.ContentVersionDateTime(),
-            PublicDownloadLink = UserSettingsSingleton.CurrentSettings().FilesHavePublicDownloadLinkByDefault
+            PublicDownloadLink = UserSettingsSingleton.CurrentSettings().FilesHavePublicDownloadLinkByDefault,
+            ShowInMainSiteFeed = UserSettingsSingleton.CurrentSettings()
+                .MainFeedFilesDefault,
         };
 
         return returnEntry;
@@ -37,7 +39,9 @@ public static class NewContentModels
             CreatedBy = UserSettingsSingleton.CurrentSettings().DefaultCreatedBy,
             FeedOn = created,
             ContentVersion = Db.ContentVersionDateTime(),
-            PublicDownloadLink = UserSettingsSingleton.CurrentSettings().GeoJsonHasPublicDownloadLinkByDefault
+            PublicDownloadLink = UserSettingsSingleton.CurrentSettings().GeoJsonHasPublicDownloadLinkByDefault,
+            ShowInMainSiteFeed = UserSettingsSingleton.CurrentSettings()
+                .MainFeedGeoJsonDefault
         };
 
         return returnEntry;
@@ -56,7 +60,9 @@ public static class NewContentModels
             CreatedBy = UserSettingsSingleton.CurrentSettings().DefaultCreatedBy,
             FeedOn = created,
             ContentVersion = Db.ContentVersionDateTime(),
-            ShowImageSizes = UserSettingsSingleton.CurrentSettings().ImagePagesHaveLinksToImageSizesByDefault
+            ShowImageSizes = UserSettingsSingleton.CurrentSettings().ImagePagesHaveLinksToImageSizesByDefault,
+            ShowInMainSiteFeed = UserSettingsSingleton.CurrentSettings()
+                .MainFeedImageDefault
         };
 
         return returnEntry;
@@ -77,7 +83,9 @@ public static class NewContentModels
             ContentVersion = Db.ContentVersionDateTime(),
             PublicDownloadLink = UserSettingsSingleton.CurrentSettings().LinesHavePublicDownloadLinkByDefault,
             ShowContentReferencesOnMap =
-                UserSettingsSingleton.CurrentSettings().LinesShowContentReferencesOnMapByDefault
+                UserSettingsSingleton.CurrentSettings().LinesShowContentReferencesOnMapByDefault,
+            ShowInMainSiteFeed = UserSettingsSingleton.CurrentSettings()
+                .MainFeedLineDefault
         };
 
         return returnEntry;
@@ -127,7 +135,8 @@ public static class NewContentModels
             CreatedOn = created,
             FeedOn = created,
             ContentVersion = Db.ContentVersionDateTime(),
-            Slug = await NoteGenerator.UniqueNoteSlug()
+            Slug = await NoteGenerator.UniqueNoteSlug(),
+            ShowInMainSiteFeed = UserSettingsSingleton.CurrentSettings().MainFeedNoteDefault
         };
 
         return returnEntry;
@@ -148,7 +157,9 @@ public static class NewContentModels
             ContentVersion = Db.ContentVersionDateTime(),
             PhotoCreatedOn = created,
             ShowPhotoSizes = UserSettingsSingleton.CurrentSettings().PhotoPagesHaveLinksToPhotoSizesByDefault,
-            ShowLocation = UserSettingsSingleton.CurrentSettings().PhotoPagesShowPositionByDefault
+            ShowLocation = UserSettingsSingleton.CurrentSettings().PhotoPagesShowPositionByDefault,
+            ShowInMainSiteFeed = UserSettingsSingleton.CurrentSettings()
+                .MainFeedPhotoDefault
         };
 
         return returnEntry;
@@ -168,7 +179,9 @@ public static class NewContentModels
             FeedOn = created,
             ContentVersion = Db.ContentVersionDateTime(),
             Latitude = UserSettingsSingleton.CurrentSettings().LatitudeDefault,
-            Longitude = UserSettingsSingleton.CurrentSettings().LongitudeDefault
+            Longitude = UserSettingsSingleton.CurrentSettings().LongitudeDefault,
+            ShowInMainSiteFeed = UserSettingsSingleton.CurrentSettings()
+                .MainFeedPointDefault
         };
 
         return returnEntry;
@@ -200,7 +213,9 @@ public static class NewContentModels
             CreatedBy = UserSettingsSingleton.CurrentSettings().DefaultCreatedBy,
             CreatedOn = created,
             FeedOn = created,
-            ContentVersion = Db.ContentVersionDateTime()
+            ContentVersion = Db.ContentVersionDateTime(),
+            ShowInMainSiteFeed = UserSettingsSingleton.CurrentSettings()
+                .MainFeedPostDefault
         };
 
         return returnEntry;
@@ -232,7 +247,9 @@ public static class NewContentModels
             CreatedBy = UserSettingsSingleton.CurrentSettings().DefaultCreatedBy,
             CreatedOn = created,
             FeedOn = created,
-            ContentVersion = Db.ContentVersionDateTime()
+            ContentVersion = Db.ContentVersionDateTime(),
+            ShowInMainSiteFeed = UserSettingsSingleton.CurrentSettings()
+                .MainFeedTrailDefault
         };
 
         return returnEntry;
@@ -251,7 +268,8 @@ public static class NewContentModels
             CreatedOn = created,
             FeedOn = created,
             ContentVersion = Db.ContentVersionDateTime(),
-            VideoCreatedOn = created
+            VideoCreatedOn = created,
+            ShowInMainSiteFeed = UserSettingsSingleton.CurrentSettings().MainFeedVideoDefault
         };
 
         return returnEntry;

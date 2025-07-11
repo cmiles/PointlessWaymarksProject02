@@ -55,7 +55,8 @@
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
                 <StackPanel Orientation="Vertical">
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=LocalSiteRootDirectoryTextBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=LocalSiteRootDirectoryTextBox}">
                             Local Site Root Directory
                         </Label>
                         <TextBox
@@ -69,7 +70,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=LocalMediaArchiveTextBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=LocalMediaArchiveTextBox}">
                             Local Media Archive Directory
                         </Label>
                         <TextBox
@@ -83,7 +85,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=SiteUrlTextBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=SiteUrlTextBox}">
                             Domain
                         </Label>
                         <TextBox
@@ -97,7 +100,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=SiteNameTextBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=SiteNameTextBox}">
                             Site Name
                         </Label>
                         <TextBox
@@ -111,7 +115,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=SiteAuthorsTextBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=SiteAuthorsTextBox}">
                             Site Authors
                         </Label>
                         <TextBox
@@ -125,7 +130,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=SiteKeywordsTextBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=SiteKeywordsTextBox}">
                             Site Keywords
                         </Label>
                         <TextBox
@@ -139,7 +145,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=SiteSummaryTextBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=SiteSummaryTextBox}">
                             Site Sub-title/Summary
                         </Label>
                         <TextBox
@@ -153,7 +160,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=SiteEmailToTextBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=SiteEmailToTextBox}">
                             Site Email To
                         </Label>
                         <TextBox
@@ -167,7 +175,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=DefaultCreatedByTextBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=DefaultCreatedByTextBox}">
                             Default Created By Name
                         </Label>
                         <TextBox
@@ -181,7 +190,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=NumberOfItemsOnMainPageTextBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=NumberOfItemsOnMainPageTextBox}">
                             Maximum Number of Items To Show on Main Page
                         </Label>
                         <TextBox
@@ -195,7 +205,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=ShowRelatedContentCheckBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=ShowRelatedContentCheckBox}">
                             Content Pages - Show Related Content Block
                         </Label>
                         <CheckBox
@@ -211,7 +222,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=ShowPreviousNextContentCheckBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=ShowPreviousNextContentCheckBox}">
                             Content Pages - Show Previous/Next Content Block
                         </Label>
                         <CheckBox
@@ -227,7 +239,59 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=FooterSnippetTextBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=ShowPreviousNextContentCheckBox}">
+                            Show In Main Site Feed Defaults
+                        </Label>
+                        <WrapPanel Orientation="Horizontal" Margin="6,0,0,8">
+                            <WrapPanel.Resources>
+                                <Style TargetType="CheckBox">
+                                    <Setter Property="Margin" Value="0,4,12,4" />
+                                </Style>
+                            </WrapPanel.Resources>
+                            <CheckBox IsChecked="{Binding EditorSettings.MainFeedFilesDefault, UpdateSourceTrigger=PropertyChanged}">
+                                Files
+                            </CheckBox>
+                            <CheckBox IsChecked="{Binding EditorSettings.MainFeedGeoJsonDefault, UpdateSourceTrigger=PropertyChanged}">
+                                GeoJson
+                            </CheckBox>
+                            <CheckBox IsChecked="{Binding EditorSettings.MainFeedImageDefault, UpdateSourceTrigger=PropertyChanged}">
+                                Images
+                            </CheckBox>
+                            <CheckBox IsChecked="{Binding EditorSettings.MainFeedLineDefault, UpdateSourceTrigger=PropertyChanged}">
+                                Lines
+                            </CheckBox>
+                            <CheckBox IsChecked="{Binding EditorSettings.MainFeedNoteDefault, UpdateSourceTrigger=PropertyChanged}">
+                                Notes
+                            </CheckBox>
+                            <CheckBox IsChecked="{Binding EditorSettings.MainFeedPhotoDefault, UpdateSourceTrigger=PropertyChanged}">
+                                Photos
+                            </CheckBox>
+                            <CheckBox IsChecked="{Binding EditorSettings.MainFeedPointDefault, UpdateSourceTrigger=PropertyChanged}">
+                                Points
+                            </CheckBox>
+                            <CheckBox IsChecked="{Binding EditorSettings.MainFeedPostDefault, UpdateSourceTrigger=PropertyChanged}">
+                                Posts
+                            </CheckBox>
+                            <CheckBox IsChecked="{Binding EditorSettings.MainFeedTrailDefault, UpdateSourceTrigger=PropertyChanged}">
+                                Trails
+                            </CheckBox>
+                            <CheckBox IsChecked="{Binding EditorSettings.MainFeedVideoDefault, UpdateSourceTrigger=PropertyChanged}">
+                                Videos
+                            </CheckBox>
+                            <CheckBox IsChecked="{Binding EditorSettings.MainLineNoteDefault, UpdateSourceTrigger=PropertyChanged}">
+                                Line Notes
+                            </CheckBox>
+                        </WrapPanel>
+                        <wpf:MarkdownViewer Markdown="{Binding HelpMarkdownShowInMainSiteFeedDefaults}">
+                            <b:Interaction.Behaviors>
+                                <behaviors:IgnoreMouseWheelBehavior />
+                            </b:Interaction.Behaviors>
+                        </wpf:MarkdownViewer>
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=FooterSnippetTextBox}">
                             Footer Snippet
                         </Label>
                         <TextBox
@@ -244,7 +308,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=SiteLangTextBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=SiteLangTextBox}">
                             Site Lang Attribute
                         </Label>
                         <TextBox
@@ -258,7 +323,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=SiteDirTextBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=SiteDirTextBox}">
                             Site Dir Attribute
                         </Label>
                         <TextBox
@@ -272,7 +338,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=DefaultPhotoShowPositionCheckBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=DefaultPhotoShowPositionCheckBox}">
                             Photo 'Show Position' Default Value
                         </Label>
                         <CheckBox
@@ -288,7 +355,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=DefaultImageShowSizesCheckBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=DefaultImageShowSizesCheckBox}">
                             Images 'Show Sizes' Default Value
                         </Label>
                         <CheckBox
@@ -305,7 +373,8 @@
                     </StackPanel>
                     <Button Command="{Binding ShowSitePictureSizesEditorWindowCommand}">Edit List of Pre-Generated Image Sizes</Button>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=DefaultFilePublicDownloadDefaultCheckBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=DefaultFilePublicDownloadDefaultCheckBox}">
                             Public Download Link Default - Files
                         </Label>
                         <CheckBox
@@ -321,7 +390,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=DefaultLinePublicDownloadDefaultCheckBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=DefaultLinePublicDownloadDefaultCheckBox}">
                             Public Download Link Default - Lines
                         </Label>
                         <CheckBox
@@ -337,7 +407,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=DefaultFilePublicDownloadDefaultCheckBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=DefaultFilePublicDownloadDefaultCheckBox}">
                             Public Download Link Default - GeoJson
                         </Label>
                         <CheckBox
@@ -353,7 +424,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=FeatureIntersectionTextBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=FeatureIntersectionTextBox}">
                             Feature Intersection Settings File
                         </Label>
                         <TextBox
@@ -367,7 +439,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=FeatureIntersectionTagOnImportCheckBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=FeatureIntersectionTagOnImportCheckBox}">
                             Feature Intersection - Tag on Import
                         </Label>
                         <CheckBox
@@ -383,7 +456,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=LinesShowContentReferencesOnMapByDefaultCheckBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=LinesShowContentReferencesOnMapByDefaultCheckBox}">
                             Line Body Content References on Map
                         </Label>
                         <CheckBox
@@ -399,7 +473,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=LatitudeTextBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=LatitudeTextBox}">
                             Default Latitude
                         </Label>
                         <TextBox
@@ -408,7 +483,8 @@
                             Text="{Binding EditorSettings.LatitudeDefault, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=LongitudeTextBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=LongitudeTextBox}">
                             Default Longitude
                         </Label>
                         <TextBox
@@ -422,7 +498,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=BingApiKeyTextBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=BingApiKeyTextBox}">
                             Bing Maps Api Key
                         </Label>
                         <TextBox
@@ -436,7 +513,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=CalTopoApiKeyTextBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=CalTopoApiKeyTextBox}">
                             CalTopo Maps Api Key
                         </Label>
                         <TextBox
@@ -450,7 +528,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=PinboardApiTokenTextBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=PinboardApiTokenTextBox}">
                             Pinboard Api Key
                         </Label>
                         <TextBox
@@ -464,7 +543,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=ProgramUpdateLocationTextBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=ProgramUpdateLocationTextBox}">
                             Program Update Location
                         </Label>
                         <TextBox
@@ -478,7 +558,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=S3BucketTextBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=S3BucketTextBox}">
                             Cloud S3 Storage
                         </Label>
                         <wpf:MarkdownViewer Markdown="{Binding HelpMarkdownS3Information}">
@@ -488,7 +569,8 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=S3StorageProviderComboBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=S3StorageProviderComboBox}">
                             S3 Storage Provider
                         </Label>
                         <ComboBox
@@ -500,7 +582,8 @@
                             SelectedValue="{Binding EditorSettings.SiteS3CloudProvider, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" Target="{Binding ElementName=S3BucketTextBox}">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=S3BucketTextBox}">
                             S3 Bucket Name
                         </Label>
                         <TextBox
@@ -551,7 +634,8 @@
             </ScrollViewer>
         </GroupBox>
         <Border Grid.Row="2" Style="{StaticResource ActionPanelBorderStyle}">
-            <Button Command="{Binding SaveSettingsCommand}" Style="{StaticResource ActionPanelUnlimitedWidthButtonStyle}">
+            <Button Command="{Binding SaveSettingsCommand}"
+                    Style="{StaticResource ActionPanelUnlimitedWidthButtonStyle}">
                 Save
             </Button>
         </Border>

@@ -99,6 +99,9 @@ public partial class UserSettingsEditorContext
     public static string HelpMarkdownShowImageSizesByDefault =>
         "Used as the default value for a Photo's or Image's 'Show Sizes' setting - if this is checked by default image pages will have links to every size available. ALL IMAGE FILES are 'public', but unless this is checked the user is never shown a direct link to any image file.";
 
+    public static string HelpMarkdownShowInMainSiteFeedDefaults =>
+        "Use these settings for the Show In Main Site Feed default value.";
+
     public static string HelpMarkdownShowPhotoPositionByDefault =>
         "Used as the default value for a Photo's 'Show Position' setting - if this is checked by default photo pages will show and link the position of a photo if the photo's latitude and longitude have values. ALL PHOTO FILES are 'public' so a determined user can examine the source of a page, download the image and extract metadata present in the photo, but unless 'Show Position' is checked a photographs position will never be displayed.";
 
@@ -214,7 +217,7 @@ public partial class UserSettingsEditorContext
 
         CloudCredentials.SaveS3SiteCredential(cleanedKey, cleanedSecret);
 
-        if (EditorSettings.SiteS3CloudProvider != S3Providers.Amazon.ToString())
+        if (EditorSettings.SiteS3CloudProvider != nameof(S3Providers.Amazon))
         {
             var serviceUrl = await StatusContext.ShowStringEntry("Service URL",
                 "Enter the S3 service URL. For Cloudflare this will be https://{accountId}.r2.cloudflarestorage.com - other providers, like Wasabi, will have a Service URL based on region (for example s3.ca-central-1.wasabisys.com for Wasabi-Toronto)",

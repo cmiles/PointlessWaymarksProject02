@@ -13,7 +13,6 @@ public partial class UserSettings
     ///     UserSettingsUtilities for general purpose use.
     /// </summary>
     public string DatabaseFile { get; set; } = string.Empty;
-
     public string DefaultCreatedBy { get; set; } = string.Empty;
     public bool FeatureIntersectionTagOnImport { get; set; }
     public string FeatureIntersectionTagSettingsFile { get; set; } = string.Empty;
@@ -39,6 +38,18 @@ public partial class UserSettings
     public string LocalSiteRootDirectory { get; set; } = string.Empty;
 
     public double LongitudeDefault { get; set; }
+
+    public bool MainFeedFilesDefault { get; set; }
+    public bool MainFeedGeoJsonDefault { get; set; }
+    public bool MainFeedImageDefault { get; set; }
+    public bool MainFeedLineDefault { get; set; }
+    public bool MainFeedNoteDefault { get; set; }
+    public bool MainFeedPhotoDefault { get; set; }
+    public bool MainFeedPointDefault { get; set; }
+    public bool MainFeedPostDefault { get; set; } = true;
+    public bool MainFeedTrailDefault { get; set; }
+    public bool MainFeedVideoDefault { get; set; }
+    public bool MainLineNoteDefault { get; set; }
     public int NumberOfItemsOnMainSitePage { get; set; }
     public bool PhotoPagesHaveLinksToPhotoSizesByDefault { get; set; }
     public bool PhotoPagesShowPositionByDefault { get; set; }
@@ -51,10 +62,10 @@ public partial class UserSettings
     public string SiteDirectionAttribute { get; set; } = string.Empty;
     public string SiteDomainName { get; set; } = string.Empty;
     public string SiteEmailTo { get; set; } = string.Empty;
-    public List<SitePictureSize> SitePictureSizes { get; set; } = [];
     public string SiteKeywords { get; set; } = string.Empty;
     public string SiteLangAttribute { get; set; } = string.Empty;
     public string SiteName { get; set; } = string.Empty;
+    public List<SitePictureSize> SitePictureSizes { get; set; } = [];
     public string SiteS3Bucket { get; set; } = string.Empty;
     public string SiteS3BucketRegion { get; set; } = string.Empty;
     public string SiteS3CloudProvider { get; set; } = string.Empty;
@@ -66,15 +77,15 @@ public class SitePictureSize
     public int MaxDimension { get; set; }
     public int Quality { get; set; }
 
-    public override string ToString()
-    {
-        return $"{MaxDimension},{Quality}";
-    }
-
     public static SitePictureSize FromString(string input)
     {
         var split = input.Split(',');
         if (split.Length != 2) return new SitePictureSize { MaxDimension = 0, Quality = 0 };
         return new SitePictureSize { MaxDimension = int.Parse(split[0]), Quality = int.Parse(split[1]) };
+    }
+
+    public override string ToString()
+    {
+        return $"{MaxDimension},{Quality}";
     }
 }
