@@ -47,8 +47,9 @@ public partial class FeedItemListContext
     public string UserAddFeedInput { get; set; } = string.Empty;
     public string UserFilterText { get; set; } = string.Empty;
 
+    private readonly ReadOnlyObservableCollection<FeedItemListListItem> _data;
     // Read-only observable collection for UI binding
-    public required ReadOnlyObservableCollection<FeedItemListListItem> Items { get; init; }
+    public ReadOnlyObservableCollection<FeedItemListListItem> Items => _data;
 
     public FeedItemListContext()
     {
@@ -56,10 +57,8 @@ public partial class FeedItemListContext
         _dynamicDataConnection = _sourceItems.Connect()
             .Filter(_filterPredicate)
             .Sort(SortExpressionComparer<FeedItemListListItem>.Descending(x => x.DbItem.PublishingDate))
-            .Bind(out var items)
+            .Bind(out _data)
             .Subscribe();
-
-        Items = items;
     }
 
     public FeedItemListListItem? SelectedListItem()
@@ -114,7 +113,8 @@ public partial class FeedItemListContext
                     """
                     .ToHtmlDocumentWithMinimalCss("Nothing...", "");
 
-            RssViewDisplayUrl = await PageServer.AddPage(newPageId, feedDisplay);
+            await PageServer.AddPage(newPageId, feedDisplay);
+            RssViewDisplayUrl = PageServer.GetPreviewUrl(newPageId);
             return;
         }
 
@@ -139,7 +139,8 @@ public partial class FeedItemListContext
                                   </ul>
                                   """.ToHtmlDocumentWithMinimalCss($"RSS - {item.DbItem.Title.HtmlEncode()}",
                 string.Empty);
-            RssViewDisplayUrl = await PageServer.AddPage(newPageId, feedPage);
+            await PageServer.AddPage(newPageId, feedPage);
+            RssViewDisplayUrl = PageServer.GetPreviewUrl(newPageId);
         }
         catch (Exception e)
         {
@@ -152,20 +153,19 @@ public partial class FeedItemListContext
     public static async Task<FeedItemListContext> CreateInstance(StatusControlContext statusContext, string dbFile,
         List<Guid>? feedList = null, bool showUnread = false)
     {
-        await ThreadSwitcher.ResumeForegroundAsync();
-
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        var feedQueries = new FeedQueries() { DbFileFullName = dbFile };
+        var feedQueries = new FeedQueries { DbFileFullName = dbFile };
+
+        var appPageServer = await AppPageServer.GetInstance();
 
         var context = new FeedItemListContext
         {
-            Items = new ReadOnlyObservableCollection<FeedItemListListItem>([]),
             StatusContext = statusContext,
             FeedList = feedList ?? [],
             ShowUnread = showUnread,
             ContextDb = feedQueries,
-            PageServer = new AppPageServer(),
+            PageServer = appPageServer,
             ListSort = new ColumnSortControlContext
             {
                 Items =
@@ -405,6 +405,8 @@ public partial class FeedItemListContext
 
         if (e.PropertyName.Equals(nameof(SelectedItem)))
         {
+            Debug.WriteLine($"FeedItemListContext SelectedItem {SelectedItem?.DbItem.Title}");
+
             if (SelectedItem is { DbItem: { MarkedRead: false, KeepUnread: false } } && AutoMarkRead)
                 StatusContext.RunNonBlockingTask(async () =>
                 {
@@ -550,8 +552,8 @@ public partial class FeedItemListContext
         await ApplySorting();
         await FilterList();
 
-        ListSort.SortUpdated += (_, list) =>
-            StatusContext.RunNonBlockingTask(() => ApplySorting());
+        ListSort.SortUpdated += (_, _) =>
+            StatusContext.RunNonBlockingTask(ApplySorting);
 
         PropertyChanged += OnPropertyChanged;
         DataNotificationsProcessor = new DataNotificationsWorkQueue { Processor = DataNotificationReceived };
@@ -689,10 +691,8 @@ public partial class FeedItemListContext
                     var index = innerList.IndexOf(listItem);
                     if (index >= 0)
                     {
-                        innerList.RemoveAt(index);
                         listItem.DbItem = dbFeedItem;
                         listItem.DbReaderFeed = dbFeed;
-                        innerList.Insert(index, listItem);
                     }
                 });
             }
@@ -722,22 +722,15 @@ public partial class FeedItemListContext
     }
 
     // Helper class for custom sorting
-    private class SortDescriptionComparer<T> : IComparer<T>
+    private class SortDescriptionComparer<T>(List<SortDescription> sortDescriptions) : IComparer<T>
     {
-        private readonly List<SortDescription> _sortDescriptions;
-
-        public SortDescriptionComparer(List<SortDescription> sortDescriptions)
-        {
-            _sortDescriptions = sortDescriptions;
-        }
-
         public int Compare(T? x, T? y)
         {
             if (x == null && y == null) return 0;
             if (x == null) return -1;
             if (y == null) return 1;
 
-            foreach (var sort in _sortDescriptions)
+            foreach (var sort in sortDescriptions)
             {
                 // Handle nested property paths like "DbItem.PublishingDate"
                 var value1 = GetPropertyValue(x, sort.PropertyName);

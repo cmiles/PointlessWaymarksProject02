@@ -2,62 +2,191 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:controls="using:PointlessWaymarks.FeedReaderAvalonia.Controls"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="PointlessWaymarks.FeedReaderAvalonia.Controls.FeedListControl">
-    <Design.DataContext>
-        <controls:FeedListControlViewModel/>
-    </Design.DataContext>
+             xmlns:controls="clr-namespace:PointlessWaymarks.FeedReaderAvalonia.Controls"
+             xmlns:columnSort="clr-namespace:PointlessWaymarks.AvaloniaCommon.ColumnSort;assembly=PointlessWaymarks.AvaloniaCommon"
+             xmlns:converters="clr-namespace:PointlessWaymarks.AvaloniaCommon.Converters;assembly=PointlessWaymarks.AvaloniaCommon"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="300"
+             x:Class="PointlessWaymarks.FeedReaderAvalonia.Controls.FeedListControl"
+             x:DataType="controls:FeedListContext">
 
-    <Grid RowDefinitions="Auto,*">
-        <Grid ColumnDefinitions="*,Auto,Auto" Margin="5">
-            <TextBox Grid.Column="0" 
-                     Text="{Binding FilterText}"
-                     Watermark="Filter feeds..."
-                     Margin="0,0,5,0"/>
-            
-            <ComboBox Grid.Column="1"
-                      Items="{Binding SortOptions}"
-                      SelectedItem="{Binding SelectedSortOption}"
-                      Margin="0,0,5,0"
-                      MinWidth="120"/>
-            
-            <CheckBox Grid.Column="2"
-                      Content="Show Active Only"
-                      IsChecked="{Binding ShowActiveOnly}"/>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Top Control Panel -->
+        <Grid Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Filter TextBox -->
+            <Border Grid.Column="0"
+                    Width="200"
+                    Margin="4,0,4,0"
+                    HorizontalAlignment="Stretch"
+                    Classes="GroupBox">
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Grid.Row="0" Text="Filter" Margin="4" />
+                    <TextBox Grid.Row="1" Text="{Binding UserFilterText}" />
+                </Grid>
+            </Border>
+
+            <!-- Sort Expander -->
+            <Expander Grid.Column="1"
+                      Width="150"
+                      Margin="6,6,4,0"
+                      Padding="8,4,12,4"
+                      HorizontalAlignment="Stretch"
+                      HorizontalContentAlignment="Center"
+                      BorderBrush="Green"
+                      ExpandDirection="Down"
+                      Header="Sort"
+                      IsExpanded="False">
+                <columnSort:ColumnSortControl Margin="4,2,4,12" DataContext="{Binding ListSort}" />
+            </Expander>
+
+            <!-- Add Feed Panel -->
+            <StackPanel Grid.Column="2"
+                        Margin="2,3,0,0"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                <TextBlock Margin="4" VerticalAlignment="Center">Add Feed:</TextBlock>
+                <TextBox Width="308"
+                         Margin="4"
+                         VerticalAlignment="Center"
+                         Text="{Binding UserAddFeedInput}">
+                    <TextBox.KeyBindings>
+                        <KeyBinding Command="{Binding NewFeedEditorFromUrlCommand}" Gesture="Enter" />
+                    </TextBox.KeyBindings>
+                </TextBox>
+                <Button Width="100"
+                        VerticalAlignment="Center"
+                        Command="{Binding TryAddFeedCommand}"
+                        Content="_Add - Auto" />
+                <Button Width="100"
+                        VerticalAlignment="Center"
+                        Command="{Binding NewFeedEditorFromUrlCommand}"
+                        Content="Add - Editor" />
+            </StackPanel>
         </Grid>
 
-        <ListView Grid.Row="1"
-                  Items="{Binding Feeds}"
-                  SelectedItem="{Binding SelectedFeed}"
-                  Margin="5">
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <Grid ColumnDefinitions="Auto,*,Auto,Auto">
-                        <Image Grid.Column="0"
-                               Source="{Binding Favicon}"
-                               Width="16"
-                               Height="16"
-                               Margin="0,0,10,0"/>
-                        
-                        <StackPanel Grid.Column="1">
-                            <TextBlock Text="{Binding Name}"
-                                     FontWeight="Bold"/>
-                            <TextBlock Text="{Binding Url}"
-                                     Opacity="0.7"/>
-                        </StackPanel>
-                        
-                        <TextBlock Grid.Column="2"
-                                 Text="{Binding LastUpdated, StringFormat='Last Updated: {0:g}'}"
-                                 Margin="10,0"
-                                 Opacity="0.7"/>
-                        
-                        <TextBlock Grid.Column="3"
-                                 Text="{Binding ItemsCount, StringFormat='Items: {0}'}"
-                                 Opacity="0.7"/>
-                    </Grid>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
+        <!-- Feeds List -->
+        <Border Grid.Row="1"
+                Grid.Column="0"
+                Margin="4,4,4,0"
+                Classes="GroupBox">
+            <Grid RowDefinitions="Auto,*">
+                <StackPanel Grid.Row="0" Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center">Feeds</TextBlock>
+                </StackPanel>
+
+                <ListBox Grid.Row="1"
+                         SelectionMode="Multiple"
+                         SelectedItem="{Binding SelectedItem}"
+                         Selection="{Binding SelectedItems, Mode=TwoWay}"
+                         ItemsSource="{Binding Items}">
+                    <ListBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Command="{Binding FeedEditorForSelectedItemCommand}" Header="Edit Feed" />
+                            <MenuItem Command="{Binding RefreshSelectedFeedCommand}" Header="Refresh Feed" />
+                            <MenuItem Command="{Binding MarkAllReadForSelectedItemCommand}" Header="Mark All Read" />
+                            <MenuItem Command="{Binding MarkAllUnReadForSelectedItemCommand}" Header="Mark All Unread" />
+                            <MenuItem Command="{Binding ArchiveSelectedFeedCommand}" Header="Archive Feed" />
+                            <Separator />
+                            <MenuItem Command="{Binding MarkdownLinksForSelectedItemsCommand}"
+                                      Header="Markdown to Clipboard" />
+                            <MenuItem Command="{Binding UrlsForSelectedItemsCommand}" Header="URLs to Clipboard" />
+                            <MenuItem Command="{Binding NamesForSelectedItemsCommand}" Header="Titles to Clipboard" />
+                            <MenuItem Command="{Binding TitleAndUrlForSelectedItemsCommand}"
+                                      Header="Titles and URLs to Clipboard" />
+                            <Separator />
+                            <MenuItem Command="{Binding ViewReadFeedItemsForSelectedItemCommand}"
+                                      Header="View Marked Read Feed Items" />
+                            <MenuItem Command="{Binding ViewUnreadFeedItemsForSelectedItemCommand}"
+                                      Header="View Feed Items" />
+                        </ContextMenu>
+                    </ListBox.ContextMenu>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="4,12,4,4">
+
+                                <TextBlock FontWeight="Bold" TextTrimming="CharacterEllipsis">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}{0} - {1} Unread">
+                                            <Binding Path="DbReaderFeed.Name" />
+                                            <Binding Path="UnreadItemsCount" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+
+                                <TextBlock Margin="8,0,4,0" TextWrapping="Wrap">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}{0} - {1} Total Items">
+                                            <Binding Path="DbReaderFeed.Url" />
+                                            <Binding Path="ItemsCount" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+
+                                <TextBlock Margin="12,0,0,0"
+                                           Text="{Binding DbReaderFeed.Note}"
+                                           TextWrapping="Wrap"
+                                           IsVisible="{Binding DbReaderFeed.Note, Converter={StaticResource IsNullOrEmptyToBoolConverter}, ConverterParameter=invert}" />
+
+                                <TextBlock Margin="12,0,0,0"
+                                           Text="{Binding DbReaderFeed.Tags}"
+                                           TextWrapping="Wrap"
+                                           IsVisible="{Binding DbReaderFeed.Tags, Converter={StaticResource IsNullOrEmptyToBoolConverter}, ConverterParameter=invert}" />
+
+                                <TextBlock Margin="20,0,0,0"
+                                           Text="{Binding DbReaderFeed.LastSuccessfulUpdate}"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Border>
+
+        <!-- Action Panel -->
+        <Border Grid.Row="2"
+                Grid.Column="0"
+                Classes="ActionPanel"
+                Margin="4">
+            <Grid>
+                <WrapPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                    <Button Command="{Binding FeedEditorForSelectedItemCommand}"
+                            Content="Edit Selected"
+                            Classes="ActionButton"
+                            Margin="4" />
+                    <Button Command="{Binding ArchiveSelectedFeedCommand}"
+                            Content="Archive Selected"
+                            Classes="ActionButton"
+                            Margin="4" />
+                    <Button Command="{Binding ExportSelectedUrlsToTextFileCommand}"
+                            Content="Export URLs"
+                            Classes="ActionButton"
+                            Margin="4" />
+                    <Button Command="{Binding ImportUrlsFromTextFileCommand}"
+                            Content="Import URLs"
+                            Classes="ActionButton"
+                            Margin="4" />
+                    <Button Command="{Binding RefreshFeedsCommand}"
+                            Content="Refresh Feeds"
+                            Classes="ActionButton"
+                            Margin="4" />
+                    <Button Command="{Binding ViewUnreadFeedItemsForSelectedItemCommand}"
+                            Content="View Feed Items"
+                            Classes="ActionButton"
+                            Margin="4" />
+                </WrapPanel>
+            </Grid>
+        </Border>
     </Grid>
-</UserControl> 
+</UserControl>

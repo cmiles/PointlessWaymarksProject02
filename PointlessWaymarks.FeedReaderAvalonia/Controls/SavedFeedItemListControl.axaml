@@ -1,127 +1,167 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:controls="using:PointlessWaymarks.FeedReaderAvalonia.Controls"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="PointlessWaymarks.FeedReaderAvalonia.Controls.SavedFeedItemListControl">
+<UserControl
+    x:Class="PointlessWaymarks.FeedReaderAvalonia.Controls.SavedFeedItemListControl"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:columnSort="clr-namespace:PointlessWaymarks.AvaloniaCommon.ColumnSort;assembly=PointlessWaymarks.AvaloniaCommon"
+    xmlns:controls="clr-namespace:GroupBox.Avalonia.Controls;assembly=GroupBox.Avalonia"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:PointlessWaymarks.FeedReaderAvalonia.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="local:SavedFeedItemListContext"
+    mc:Ignorable="d">
     <Design.DataContext>
-        <controls:SavedFeedItemListControlViewModel/>
+        <local:SavedFeedItemListContext />
     </Design.DataContext>
 
-    <Grid ColumnDefinitions="400,6,*">
-        <Grid RowDefinitions="Auto,*,Auto">
-            <!-- Filter Section -->
-            <Grid Grid.Row="0" Grid.Column="0" ColumnDefinitions="*,*" Margin="5">
-                <Border Grid.Column="0" 
-                        BorderBrush="Gray" 
-                        BorderThickness="1" 
-                        CornerRadius="4" 
-                        Padding="5">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="400" />
+            <ColumnDefinition Width="6" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <controls:GroupBox
+                    Grid.Column="0"
+                    Margin="4,0,4,0"
+                    Header="Filter">
                     <StackPanel>
-                        <TextBlock Text="Filter" FontWeight="Bold"/>
-                        <TextBox Text="{Binding FilterText}"
-                                 Watermark="Filter items..."/>
+                        <TextBlock Text="Filter" />
+                        <TextBox Text="{Binding UserFilterText}" />
                     </StackPanel>
-                </Border>
-                
-                <Expander Grid.Column="1" 
-                          Header="Sort" 
-                          Margin="5,0,0,0">
-                    <StackPanel>
-                        <RadioButton Content="Posted Date" IsChecked="True"/>
-                        <RadioButton Content="Title"/>
-                        <RadioButton Content="Feed Name"/>
-                        <RadioButton Content="Author"/>
-                    </StackPanel>
+                </controls:GroupBox>
+                <Expander
+                    Grid.Column="1"
+                    Margin="6,6,4,0"
+                    Padding="8,4,12,4"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    ExpandDirection="Down"
+                    Header="Sort"
+                    IsExpanded="False">
+                    <columnSort:ColumnSortControl Margin="4,2,4,12" DataContext="{Binding ListSort}" />
                 </Expander>
             </Grid>
-
-            <!-- Items List -->
-            <Border Grid.Row="1" Grid.Column="0"
-                    BorderBrush="Gray"
-                    BorderThickness="1"
-                    CornerRadius="4"
-                    Margin="5">
-                <StackPanel>
-                    <TextBlock Text="Saved Items" 
-                             FontWeight="Bold" 
-                             Margin="5"/>
-                    <ListBox Items="{Binding Items}"
-                             SelectedItem="{Binding SelectedItem}"
-                             Margin="5">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Grid RowDefinitions="Auto,Auto,Auto,Auto" 
-                                      Opacity="{Binding IsRead, Converter={StaticResource BoolToOpacityConverter}}">
-                                    <TextBlock Grid.Row="0"
-                                             Text="{Binding Title}"
-                                             FontWeight="Bold"
-                                             TextTrimming="CharacterEllipsis"/>
-                                    
-                                    <TextBlock Grid.Row="1"
-                                             Text="{Binding PublishingDate, StringFormat='{0}, {1}', ConverterParameter='{0}, {1}'}"
-                                             Margin="8,2,0,0"
-                                             TextTrimming="CharacterEllipsis"/>
-                                    
-                                    <TextBlock Grid.Row="2"
-                                             Text="{Binding Tags}"
-                                             Margin="4,2,0,0"
-                                             HorizontalAlignment="Center"
-                                             TextTrimming="CharacterEllipsis"/>
-                                    
-                                    <TextBlock Grid.Row="3"
-                                             Text="{Binding FeedName}"
-                                             Margin="4,2,0,0"
-                                             HorizontalAlignment="Right"
-                                             TextTrimming="CharacterEllipsis"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                        <ListBox.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="Open in Browser" Command="{Binding OpenInBrowser}"/>
-                                <Separator/>
-                                <MenuItem Header="Edit Feed" Command="{Binding EditFeed}"/>
-                                <Separator/>
-                                <MenuItem Header="Archive Selected" Command="{Binding ArchiveSelected}"/>
-                                <Separator/>
-                                <MenuItem Header="Markdown to Clipboard" Command="{Binding CopyMarkdownLinks}"/>
-                                <MenuItem Header="URLs to Clipboard" Command="{Binding CopyUrls}"/>
-                                <MenuItem Header="Titles to Clipboard" Command="{Binding CopyTitles}"/>
-                                <MenuItem Header="Titles and URLs to Clipboard" Command="{Binding CopyTitlesAndUrls}"/>
-                            </ContextMenu>
-                        </ListBox.ContextMenu>
-                    </ListBox>
-                </StackPanel>
-            </Border>
-
-            <!-- Grid Splitter -->
-            <GridSplitter Grid.Row="0" Grid.RowSpan="2" Grid.Column="1"
-                         Background="Gray"
-                         Width="6"/>
-
-            <!-- Web View -->
-            <TabControl Grid.Row="0" Grid.RowSpan="2" Grid.Column="2">
-                <TabItem Header="Web">
-                    <WebView Source="{Binding DisplayUrl}"/>
+            <controls:GroupBox
+                Grid.Row="1"
+                Margin="4,4,4,0"
+                Header="Feed Items">
+                <ListBox
+                    ItemsSource="{Binding Items}"
+                    SelectedItem="{Binding SelectedItem}"
+                    Selection="{Binding SelectedItems}"
+                    SelectionMode="Multiple">
+                    <ListBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Command="{Binding OpenSelectedItemInBrowserCommand}" Header="Open in Browser" />
+                            <Separator />
+                            <MenuItem Command="{Binding MarkdownLinksForSelectedItemsCommand}" Header="Markdown to Clipboard" />
+                            <MenuItem Command="{Binding UrlsForSelectedItemsCommand}" Header="URLs to Clipboard" />
+                            <MenuItem Command="{Binding TitlesForSelectedItemsCommand}" Header="Titles to Clipboard" />
+                            <MenuItem Command="{Binding TitleAndUrlForSelectedItemsCommand}" Header="Titles and URLs to Clipboard" />
+                            <Separator />
+                            <MenuItem Command="{Binding FeedEditorForSelectedItemCommand}" Header="Edit Feed" />
+                            <Separator />
+                        </ContextMenu>
+                    </ListBox.ContextMenu>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="4,12,4,4">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <TextBlock
+                                    FontWeight="Bold"
+                                    Text="{Binding DbItem.Title}"
+                                    TextTrimming="CharacterEllipsis"
+                                    ToolTip.Tip="{Binding DbItem.Description}" />
+                                <TextBlock
+                                    Grid.Row="1"
+                                    Margin="8,2,0,0"
+                                    HorizontalAlignment="Left"
+                                    TextTrimming="CharacterEllipsis"
+                                    ToolTip.Tip="{Binding DbItem.Description}">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}{0}, {1}">
+                                            <Binding Path="DbItem.PublishingDate" />
+                                            <Binding Path="DbItem.Author" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                                <TextBlock
+                                    Grid.Row="2"
+                                    Margin="4,2,0,0"
+                                    HorizontalAlignment="Center"
+                                    Text="{Binding DbReaderFeed.Tags}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <TextBlock
+                                    Grid.Row="3"
+                                    Margin="4,2,0,0"
+                                    HorizontalAlignment="Right"
+                                    Text="{Binding DbReaderFeed.Name}"
+                                    TextTrimming="CharacterEllipsis"
+                                    ToolTip.Tip="{Binding DbReaderFeed.Note}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </controls:GroupBox>
+        </Grid>
+        <GridSplitter
+            Grid.Column="1"
+            Background="{DynamicResource SystemAccentColor}"
+            ResizeDirection="Columns" />
+        <Grid Grid.Column="2">
+            <TabControl Margin="4,2,0,0">
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                Margin="2,0,4,0"
+                                FontWeight="Bold"
+                                Text="Web" />
+                            <Button
+                                Classes="Icon"
+                                Command="{Binding ItemWebViewScreenshotCommand}"
+                                ToolTip.Tip="Save Jpg of Entire Page">
+                                <PathIcon Data="{StaticResource file_jpg_box_regular}" />
+                            </Button>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <NativeWebView Name="BodyContentWebView" Source="{Binding DisplayUrl, FallbackValue='about:blank'}" />
                 </TabItem>
-                <TabItem Header="Feed">
-                    <WebView Source="{Binding DisplayUrl}"/>
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                Margin="2,0,4,0"
+                                FontWeight="Bold"
+                                Text="Feed" />
+                            <Button
+                                Classes="Icon"
+                                Command="{Binding RssViewScreenshotCommand}"
+                                ToolTip.Tip="Save Jpg of Entire Page">
+                                <PathIcon Data="{StaticResource file_jpg_box_regular}" />
+                            </Button>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <NativeWebView Name="RssContentWebView" />
                 </TabItem>
             </TabControl>
-
-            <!-- Status Bar -->
-            <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
-                    BorderBrush="Gray"
-                    BorderThickness="0,1,0,0"
-                    Padding="5">
-                <Grid ColumnDefinitions="*,*,*">
-                    <TextBlock Grid.Column="0" Text="{Binding Items.Count, StringFormat='Items: {0}'}"/>
-                    <TextBlock Grid.Column="1" Text="{Binding SelectedItem?.FeedName}"/>
-                    <TextBlock Grid.Column="2" Text="{Binding SelectedItem?.PublishingDate, StringFormat='Last Updated: {0:g}'}"/>
-                </Grid>
-            </Border>
         </Grid>
     </Grid>
 </UserControl> 

@@ -3,35 +3,33 @@ using Avalonia.Controls;
 using PointlessWaymarks.AvaloniaCommon;
 using PointlessWaymarks.AvaloniaCommon.Status;
 using PointlessWaymarks.AvaloniaCommon.Utility;
-using PointlessWaymarks.AvaloniaLlamaAspects;
 
 namespace PointlessWaymarks.FeedReaderAvalonia.Controls;
 
-[StaThreadConstructorGuard]
-public partial class FeedListWindow : Window
+public partial class FeedItemListWindow : Window
 {
     // Define direct properties
-    public static readonly DirectProperty<FeedListWindow, FeedListContext?> FeedContextProperty =
-        AvaloniaProperty.RegisterDirect<FeedListWindow, FeedListContext?>(
-            nameof(FeedContext),
-            o => o.FeedContext,
-            (o, v) => o.FeedContext = v);
+    public static readonly DirectProperty<FeedItemListWindow, FeedItemListContext?> ItemsContextProperty =
+        AvaloniaProperty.RegisterDirect<FeedItemListWindow, FeedItemListContext?>(
+            nameof(ItemsContext),
+            o => o.ItemsContext,
+            (o, v) => o.ItemsContext = v);
 
-    public static readonly DirectProperty<FeedListWindow, StatusControlContext> StatusContextProperty =
-        AvaloniaProperty.RegisterDirect<FeedListWindow, StatusControlContext>(
+    public static readonly DirectProperty<FeedItemListWindow, StatusControlContext> StatusContextProperty =
+        AvaloniaProperty.RegisterDirect<FeedItemListWindow, StatusControlContext>(
             nameof(StatusContext),
             o => o.StatusContext,
             (o, v) => o.StatusContext = v);
 
     // Backing fields
-    private FeedListContext? _feedContext;
+    private FeedItemListContext? _itemsContext;
     private StatusControlContext _statusContext;
 
     // CLR property wrappers
-    public FeedListContext? FeedContext
+    public FeedItemListContext? ItemsContext
     {
-        get => _feedContext;
-        set => SetAndRaise(FeedContextProperty, ref _feedContext, value);
+        get => _itemsContext;
+        set => SetAndRaise(ItemsContextProperty, ref _itemsContext, value);
     }
 
     public StatusControlContext StatusContext
@@ -40,8 +38,8 @@ public partial class FeedListWindow : Window
         set => SetAndRaise(StatusContextProperty, ref _statusContext, value);
     }
 
-    // Initialize the required StatusContext in the constructor
-    public FeedListWindow()
+    // Initialize required properties in constructor
+    public FeedItemListWindow()
     {
         // Initialize with a temporary value that will be replaced in CreateInstance
         _statusContext = new StatusControlContext();
@@ -50,14 +48,15 @@ public partial class FeedListWindow : Window
         DataContext = this;
     }
 
-    public static async Task<FeedListWindow> CreateInstance(string dbFile)
+    public static async Task<FeedItemListWindow> CreateInstance(string dbFile, List<Guid>? feedList = null,
+        bool showUnread = false)
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
         var factoryStatusContext = await StatusControlContext.CreateInstance();
         factoryStatusContext.BlockUi = true;
 
-        var window = new FeedListWindow();
+        var window = new FeedItemListWindow();
 
         // Set the StatusContext using the direct property
         window.StatusContext = factoryStatusContext;
@@ -66,10 +65,11 @@ public partial class FeedListWindow : Window
 
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        window.StatusContext.Progress("Feed List - Creating Context");
+        window.StatusContext.Progress("Feed Items List - Creating Context");
 
-        // Set the FeedContext using the direct property
-        window.FeedContext = await FeedListContext.CreateInstance(window.StatusContext, dbFile);
+        // Set the ItemsContext using the direct property
+        window.ItemsContext =
+            await FeedItemListContext.CreateInstance(window.StatusContext, dbFile, feedList, showUnread);
 
         window.StatusContext.BlockUi = false;
 

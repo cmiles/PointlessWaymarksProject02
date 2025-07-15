@@ -138,13 +138,15 @@ public partial class SavedFeedItemListContext
 
         var feedQueries = new FeedQueries() { DbFileFullName = dbFile };
 
+        var appPageServer = await AppPageServer.GetInstance();
+
         var newContext = new SavedFeedItemListContext
         {
             Items = new ReadOnlyObservableCollection<SavedFeedItemListListItem>([]),
             StatusContext = statusContext,
             FeedList = feedList ?? [],
             ContextDb = feedQueries,
-            PageServer = new AppPageServer(),
+            PageServer = appPageServer,
             ListSort = new ColumnSortControlContext
             {
                 Items =

@@ -62,7 +62,7 @@
                              Margin="0,0,0,10">
                         The Decryption Key is stored on your computer - it is recommended you store this value in a Password
                         Manager so you have it available if you move to another computer or if there is an OS reset/restore/update
-                        that causes Windows to loose this value.
+                        that causes Windows to lose this value.
                     </TextBlock>
                     <Button Content="Enter Decryption Key" 
                             Command="{Binding EnterBasicAuthDecryptionKey}"

@@ -8,10 +8,15 @@
         xmlns:programUpdateMessage="clr-namespace:PointlessWaymarks.AvaloniaToolkit.ProgramUpdateMessage;assembly=PointlessWaymarks.AvaloniaToolkit"
         xmlns:status="clr-namespace:PointlessWaymarks.AvaloniaToolkit.Status;assembly=PointlessWaymarks.AvaloniaToolkit"
         xmlns:windowScreenShot="clr-namespace:PointlessWaymarks.AvaloniaToolkit.WindowScreenShot;assembly=PointlessWaymarks.AvaloniaToolkit"
+        xmlns:windowScreenShot1="clr-namespace:PointlessWaymarks.AvaloniaCommon.WindowScreenShot;assembly=PointlessWaymarks.AvaloniaCommon"
+        xmlns:status1="clr-namespace:PointlessWaymarks.AvaloniaCommon.Status;assembly=PointlessWaymarks.AvaloniaCommon"
+        xmlns:programUpdateMessage1="clr-namespace:PointlessWaymarks.AvaloniaCommon.ProgramUpdateMessage;assembly=PointlessWaymarks.AvaloniaCommon"
+        xmlns:markdownDisplay1="clr-namespace:PointlessWaymarks.AvaloniaCommon.MarkdownDisplay;assembly=PointlessWaymarks.AvaloniaCommon"
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="900"
         x:Class="PointlessWaymarks.FeedReaderAvalonia.MainWindow"
         Title="{Binding InfoTitle}"
-        Width="1200" Height="900">
+        Width="1200" Height="900"
+        x:DataType="local:MainWindow">
     <Grid>
         <TabControl>
             <TabItem Header="Feed Reader">
@@ -27,7 +32,7 @@
                 <controls:AppSettingsControl DataContext="{Binding AppSettingsTabContext}" />
             </TabItem>
             <TabItem Header="About/Help">
-                <markdownDisplay:HelpDisplayControl DataContext="{Binding HelpTabContext}" />
+                <markdownDisplay1:HelpDisplayControl DataContext="{Binding HelpTabContext}" />
             </TabItem>
         </TabControl>
         <Menu Margin="400,2,4,0" HorizontalAlignment="Left" VerticalAlignment="Top">
@@ -36,13 +41,13 @@
                 <MenuItem Header="Start New Database" Command="{Binding NewDatabaseCommand}" />
             </MenuItem>
         </Menu>
-        <programUpdateMessage:ProgramUpdateMessageControl
+        <programUpdateMessage1:ProgramUpdateMessageControl
             Width="400"
             HorizontalAlignment="Center"
             VerticalAlignment="Top"
             DataContext="{Binding UpdateMessageContext}" />
-        <status:StatusControl DataContext="{Binding StatusContext}" />
-        <windowScreenShot:WindowScreenShotControl
+        <status1:StatusControl DataContext="{Binding StatusContext}" />
+        <windowScreenShot1:WindowScreenShotControl
             Width="40"
             Margin="2"
             HorizontalAlignment="Left"

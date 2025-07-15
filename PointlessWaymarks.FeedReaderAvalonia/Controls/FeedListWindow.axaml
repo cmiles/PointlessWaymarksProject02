@@ -5,11 +5,13 @@
         xmlns:controls="using:PointlessWaymarks.FeedReaderAvalonia.Controls"
         xmlns:status="clr-namespace:PointlessWaymarks.AvaloniaCommon.Status;assembly=PointlessWaymarks.AvaloniaCommon"
         xmlns:windowScreenShot="clr-namespace:PointlessWaymarks.AvaloniaCommon.WindowScreenShot;assembly=PointlessWaymarks.AvaloniaCommon"
+        xmlns:controls0="clr-namespace:PointlessWaymarks.FeedReaderAvalonia.Controls"
         x:Class="PointlessWaymarks.FeedReaderAvalonia.Controls.FeedListWindow"
         Title="Feeds"
         Width="600"
         Height="700"
         d:DataContext="{d:DesignInstance controls:FeedListWindow}"
+        x:DataType="controls0:FeedListWindow"
         mc:Ignorable="d">
     <Grid>
         <controls:FeedListControl DataContext="{Binding FeedContext}" />

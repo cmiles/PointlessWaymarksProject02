@@ -12,9 +12,6 @@
     d:DesignWidth="1200"
     x:DataType="local:FeedItemListContext"
     mc:Ignorable="d">
-    <UserControl.Resources>
-        <local:FeedItemListMarkedReadOpacityConverter x:Key="FeedItemListMarkedReadOpacity" />
-    </UserControl.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="400" />
@@ -59,9 +56,8 @@
                 Header="Feed Items">
                 <ListBox
                     ItemsSource="{Binding Items}"
-                    SelectedItem="{Binding SelectedItem}"
-                    Selection="{Binding SelectedItems}"
-                    SelectionMode="Multiple">
+                    SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+                    SelectionMode="Single">
                     <ListBox.ContextMenu>
                         <ContextMenu>
                             <MenuItem Command="{Binding MarkSelectedReadCommand}" Header="Mark Selected Read" />
@@ -86,7 +82,7 @@
                     </ListBox.ContextMenu>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <Grid Margin="4,12,4,4" Opacity="{Binding DbItem.MarkedRead, Converter={StaticResource FeedItemListMarkedReadOpacity}}">
+                            <Grid Margin="4,12,4,4">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
@@ -177,7 +173,7 @@
             Background="{DynamicResource SystemAccentColor}"
             ResizeDirection="Columns" />
         <Grid Grid.Column="2">
-            <TabControl Margin="4,2,0,0">
+            <TabControl Margin="4">
                 <TabItem>
                     <TabItem.Header>
                         <StackPanel Orientation="Horizontal">
@@ -210,7 +206,7 @@
                             </Button>
                         </StackPanel>
                     </TabItem.Header>
-                    <NativeWebView Name="RssContentWebView" />
+                    <NativeWebView Name="RssContentWebView" Source="{Binding RssViewDisplayUrl, FallbackValue='about:blank'}" />
                 </TabItem>
             </TabControl>
         </Grid>

@@ -1,6 +1,6 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Metalama.Patterns.Observability;
 using PointlessWaymarks.AvaloniaCommon;
 using PointlessWaymarks.AvaloniaCommon.AppToast;
 using PointlessWaymarks.AvaloniaCommon.LocalHtml;
@@ -13,15 +13,123 @@ using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.FeedReaderAvalonia.Controls;
 using PointlessWaymarks.FeedReaderData;
 using Serilog;
-using System.ComponentModel;
 using System.IO;
+using Avalonia.Platform.Storage;
 
 namespace PointlessWaymarks.FeedReaderAvalonia;
 
-[Observable]
 [GenerateStatusCommands]
 public partial class MainWindow : Window
 {
+    // Define direct properties
+    public static readonly DirectProperty<MainWindow, AppSettingsContext?> AppSettingsTabContextProperty =
+        AvaloniaProperty.RegisterDirect<MainWindow, AppSettingsContext?>(
+            nameof(AppSettingsTabContext),
+            o => o.AppSettingsTabContext,
+            (o, v) => o.AppSettingsTabContext = v);
+
+    public static readonly DirectProperty<MainWindow, FeedItemListContext?> FeedItemListTabContextProperty =
+        AvaloniaProperty.RegisterDirect<MainWindow, FeedItemListContext?>(
+            nameof(FeedItemListTabContext),
+            o => o.FeedItemListTabContext,
+            (o, v) => o.FeedItemListTabContext = v);
+
+    public static readonly DirectProperty<MainWindow, FeedListContext?> FeedListTabContextProperty =
+        AvaloniaProperty.RegisterDirect<MainWindow, FeedListContext?>(
+            nameof(FeedListTabContext),
+            o => o.FeedListTabContext,
+            (o, v) => o.FeedListTabContext = v);
+
+    public static readonly DirectProperty<MainWindow, HelpDisplayContext?> HelpTabContextProperty =
+        AvaloniaProperty.RegisterDirect<MainWindow, HelpDisplayContext?>(
+            nameof(HelpTabContext),
+            o => o.HelpTabContext,
+            (o, v) => o.HelpTabContext = v);
+
+
+    public static readonly DirectProperty<MainWindow, string> InfoTitleProperty =
+        AvaloniaProperty.RegisterDirect<MainWindow, string>(
+            nameof(InfoTitle),
+            o => o.InfoTitle,
+            (o, v) => o.InfoTitle = v);
+
+    public static readonly DirectProperty<MainWindow, SavedFeedItemListContext?> SavedFeedItemListTabContextProperty =
+        AvaloniaProperty.RegisterDirect<MainWindow, SavedFeedItemListContext?>(
+            nameof(SavedFeedItemListTabContext),
+            o => o.SavedFeedItemListTabContext,
+            (o, v) => o.SavedFeedItemListTabContext = v);
+
+    public static readonly DirectProperty<MainWindow, StatusControlContext?> StatusContextProperty =
+        AvaloniaProperty.RegisterDirect<MainWindow, StatusControlContext?>(
+            nameof(StatusContext),
+            o => o.StatusContext,
+            (o, v) => o.StatusContext = v);
+
+    public static readonly DirectProperty<MainWindow, ProgramUpdateMessageContext?> UpdateMessageContextProperty =
+        AvaloniaProperty.RegisterDirect<MainWindow, ProgramUpdateMessageContext?>(
+            nameof(UpdateMessageContext),
+            o => o.UpdateMessageContext,
+            (o, v) => o.UpdateMessageContext = v);
+
+    // Backing fields
+    private AppSettingsContext? _appSettingsTabContext;
+    private FeedItemListContext? _feedItemListTabContext;
+    private FeedListContext? _feedListTabContext;
+    private HelpDisplayContext? _helpTabContext;
+    private string _infoTitle = string.Empty;
+    private SavedFeedItemListContext? _savedFeedItemListTabContext;
+    private StatusControlContext? _statusContext;
+    private ProgramUpdateMessageContext? _updateMessageContext;
+
+    // CLR property wrappers
+    public AppSettingsContext? AppSettingsTabContext
+    {
+        get => _appSettingsTabContext;
+        set => SetAndRaise(AppSettingsTabContextProperty, ref _appSettingsTabContext, value);
+    }
+
+    public FeedItemListContext? FeedItemListTabContext
+    {
+        get => _feedItemListTabContext;
+        set => SetAndRaise(FeedItemListTabContextProperty, ref _feedItemListTabContext, value);
+    }
+
+    public FeedListContext? FeedListTabContext
+    {
+        get => _feedListTabContext;
+        set => SetAndRaise(FeedListTabContextProperty, ref _feedListTabContext, value);
+    }
+
+    public HelpDisplayContext? HelpTabContext
+    {
+        get => _helpTabContext;
+        set => SetAndRaise(HelpTabContextProperty, ref _helpTabContext, value);
+    }
+
+    public string InfoTitle
+    {
+        get => _infoTitle;
+        set => SetAndRaise(InfoTitleProperty, ref _infoTitle, value);
+    }
+
+    public SavedFeedItemListContext? SavedFeedItemListTabContext
+    {
+        get => _savedFeedItemListTabContext;
+        set => SetAndRaise(SavedFeedItemListTabContextProperty, ref _savedFeedItemListTabContext, value);
+    }
+
+    public StatusControlContext? StatusContext
+    {
+        get => _statusContext;
+        set => SetAndRaise(StatusContextProperty, ref _statusContext, value);
+    }
+
+    public ProgramUpdateMessageContext? UpdateMessageContext
+    {
+        get => _updateMessageContext;
+        set => SetAndRaise(UpdateMessageContextProperty, ref _updateMessageContext, value);
+    }
+
     public readonly string HelpText =
         """
         ## Pointless Waymarks Feed Reader
@@ -58,15 +166,6 @@ public partial class MainWindow : Window
 
         DataContext = this;
 
-        UpdateMessageContext = new ProgramUpdateMessageContext(StatusContext);
-
-        HelpTabContext = new HelpDisplayContext([
-            HelpText,
-            HelpMarkdown.CombinedAboutToolsAndPackages
-        ]);
-
-        _ = new AppPageServer();
-
         StatusContext.RunFireAndForgetNonBlockingTask(async () =>
         {
             await CheckForProgramUpdate(currentDateVersion);
@@ -74,15 +173,6 @@ public partial class MainWindow : Window
             await LoadData();
         });
     }
-
-    public AppSettingsContext? AppSettingsTabContext { get; set; }
-    public FeedItemListContext? FeedItemListTabContext { get; set; }
-    public FeedListContext? FeedListTabContext { get; set; }
-    public HelpDisplayContext HelpTabContext { get; set; }
-    public string InfoTitle { get; set; }
-    public SavedFeedItemListContext? SavedFeedItemListTabContext { get; set; }
-    public StatusControlContext StatusContext { get; set; }
-    public ProgramUpdateMessageContext UpdateMessageContext { get; set; }
 
     public async Task CheckForProgramUpdate(string currentDateVersion)
     {
@@ -123,28 +213,38 @@ public partial class MainWindow : Window
             {
                 await ThreadSwitcher.ResumeForegroundAsync();
 
-                var dialog = new OpenFileDialog
+                // Using StorageProvider instead of OpenFileDialog
+                var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
                 {
                     Title = "Open Database",
                     AllowMultiple = false,
-                    Filters =
+                    FileTypeFilter =
                     [
-                        new() { Name = "Database files", Extensions = ["db"] },
-                        new() { Name = "All files", Extensions = ["*"] }
+                        new FilePickerFileType("Database files")
+                        {
+                            Patterns = ["*.db"],
+                        },
+                        new FilePickerFileType("All files")
+                        {
+                            Patterns = ["*"]
+                        }
                     ],
-                    Directory = FeedReaderGuiSettingTools.GetLastDirectory().FullName
-                };
+                    SuggestedStartLocation = await StorageProvider.TryGetFolderFromPathAsync(
+                        FeedReaderGuiSettingTools.GetLastDirectory().FullName)
+                });
 
-                var result = await dialog.ShowAsync(this);
+                if (files.Count == 0) return string.Empty;
 
-                if (result == null || result.Length == 0) return string.Empty;
-
-                var newFile = new FileInfo(result[0]);
-
-                if (newFile.Directory?.Exists ?? false)
-                    await FeedReaderGuiSettingTools.SetLastDirectory(newFile.Directory.FullName);
-
-                return result[0];
+                var filePath = files[0].TryGetLocalPath();
+                if (filePath != null)
+                {
+                    var newFile = new FileInfo(filePath);
+                    if (newFile.Directory?.Exists ?? false)
+                        await FeedReaderGuiSettingTools.SetLastDirectory(newFile.Directory.FullName);
+                    
+                    return filePath;
+                }
+                return string.Empty;
             }
         }
 
@@ -175,7 +275,18 @@ public partial class MainWindow : Window
 
     private async Task LoadData(string? loadWithDatabaseFile = null)
     {
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        UpdateMessageContext = new ProgramUpdateMessageContext(StatusContext!);
+
+        HelpTabContext = new HelpDisplayContext([
+            HelpText,
+            HelpMarkdown.CombinedAboutToolsAndPackages
+        ]);
+        
         await ThreadSwitcher.ResumeBackgroundAsync();
+
+        _ = await AppPageServer.GetInstance();
 
         var settings = FeedReaderGuiSettingTools.ReadSettings();
 
@@ -203,6 +314,8 @@ public partial class MainWindow : Window
             ProgramInfoTools.StandardAppInformationString(AppContext.BaseDirectory,
                 "Pointless Waymarks Feed Reader Beta");
 
+        await ThreadSwitcher.ResumeForegroundAsync();
+        
         InfoTitle = $"{versionInfo.humanTitleString} - {dbFileName}";
 
         FeedItemListTabContext = await FeedItemListContext.CreateInstance(StatusContext, dbFileName);
@@ -211,30 +324,26 @@ public partial class MainWindow : Window
         AppSettingsTabContext = new AppSettingsContext(StatusContext);
     }
 
-    //protected override void OnClosing(CancelEventArgs e)
-    //{
-    //    base.OnClosing(e);
-    //    Log.CloseAndFlush();
-    //}
-
     [BlockingCommand]
     public async Task NewDatabase()
     {
         await ThreadSwitcher.ResumeForegroundAsync();
         
-        var dialog = new OpenFolderDialog
+        // Using StorageProvider instead of OpenFolderDialog
+        var folder = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
             Title = "New Db Directory",
-            Directory = FileLocationHelpers.DefaultStorageDirectory().FullName
-        };
+            AllowMultiple = false,
+            SuggestedStartLocation = await StorageProvider.TryGetFolderFromPathAsync(
+                FileLocationHelpers.DefaultStorageDirectory().FullName)
+        });
 
-        var result = await dialog.ShowAsync(this);
+        if (folder.Count == 0) return;
 
-        if (string.IsNullOrEmpty(result)) return;
-
-        if (!Directory.Exists(result))
+        var result = folder[0].TryGetLocalPath();
+        if (string.IsNullOrEmpty(result) || !Directory.Exists(result))
         {
-            await StatusContext.ToastError($"Selected Directory Does Not Exist? {result}");
+            await StatusContext.ToastError("Selected Directory Does Not Exist or Cannot Be Accessed");
             return;
         }
 
@@ -275,27 +384,36 @@ public partial class MainWindow : Window
     [BlockingCommand]
     public async Task PickNewDatabase()
     {
-        var dialog = new OpenFileDialog
+        // Using StorageProvider instead of OpenFileDialog
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = "Open Database",
             AllowMultiple = false,
-            Filters =
+            FileTypeFilter =
             [
-                new() { Name = "Database files", Extensions = ["db"] },
-                new() { Name = "All files", Extensions = ["*"] }
+                new FilePickerFileType("Database files")
+                {
+                    Patterns = ["*.db"],
+                },
+                new FilePickerFileType("All files")
+                {
+                    Patterns = ["*"]
+                }
             ],
-            Directory = FeedReaderGuiSettingTools.GetLastDirectory().FullName
-        };
+            SuggestedStartLocation = await StorageProvider.TryGetFolderFromPathAsync(
+                FeedReaderGuiSettingTools.GetLastDirectory().FullName)
+        });
 
-        var result = await dialog.ShowAsync(this);
+        if (files.Count == 0) return;
 
-        if (result == null || result.Length == 0) return;
-
-        var newFile = new FileInfo(result[0]);
-
-        if (newFile.Directory?.Exists ?? false)
-            await FeedReaderGuiSettingTools.SetLastDirectory(newFile.Directory.FullName);
-
-        await LoadData(result[0]);
+        var filePath = files[0].TryGetLocalPath();
+        if (filePath != null)
+        {
+            var newFile = new FileInfo(filePath);
+            if (newFile.Directory?.Exists ?? false)
+                await FeedReaderGuiSettingTools.SetLastDirectory(newFile.Directory.FullName);
+            
+            await LoadData(filePath);
+        }
     }
 }

@@ -1,0 +1,18 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:status="clr-namespace:PointlessWaymarks.AvaloniaCommon.Status;assembly=PointlessWaymarks.AvaloniaCommon"
+        xmlns:controls="clr-namespace:PointlessWaymarks.FeedReaderAvalonia.Controls"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="PointlessWaymarks.FeedReaderAvalonia.Controls.FeedItemListWindow"
+        Title="FeedItemListWindow"
+        x:DataType="controls:FeedItemListWindow">
+    <Grid>
+        <controls:FeedItemListControl DataContext="{Binding ItemsContext}" />
+        <status:StatusControl
+            Grid.Row="0"
+            d:IsHidden="true"
+            DataContext="{Binding StatusContext}" />
+    </Grid>
+</Window>
