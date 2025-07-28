@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using NetTopologySuite.Features;
+using NetTopologySuite.Geometries;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.FeatureIntersectionTags.Models;
 using PointlessWaymarks.SpatialTools;
@@ -13,7 +14,7 @@ public static class Intersection
     public static async Task<List<IntersectFileTaggingResult>> FileIntersectionTags(this List<FileInfo> toTag,
         IntersectSettings settings, bool tagsToLower, bool sanitizeTags,
         bool tagSpacesToHyphens,
-        CancellationToken cancellationToken,  int tagMaxCharacterLength = 256,
+        CancellationToken cancellationToken, int tagMaxCharacterLength = 256,
         IProgress<string>? progress = null)
     {
         var sourceFileAndFeatures = new List<IntersectFileTaggingResult>();
@@ -24,16 +25,23 @@ public static class Intersection
                     y.Equals(x.FileToTag.Extension, StringComparison.OrdinalIgnoreCase)))
             .ToList();
 
+        var pointBufferInFeet = settings.BufferPointsAndLinesByFeet ?? 0;
+
         foreach (var loopFile in metadataFiles)
         {
             var location = await FileMetadataTools.Location(loopFile.FileToTag, false, progress);
 
             if (!location.HasValidLocation()) continue;
 
-            var feature = new Feature(PointTools.Wgs84Point(location.Longitude!.Value, location.Latitude!.Value),
+            var feature = new Feature(
+                pointBufferInFeet > 0
+                    ? PointTools.CreateCircle(location.Longitude!.Value, location.Latitude!.Value, pointBufferInFeet)
+                    : PointTools.Wgs84Point(location.Longitude!.Value, location.Latitude!.Value),
                 new AttributesTable());
 
             loopFile.IntersectInformation = new IntersectResult(feature);
+            loopFile.IntersectInformation.OsmIsInPoints.Add(new Coordinate(location.Longitude!.Value,
+                location.Latitude!.Value));
         }
 
         var gpxFiles = sourceFileAndFeatures.Where(x =>
@@ -41,13 +49,33 @@ public static class Intersection
 
         foreach (var loopGpx in gpxFiles)
         {
-            var trackLines = await GpxTools.TrackLinesFromGpxFile(loopGpx.FileToTag);
-            var routeLines = await GpxTools.RouteLinesFromGpxFile(loopGpx.FileToTag);
-            var waypointPoints = await GpxTools.WaypointPointsFromGpxFile(loopGpx.FileToTag);
+            var trackLines = await GpxTools.TrackLinesFromGpxFileBuffered(loopGpx.FileToTag, pointBufferInFeet);
+            var routeLines = await GpxTools.RouteLinesFromGpxFileBuffered(loopGpx.FileToTag, pointBufferInFeet);
+            var waypointPoints =
+                await GpxTools.WaypointPointsFromGpxFileAs2DCircles(loopGpx.FileToTag, pointBufferInFeet);
 
             loopGpx.IntersectInformation = new IntersectResult(trackLines.features.Cast<IFeature>()
                 .Union(routeLines.features)
                 .Union(waypointPoints.features).ToList());
+
+            foreach (var loopWaypoints in waypointPoints.features)
+                loopGpx.IntersectInformation.OsmIsInPoints.Add(new Coordinate(loopWaypoints.Geometry.Coordinate));
+
+            foreach (var loopTracks in trackLines.features)
+            {
+                loopGpx.IntersectInformation.OsmIsInPoints.Add(loopTracks.Geometry.Coordinates.First());
+                loopGpx.IntersectInformation.OsmIsInPoints.Add(
+                    loopTracks.Geometry.Coordinates[loopTracks.Geometry.Coordinates.Length / 2]);
+                loopGpx.IntersectInformation.OsmIsInPoints.Add(loopTracks.Geometry.Coordinates.Last());
+            }
+
+            foreach (var loopRoutes in routeLines.features)
+            {
+                loopGpx.IntersectInformation.OsmIsInPoints.Add(loopRoutes.Geometry.Coordinates.First());
+                loopGpx.IntersectInformation.OsmIsInPoints.Add(
+                    loopRoutes.Geometry.Coordinates[loopRoutes.Geometry.Coordinates.Length / 2]);
+                loopGpx.IntersectInformation.OsmIsInPoints.Add(loopRoutes.Geometry.Coordinates.Last());
+            }
         }
 
         var geojsonFiles = sourceFileAndFeatures.Where(x =>
@@ -60,18 +88,21 @@ public static class Intersection
             foreach (var loopFeature in features) loopFeature.Attributes.Add("title", loopGeojson.FileToTag.Name);
 
             loopGeojson.IntersectInformation = new IntersectResult(features);
+
+            foreach (var loopFeature in features)
+                loopGeojson.IntersectInformation.OsmIsInPoints.Add(loopFeature.Geometry.InteriorPoint.Coordinate);
         }
 
-        sourceFileAndFeatures.Where(x => x.IntersectInformation != null).Select(x => x.IntersectInformation!).ToList()
-            .IntersectionTags(settings,
-                cancellationToken,
-                progress);
+        var sourceFileAndFeaturesToProcess = sourceFileAndFeatures.Where(x => x.IntersectInformation != null)
+            .Select(x => x.IntersectInformation!).ToList();
+
+        await sourceFileAndFeaturesToProcess.IntersectionTags(settings, cancellationToken, progress);
 
         List<string> ProcessTagsLocal(List<string> toProcess)
         {
             return ProcessTags(toProcess, tagSpacesToHyphens, sanitizeTags, tagsToLower, tagMaxCharacterLength);
         }
-        
+
         foreach (var loopIntersects in sourceFileAndFeatures)
         {
             if (loopIntersects.IntersectInformation == null)
@@ -87,7 +118,7 @@ public static class Intersection
                 loopIntersects.Notes = "";
                 continue;
             }
-            
+
             var existingTags = ProcessTagsLocal(await FileMetadataTools.FileKeywords(loopIntersects.FileToTag, true));
 
             loopIntersects.ExistingTagString = string.Join(",", existingTags);
@@ -110,6 +141,7 @@ public static class Intersection
             loopIntersects.Result = "New Tags Found";
             loopIntersects.Notes = $"New Tags from {string.Join(",", loopIntersects.IntersectInformation.Sources)}";
         }
+
         sourceFileAndFeatures.Where(x => x.IntersectInformation == null).ToList().ForEach(x =>
         {
             x.Result = "No Location Found";
@@ -119,22 +151,27 @@ public static class Intersection
         return sourceFileAndFeatures;
     }
 
-    public static List<IntersectResult> IntersectionTags(this List<IntersectResult> toCheck,
+    public static async Task<List<IntersectResult>> IntersectionTags(this List<IntersectResult> toCheck,
         IntersectSettings settings,
         CancellationToken cancellationToken, IProgress<string>? progress = null)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (settings.IntersectFiles.Any())
-            toCheck.ProcessFileIntersections(settings.IntersectFiles.ToList(),
+        if (settings.FeatureIntersectFiles.Any())
+            toCheck.ProcessFileIntersections(settings.FeatureIntersectFiles,
                 cancellationToken, progress);
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (!string.IsNullOrWhiteSpace(settings.PadUsDirectory) && settings.PadUsAttributesForTags.Any())
-            toCheck.ProcessPadUsIntersections(settings.PadUsAttributesForTags.ToList(),
+        if (!string.IsNullOrWhiteSpace(settings.PadUsDirectory) && settings.PadUsAttributes.Any())
+            toCheck.ProcessPadUsIntersections(settings.PadUsAttributes.ToList(),
                 settings.PadUsDirectory, cancellationToken,
                 progress);
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (settings.UseOsmOverpass && !string.IsNullOrWhiteSpace(settings.OsmOverpassUrl))
+            await toCheck.ProcessOsmIntersections(settings, cancellationToken, progress);
 
         return toCheck;
     }
@@ -148,7 +185,7 @@ public static class Intersection
     /// <param name="cancellationToken"></param>
     /// <param name="progress"></param>
     /// <returns></returns>
-    public static List<IntersectResult> IntersectionTags(this List<IntersectResult> toCheck,
+    public static async Task<List<IntersectResult>> IntersectionTags(this List<IntersectResult> toCheck,
         string intersectSettingsFile,
         CancellationToken cancellationToken, IProgress<string>? progress = null)
     {
@@ -167,7 +204,9 @@ public static class Intersection
         }
 
         progress?.Report($"Getting Settings from {intersectSettingsFile}");
-        var settings = JsonSerializer.Deserialize<IntersectSettings>(File.ReadAllText(intersectSettingsFile));
+        var settings =
+            JsonSerializer.Deserialize<IntersectSettings>(await File.ReadAllTextAsync(intersectSettingsFile,
+                cancellationToken));
 
         if (settings == null)
         {
@@ -176,10 +215,10 @@ public static class Intersection
             return toCheck;
         }
 
-        return toCheck.IntersectionTags(settings, cancellationToken, progress);
+        return await toCheck.IntersectionTags(settings, cancellationToken, progress);
     }
 
-    public static List<string> IntersectionTags(this IFeature toCheck, string intersectSettingsFile,
+    public static async Task<List<string>> IntersectionTags(this IFeature toCheck, string intersectSettingsFile,
         CancellationToken cancellationToken, IProgress<string>? progress = null)
     {
         if (string.IsNullOrEmpty(intersectSettingsFile))
@@ -192,7 +231,9 @@ public static class Intersection
         var intersectionResult = new IntersectResult(toCheck);
 
         progress?.Report($"Getting Settings from {intersectSettingsFile}");
-        var settings = JsonSerializer.Deserialize<IntersectSettings>(File.ReadAllText(intersectSettingsFile));
+        var settings =
+            JsonSerializer.Deserialize<IntersectSettings>(await File.ReadAllTextAsync(intersectSettingsFile,
+                cancellationToken));
 
         if (settings == null)
         {
@@ -201,11 +242,12 @@ public static class Intersection
             return [];
         }
 
-        return intersectionResult.AsList().IntersectionTags(settings, cancellationToken, progress)
+        return (await intersectionResult.AsList().IntersectionTags(settings, cancellationToken, progress))
             .SelectMany(x => x.Tags).ToList();
     }
 
-    public static IntersectResult IntersectionTags(this IntersectResult toCheck, string intersectSettingsFile,
+    public static async Task<IntersectResult> IntersectionTags(this IntersectResult toCheck,
+        string intersectSettingsFile,
         CancellationToken cancellationToken, IProgress<string>? progress = null)
     {
         if (string.IsNullOrEmpty(intersectSettingsFile))
@@ -216,7 +258,9 @@ public static class Intersection
         }
 
         progress?.Report($"Getting Settings from {intersectSettingsFile}");
-        var settings = JsonSerializer.Deserialize<IntersectSettings>(File.ReadAllText(intersectSettingsFile));
+        var settings =
+            JsonSerializer.Deserialize<IntersectSettings>(await File.ReadAllTextAsync(intersectSettingsFile,
+                cancellationToken));
 
         if (settings == null)
         {
@@ -225,11 +269,11 @@ public static class Intersection
             return toCheck;
         }
 
-        return toCheck.AsList().IntersectionTags(settings, cancellationToken, progress).Single();
+        return (await toCheck.AsList().IntersectionTags(settings, cancellationToken, progress)).Single();
     }
 
     public static List<IntersectResult> ProcessFileIntersections(this List<IntersectResult> toCheck,
-        List<FeatureFile> intersectFiles,
+        List<IntersectFile> intersectFiles,
         CancellationToken cancellationToken,
         IProgress<string>? progress = null)
     {
@@ -269,8 +313,8 @@ public static class Intersection
                 foreach (var loopCheck in toCheck)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                   
-                    if (loopCheck.Features.Any(x => 
+
+                    if (loopCheck.Features.Any(x =>
                             x.Geometry.Intersects(loopIntersectFeature.Geometry)
                             || x.Geometry.Crosses(loopIntersectFeature.Geometry)
                             || x.Geometry.Contains(loopIntersectFeature.Geometry)
@@ -279,30 +323,48 @@ public static class Intersection
                             || x.Geometry.Touches(loopIntersectFeature.Geometry)
                             || x.Geometry.Within(loopIntersectFeature.Geometry)))
                     {
+                        // First check if we have any attributes or TagAll to process
+                        var hasAttributesToProcess = loopIntersectFile.AttributesForTags.Any(attr =>
+                            loopIntersectFeature.Attributes.GetNames().Contains(attr));
+                        var hasTagAll = !string.IsNullOrWhiteSpace(loopIntersectFile.TagAll);
+
+                        if (!hasAttributesToProcess && !hasTagAll) continue;
+                        
+                        // Get a list of tags that would be added
+                        var tagsToAdd = new List<string>();
+
+                        // Add tags from attributes
                         foreach (var loopAttribute in loopIntersectFile.AttributesForTags)
                             if (loopIntersectFeature.Attributes.GetNames().Any(a => a == loopAttribute))
                             {
-                                loopCheck.IntersectsWith.Add(loopIntersectFeature);
-                                if (!loopCheck.Sources.Any(x =>
-                                        loopIntersectFile.Name.Equals(x, StringComparison.OrdinalIgnoreCase)))
-                                    loopCheck.Sources.Add(loopIntersectFile.Name);
-
                                 var tagValue = (loopIntersectFeature.Attributes[loopAttribute]?.ToString() ??
                                                 string.Empty).Trim();
-                                if (!loopCheck.Tags.Any(x => x.Equals(tagValue, StringComparison.OrdinalIgnoreCase)))
-                                    loopCheck.Tags.Add(tagValue);
+                                if (!string.IsNullOrWhiteSpace(tagValue) &&
+                                    !loopCheck.Tags.Any(x => x.Equals(tagValue, StringComparison.OrdinalIgnoreCase)))
+                                    tagsToAdd.Add(tagValue);
                             }
 
-                        if (!string.IsNullOrWhiteSpace(loopIntersectFile.TagAll) && !loopCheck.Tags.Any(x =>
+                        // Add the TagAll value if specified
+                        if (hasTagAll && !loopCheck.Tags.Any(x =>
                                 x.Equals(loopIntersectFile.TagAll, StringComparison.OrdinalIgnoreCase)))
-                        {
-                            loopCheck.IntersectsWith.Add(loopIntersectFeature);
-                            if (!loopCheck.Sources.Any(x =>
-                                    loopIntersectFile.Name.Equals(x, StringComparison.OrdinalIgnoreCase)))
-                                loopCheck.Sources.Add(loopIntersectFile.Name);
+                            tagsToAdd.Add(loopIntersectFile.TagAll);
 
-                            loopCheck.Tags.Add(loopIntersectFile.TagAll);
-                        }
+                        // If we don't have any new tags to add, continue to next feature
+                        if (!tagsToAdd.Any())
+                            continue;
+
+                        // Create IntersectWithFeature object and add it to the list
+                        var intersectWithFeature = new IntersectWithFeature
+                            { Feature = loopIntersectFeature, Source = loopIntersectFile.Name, Tags = tagsToAdd };
+                        loopCheck.IntersectsWith.Add(intersectWithFeature);
+
+                        // Add the source if it's not already there
+                        if (!loopCheck.Sources.Any(x =>
+                                loopIntersectFile.Name.Equals(x, StringComparison.OrdinalIgnoreCase)))
+                            loopCheck.Sources.Add(loopIntersectFile.Name);
+
+                        // Add all the new tags
+                        foreach (var tag in tagsToAdd) loopCheck.Tags.Add(tag);
                     }
                 }
             }
@@ -418,20 +480,46 @@ public static class Intersection
                     cancellationToken.ThrowIfCancellationRequested();
 
                     if (loopCheck.Features.Any(x => x.Geometry.Intersects(loopRegionFeature.Geometry)))
+                    {
+                        // Get a list of tags that would be added
+                        var tagsToAdd = new List<string>();
+
+                        // Check each attribute and collect the tags
                         foreach (var loopAttribute in attributesForTags)
+                        {
                             if (loopRegionFeature.Attributes.GetNames().Any(a => a == loopAttribute))
                             {
-                                loopCheck.IntersectsWith.Add(loopRegionFeature);
-                                if (!loopCheck.Sources.Any(x =>
-                                        regionFile.Name.Equals(x, StringComparison.OrdinalIgnoreCase)))
-                                    loopCheck.Sources.Add(regionFile.Name);
-
-                                var tagValue = (loopRegionFeature.Attributes[loopAttribute]?.ToString() ??
-                                                string.Empty).Trim();
-                                if (!loopCheck.Tags.Any(x =>
-                                        x.Equals(tagValue, StringComparison.OrdinalIgnoreCase)))
-                                    loopCheck.Tags.Add(tagValue);
+                                var tagValue = (loopRegionFeature.Attributes[loopAttribute]?.ToString() ?? string.Empty)
+                                    .Trim();
+                                if (!string.IsNullOrWhiteSpace(tagValue) &&
+                                    !loopCheck.Tags.Any(x => x.Equals(tagValue, StringComparison.OrdinalIgnoreCase)))
+                                {
+                                    tagsToAdd.Add(tagValue);
+                                }
                             }
+                        }
+
+                        // If we don't have any new tags to add, continue to next feature
+                        if (!tagsToAdd.Any())
+                            continue;
+
+                        // Create IntersectWithFeature object and add it to the list
+                        var intersectWithFeature = new IntersectWithFeature
+                        {
+                            Feature = loopRegionFeature,
+                            Source = regionFile.Name,
+                            Tags = tagsToAdd
+                        };
+                        loopCheck.IntersectsWith.Add(intersectWithFeature);
+
+                        // Add the source if it's not already there
+                        if (!loopCheck.Sources.Any(x => regionFile.Name.Equals(x, StringComparison.OrdinalIgnoreCase)))
+                            loopCheck.Sources.Add(regionFile.Name);
+
+                        // Add all the new tags
+                        foreach (var tag in tagsToAdd)
+                            loopCheck.Tags.Add(tag);
+                    }
                 }
             }
 
@@ -440,9 +528,9 @@ public static class Intersection
 
         return toCheck;
     }
-    
+
     /// <summary>
-    /// Processes a list of tags into a list of tags with options applied - result is sorted before it is returned.
+    ///     Processes a list of tags into a list of tags with options applied - result is sorted before it is returned.
     /// </summary>
     /// <param name="toProcess"></param>
     /// <param name="tagSpacesToHyphens"></param>
@@ -450,7 +538,8 @@ public static class Intersection
     /// <param name="tagsToLower"></param>
     /// <param name="tagMaxCharacterLength"></param>
     /// <returns></returns>
-    private static List<string> ProcessTags(List<string> toProcess, bool tagSpacesToHyphens, bool sanitizeTags, bool tagsToLower, int tagMaxCharacterLength)
+    internal static List<string> ProcessTags(List<string> toProcess, bool tagSpacesToHyphens, bool sanitizeTags,
+        bool tagsToLower, int tagMaxCharacterLength)
     {
         if (tagSpacesToHyphens)
         {

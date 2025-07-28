@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Windows;
 using KellermanSoftware.CompareNetObjects;
@@ -143,6 +144,13 @@ public partial class PhotoListWithActionsContext
             return;
         }
 
+        var settings = JsonSerializer.Deserialize<IntersectSettings>(await File.ReadAllTextAsync(settingsFileInfo.FullName, cancellationToken));
+        if (settings == null)
+        {
+            StatusContext.Progress($"The settings file {settingsFileInfo.FullName} did not deserialized to valid settings...");
+            return;
+        }
+
         var errorList = new List<string>();
         var successList = new List<string>();
         var noTagsList = new List<string>();
@@ -156,7 +164,7 @@ public partial class PhotoListWithActionsContext
 
         foreach (var loopSelected in frozenSelect)
         {
-            var feature = loopSelected.DbEntry.FeatureFromPoint();
+            var feature = settings.BufferPointsAndLinesByFeet > 0 ? loopSelected.DbEntry.FeatureFromPointAsCircle(settings.BufferPointsAndLinesByFeet.Value) : loopSelected.DbEntry.FeatureFromPoint();
 
             if (feature == null) continue;
 
@@ -166,7 +174,7 @@ public partial class PhotoListWithActionsContext
             intersectResults.Add(new IntersectResult(feature) { ContentId = loopSelected.DbEntry.ContentId });
         }
 
-        intersectResults.IntersectionTags(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile,
+        await intersectResults.IntersectionTags(settings,
             cancellationToken,
             StatusContext.ProgressTracker());
 
@@ -359,21 +367,6 @@ public partial class PhotoListWithActionsContext
     }
 
     [BlockingCommand]
-    [StopAndWarnIfNoSelectedListItems]
-    private async Task PhotoWithDetailsCodesToClipboardForSelected()
-    {
-        var finalString = SelectedListItems().Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + BracketCodePhotosWithDetails.Create(loopSelected.DbEntry) + Environment.NewLine);
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
-    }
-
-    [BlockingCommand]
     private async Task PhotoMetadataFromPickedFile()
     {
         await ThreadSwitcher.ResumeForegroundAsync();
@@ -424,6 +417,21 @@ public partial class PhotoListWithActionsContext
 
             await pointWindow.PositionWindowAndShowOnUiThread();
         }
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    private async Task PhotoWithDetailsCodesToClipboardForSelected()
+    {
+        var finalString = SelectedListItems().Aggregate(string.Empty,
+            (current, loopSelected) =>
+                current + BracketCodePhotosWithDetails.Create(loopSelected.DbEntry) + Environment.NewLine);
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        Clipboard.SetText(finalString);
+
+        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
     }
 
     [BlockingCommand]

@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 using NetTopologySuite.Features;
 using NetTopologySuite.Geometries;
+using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.SpatialTools;
 
@@ -65,6 +66,26 @@ public class LineContent : IUpdateNotes, IContentCommon
     public IFeature? FeatureFromGeoJsonLine()
     {
         return FeatureFromGeoJsonLine(Line);
+    }
+
+    public IFeature? FeatureFromGeoJsonLineAsPolygon(double? bufferInFeet)
+    {
+        if(bufferInFeet is null or <= 0) 
+            return FeatureFromGeoJsonLine(Line);
+
+        var lineString = LineStringFromGeoJsonLine();
+
+        if (lineString is null || lineString.Count < 1) return null;
+
+        var latitudeDegrees = DistanceTools.ApproximateMetersToLatitudeDegrees(bufferInFeet.FeetToMeters(), lineString.StartPoint.X, lineString.StartPoint.Y);
+        var longitudeDegrees
+            = DistanceTools.ApproximateMetersToLongitudeDegrees(bufferInFeet.FeetToMeters(), lineString.StartPoint.X, lineString.StartPoint.Y);
+
+        var bufferedLine = lineString.Buffer((latitudeDegrees + longitudeDegrees) / 2D);
+
+        if (bufferedLine is null) return null;
+        
+        return new Feature(bufferedLine, new AttributesTable());
     }
 
     /// <summary>

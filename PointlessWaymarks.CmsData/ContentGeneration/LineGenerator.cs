@@ -51,7 +51,7 @@ public static class LineGenerator
                 var lineFeature = new Feature(new LineString(trackInformation.Track.ToArray()),
                     new AttributesTable());
 
-                tagList.AddRange(lineFeature.IntersectionTags(
+                tagList.AddRange(await lineFeature.IntersectionTags(
                     UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile,
                     CancellationToken.None, progress));
             }
@@ -152,7 +152,7 @@ public static class LineGenerator
                 var lineFeature = new Feature(new LineString(trackInformation.Track.ToArray()),
                     new AttributesTable());
 
-                tagList.AddRange(lineFeature.IntersectionTags(
+                tagList.AddRange(await lineFeature.IntersectionTags(
                     UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile,
                     CancellationToken.None, progress));
             }

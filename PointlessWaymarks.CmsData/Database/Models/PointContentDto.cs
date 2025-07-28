@@ -3,6 +3,7 @@ using NetTopologySuite.Features;
 using NetTopologySuite.Geometries;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.CommonTools.S3;
+using PointlessWaymarks.SpatialTools;
 
 namespace PointlessWaymarks.CmsData.Database.Models;
 
@@ -32,10 +33,10 @@ public class PointContentDto : IUpdateNotes, IContentCommon
     public bool ShowInMainSiteFeed { get; set; }
     public bool ShowInSearch { get; set; } = true;
     public string? Tags { get; set; }
+    public string? Title { get; set; }
     public string? Folder { get; set; }
     public string? Slug { get; set; }
     public string? Summary { get; set; }
-    public string? Title { get; set; }
     public string? UpdateNotes { get; set; }
     public string? UpdateNotesFormat { get; set; }
 
@@ -48,6 +49,15 @@ public class PointContentDto : IUpdateNotes, IContentCommon
         return new Feature(PointFromLatitudeLongitude(), new AttributesTable());
     }
 
+    /// <summary>
+    ///     Returns a NTS Feature based on the Content data.
+    /// </summary>
+    /// <returns></returns>
+    public IFeature FeatureFromPointAsCircle(double radiusInFeet)
+    {
+        var circle = PointTools.CreateCircle(Longitude, Latitude, radiusInFeet);
+        return new Feature(circle, new AttributesTable());
+    }
 
     /// <summary>
     ///     Returns either a Point or a PointZ from the Contents Values

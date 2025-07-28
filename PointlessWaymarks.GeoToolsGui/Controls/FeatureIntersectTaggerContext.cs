@@ -2,14 +2,8 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
-using System.Web;
 using CommunityToolkit.Mvvm.Messaging;
-using HtmlTableHelper;
-using MetadataExtractor;
-using MetadataExtractor.Formats.Xmp;
-using NetTopologySuite.Features;
 using Ookii.Dialogs.Wpf;
-using PointlessWaymarks.CmsData.ContentHtml.GeoJsonHtml;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.FeatureIntersectionTags;
 using PointlessWaymarks.FeatureIntersectionTags.Models;
@@ -17,14 +11,11 @@ using PointlessWaymarks.GeoToolsGui.Messages;
 using PointlessWaymarks.GeoToolsGui.Models;
 using PointlessWaymarks.GeoToolsGui.Settings;
 using PointlessWaymarks.LlamaAspects;
-using PointlessWaymarks.SpatialTools;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.FileList;
 using PointlessWaymarks.WpfCommon.FileMetadataDisplay;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
-using PointlessWaymarks.WpfCommon.WpfHtml;
-using XmpCore;
 using Directory = System.IO.Directory;
 
 namespace PointlessWaymarks.GeoToolsGui.Controls;
@@ -52,44 +43,74 @@ public partial class FeatureIntersectTaggerContext
     public FileListContext? FilesToTagFileList { get; set; }
     public FeatureIntersectTaggerFilesToTagSettings? FilesToTagSettings { get; set; }
 
+    public string OsmOverviewMarkdown => """
+                                                 [Open Street Map](https://www.openstreetmap.org/) is an incredible resource that collects together a huge variety of geographic information that can be queried for free. Regardless of your interest in tagging with OSM I encourage you to visit the [OpenStreetMap Foundation Page](https://osmfoundation.org/wiki/Main_Page) and consider using, donating to and contributing to the project.
+                                                 
+                                                 This program can use the [Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API) to look for feature intersections and/or areas and features that your files are 'in'. In both cases the tags are determined by the OSM Name Tag. If you want to see what data the API returns I would recommend trying [overpass turbo](https://overpass-turbo.eu/).
+                                                 
+                                                 ### Feature Intersect Tagging
+                                                 
+                                                 Feature Intersect Tagging is a great way to pick up the names of trails, roads, rivers and peaks. It is unlikely in most cases to pick up features that cover large areas like a National Park. This can be a nice compliment to the PAD-US data that is a very good source in the US for land ownership and management data.
+                                                 
+                                                 ### 'In' Tagging
+                                                 
+                                                 In tagging takes a point - or a few point from a line or GeoJson feature - and queries the Overpass API for features your points are in - this is great for finding details like like country, states and parks. Because only a few points are taken for things like GPX Tracks or GeoJson features it may be more accurate to use GeoJson Feature Files or PAD-US where full intersections are checked.
+                                                 
+                                                 ### Filtering
+                                                 
+                                                 Especially if you use the 'In' Tagging you may find that the OSM data returns items that you don't want as tags - for many people timezones may be a good example of this. You can add filters to help with this:
+                                                  - "boundary": "timezone" or boundary:timezone -> this will filter out any features with a tag name boundary and a value of timezone (case insensitive)
+                                                  - boundary or boundary: -> this will filter out any features with a tag name boundary (case insensitive)
+                                                  - :timezone or : "timezone" -> this will filter out any features if any tag has the value timezone (case insensitive)
+                                                  
+                                                 In the Preview Window you can right click an item to browse the returned features. This is a good way to determine what and how to filter - for example look for 'OSM' features with a tag you want to eliminate, select it and look at the Json data to find the "properties". Inside the properties are "tag": "values" that you can filter on.
+                                                 
+                                                 ### Limitations
+                                                 
+                                                 By default this program uses a public instance of the Overpass API - this is easy and convenient but means that the program must be careful about how many requests are submitted to the API and how much data is returned. With that in mind there are some limitations:
+                                                  - Feature Intersect Tagging will not pick up large areas like a national park
+                                                  - 'In' Tagging can't be run for every point on a line or shape in a GeoJson file - this program just take a few representative points and runs those - while Open Street Map may have much of the same data that the PAD-US data it is only possible to query 'points' and something like a GPX Track may be more accurately tagged via the PAD-US data and/or GeoJson Feature Files.
+                                                 """;
+
     public string GeoJsonFileOverviewMarkdown => """
-        Inside the USA the [USGS PAD-US Data](https://www.usgs.gov/programs/gap-analysis-project/science/pad-us-data-overview) (see previous tab) is a great resource for automatically identifying landscape ownership/management and generating tags. But there is a wide variety of other data that you might want to use or create.
+                                                 Inside the USA the [USGS PAD-US Data](https://www.usgs.gov/programs/gap-analysis-project/science/pad-us-data-overview) (see previous tab) is a great resource for automatically identifying landscape ownership/management and generating tags. But there is a wide variety of other data that you might want to use or create.
 
-        To generate tags from GeoJson files the following information has to be provided:
+                                                 To generate tags from GeoJson files the following information has to be provided:
 
-          - File Name - must be the full path and filename of a valid GeoJson file
-          - Attributes For Tags - When an intersecting feature is found the program will add tags from the values of any attribute names listed here. This can be empty if a 'Tag All' value is provided.
-          - Tag All - you may find data sets where you want any intersections tagged with a value rather than tagging based on the value of an attribute. An example is Arizona State Trust Land - in Arizona it is interesting and useful to know your hike included Arizona State Trust Land (a useful tag), but you might not care about any of the specifics list who leases the land, how is the land used, ... - in that case you could leave the 'Attributes For Tags' blank and set 'Tag All' to 'Arizona State Trust Land'.
+                                                   - File Name - must be the full path and filename of a valid GeoJson file
+                                                   - Attributes For Tags - When an intersecting feature is found the program will add tags from the values of any attribute names listed here. This can be empty if a 'Tag All' value is provided.
+                                                   - Tag All - you may find data sets where you want any intersections tagged with a value rather than tagging based on the value of an attribute. An example is Arizona State Trust Land - in Arizona it is interesting and useful to know your hike included Arizona State Trust Land (a useful tag), but you might not care about any of the specifics list who leases the land, how is the land used, ... - in that case you could leave the 'Attributes For Tags' blank and set 'Tag All' to 'Arizona State Trust Land'.
 
-        And you can also provide the information below which can be very useful to keep track of the data you are using: 
-          - Name - Not needed for the program but can make keeping track of the data much simpler
-          - Source - The source of the information - often a great choice for this field is a URL for the information
-          - Downloaded On - The date you downloaded the information is suggested here. GeoJson data is not always 'versioned' in a useful way and without knowing when you downloaded a file it may be hard to know if your data is current.
+                                                 And you can also provide the information below which can be very useful to keep track of the data you are using: 
+                                                   - Name - Not needed for the program but can make keeping track of the data much simpler
+                                                   - Source - The source of the information - often a great choice for this field is a URL for the information
+                                                   - Downloaded On - The date you downloaded the information is suggested here. GeoJson data is not always 'versioned' in a useful way and without knowing when you downloaded a file it may be hard to know if your data is current.
 
-        Regardless of the areas you are interested in and the availability of pre-existing data you are likely to find it useful to create your own GeoJson data to help automatically tag things like unofficial names, areas and trails that have local names that will never appear in official data and features and areas with personal significance! [geojson.io](https://geojson.io/) is one simple way to produce a reference file - for example you could draw a polygon around a local trail area, add a property that identifies its well known local name ("name": "My Special Trail Area"), save the file and create a Feature File entry for it with a 'Attributes for Tags' entry of 'name'. Official recognition and public data almost certainly don't define everything you care about on the landscape!
-        """;
+                                                 Regardless of the areas you are interested in and the availability of pre-existing data you are likely to find it useful to create your own GeoJson data to help automatically tag things like unofficial names, areas and trails that have local names that will never appear in official data and features and areas with personal significance! [geojson.io](https://geojson.io/) is one simple way to produce a reference file - for example you could draw a polygon around a local trail area, add a property that identifies its well known local name ("name": "My Special Trail Area"), save the file and create a Feature File entry for it with a 'Attributes for Tags' entry of 'name'. Official recognition and public data almost certainly don't define everything you care about on the landscape!
+                                                 """;
 
     public string PadUsAttributeToAdd { get; set; } = string.Empty;
 
     public string PadUsOverviewMarkdown => """
-        From the [USGS PAD-US Data Overview](https://www.usgs.gov/programs/gap-analysis-project/science/pad-us-data-overview):
+                                           From the [USGS PAD-US Data Overview](https://www.usgs.gov/programs/gap-analysis-project/science/pad-us-data-overview):
 
-        > PAD-US is America’s official national inventory of U.S. terrestrial and marine protected areas that are dedicated to the preservation of biological diversity and to other natural, recreation and cultural uses, managed for these purposes through legal or other effective means. PAD-US also includes the best available aggregation of federal land and marine areas provided directly by managing agencies, coordinated through the Federal Geographic Data Committee Federal Lands Working Group.
+                                           > PAD-US is America’s official national inventory of U.S. terrestrial and marine protected areas that are dedicated to the preservation of biological diversity and to other natural, recreation and cultural uses, managed for these purposes through legal or other effective means. PAD-US also includes the best available aggregation of federal land and marine areas provided directly by managing agencies, coordinated through the Federal Geographic Data Committee Federal Lands Working Group.
 
-        The Protected Areas Database is likely the best single source for land ownership and management information for the US Landscape and forms an excellent basis for automatically generating landscape oriented tags.
+                                           The Protected Areas Database is likely the best single source for land ownership and management information for the US Landscape and forms an excellent basis for automatically generating landscape oriented tags.
 
-        The large size of the PAD-US data is a challenge to using it efficiently. You can download State or Region files from PAD-US and enter them like you would any other GeoJson file in the next tab - but this program can use the PAD-US somewhat more efficiently if you take some time and download, setup and specifically configure the PAD-US data:
-          - Create a directory dedicated to the PAD-US data - place on the Region Boundaries GeoJson file and Region GeoJson files in this directory. Enter the directory in this screen.
-          - On the [U.S. Department of the Interior Unified Interior Regional Boundaries](https://www.doi.gov/employees/reorg/unified-regional-boundaries) site find and click the 'shapefiles (for mapping software)' link - this will download a zip file.
-              - Extract the contents of the zip file. 
-              - Use ogr2ogr (see the general help for information on this command-line program) to convert the data to GeoJson (rough template: \ogr2ogr.exe -f GeoJSON -t_srs crs:84 {path and name for destination GeoJson file} {path and name of the shapefile to convert}). 
-              - Put the GeoJson output file into your PAD-US data directory
-          - [PAD-US 3.0 Download data by Department of the Interior (DOI) Region GeoJSON - ScienceBase-Catalog](https://www.sciencebase.gov/catalog/item/622256afd34ee0c6b38b6bb7) - from this page click the 'Download data by Department of the Interior (DOI) Region GeoJSON' link, this will take you to a page where you can download any regions you are interested in. For each region:
-            - Extract the zip file and place the GeoJson file in your PAD-US data directory
-            - Ensure that the GeoJson has the expected coordinate reference system and format - for example  \ogr2ogr.exe -f GeoJSON -t_srs crs:84 C:\PointlessWaymarksPadUs\PADUS3_0Combined_Region1.geojson C:\PointlessWaymarksPadUs\PADUS3_0Combined_Region1.json.
-        """;
+                                           The large size of the PAD-US data is a challenge to using it efficiently. You can download State or Region files from PAD-US and enter them like you would any other GeoJson file in the next tab - but this program can use the PAD-US somewhat more efficiently if you take some time and download, setup and specifically configure the PAD-US data:
+                                             - Create a directory dedicated to the PAD-US data - place on the Region Boundaries GeoJson file and Region GeoJson files in this directory. Enter the directory in this screen.
+                                             - On the [U.S. Department of the Interior Unified Interior Regional Boundaries](https://www.doi.gov/employees/reorg/unified-regional-boundaries) site find and click the 'shapefiles (for mapping software)' link - this will download a zip file.
+                                                 - Extract the contents of the zip file. 
+                                                 - Use ogr2ogr (see the general help for information on this command-line program) to convert the data to GeoJson (rough template: \ogr2ogr.exe -f GeoJSON -t_srs crs:84 {path and name for destination GeoJson file} {path and name of the shapefile to convert}). 
+                                                 - Put the GeoJson output file into your PAD-US data directory
+                                             - [PAD-US 3.0 Download data by Department of the Interior (DOI) Region GeoJSON - ScienceBase-Catalog](https://www.sciencebase.gov/catalog/item/622256afd34ee0c6b38b6bb7) - from this page click the 'Download data by Department of the Interior (DOI) Region GeoJSON' link, this will take you to a page where you can download any regions you are interested in. For each region:
+                                               - Extract the zip file and place the GeoJson file in your PAD-US data directory
+                                               - Ensure that the GeoJson has the expected coordinate reference system and format - for example  \ogr2ogr.exe -f GeoJSON -t_srs crs:84 C:\PointlessWaymarksPadUs\PADUS3_0Combined_Region1.geojson C:\PointlessWaymarksPadUs\PADUS3_0Combined_Region1.json.
+                                           """;
 
     public List<IntersectFileTaggingResult> PreviewResults { get; set; } = [];
+    public IntersectFileTaggingResult? PreviewResultSelectedItem { get; set; }
     public FeatureFileContext? SelectedFeatureFile { get; set; }
     public string? SelectedPadUsAttribute { get; set; }
     public int SelectedTab { get; set; }
@@ -97,6 +118,45 @@ public partial class FeatureIntersectTaggerContext
     public StatusControlContext StatusContext { get; set; }
     public WindowIconStatus WindowStatus { get; set; }
     public List<IntersectFileTaggingResult> WriteToFileResults { get; set; } = [];
+    public IntersectFileTaggingResult? WriteToFileSelectedItem { get; set; }
+    public string? SelectedOsmTagFilter { set; get; }
+    public string? OsmTagFilterToAdd { get; set; }
+
+    [NonBlockingCommand]
+    public async Task AddOsmTagFilter()
+    {
+        if (string.IsNullOrWhiteSpace(OsmTagFilterToAdd))
+        {
+            await StatusContext.ToastWarning("Can't Add a Blank/Whitespace Only Filter");
+            return;
+        }
+
+        if (Settings.OsmTagFilters.Any(x => x.Equals(OsmTagFilterToAdd, StringComparison.InvariantCultureIgnoreCase)))
+        {
+            await StatusContext.ToastWarning("Filter already exists? Filters are case insensitive...");
+            return;
+        }
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+        Settings.OsmTagFilters.Add(OsmTagFilterToAdd.Trim());
+        OsmTagFilterToAdd = string.Empty;
+    }
+
+    [NonBlockingCommand]
+    public async Task RemoveOsmTagFilter(string? toRemove)
+    {
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        try
+        {
+            Settings.OsmTagFilters.Remove(toRemove ?? string.Empty);
+        }
+        catch (Exception e)
+        {
+            await StatusContext.ToastError(
+                $"Error removing OSM Tag Filter {toRemove ?? string.Empty} - {e.Message}");
+        }
+    }
 
     [NonBlockingCommand]
     public async Task AddPadUsAttribute()
@@ -195,15 +255,15 @@ public partial class FeatureIntersectTaggerContext
     }
 
     [BlockingCommand]
-    private Task<IntersectSettings> CurrentSettingsAsIntersectSettings()
+    private async Task<IntersectSettings> CurrentSettingsAsIntersectSettings()
     {
         Debug.Assert(Settings != null, nameof(Settings) + " != null");
 
-        var featureFiles = Settings.FeatureIntersectFiles
-            .Select(x => new FeatureFile(x.Source, x.Name, x.AttributesForTags, x.TagAll, x.FileName, x.Downloaded, x.Note))
-            .ToList();
+        var newSettings = Settings.ToIntersectSettings();
 
-        return Task.FromResult(new IntersectSettings(featureFiles, Settings.PadUsDirectory, Settings.PadUsAttributes));
+        await FeatureIntersectTaggerSettingTools.WriteSettings(Settings);
+
+        return newSettings;
     }
 
     [BlockingCommand]
@@ -238,8 +298,6 @@ public partial class FeatureIntersectTaggerContext
         }
 
         FeatureFileToEdit!.Show(SelectedFeatureFile, Settings.FeatureIntersectFiles.ToList());
-
-        return;
     }
 
     private void EndEdit(object? sender,
@@ -286,18 +344,13 @@ public partial class FeatureIntersectTaggerContext
 
         Debug.Assert(Settings != null, nameof(Settings) + " != null");
 
-        var featureFiles = Settings.FeatureIntersectFiles
-            .Select(x => new FeatureFile(x.Source, x.Name, x.AttributesForTags, x.TagAll, x.FileName, x.Downloaded, x.Note))
-            .ToList();
-
-        var intersectSettings =
-            new IntersectSettings(featureFiles, Settings.PadUsDirectory, Settings.PadUsAttributes);
+        var intersectSettings = Settings.ToIntersectSettings();
 
         PreviewResults = await FilesToTagFileList.Files.ToList()
             .FileIntersectionTags(intersectSettings, Settings.TagsToLowerCase, Settings.SanitizeTags,
                 Settings.TagSpacesToHyphens, CancellationToken.None, 1024, StatusContext.ProgressTracker());
 
-        SelectedTab = 4;
+        SelectedTab = 5;
     }
 
     [BlockingCommand]
@@ -335,16 +388,16 @@ public partial class FeatureIntersectTaggerContext
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        if (settings.PadUsAttributesForTags.Any())
+        if (settings.PadUsAttributes.Any())
         {
             Settings.PadUsAttributes.Clear();
-            settings.PadUsAttributesForTags.OrderBy(x => x).ToList().ForEach(x => Settings.PadUsAttributes.Add(x));
+            settings.PadUsAttributes.OrderBy(x => x).ToList().ForEach(x => Settings.PadUsAttributes.Add(x));
         }
 
-        if (settings.PadUsAttributesForTags.Any())
+        if (settings.PadUsAttributes.Any())
         {
             Settings.FeatureIntersectFiles.Clear();
-            settings.IntersectFiles.OrderBy(x => x.Name).Select(loopFeatureFile =>
+            settings.FeatureIntersectFiles.OrderBy(x => x.Name).Select(loopFeatureFile =>
                 new FeatureFileContext
                 {
                     Name = loopFeatureFile.Name,
@@ -368,13 +421,13 @@ public partial class FeatureIntersectTaggerContext
         FilesToTagFileList =
             await FileListContext.CreateInstance(StatusContext, FilesToTagSettings,
             [
-                new()
+                new ContextMenuItemData
                 {
                     ItemCommand = MetadataForSelectedFilesToTagCommand,
                     ItemName = "Metadata Report for Selected"
                 }
             ]);
-        
+
         Debug.Assert(Settings != null, nameof(Settings) + " != null");
 
         Settings.PropertyChanged += OnSettingsPropertyChanged;
@@ -451,6 +504,24 @@ public partial class FeatureIntersectTaggerContext
             StatusContext.RunNonBlockingTask(async () => await CheckThatExifToolExists(true));
     }
 
+    [NonBlockingCommand]
+    public async Task PreviewResultSelectItemToResultBrowser()
+    {
+        if (PreviewResultSelectedItem is null)
+        {
+            await StatusContext.ToastWarning("Nothing Selected?");
+            return;
+        }
+
+        if (PreviewResultSelectedItem.IntersectInformation is null)
+        {
+            await StatusContext.ToastWarning("No Intersect Information for Selected Item.");
+            return;
+        }
+
+        await FeatureIntersectResultBrowserWindow.CreateInstanceAndShow(PreviewResultSelectedItem.IntersectInformation, PreviewResultSelectedItem.FileToTag.FullName);
+    }
+
     public async Task ProcessEditedFeatureFileViewModel(FeatureFileContext model)
     {
         await ThreadSwitcher.ResumeForegroundAsync();
@@ -509,6 +580,24 @@ public partial class FeatureIntersectTaggerContext
                 Settings.TagsToLowerCase, Settings.SanitizeTags, Settings.TagSpacesToHyphens,
                 Settings.ExifToolFullName, CancellationToken.None, 1024, StatusContext.ProgressTracker());
 
-        SelectedTab = 5;
+        SelectedTab = 6;
+    }
+
+    [NonBlockingCommand]
+    public async Task WriteToFileSelectItemToResultBrowser()
+    {
+        if (WriteToFileSelectedItem is null)
+        {
+            await StatusContext.ToastWarning("Nothing Selected?");
+            return;
+        }
+
+        if (WriteToFileSelectedItem.IntersectInformation is null)
+        {
+            await StatusContext.ToastWarning("No Intersect Information for Selected Item.");
+            return;
+        }
+
+        await FeatureIntersectResultBrowserWindow.CreateInstanceAndShow(WriteToFileSelectedItem.IntersectInformation, WriteToFileSelectedItem.FileToTag.FullName);
     }
 }

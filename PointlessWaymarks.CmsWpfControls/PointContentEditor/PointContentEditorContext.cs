@@ -126,7 +126,7 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        var featureToCheck = await FeatureFromPoint();
+        var featureToCheck = await FeatureFromPointAsCircle(20);
         if (featureToCheck == null)
         {
             await StatusContext.ToastError("No valid Lat/Long to check?");
@@ -140,7 +140,7 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
             return;
         }
 
-        var possibleTags = featureToCheck.IntersectionTags(
+        var possibleTags = await featureToCheck.IntersectionTags(
             UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile, CancellationToken.None,
             StatusContext.ProgressTracker());
 
@@ -280,6 +280,16 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
             new AttributesTable()));
     }
 
+    public Task<IFeature?> FeatureFromPointAsCircle(double radiusInFeet)
+    {
+        if (LatitudeEntry!.HasValidationIssues || LongitudeEntry!.HasValidationIssues)
+            return Task.FromResult((IFeature?)null);
+
+        var circle = PointTools.CreateCircle(LongitudeEntry.UserValue, LatitudeEntry.UserValue, radiusInFeet);
+
+        return Task.FromResult((IFeature?)new Feature(circle, new AttributesTable()));
+    }
+
     [BlockingCommand]
     public async Task GetElevation()
     {
@@ -417,7 +427,8 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
 
         var closeByFeatures = (await db.ContentFromBoundingBox(searchBounds, [Db.ContentTypeDisplayStringForPoint]))
             .Where(x => x.ContentId != DbEntry.ContentId && !DisplayedContentGuids.Contains(x.ContentId)).ToList();
-        var mapInformation = await MapCmsJson.ProcessContentToMapInformation(closeByFeatures.Cast<object>().ToList(), false);
+        var mapInformation =
+            await MapCmsJson.ProcessContentToMapInformation(closeByFeatures.Cast<object>().ToList(), false);
         DisplayedContentGuids =
             DisplayedContentGuids.Union(closeByFeatures.Select(x => x.ContentId).Cast<Guid>()).ToList();
 
@@ -545,7 +556,8 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
         await StatusContext.ToastSuccess(
             $"Added {searchResult.Count} Item{(searchResult.Count > 1 ? "s" : string.Empty)}");
 
-        var mapInformation = await MapCmsJson.ProcessContentToMapInformation(searchResult.Cast<object>().ToList(), false);
+        var mapInformation =
+            await MapCmsJson.ProcessContentToMapInformation(searchResult.Cast<object>().ToList(), false);
         DisplayedContentGuids =
             DisplayedContentGuids.Union(searchResult.Select(x => x.ContentId).Cast<Guid>()).ToList();
 

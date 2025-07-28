@@ -1247,15 +1247,15 @@
                             CommandParameter="{Binding DbEntry}">
                             Create Image Snapshot
                         </Button>
-                        <Menu 
+                        <Menu
                             Margin="8,0,0,0"
                             VerticalAlignment="Center"
                             Background="Transparent"
                             BorderThickness="0"
                             Visibility="{Binding SnapshotImages.Count, Converter={StaticResource IntegerGreaterThanZeroToVisibility}, FallbackValue=Collapsed}">
-                            <MenuItem 
-                                Header="Click for Saved Snapshots" 
+                            <MenuItem
                                 BorderThickness="0"
+                                Header="Click for Saved Snapshots"
                                 ItemsSource="{Binding SnapshotImages}">
                                 <MenuItem.ItemContainerStyle>
                                     <Style TargetType="MenuItem">

@@ -1,5 +1,6 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.IO;
+using System.Text.Json.Serialization;
 using PointlessWaymarks.LlamaAspects;
 
 namespace PointlessWaymarks.GeoToolsGui.Models;
@@ -17,12 +18,12 @@ public partial class FeatureFileContext
     public Guid ContentId { get; set; } = Guid.NewGuid();
     public string Downloaded { get; set; } = string.Empty;
     public string FileName { get; set; } = string.Empty;
-    public bool HasWarnings { get; set; }
+    [JsonIgnore] public bool HasWarnings { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Note { get; set; } = string.Empty;
     public string Source { get; set; } = string.Empty;
     public string TagAll { get; set; } = string.Empty;
-    public List<string> Warnings { get; } = [];
+    [JsonIgnore] public List<string> Warnings { get; } = [];
 
     private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {

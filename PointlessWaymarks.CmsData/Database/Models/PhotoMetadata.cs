@@ -1,3 +1,8 @@
+using NetTopologySuite.Features;
+using NetTopologySuite.Geometries;
+using PointlessWaymarks.CommonTools;
+using PointlessWaymarks.SpatialTools;
+
 namespace PointlessWaymarks.CmsData.Database.Models;
 
 public class PhotoMetadata
@@ -20,4 +25,47 @@ public class PhotoMetadata
     public string? Summary { get; set; }
     public string? Tags { get; set; }
     public string? Title { get; set; }
+
+    public Point? PointFromLatitudeLongitude()
+    {
+        if (Longitude is null || Latitude is null) return null;
+        return Elevation is null
+            ? new Point(Longitude.Value, Latitude.Value)
+            : new Point(Longitude.Value, Latitude.Value, Elevation.Value.FeetToMeters());
+    }
+
+    public IFeature? FeatureFromPoint()
+    {
+        if (Longitude is null || Latitude is null) return null;
+        return new Feature(PointFromLatitudeLongitude(), new AttributesTable());
+    }
+
+    /// <summary>
+    ///     Creates a Feature representing a circle with the specified radius in feet around the location's point
+    /// </summary>
+    /// <param name="radiusInFeet">The radius of the circle in feet</param>
+    /// <returns>A Feature containing a circular polygon, or null if the location doesn't have valid coordinates</returns>
+    public IFeature? FeatureFromPointAsCircle(double radiusInFeet)
+    {
+        if (Longitude is null || Latitude is null) return null;
+
+        // Get the point from the location
+        var point = PointFromLatitudeLongitude2D();
+        if (point == null) return null;
+
+        var circle = PointTools.CreateCircle(point, radiusInFeet);
+
+        // Return the circle as a feature
+        return new Feature(circle, new AttributesTable());
+    }
+
+    /// <summary>
+    ///     Returns a 2D Point
+    /// </summary>
+    /// <returns></returns>
+    public Point? PointFromLatitudeLongitude2D()
+    {
+        if (Longitude is null || Latitude is null) return null;
+        return new Point(Longitude.Value, Latitude.Value);
+    }
 }

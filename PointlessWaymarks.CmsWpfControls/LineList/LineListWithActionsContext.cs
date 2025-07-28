@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Text.Json;
 using System.Windows;
 using System.Xml;
 using ClosedXML.Excel;
@@ -182,9 +183,16 @@ public partial class LineListWithActionsContext
         List<LineContent> dbEntriesToProcess = [];
         List<IntersectResult> intersectResults = [];
 
+        var settings = JsonSerializer.Deserialize<IntersectSettings>(await File.ReadAllTextAsync(settingsFileInfo.FullName, cancellationToken));
+        if (settings == null)
+        {
+            StatusContext.Progress($"The settings file {settingsFileInfo.FullName} did not deserialized to valid settings...");
+            return;
+        }
+
         foreach (var loopSelected in frozenSelect)
         {
-            var features = loopSelected.DbEntry.FeatureFromGeoJsonLine();
+            var features = loopSelected.DbEntry.FeatureFromGeoJsonLineAsPolygon(settings.BufferPointsAndLinesByFeet);
 
             if (features == null) continue;
 
@@ -193,7 +201,7 @@ public partial class LineListWithActionsContext
                 { ContentId = loopSelected.DbEntry.ContentId });
         }
 
-        intersectResults.IntersectionTags(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile,
+        await intersectResults.IntersectionTags(settings,
             cancellationToken, StatusContext.ProgressTracker());
 
         var updateTime = DateTime.Now;

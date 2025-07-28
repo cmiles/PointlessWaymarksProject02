@@ -1,11 +1,10 @@
 using System.Globalization;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 using MetadataExtractor.Formats.Iptc;
 using MetadataExtractor.Formats.Xmp;
-using NetTopologySuite.Features;
-using NetTopologySuite.Geometries;
 using Omu.ValueInjecter;
 using PointlessWaymarks.CmsData.ContentHtml.PhotoHtml;
 using PointlessWaymarks.CmsData.Database;
@@ -14,6 +13,7 @@ using PointlessWaymarks.CmsData.ImageHelpers;
 using PointlessWaymarks.CmsData.Json;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.FeatureIntersectionTags;
+using PointlessWaymarks.FeatureIntersectionTags.Models;
 using PointlessWaymarks.SpatialTools;
 using Serilog;
 using XmpCore;
@@ -61,37 +61,22 @@ public static class PhotoGenerator
         await htmlContext.WriteLocalHtml().ConfigureAwait(false);
     }
 
-    public static List<string> SupportedPhotoFileNativeExtensions()
-    {
-        return [".JPG", ".JPEG"];
-    }
-
-    public static List<string> SupportedPhotoFileConversionExtensions()
-    {
-        return [".BMP", ".PNG", ".TIF", ".WEBP"];
-    }
-
-    public static List<string> SupportedPhotoFileExtensions()
-    {
-        return SupportedPhotoFileNativeExtensions().Concat(SupportedPhotoFileConversionExtensions()).ToList();
-    }
-
     public static bool PhotoFileTypeConversionIsSupported(FileInfo toCheck)
     {
         if (toCheck is not { Exists: true }) return false;
         return SupportedPhotoFileConversionExtensions().Contains(toCheck.Extension.ToUpperInvariant());
     }
 
-    public static bool PhotoFileTypeNativeIsSupported(FileInfo toCheck)
-    {
-        if (toCheck is not { Exists: true }) return false;
-        return SupportedPhotoFileNativeExtensions().Contains(toCheck.Extension.ToUpperInvariant());
-    }
-
     public static bool PhotoFileTypeIsSupported(FileInfo toCheck)
     {
         if (toCheck is not { Exists: true }) return false;
         return PhotoFileTypeNativeIsSupported(toCheck) || PhotoFileTypeConversionIsSupported(toCheck);
+    }
+
+    public static bool PhotoFileTypeNativeIsSupported(FileInfo toCheck)
+    {
+        if (toCheck is not { Exists: true }) return false;
+        return SupportedPhotoFileNativeExtensions().Contains(toCheck.Extension.ToUpperInvariant());
     }
 
     public static async Task<(GenerationReturn generationReturn, PhotoMetadata? metadata)> PhotoMetadataFromFile(
@@ -170,13 +155,24 @@ public static class PhotoGenerator
             !skipAdditionalTagDiscovery)
             try
             {
-                var pointFeature = new Feature(
-                    new Point(toReturn.Longitude.Value, toReturn.Latitude.Value),
-                    new AttributesTable());
+                var settingsFileInfo =
+                    new FileInfo(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile);
+                if (settingsFileInfo.Exists)
+                {
+                    var settings = JsonSerializer.Deserialize<IntersectSettings>(
+                        await File.ReadAllTextAsync(settingsFileInfo.FullName, CancellationToken.None));
+                    if (settings != null)
+                    {
+                        var feature = settings.BufferPointsAndLinesByFeet > 0
+                            ? toReturn.FeatureFromPointAsCircle(settings.BufferPointsAndLinesByFeet.Value)
+                            : toReturn.FeatureFromPoint();
 
-                tags.AddRange(pointFeature.IntersectionTags(
-                    UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile,
-                    CancellationToken.None, progress));
+                        if (feature != null)
+                            tags.AddRange(await feature.IntersectionTags(
+                                UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile,
+                                CancellationToken.None, progress));
+                    }
+                }
             }
             catch (Exception e)
             {
@@ -378,6 +374,21 @@ public static class PhotoGenerator
             DataNotificationUpdateType.LocalContent, [toSave.ContentId]);
 
         return (GenerationReturn.Success($"Saved and Generated Content And Html for {toSave.Title}"), toSave);
+    }
+
+    public static List<string> SupportedPhotoFileConversionExtensions()
+    {
+        return [".BMP", ".PNG", ".TIF", ".WEBP"];
+    }
+
+    public static List<string> SupportedPhotoFileExtensions()
+    {
+        return SupportedPhotoFileNativeExtensions().Concat(SupportedPhotoFileConversionExtensions()).ToList();
+    }
+
+    public static List<string> SupportedPhotoFileNativeExtensions()
+    {
+        return [".JPG", ".JPEG"];
     }
 
     public static async Task<GenerationReturn> Validate(PhotoContent? photoContent, FileInfo? selectedFile)

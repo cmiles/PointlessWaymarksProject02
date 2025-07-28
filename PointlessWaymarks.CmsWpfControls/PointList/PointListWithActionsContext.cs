@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text;
+using System.Text.Json;
 using System.Windows;
 using System.Xml;
 using NetTopologySuite.Features;
@@ -93,7 +94,8 @@ public partial class PointListWithActionsContext
             },
             new ContextMenuItemData
             {
-                ItemName = "View Selected Pictures", ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
+                ItemName = "View Selected Pictures",
+                ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
             },
             new ContextMenuItemData { ItemName = "Refresh Data", ItemCommand = RefreshDataCommand }
         ];
@@ -126,6 +128,13 @@ public partial class PointListWithActionsContext
             return;
         }
 
+        var settings = JsonSerializer.Deserialize<IntersectSettings>(await File.ReadAllTextAsync(settingsFileInfo.FullName, cancellationToken));
+        if (settings == null)
+        {
+            StatusContext.Progress($"The settings file {settingsFileInfo.FullName} did not deserialized to valid settings...");
+            return;
+        }
+
         var errorList = new List<string>();
         var successList = new List<string>();
         var noTagsList = new List<string>();
@@ -142,13 +151,13 @@ public partial class PointListWithActionsContext
 
         foreach (var loopSelected in pointDtos)
         {
-            var feature = loopSelected.FeatureFromPoint();
+            var feature = settings.BufferPointsAndLinesByFeet > 0 ? loopSelected.FeatureFromPointAsCircle(settings.BufferPointsAndLinesByFeet.Value) : loopSelected.FeatureFromPoint();
 
             toProcess.Add(loopSelected);
             intersectResults.Add(new IntersectResult(feature) { ContentId = loopSelected.ContentId });
         }
 
-        intersectResults.IntersectionTags(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile,
+        await intersectResults.IntersectionTags(settings,
             cancellationToken,
             StatusContext.ProgressTracker());
 
@@ -238,7 +247,8 @@ public partial class PointListWithActionsContext
             await ContentListContext.CreateInstance(factoryStatusContext, new PointListLoader(100),
                 [Db.ContentTypeDisplayStringForPoint], windowStatus);
 
-        return new PointListWithActionsContext(factoryStatusContext, windowStatus, factoryListContext, loadInBackground);
+        return new PointListWithActionsContext(factoryStatusContext, windowStatus, factoryListContext,
+            loadInBackground);
     }
 
     [BlockingCommand]
@@ -266,6 +276,21 @@ public partial class PointListWithActionsContext
 
     [NonBlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
+    private async Task PointDetailsBracketCodesToClipboardForSelected()
+    {
+        var finalString = SelectedListItems().Aggregate(string.Empty,
+            (current, loopSelected) =>
+                current + $"{BracketCodePointDetails.Create(loopSelected.DbEntry.ToDbObject())}{Environment.NewLine}");
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        Clipboard.SetText(finalString);
+
+        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+    }
+
+    [NonBlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
     private async Task PointLinkBracketCodesToClipboardForSelected()
     {
         var finalString = SelectedListItems().Aggregate(string.Empty,
@@ -278,29 +303,15 @@ public partial class PointListWithActionsContext
 
         await StatusContext.ToastSuccess($"To Clipboard {finalString}");
     }
-    
+
     [NonBlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
     private async Task PointLinkExternalDirectionsBracketCodesToClipboardForSelected()
     {
         var finalString = SelectedListItems().Aggregate(string.Empty,
             (current, loopSelected) =>
-                current + $"{BracketCodePointExternalDirectionLinks.Create(loopSelected.DbEntry.ToDbObject())}{Environment.NewLine}");
-        
-        await ThreadSwitcher.ResumeForegroundAsync();
-        
-        Clipboard.SetText(finalString);
-        
-        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
-    }
-
-    [NonBlockingCommand]
-    [StopAndWarnIfNoSelectedListItems]
-    private async Task PointDetailsBracketCodesToClipboardForSelected()
-    {
-        var finalString = SelectedListItems().Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodePointDetails.Create(loopSelected.DbEntry.ToDbObject())}{Environment.NewLine}");
+                current +
+                $"{BracketCodePointExternalDirectionLinks.Create(loopSelected.DbEntry.ToDbObject())}{Environment.NewLine}");
 
         await ThreadSwitcher.ResumeForegroundAsync();
 

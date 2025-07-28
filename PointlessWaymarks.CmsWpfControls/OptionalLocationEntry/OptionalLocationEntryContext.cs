@@ -124,7 +124,7 @@ public partial class OptionalLocationEntryContext : IHasChanges, IHasValidationI
             return [];
         }
 
-        var possibleTags = featureToCheck.IntersectionTags(
+        var possibleTags = await featureToCheck.IntersectionTags(
             UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile,
             CancellationToken.None, StatusContext.ProgressTracker());
 

@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text;
+using System.Text.Json;
 using System.Windows;
 using Omu.ValueInjecter;
 using PointlessWaymarks.CmsData;
@@ -8,6 +9,7 @@ using PointlessWaymarks.CmsData.ContentGeneration;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsWpfControls.ContentList;
+using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.FeatureIntersectionTags;
 using PointlessWaymarks.FeatureIntersectionTags.Models;
 using PointlessWaymarks.LlamaAspects;
@@ -66,7 +68,8 @@ public partial class GeoJsonListWithActionsContext
             },
             new ContextMenuItemData
             {
-                ItemName = "View Selected Pictures", ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
+                ItemName = "View Selected Pictures",
+                ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
             },
             new ContextMenuItemData { ItemName = "Refresh Data", ItemCommand = RefreshDataCommand }
         ];
@@ -99,10 +102,22 @@ public partial class GeoJsonListWithActionsContext
         }
 
         var settingsFileInfo = new FileInfo(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile);
+        
         if (!settingsFileInfo.Exists)
         {
             await StatusContext.ToastError(
                 $"The Settings File for the Feature Intersection {settingsFileInfo.FullName} doesn't exist?");
+            return;
+        }
+
+        var settings =
+            JsonSerializer.Deserialize<IntersectSettings>(
+                FileAndFolderTools.ReadAllText(settingsFileInfo.FullName));
+
+        if (settings is null)
+        {
+            await StatusContext.ToastError(
+                $"The Settings File for the Feature Intersection {settingsFileInfo.FullName} isn't valid?");
             return;
         }
 
@@ -128,7 +143,7 @@ public partial class GeoJsonListWithActionsContext
                 { ContentId = loopSelected.DbEntry.ContentId });
         }
 
-        intersectResults.IntersectionTags(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile,
+        await intersectResults.IntersectionTags(settings,
             cancellationToken, StatusContext.ProgressTracker());
 
         var updateTime = DateTime.Now;
@@ -217,7 +232,8 @@ public partial class GeoJsonListWithActionsContext
             await ContentListContext.CreateInstance(factoryStatusContext, new GeoJsonListLoader(100),
                 [Db.ContentTypeDisplayStringForGeoJson], windowStatus);
 
-        return new GeoJsonListWithActionsContext(factoryStatusContext, windowStatus, factoryListContext, loadInBackground);
+        return new GeoJsonListWithActionsContext(factoryStatusContext, windowStatus, factoryListContext,
+            loadInBackground);
     }
 
     [BlockingCommand]

@@ -135,7 +135,7 @@ public partial class LineContentEditorContext : IHasChanges, IHasValidationIssue
             return;
         }
 
-        var possibleTags = featureToCheck.IntersectionTags(
+        var possibleTags = await featureToCheck.IntersectionTags(
             UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile, CancellationToken.None,
             StatusContext.ProgressTracker());
 

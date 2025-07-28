@@ -364,7 +364,7 @@ public partial class GpxImportContext : IWebViewMessenger
         try
         {
             tagList.AddRange(
-                new Feature(new Point(newPoint.Longitude, newPoint.Latitude), new AttributesTable())
+                await new Feature(new Point(newPoint.Longitude, newPoint.Latitude), new AttributesTable())
                     .IntersectionTags(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile,
                         CancellationToken.None));
         }

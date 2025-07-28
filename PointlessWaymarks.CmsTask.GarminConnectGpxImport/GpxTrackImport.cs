@@ -224,7 +224,7 @@ public class GpxTrackImport
 
                     if (featureToCheck != null)
                     {
-                        var tagResult = featureToCheck.IntersectionTags(siteSettings.FeatureIntersectionTagSettingsFile,
+                        var tagResult = await featureToCheck.IntersectionTags(siteSettings.FeatureIntersectionTagSettingsFile,
                             CancellationToken.None,
                             new ConsoleProgress());
 

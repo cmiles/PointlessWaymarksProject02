@@ -119,9 +119,9 @@ public partial class GeoJsonContentEditorContext : IHasChanges, IHasValidationIs
 
         var intersectResult = new IntersectResult(featuresToCheck);
 
-        var possibleTags = intersectResult
+        var possibleTags = (await intersectResult
             .IntersectionTags(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile,
-                CancellationToken.None, StatusContext.ProgressTracker()).Tags;
+                CancellationToken.None, StatusContext.ProgressTracker())).Tags;
 
         if (!possibleTags.Any())
         {
