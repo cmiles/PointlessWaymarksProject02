@@ -158,20 +158,50 @@ public static class Intersection
         cancellationToken.ThrowIfCancellationRequested();
 
         if (settings.FeatureIntersectFiles.Any())
-            toCheck.ProcessFileIntersections(settings.FeatureIntersectFiles,
-                cancellationToken, progress);
+        {
+            try
+            {
+                toCheck.ProcessFileIntersections(settings.FeatureIntersectFiles,
+                    cancellationToken, progress);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error processing file intersections");
+                progress?.Report($"Error processing file intersections: {ex.Message}");
+            }
+        }
 
         cancellationToken.ThrowIfCancellationRequested();
 
         if (!string.IsNullOrWhiteSpace(settings.PadUsDirectory) && settings.PadUsAttributes.Any())
-            toCheck.ProcessPadUsIntersections(settings.PadUsAttributes.ToList(),
-                settings.PadUsDirectory, cancellationToken,
-                progress);
+        {
+            try
+            {
+                toCheck.ProcessPadUsIntersections(settings.PadUsAttributes.ToList(),
+                    settings.PadUsDirectory, cancellationToken,
+                    progress);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error processing PAD-US intersections");
+                progress?.Report($"Error processing PAD-US intersections: {ex.Message}");
+            }
+        }
 
         cancellationToken.ThrowIfCancellationRequested();
 
         if (settings.UseOsmOverpass && !string.IsNullOrWhiteSpace(settings.OsmOverpassUrl))
-            await toCheck.ProcessOsmIntersections(settings, cancellationToken, progress);
+        {
+            try
+            {
+                await toCheck.ProcessOsmIntersections(settings, cancellationToken, progress);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error processing OSM Overpass intersections");
+                progress?.Report($"Error processing OSM Overpass intersections: {ex.Message}");
+            }
+        }
 
         return toCheck;
     }

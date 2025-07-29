@@ -10,53 +10,6 @@ using Serilog;
 
 namespace PointlessWaymarks.FeatureIntersectionTags;
 
-/// <summary>
-/// Provides rate limiting for OSM Overpass API calls
-/// </summary>
-public static class OsmOverpassRateLimiter
-{
-    private static readonly SemaphoreSlim _semaphore = new(1, 1);
-    private static DateTime _lastApiCallTime = DateTime.MinValue;
-    private static readonly TimeSpan _defaultMinimumInterval = TimeSpan.FromMilliseconds(800);
-
-    /// <summary>
-    /// Waits if necessary to respect rate limits before making an API call
-    /// </summary>
-    /// <param name="enforceRateLimit">Whether to enforce the rate limit</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>A task representing the asynchronous operation</returns>
-    public static async Task WaitForRateLimitAsync(bool enforceRateLimit, CancellationToken cancellationToken)
-    {
-        if (!enforceRateLimit) return;
-
-        await _semaphore.WaitAsync(cancellationToken);
-
-        try
-        {
-            var timeSinceLastCall = DateTime.UtcNow - _lastApiCallTime;
-
-            if (timeSinceLastCall < _defaultMinimumInterval)
-            {
-                var delayTime = _defaultMinimumInterval - timeSinceLastCall;
-                await Task.Delay(delayTime, cancellationToken);
-            }
-
-            _lastApiCallTime = DateTime.UtcNow;
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
-    }
-
-    /// <summary>
-    /// Records that an API call has been made
-    /// </summary>
-    public static void RecordApiCall()
-    {
-        _lastApiCallTime = DateTime.UtcNow;
-    }
-}
 public static class OsmIntersection
 {
     // Returns true if the OSM element should be filtered out according to tagFilters
@@ -142,14 +95,30 @@ public static class OsmIntersection
             progress?.Report(
                 $"Processing {counter} of {toCheck.Count} features for intersection tags via OSM.");
 
-            if (++counter > 1 && settings.RateLimitOsmOverpass) await Task.Delay(500, cancellationToken);
-
-            await QueryOverpassForIntersectsAsync(loopToCheck, settings,
-                cancellationToken, progress);
+            try
+            {
+                await QueryOverpassForIntersectsAsync(loopToCheck, settings,
+                    cancellationToken, progress);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error querying OSM Overpass for intersections for feature {FeatureId}",
+                    loopToCheck.ContentId);
+                progress?.Report($"Error querying OSM Overpass for intersections: {ex.Message}");
+            }
 
             if (settings.OsmInTagging)
-                await QueryOverpassForInAsync(loopToCheck, settings,
-                    cancellationToken, progress);
+                try
+                {
+                    await QueryOverpassForInAsync(loopToCheck, settings,
+                        cancellationToken, progress);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Error querying OSM Overpass for 'is_in' data for feature {FeatureId}",
+                        loopToCheck.ContentId);
+                    progress?.Report($"Error querying OSM Overpass for 'is_in' data: {ex.Message}");
+                }
         }
 
         return toCheck;
@@ -175,20 +144,49 @@ public static class OsmIntersection
                          out tags;
                          """;
 
-            Log.ForContext("query", query).ForContext("hint",
-                    "This log entry records 'in' queries to the OSM Overpass API for point-based tag lookup.")
-                .Information("OSM Overpass 'in' Query");
-
             var content = new StringContent($"data={Uri.EscapeDataString(query)}", Encoding.UTF8,
                 "application/x-www-form-urlencoded");
 
+            HttpResponseMessage response;
 
-            await OsmOverpassRateLimiter.WaitForRateLimitAsync(settings.RateLimitOsmOverpass, cancellationToken);
+            try
+            {
+                await OsmOverpassRateLimiter.WaitForRateLimitAsync(settings.RateLimitOsmOverpass, cancellationToken);
 
-            var response = await client.PostAsync(settings.OsmOverpassUrl, content, cancellationToken);
+                response = await client.PostAsync(settings.OsmOverpassUrl, content, cancellationToken);
 
-            OsmOverpassRateLimiter.RecordApiCall();
-            
+                OsmOverpassRateLimiter.RecordApiCall();
+
+                Log.ForContext("query", query)
+                    .ForContext("response.StatusCode", response.StatusCode)
+                    .ForContext("hint",
+                        "This log entry records 'in' queries to the OSM Overpass API for point-based tag lookup.")
+                    .Information("OSM Overpass 'in' Query");
+
+                response.EnsureSuccessStatusCode();
+            }
+            catch (Exception ex)
+            {
+                // Log the first attempt failure as a warning
+                Log.Warning(ex, "First attempt to query OSM Overpass API failed, retrying after delay");
+                progress?.Report($"OSM Overpass API request failed, retrying: {ex.Message}");
+
+                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+
+                // Retry once
+                await OsmOverpassRateLimiter.WaitForRateLimitAsync(settings.RateLimitOsmOverpass, cancellationToken);
+
+                response = await client.PostAsync(settings.OsmOverpassUrl, content, cancellationToken);
+
+                OsmOverpassRateLimiter.RecordApiCall();
+
+                Log.ForContext("query", query)
+                    .ForContext("response.StatusCode", response.StatusCode)
+                    .ForContext("hint",
+                        "This log entry records 'in' queries to the OSM Overpass API for point-based tag lookup.")
+                    .Information("OSM Overpass 'in' Query - Retry");
+            }
+
             response.EnsureSuccessStatusCode();
             var jsonString = await response.Content.ReadAsStringAsync(cancellationToken);
 
@@ -290,11 +288,45 @@ public static class OsmIntersection
         var content = new StringContent($"data={Uri.EscapeDataString(query)}", Encoding.UTF8,
             "application/x-www-form-urlencoded");
 
-        await OsmOverpassRateLimiter.WaitForRateLimitAsync(settings.RateLimitOsmOverpass, cancellationToken);
-        
-        var response = await client.PostAsync(settings.OsmOverpassUrl, content, cancellationToken);
+        HttpResponseMessage response;
 
-        OsmOverpassRateLimiter.RecordApiCall();
+        try
+        {
+            await OsmOverpassRateLimiter.WaitForRateLimitAsync(settings.RateLimitOsmOverpass, cancellationToken);
+
+            response = await client.PostAsync(settings.OsmOverpassUrl, content, cancellationToken);
+
+            OsmOverpassRateLimiter.RecordApiCall();
+
+            Log.ForContext("query", query)
+                .ForContext("response.StatusCode", response.StatusCode)
+                .ForContext("hint",
+                    "This log entry records queries to the OSM Overpass API in order to facilitate exploring the results at a later time - using the API for tagging is not unique, but I didn't come across useful helps/tips/guidance on best way to include/exclude relevant data - overpass-turbo.eu is a useful resource to manually run and see these queries.")
+                .Information("OSM Overpass Query");
+
+            response.EnsureSuccessStatusCode();
+        }
+        catch (Exception ex)
+        {
+            // Log the first attempt failure as a warning
+            Log.Warning(ex, "First attempt to query OSM Overpass API failed, retrying after delay");
+            progress?.Report($"OSM Overpass API request failed, retrying: {ex.Message}");
+
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+
+            // Retry once
+            await OsmOverpassRateLimiter.WaitForRateLimitAsync(settings.RateLimitOsmOverpass, cancellationToken);
+
+            response = await client.PostAsync(settings.OsmOverpassUrl, content, cancellationToken);
+
+            OsmOverpassRateLimiter.RecordApiCall();
+
+            Log.ForContext("query", query)
+                .ForContext("response.StatusCode", response.StatusCode)
+                .ForContext("hint",
+                    "This log entry records queries to the OSM Overpass API in order to facilitate exploring the results at a later time - using the API for tagging is not unique, but I didn't come across useful helps/tips/guidance on best way to include/exclude relevant data - overpass-turbo.eu is a useful resource to manually run and see these queries.")
+                .Information("OSM Overpass Query - Retry");
+        }
 
         response.EnsureSuccessStatusCode();
         var jsonString = await response.Content.ReadAsStringAsync(cancellationToken);
