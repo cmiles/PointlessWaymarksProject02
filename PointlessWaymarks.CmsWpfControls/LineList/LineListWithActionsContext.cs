@@ -92,7 +92,14 @@ public partial class LineListWithActionsContext
                 ItemCommand = ActivityLogMonthlyStatsWindowForSelectedCommand
             },
             new ContextMenuItemData
-                { ItemName = "Add Intersection Tags", ItemCommand = AddIntersectionTagsToSelectedCommand },
+            {
+                ItemName = "Add Intersection Tags - With OSM", ItemCommand = AddIntersectionTagsWithOsmToSelectedCommand
+            },
+            new ContextMenuItemData
+            {
+                ItemName = "Add Intersection Tags - Without OSM",
+                ItemCommand = AddIntersectionTagsWithoutOsmToSelectedCommand
+            },
             new ContextMenuItemData
                 { ItemName = "Extract New Links", ItemCommand = ListContext.ExtractNewLinksSelectedCommand },
             new ContextMenuItemData { ItemName = "Open URL", ItemCommand = ListContext.ViewOnSiteCommand },
@@ -108,7 +115,8 @@ public partial class LineListWithActionsContext
             },
             new ContextMenuItemData
             {
-                ItemName = "View Selected Pictures", ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
+                ItemName = "View Selected Pictures",
+                ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
             },
             new ContextMenuItemData { ItemName = "Refresh Data", ItemCommand = RefreshDataCommand }
         ];
@@ -152,9 +160,7 @@ public partial class LineListWithActionsContext
         await window.PositionWindowAndShowOnUiThread();
     }
 
-    [BlockingCommand]
-    [StopAndWarnIfNoSelectedListItems]
-    private async Task AddIntersectionTagsToSelected(CancellationToken cancellationToken)
+    private async Task AddIntersectionTagsToSelected(bool includeOsm, CancellationToken cancellationToken)
     {
         var frozenSelect = SelectedListItems();
 
@@ -183,22 +189,33 @@ public partial class LineListWithActionsContext
         List<LineContent> dbEntriesToProcess = [];
         List<IntersectResult> intersectResults = [];
 
-        var settings = JsonSerializer.Deserialize<IntersectSettings>(await File.ReadAllTextAsync(settingsFileInfo.FullName, cancellationToken));
+        var settings =
+            JsonSerializer.Deserialize<IntersectSettings>(await File.ReadAllTextAsync(settingsFileInfo.FullName,
+                cancellationToken));
         if (settings == null)
         {
-            StatusContext.Progress($"The settings file {settingsFileInfo.FullName} did not deserialized to valid settings...");
+            StatusContext.Progress(
+                $"The settings file {settingsFileInfo.FullName} did not deserialized to valid settings...");
             return;
         }
 
+        settings.UseOsmOverpass = includeOsm;
+        settings.OsmInTagging = includeOsm;
+
         foreach (var loopSelected in frozenSelect)
         {
-            var features = loopSelected.DbEntry.FeatureFromGeoJsonLineAsPolygon(settings.BufferPointsAndLinesByFeet);
+            var feature = loopSelected.DbEntry.FeatureFromGeoJsonLineAsPolygon(settings.BufferPointsAndLinesByFeet);
 
-            if (features == null) continue;
+            if (feature == null) continue;
 
             dbEntriesToProcess.Add((LineContent)LineContent.CreateInstance().InjectFrom(loopSelected.DbEntry));
-            intersectResults.Add(new IntersectResult(features)
-                { ContentId = loopSelected.DbEntry.ContentId });
+            var intersectResult = new IntersectResult(feature)
+                { ContentId = loopSelected.DbEntry.ContentId };
+
+            var lineFeature = loopSelected.DbEntry.FeatureFromGeoJsonLine();
+            if (lineFeature is not null)
+                intersectResult.OsmIsInPoints.AddRange(LineTools.GetRepresentativePointsFromLine(lineFeature.Geometry));
+            intersectResults.Add(intersectResult);
         }
 
         await intersectResults.IntersectionTags(settings,
@@ -277,6 +294,20 @@ public partial class LineListWithActionsContext
 
             await StatusContext.ShowMessageWithOkButton("Feature Intersection Errors", bodyBuilder.ToString());
         }
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    private async Task AddIntersectionTagsWithOsmToSelected(CancellationToken cancellationToken)
+    {
+        await AddIntersectionTagsToSelected(true, cancellationToken);
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    private async Task AddIntersectionTagsWithoutOsmToSelected(CancellationToken cancellationToken)
+    {
+        await AddIntersectionTagsToSelected(false, cancellationToken);
     }
 
     public static async Task<LineListWithActionsContext> CreateInstance(StatusControlContext? statusContext,
@@ -464,8 +495,9 @@ public partial class LineListWithActionsContext
         {
             StatusContext.Progress($"Saving and Writing HTML for Line {loopItem.Title}");
 
-            generationReturns.Add((await LineGenerator.SaveAndGenerateHtml(loopItem, generationVersion, StatusContext.ProgressTracker())).generationReturn);
-
+            generationReturns.Add(
+                (await LineGenerator.SaveAndGenerateHtml(loopItem, generationVersion, StatusContext.ProgressTracker()))
+                .generationReturn);
         }).ConfigureAwait(false);
 
         if (generationReturns.Any(x => x.HasError))
@@ -533,7 +565,7 @@ public partial class LineListWithActionsContext
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        var fileDialog = new VistaFolderBrowserDialog() { Multiselect = false };
+        var fileDialog = new VistaFolderBrowserDialog { Multiselect = false };
         var fileDialogResult = fileDialog.ShowDialog();
 
         if (!(fileDialogResult ?? false)) return;
