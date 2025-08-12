@@ -12,6 +12,78 @@ namespace PointlessWaymarks.FeatureIntersectionTags;
 
 public static class OsmIntersection
 {
+    private const double MaxQueryAreaDegrees = 0.01; // Maximum area in square degrees
+
+    // Add this helper method to divide the envelope if needed
+    private static List<Envelope> DivideEnvelopeIfNeeded(Envelope envelope, IntersectResult intersectResult)
+    {
+        var width = envelope.MaxX - envelope.MinX;
+        var height = envelope.MaxY - envelope.MinY;
+        var area = width * height;
+
+        if (area <= MaxQueryAreaDegrees)
+            // Envelope is small enough, return it as is
+            return [envelope];
+
+        // Calculate number of divisions needed based only on area
+        var totalDivisionsNeeded = Math.Ceiling(area / MaxQueryAreaDegrees);
+
+        // Try to make divisions roughly square by taking the square root
+        var divisionsPerSide = Math.Ceiling(Math.Sqrt(totalDivisionsNeeded));
+        var xDivisions = Math.Max(1, (int)divisionsPerSide);
+        var yDivisions = Math.Max(1, (int)divisionsPerSide);
+
+        // Adjust divisions based on aspect ratio of the envelope
+        var aspectRatio = width / height;
+        if (aspectRatio > 1.5)
+        {
+            // Wider than tall, increase x divisions
+            xDivisions = (int)Math.Ceiling(xDivisions * Math.Sqrt(aspectRatio));
+            yDivisions = (int)Math.Ceiling(totalDivisionsNeeded / xDivisions);
+        }
+        else if (aspectRatio < 0.67)
+        {
+            // Taller than wide, increase y divisions
+            yDivisions = (int)Math.Ceiling(yDivisions * Math.Sqrt(1 / aspectRatio));
+            xDivisions = (int)Math.Ceiling(totalDivisionsNeeded / yDivisions);
+        }
+
+        // Ensure we don't create too many sub-envelopes
+        var totalDivisions = xDivisions * yDivisions;
+        if (totalDivisions > 25) // Arbitrary limit to prevent excessive queries
+        {
+            // Recalculate to stay under the limit while maintaining aspect ratio
+            var scaleFactor = Math.Sqrt(25.0 / totalDivisions);
+            xDivisions = Math.Max(1, (int)Math.Ceiling(xDivisions * scaleFactor));
+            yDivisions = Math.Max(1, (int)Math.Ceiling(yDivisions * scaleFactor));
+        }
+
+        var result = new List<Envelope>();
+        var xStep = width / xDivisions;
+        var yStep = height / yDivisions;
+
+        // Create grid of sub-envelopes
+        for (var y = 0; y < yDivisions; y++)
+            for (var x = 0; x < xDivisions; x++)
+            {
+                var minX = envelope.MinX + x * xStep;
+                var minY = envelope.MinY + y * yStep;
+                var maxX = x == xDivisions - 1 ? envelope.MaxX : minX + xStep;
+                var maxY = y == yDivisions - 1 ? envelope.MaxY : minY + yStep;
+
+                var subEnvelope = new Envelope(minX, maxX, minY, maxY);
+                var subEnvelopeGeometry = GeoJsonTools.EnvelopeToGeometry(subEnvelope);
+                
+                // Only add sub-envelope if it intersects with at least one feature
+                if (intersectResult.Features.Any(feature => feature.Geometry.Intersects(subEnvelopeGeometry) || subEnvelopeGeometry.Contains(feature.Geometry)))
+                {
+                    result.Add(subEnvelope);
+                }
+            }
+
+        return result;
+    }
+
     // Returns true if the OSM element should be filtered out according to tagFilters
     public static bool IsOsmElementFiltered(OsmElement osmElement, List<string> tagFilters)
     {
@@ -129,7 +201,11 @@ public static class OsmIntersection
     {
         if (intersectResult.OsmIsInPoints.Count == 0) return;
 
-        var client = new HttpClient();
+        var client = new HttpClient
+        {
+            Timeout = TimeSpan.FromMinutes(3) // Set timeout to 3 minutes
+        };
+
         var counter = 0;
 
         foreach (var point in intersectResult.OsmIsInPoints)
@@ -236,7 +312,10 @@ public static class OsmIntersection
     {
         if (intersectResult.Features.Count == 0) return;
 
-        var client = new HttpClient();
+        var client = new HttpClient
+        {
+            Timeout = TimeSpan.FromMinutes(3) // Set timeout to 3 minutes
+        };
 
         // Calculate bounding box of all features
         Envelope? envelope = null;
@@ -264,107 +343,120 @@ public static class OsmIntersection
                 envelope.MaxY)
         );
 
-        var minLat = envelope.MinY;
-        var minLon = envelope.MinX;
-        var maxLat = envelope.MaxY;
-        var maxLon = envelope.MaxX;
+        // Check if the envelope is too large and needs to be divided
+        var subEnvelopes = DivideEnvelopeIfNeeded(envelope, intersectResult);
+        var allFeatures = new List<IFeature>();
 
-        // Create Overpass query in XML format
-        var query = FormattableString.Invariant($"""
-
-                                                                 [out:json];
-                                                                 ( node({minLat},{minLon},{maxLat},{maxLon});
-                                                                   way({minLat},{minLon},{maxLat},{maxLon}); );
-                                                                 out geom qt;
-                                                                 <;
-                                                                 out qt;
-                                                             
-                                                 """);
-
-        Log.ForContext("query", query).ForContext("hint",
-                "This log entry records queries to the OSM Overpass API in order to facilitate exploring the results at a later time - using the API for tagging is not unique, but I didn't come across useful helps/tips/guidance on best way to include/exclude relevant data - overpass-turbo.eu is a useful resource to manually run and see these queries.")
-            .Information("OSM Overpass Query");
-
-        var content = new StringContent($"data={Uri.EscapeDataString(query)}", Encoding.UTF8,
-            "application/x-www-form-urlencoded");
-
-        HttpResponseMessage response;
-
-        try
+        // Process each sub-envelope
+        foreach (var subEnvelope in subEnvelopes)
         {
-            await OsmOverpassRateLimiter.WaitForRateLimitAsync(settings.RateLimitOsmOverpass, cancellationToken);
+            progress?.Report($"Processing sub-region {subEnvelopes.IndexOf(subEnvelope) + 1} of {subEnvelopes.Count}");
 
-            response = await client.PostAsync(settings.OsmOverpassUrl, content, cancellationToken);
+            var minLat = subEnvelope.MinY;
+            var minLon = subEnvelope.MinX;
+            var maxLat = subEnvelope.MaxY;
+            var maxLon = subEnvelope.MaxX;
 
-            OsmOverpassRateLimiter.RecordApiCall();
+            // Create Overpass query in XML format
+            var query = FormattableString.Invariant($"""
 
-            Log.ForContext("query", query)
-                .ForContext("response.StatusCode", response.StatusCode)
-                .ForContext("hint",
+                                                                     [out:json];
+                                                                     ( node({minLat},{minLon},{maxLat},{maxLon});
+                                                                       way({minLat},{minLon},{maxLat},{maxLon}); );
+                                                                     out geom qt;
+                                                                     <;
+                                                                     out qt;
+                                                                 
+                                                     """);
+
+            Log.ForContext("query", query).ForContext("hint",
                     "This log entry records queries to the OSM Overpass API in order to facilitate exploring the results at a later time - using the API for tagging is not unique, but I didn't come across useful helps/tips/guidance on best way to include/exclude relevant data - overpass-turbo.eu is a useful resource to manually run and see these queries.")
                 .Information("OSM Overpass Query");
 
-            response.EnsureSuccessStatusCode();
-        }
-        catch (Exception ex)
-        {
-            // Log the first attempt failure as a warning
-            Log.Warning(ex, "First attempt to query OSM Overpass API failed, retrying after delay");
-            progress?.Report($"OSM Overpass API request failed, retrying: {ex.Message}");
+            var content = new StringContent($"data={Uri.EscapeDataString(query)}", Encoding.UTF8,
+                "application/x-www-form-urlencoded");
 
-            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+            HttpResponseMessage response;
 
-            // Retry once
-            await OsmOverpassRateLimiter.WaitForRateLimitAsync(settings.RateLimitOsmOverpass, cancellationToken);
-
-            response = await client.PostAsync(settings.OsmOverpassUrl, content, cancellationToken);
-
-            OsmOverpassRateLimiter.RecordApiCall();
-
-            Log.ForContext("query", query)
-                .ForContext("response.StatusCode", response.StatusCode)
-                .ForContext("hint",
-                    "This log entry records queries to the OSM Overpass API in order to facilitate exploring the results at a later time - using the API for tagging is not unique, but I didn't come across useful helps/tips/guidance on best way to include/exclude relevant data - overpass-turbo.eu is a useful resource to manually run and see these queries.")
-                .Information("OSM Overpass Query - Retry");
-        }
-
-        response.EnsureSuccessStatusCode();
-        var jsonString = await response.Content.ReadAsStringAsync(cancellationToken);
-
-        var options = new JsonSerializerOptions();
-        options.Converters.Add(new OsmElementConverter());
-        var features = JsonSerializer.Deserialize<OsmResponse>(jsonString, options);
-
-        if (features?.Elements is null) return;
-
-        var listOfFeatures = new List<IFeature>();
-        // Convert to geometries
-        foreach (var osmElement in features.Elements)
-        {
-            // Skip elements without name
-            if (!osmElement.Tags.TryGetValue("name", out var name)) continue;
-
-            if (string.IsNullOrEmpty(name)) continue;
-
-            if (IsOsmElementFiltered(osmElement, settings.OsmTagFilters)) continue;
-
-            if (osmElement is OsmNode node) listOfFeatures.Add(OsmGeometryHelpers.NodeToFeature(node));
-
-            if (osmElement is OsmWay way)
+            try
             {
-                var convertedWay =
-                    OsmGeometryHelpers.WayToFeature(OsmWayWithGeometry.FromOsmWay(way,
-                        features.Elements.OfType<OsmNode>().ToList(), true));
-                if (convertedWay is not null) listOfFeatures.Add(convertedWay);
+                await OsmOverpassRateLimiter.WaitForRateLimitAsync(settings.RateLimitOsmOverpass, cancellationToken);
+
+                response = await client.PostAsync(settings.OsmOverpassUrl, content, cancellationToken);
+
+                OsmOverpassRateLimiter.RecordApiCall();
+
+                Log.ForContext("query", query)
+                    .ForContext("response.StatusCode", response.StatusCode)
+                    .ForContext("hint",
+                        "This log entry records queries to the OSM Overpass API in order to facilitate exploring the results at a later time - using the API for tagging is not unique, but I didn't come across useful helps/tips/guidance on best way to include/exclude relevant data - overpass-turbo.eu is a useful resource to manually run and see these queries.")
+                    .Information("OSM Overpass Query");
+
+                response.EnsureSuccessStatusCode();
             }
+            catch (Exception ex)
+            {
+                // Log the first attempt failure as a warning
+                Log.Warning(ex, "First attempt to query OSM Overpass API failed, retrying after delay");
+                progress?.Report($"OSM Overpass API request failed, retrying: {ex.Message}");
+
+                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+
+                // Retry once
+                await OsmOverpassRateLimiter.WaitForRateLimitAsync(settings.RateLimitOsmOverpass, cancellationToken);
+
+                response = await client.PostAsync(settings.OsmOverpassUrl, content, cancellationToken);
+
+                OsmOverpassRateLimiter.RecordApiCall();
+
+                Log.ForContext("query", query)
+                    .ForContext("response.StatusCode", response.StatusCode)
+                    .ForContext("hint",
+                        "This log entry records queries to the OSM Overpass API in order to facilitate exploring the results at a later time - using the API for tagging is not unique, but I didn't come across useful helps/tips/guidance on best way to include/exclude relevant data - overpass-turbo.eu is a useful resource to manually run and see these queries.")
+                    .Information("OSM Overpass Query - Retry");
+            }
+
+            response.EnsureSuccessStatusCode();
+            var jsonString = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            var options = new JsonSerializerOptions();
+            options.Converters.Add(new OsmElementConverter());
+            var features = JsonSerializer.Deserialize<OsmResponse>(jsonString, options);
+
+            if (features?.Elements is null) return;
+
+            var listOfFeatures = new List<IFeature>();
+            // Convert to geometries
+            foreach (var osmElement in features.Elements)
+            {
+                // Skip elements without name
+                if (!osmElement.Tags.TryGetValue("name", out var name)) continue;
+
+                if (string.IsNullOrEmpty(name)) continue;
+
+                if (IsOsmElementFiltered(osmElement, settings.OsmTagFilters)) continue;
+
+                if (osmElement is OsmNode node) listOfFeatures.Add(OsmGeometryHelpers.NodeToFeature(node));
+
+                if (osmElement is OsmWay way)
+                {
+                    var convertedWay =
+                        OsmGeometryHelpers.WayToFeature(OsmWayWithGeometry.FromOsmWay(way,
+                            features.Elements.OfType<OsmNode>().ToList(), true));
+                    if (convertedWay is not null) listOfFeatures.Add(convertedWay);
+                }
+            }
+
+            var simpleRelations = OsmSimpleRelation.SimpleRelationsFromResponse(features, settings.OsmTagFilters)
+                .SelectMany(x => x.Features());
+
+            listOfFeatures.AddRange(simpleRelations);
+
+            // Add features from this sub-query to the combined results
+            allFeatures.AddRange(listOfFeatures);
         }
 
-        var simpleRelations = OsmSimpleRelation.SimpleRelationsFromResponse(features, settings.OsmTagFilters)
-            .SelectMany(x => x.Features());
-
-        listOfFeatures.AddRange(simpleRelations);
-
-        foreach (var loopOsmFeatures in listOfFeatures)
+        foreach (var loopOsmFeatures in allFeatures)
             if (intersectResult.Features.Any(x => loopOsmFeatures.Geometry.Intersects(x.Geometry)))
                 if (loopOsmFeatures.Attributes.Exists("name"))
                 {

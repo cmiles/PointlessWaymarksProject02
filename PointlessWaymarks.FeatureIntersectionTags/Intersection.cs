@@ -49,33 +49,25 @@ public static class Intersection
 
         foreach (var loopGpx in gpxFiles)
         {
-            var trackLines = await GpxTools.TrackLinesFromGpxFileBuffered(loopGpx.FileToTag, pointBufferInFeet);
-            var routeLines = await GpxTools.RouteLinesFromGpxFileBuffered(loopGpx.FileToTag, pointBufferInFeet);
+            var bufferedTrackLines = await GpxTools.TrackLinesFromGpxFileBuffered(loopGpx.FileToTag, pointBufferInFeet);
+            var bufferedRouteLines = await GpxTools.RouteLinesFromGpxFileBuffered(loopGpx.FileToTag, pointBufferInFeet);
             var waypointPoints =
                 await GpxTools.WaypointPointsFromGpxFileAs2DCircles(loopGpx.FileToTag, pointBufferInFeet);
 
-            loopGpx.IntersectInformation = new IntersectResult(trackLines.features.Cast<IFeature>()
-                .Union(routeLines.features)
+            loopGpx.IntersectInformation = new IntersectResult(bufferedTrackLines.features.Select(x => x.BufferedFeature).Cast<IFeature>()
+                .Union(bufferedRouteLines.features.Select(x => x.BufferedFeature))
                 .Union(waypointPoints.features).ToList());
 
             foreach (var loopWaypoints in waypointPoints.features)
                 loopGpx.IntersectInformation.OsmIsInPoints.Add(new Coordinate(loopWaypoints.Geometry.Coordinate));
 
-            foreach (var loopTracks in trackLines.features)
-            {
-                loopGpx.IntersectInformation.OsmIsInPoints.Add(loopTracks.Geometry.Coordinates.First());
-                loopGpx.IntersectInformation.OsmIsInPoints.Add(
-                    loopTracks.Geometry.Coordinates[loopTracks.Geometry.Coordinates.Length / 2]);
-                loopGpx.IntersectInformation.OsmIsInPoints.Add(loopTracks.Geometry.Coordinates.Last());
-            }
+            foreach (var loopTracks in bufferedTrackLines.features)
+                loopGpx.IntersectInformation.OsmIsInPoints.AddRange(
+                    LineTools.GetRepresentativePointsFromLine(loopTracks.Feature.Geometry));
 
-            foreach (var loopRoutes in routeLines.features)
-            {
-                loopGpx.IntersectInformation.OsmIsInPoints.Add(loopRoutes.Geometry.Coordinates.First());
-                loopGpx.IntersectInformation.OsmIsInPoints.Add(
-                    loopRoutes.Geometry.Coordinates[loopRoutes.Geometry.Coordinates.Length / 2]);
-                loopGpx.IntersectInformation.OsmIsInPoints.Add(loopRoutes.Geometry.Coordinates.Last());
-            }
+            foreach (var loopRoutes in bufferedRouteLines.features)
+                loopGpx.IntersectInformation.OsmIsInPoints.AddRange(
+                    LineTools.GetRepresentativePointsFromLine(loopRoutes.Feature.Geometry));
         }
 
         var geojsonFiles = sourceFileAndFeatures.Where(x =>
@@ -158,7 +150,6 @@ public static class Intersection
         cancellationToken.ThrowIfCancellationRequested();
 
         if (settings.FeatureIntersectFiles.Any())
-        {
             try
             {
                 toCheck.ProcessFileIntersections(settings.FeatureIntersectFiles,
@@ -169,12 +160,10 @@ public static class Intersection
                 Log.Error(ex, "Error processing file intersections");
                 progress?.Report($"Error processing file intersections: {ex.Message}");
             }
-        }
 
         cancellationToken.ThrowIfCancellationRequested();
 
         if (!string.IsNullOrWhiteSpace(settings.PadUsDirectory) && settings.PadUsAttributes.Any())
-        {
             try
             {
                 toCheck.ProcessPadUsIntersections(settings.PadUsAttributes.ToList(),
@@ -186,12 +175,10 @@ public static class Intersection
                 Log.Error(ex, "Error processing PAD-US intersections");
                 progress?.Report($"Error processing PAD-US intersections: {ex.Message}");
             }
-        }
 
         cancellationToken.ThrowIfCancellationRequested();
 
         if (settings.UseOsmOverpass && !string.IsNullOrWhiteSpace(settings.OsmOverpassUrl))
-        {
             try
             {
                 await toCheck.ProcessOsmIntersections(settings, cancellationToken, progress);
@@ -201,7 +188,6 @@ public static class Intersection
                 Log.Error(ex, "Error processing OSM Overpass intersections");
                 progress?.Report($"Error processing OSM Overpass intersections: {ex.Message}");
             }
-        }
 
         return toCheck;
     }
@@ -359,7 +345,7 @@ public static class Intersection
                         var hasTagAll = !string.IsNullOrWhiteSpace(loopIntersectFile.TagAll);
 
                         if (!hasAttributesToProcess && !hasTagAll) continue;
-                        
+
                         // Get a list of tags that would be added
                         var tagsToAdd = new List<string>();
 
@@ -516,18 +502,14 @@ public static class Intersection
 
                         // Check each attribute and collect the tags
                         foreach (var loopAttribute in attributesForTags)
-                        {
                             if (loopRegionFeature.Attributes.GetNames().Any(a => a == loopAttribute))
                             {
                                 var tagValue = (loopRegionFeature.Attributes[loopAttribute]?.ToString() ?? string.Empty)
                                     .Trim();
                                 if (!string.IsNullOrWhiteSpace(tagValue) &&
                                     !loopCheck.Tags.Any(x => x.Equals(tagValue, StringComparison.OrdinalIgnoreCase)))
-                                {
                                     tagsToAdd.Add(tagValue);
-                                }
                             }
-                        }
 
                         // If we don't have any new tags to add, continue to next feature
                         if (!tagsToAdd.Any())
