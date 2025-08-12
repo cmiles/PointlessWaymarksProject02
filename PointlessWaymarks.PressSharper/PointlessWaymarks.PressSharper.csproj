@@ -7,7 +7,7 @@
     <Copyright>Copyright 2012 Ben Lakey, 2016 Brandon Wood</Copyright>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Metalama.Framework" Version="2025.1.11" />
+    <PackageReference Include="Metalama.Framework" Version="2025.1.12" />
   </ItemGroup>
   <ItemGroup>
     <None Update="PressSharper-License.txt">
