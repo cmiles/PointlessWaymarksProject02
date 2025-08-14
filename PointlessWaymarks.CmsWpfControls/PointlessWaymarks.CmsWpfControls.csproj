@@ -70,6 +70,12 @@
             <AutoGen>True</AutoGen>
             <DependentUpon>ContentViewHistoryPage.tt</DependentUpon>
         </Compile>
+        <Compile Update="FeatureIntersectResultBrowser\FeatureIntersectResultBrowserControl.xaml.cs">
+          <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="FeatureIntersectResultBrowser\FeatureIntersectResultBrowserWindow.xaml.cs">
+          <SubType>Code</SubType>
+        </Compile>
     </ItemGroup>
 
 </Project>

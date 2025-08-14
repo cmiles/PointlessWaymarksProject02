@@ -18,6 +18,7 @@ using PointlessWaymarks.CmsData.ContentHtml.LineMonthlyActivitySummaryHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsWpfControls.ContentList;
+using PointlessWaymarks.CmsWpfControls.FeatureIntersectResultBrowser;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.FeatureIntersectionTags;
 using PointlessWaymarks.FeatureIntersectionTags.Models;
@@ -99,6 +100,11 @@ public partial class LineListWithActionsContext
             {
                 ItemName = "Add Intersection Tags - Without OSM",
                 ItemCommand = AddIntersectionTagsWithoutOsmToSelectedCommand
+            },
+            new ContextMenuItemData
+            {
+                ItemName = "View Intersection Tags",
+                ItemCommand = ShowIntersectionTagsForSelectedCommand
             },
             new ContextMenuItemData
                 { ItemName = "Extract New Links", ItemCommand = ListContext.ExtractNewLinksSelectedCommand },
@@ -600,6 +606,61 @@ public partial class LineListWithActionsContext
             await using var xmlWriter = XmlWriter.Create(fileStream, writerSettings);
             GpxWriter.Write(xmlWriter, null, new GpxMetadata("Pointless Waymarks CMS"), null, null, trackList, null);
             xmlWriter.Close();
+        }
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoOrMoreThanSelectedListItems(MaxSelectedItems = 5)]
+    private async Task ShowIntersectionTagsForSelected(CancellationToken cancellationToken)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var frozenSelected = SelectedListItems();
+
+        if (string.IsNullOrWhiteSpace(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile))
+        {
+            await StatusContext.ToastError("The Settings File for the Feature Intersection is blank?");
+            return;
+        }
+
+        var settingsFileInfo = new FileInfo(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile);
+        if (!settingsFileInfo.Exists)
+        {
+            await StatusContext.ToastError(
+                $"The Settings File for the Feature Intersection {settingsFileInfo.FullName} doesn't exist?");
+            return;
+        }
+
+        var settings =
+            JsonSerializer.Deserialize<IntersectSettings>(await File.ReadAllTextAsync(settingsFileInfo.FullName,
+                cancellationToken));
+        if (settings == null)
+        {
+            StatusContext.Progress(
+                $"The settings file {settingsFileInfo.FullName} did not deserialized to valid settings...");
+            return;
+        }
+
+        foreach (var loopSelected in frozenSelected)
+        {
+            var feature = loopSelected.DbEntry.FeatureFromGeoJsonLineAsPolygon(settings.BufferPointsAndLinesByFeet);
+
+            if (feature == null) continue;
+
+            var intersectResult = new IntersectResult(feature)
+                { ContentId = loopSelected.DbEntry.ContentId };
+
+            var lineFeature = loopSelected.DbEntry.FeatureFromGeoJsonLine();
+            if (lineFeature is not null)
+            {
+                intersectResult.OsmIsInPoints.AddRange(LineTools.GetRepresentativePointsFromLine(lineFeature.Geometry));
+
+                var tagResult = await intersectResult.IntersectionTags(settingsFileInfo.FullName,
+                    cancellationToken, StatusContext.ProgressTracker());
+
+                await FeatureIntersectResultBrowserWindow.CreateInstanceAndShow(tagResult,
+                    loopSelected.DbEntry.Title ?? "Content has No Title...");
+            }
         }
     }
 
