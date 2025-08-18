@@ -1,5 +1,6 @@
 using System.Data;
 using FluentMigrator;
+using System.Data.SQLite;
 
 namespace PointlessWaymarks.CmsData.Database.Migrations;
 
@@ -13,23 +14,28 @@ public class ModifyTrailFeeDogBikeColumnTypes : Migration
 
     public override void Up()
     {
-        // Check if the current Bikes column is of type integer
         var bikesColumnType = string.Empty;
-        Execute.WithConnection((connection, transaction) =>
+        var sql = "PRAGMA table_info(TrailContents);";
+        var dataTable = new DataTable();
+
+        using (var connection = new SQLiteConnection(ConnectionString))
         {
-            using var command = connection.CreateCommand();
-            command.Transaction = transaction;
-            command.CommandText = "PRAGMA table_info(TrailContents)";
-            using var reader = command.ExecuteReader();
-            while (reader.Read())
+            connection.Open();
+            using (var command = new SQLiteCommand(sql, connection))
+            using (var adapter = new SQLiteDataAdapter(command))
             {
-                if (reader["name"].ToString() == "Bikes")
-                {
-                    bikesColumnType = reader["type"].ToString();
-                    return;
-                }
+                adapter.Fill(dataTable);
             }
-        });
+        }
+
+        foreach (DataRow row in dataTable.Rows)
+        {
+            if (row["name"].ToString() == "Bikes")
+            {
+                bikesColumnType = row["type"].ToString();
+                break;
+            }
+        }
 
         if (bikesColumnType == "INTEGER")
         {
