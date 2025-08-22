@@ -15,7 +15,7 @@
         <PackageReference Include="Dirkster.NumericUpDownLib" Version="3.4.0" />
         <PackageReference Include="Jot" Version="2.1.17" />
         <PackageReference Include="Metalama.Framework" Version="2025.1.12" />
-        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3351.48" />
+        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3405.78" />
         <PackageReference Include="Microsoft.Web.WebView2.DevToolsProtocolExtension" Version="1.0.2901" />
         <PackageReference Include="ModernWpfUI" Version="0.9.6" />
         <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.8" />
