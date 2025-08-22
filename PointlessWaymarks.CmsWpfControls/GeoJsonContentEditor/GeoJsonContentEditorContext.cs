@@ -117,7 +117,12 @@ public partial class GeoJsonContentEditorContext : IHasChanges, IHasValidationIs
             return;
         }
 
-        var intersectResult = new IntersectResult(featuresToCheck);
+        var intersectResult = new IntersectResult(featuresToCheck)
+        {
+            ContentId = DbEntry.ContentId,
+            Description =
+                $"GeoJson Content - {(string.IsNullOrWhiteSpace(TitleSummarySlugFolder?.TitleEntry.Title) ? "No Title" : TitleSummarySlugFolder?.TitleEntry.Title)}"
+        };
 
         var possibleTags = (await intersectResult
             .IntersectionTags(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile,

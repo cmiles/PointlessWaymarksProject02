@@ -102,7 +102,7 @@ public partial class GeoJsonListWithActionsContext
         }
 
         var settingsFileInfo = new FileInfo(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile);
-        
+
         if (!settingsFileInfo.Exists)
         {
             await StatusContext.ToastError(
@@ -140,7 +140,10 @@ public partial class GeoJsonListWithActionsContext
 
             dbEntriesToProcess.Add((GeoJsonContent)GeoJsonContent.CreateInstance().InjectFrom(loopSelected.DbEntry));
             intersectResults.Add(new IntersectResult(features)
-                { ContentId = loopSelected.DbEntry.ContentId });
+            {
+                ContentId = loopSelected.DbEntry.ContentId,
+                Description = $"GeoJson Content - {loopSelected.DbEntry.Title}"
+            });
         }
 
         await intersectResults.IntersectionTags(settings,

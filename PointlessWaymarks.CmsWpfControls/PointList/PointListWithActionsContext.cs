@@ -154,7 +154,7 @@ public partial class PointListWithActionsContext
             var feature = settings.BufferPointsAndLinesByFeet > 0 ? loopSelected.FeatureFromPointAsCircle(settings.BufferPointsAndLinesByFeet.Value) : loopSelected.FeatureFromPoint();
 
             toProcess.Add(loopSelected);
-            intersectResults.Add(new IntersectResult(feature) { ContentId = loopSelected.ContentId });
+            intersectResults.Add(new IntersectResult(feature) { ContentId = loopSelected.ContentId, Description = $"Point Content - {loopSelected.Title ?? "No Title"}" });
         }
 
         await intersectResults.IntersectionTags(settings,

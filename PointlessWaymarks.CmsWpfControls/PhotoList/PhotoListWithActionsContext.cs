@@ -171,7 +171,7 @@ public partial class PhotoListWithActionsContext
             var toAdd = PhotoContent.CreateInstance();
 
             toProcess.Add((PhotoContent)toAdd.InjectFrom(loopSelected.DbEntry));
-            intersectResults.Add(new IntersectResult(feature) { ContentId = loopSelected.DbEntry.ContentId });
+            intersectResults.Add(new IntersectResult(feature) { ContentId = loopSelected.DbEntry.ContentId, Description = $"Photo Content - {loopSelected.DbEntry.Title ?? "No Title"}" });
         }
 
         await intersectResults.IntersectionTags(settings,

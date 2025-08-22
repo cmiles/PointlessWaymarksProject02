@@ -64,22 +64,21 @@ public static class OsmIntersection
 
         // Create grid of sub-envelopes
         for (var y = 0; y < yDivisions; y++)
-            for (var x = 0; x < xDivisions; x++)
-            {
-                var minX = envelope.MinX + x * xStep;
-                var minY = envelope.MinY + y * yStep;
-                var maxX = x == xDivisions - 1 ? envelope.MaxX : minX + xStep;
-                var maxY = y == yDivisions - 1 ? envelope.MaxY : minY + yStep;
+        for (var x = 0; x < xDivisions; x++)
+        {
+            var minX = envelope.MinX + x * xStep;
+            var minY = envelope.MinY + y * yStep;
+            var maxX = x == xDivisions - 1 ? envelope.MaxX : minX + xStep;
+            var maxY = y == yDivisions - 1 ? envelope.MaxY : minY + yStep;
 
-                var subEnvelope = new Envelope(minX, maxX, minY, maxY);
-                var subEnvelopeGeometry = GeoJsonTools.EnvelopeToGeometry(subEnvelope);
-                
-                // Only add sub-envelope if it intersects with at least one feature
-                if (intersectResult.Features.Any(feature => feature.Geometry.Intersects(subEnvelopeGeometry) || subEnvelopeGeometry.Contains(feature.Geometry)))
-                {
-                    result.Add(subEnvelope);
-                }
-            }
+            var subEnvelope = new Envelope(minX, maxX, minY, maxY);
+            var subEnvelopeGeometry = GeoJsonTools.EnvelopeToGeometry(subEnvelope);
+
+            // Only add sub-envelope if it intersects with at least one feature
+            if (intersectResult.Features.Any(feature =>
+                    feature.Geometry.Intersects(subEnvelopeGeometry) || subEnvelopeGeometry.Contains(feature.Geometry)))
+                result.Add(subEnvelope);
+        }
 
         return result;
     }
@@ -174,7 +173,9 @@ public static class OsmIntersection
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error querying OSM Overpass for intersections for feature {FeatureId}",
+                Log.Error(ex,
+                    "Error querying OSM Overpass for intersections for feature {FeatureDescription}, ID {FeatureId}",
+                    loopToCheck.Description,
                     loopToCheck.ContentId);
                 progress?.Report($"Error querying OSM Overpass for intersections: {ex.Message}");
             }
@@ -409,7 +410,8 @@ public static class OsmIntersection
 
                 OsmOverpassRateLimiter.RecordApiCall();
 
-                Log.ForContext("query", query)
+                Log.ForContext("intersectResultDescription", intersectResult.Description)
+                    .ForContext("query", query)
                     .ForContext("response.StatusCode", response.StatusCode)
                     .ForContext("hint",
                         "This log entry records queries to the OSM Overpass API in order to facilitate exploring the results at a later time - using the API for tagging is not unique, but I didn't come across useful helps/tips/guidance on best way to include/exclude relevant data - overpass-turbo.eu is a useful resource to manually run and see these queries.")
@@ -421,7 +423,20 @@ public static class OsmIntersection
 
             var options = new JsonSerializerOptions();
             options.Converters.Add(new OsmElementConverter());
-            var features = JsonSerializer.Deserialize<OsmResponse>(jsonString, options);
+
+            OsmResponse? features;
+
+            try
+            {
+                features = JsonSerializer.Deserialize<OsmResponse>(jsonString, options);
+            }
+            catch (Exception e)
+            {
+                Log.ForContext("intersectResultDescription", intersectResult.Description)
+                    .ForContext("json", jsonString).ForContext("query", query)
+                    .Error(e, $"OSM Json Deserialization Error - {e.Message}");
+                throw;
+            }
 
             if (features?.Elements is null) return;
 

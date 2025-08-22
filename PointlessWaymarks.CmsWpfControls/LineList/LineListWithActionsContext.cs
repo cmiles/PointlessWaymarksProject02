@@ -216,7 +216,7 @@ public partial class LineListWithActionsContext
 
             dbEntriesToProcess.Add((LineContent)LineContent.CreateInstance().InjectFrom(loopSelected.DbEntry));
             var intersectResult = new IntersectResult(feature)
-                { ContentId = loopSelected.DbEntry.ContentId };
+                { ContentId = loopSelected.DbEntry.ContentId, Description = $"Line Content - {loopSelected.DbEntry.Title ?? "No Title"}" };
 
             var lineFeature = loopSelected.DbEntry.FeatureFromGeoJsonLine();
             if (lineFeature is not null)
@@ -648,7 +648,7 @@ public partial class LineListWithActionsContext
             if (feature == null) continue;
 
             var intersectResult = new IntersectResult(feature)
-                { ContentId = loopSelected.DbEntry.ContentId };
+                { ContentId = loopSelected.DbEntry.ContentId, Description = $"Line Content - {loopSelected.DbEntry.Title ?? "No Title"}" };
 
             var lineFeature = loopSelected.DbEntry.FeatureFromGeoJsonLine();
             if (lineFeature is not null)

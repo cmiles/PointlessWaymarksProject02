@@ -39,7 +39,8 @@ public static class Intersection
                     : PointTools.Wgs84Point(location.Longitude!.Value, location.Latitude!.Value),
                 new AttributesTable());
 
-            loopFile.IntersectInformation = new IntersectResult(feature);
+            loopFile.IntersectInformation = new IntersectResult(feature)
+                { Description = $"File - {loopFile.FileToTag.FullName}" };
             loopFile.IntersectInformation.OsmIsInPoints.Add(new Coordinate(location.Longitude!.Value,
                 location.Latitude!.Value));
         }
@@ -54,9 +55,10 @@ public static class Intersection
             var waypointPoints =
                 await GpxTools.WaypointPointsFromGpxFileAs2DCircles(loopGpx.FileToTag, pointBufferInFeet);
 
-            loopGpx.IntersectInformation = new IntersectResult(bufferedTrackLines.features.Select(x => x.BufferedFeature).Cast<IFeature>()
+            loopGpx.IntersectInformation = new IntersectResult(bufferedTrackLines.features
+                .Select(x => x.BufferedFeature).Cast<IFeature>()
                 .Union(bufferedRouteLines.features.Select(x => x.BufferedFeature))
-                .Union(waypointPoints.features).ToList());
+                .Union(waypointPoints.features).ToList()) { Description = loopGpx.FileToTag.FullName };
 
             foreach (var loopWaypoints in waypointPoints.features)
                 loopGpx.IntersectInformation.OsmIsInPoints.Add(new Coordinate(loopWaypoints.Geometry.Coordinate));
@@ -79,7 +81,8 @@ public static class Intersection
 
             foreach (var loopFeature in features) loopFeature.Attributes.Add("title", loopGeojson.FileToTag.Name);
 
-            loopGeojson.IntersectInformation = new IntersectResult(features);
+            loopGeojson.IntersectInformation = new IntersectResult(features)
+                { Description = loopGeojson.FileToTag.FullName };
 
             foreach (var loopFeature in features)
                 loopGeojson.IntersectInformation.OsmIsInPoints.Add(loopFeature.Geometry.InteriorPoint.Coordinate);
@@ -244,7 +247,8 @@ public static class Intersection
             return [];
         }
 
-        var intersectionResult = new IntersectResult(toCheck);
+        var intersectionResult = new IntersectResult(toCheck) { Description = "IFeature Tagging" };
+        ;
 
         progress?.Report($"Getting Settings from {intersectSettingsFile}");
         var settings =
