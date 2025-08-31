@@ -87,7 +87,7 @@ public partial class ActivityLogMonthlySummaryWindow
             .ToListAsync();
 
         var grouped = lines.GroupBy(x =>
-                new { x.RecordingStartedOn.Value.Year, x.RecordingStartedOn.Value.Month, x.ActivityType, x.CreatedBy })
+                new { x.RecordingStartedOn!.Value.Year, x.RecordingStartedOn.Value.Month, x.ActivityType, x.CreatedBy })
             .OrderByDescending(x => x.Key.Year).ThenByDescending(x => x.Key.Month);
 
         var reportRows = grouped.Select(x => new ActivityLogMonthlyStatRow
@@ -101,13 +101,13 @@ public partial class ActivityLogMonthlySummaryWindow
             Hours = (int)Math.Floor(new TimeSpan(0, (int)x
                     .Where(y => y is { RecordingStartedOn: not null, RecordingEndedOn: not null } &&
                                 y.RecordingStartedOn < y.RecordingEndedOn)
-                    .Select(y => y.RecordingEndedOn.Value - y.RecordingStartedOn.Value).Sum(y => y.TotalMinutes), 0)
+                    .Select(y => y.RecordingEndedOn!.Value - y.RecordingStartedOn!.Value).Sum(y => y.TotalMinutes), 0)
                 .TotalHours),
             MinElevation = (int)Math.Floor(x.Min(y => y.MinimumElevation)),
             MaxElevation = (int)Math.Floor(x.Max(y => y.MaximumElevation)),
             Climb = (int)Math.Floor(x.Sum(y => y.ClimbElevation)),
             Descent = (int)Math.Floor(x.Sum(y => y.DescentElevation)),
-            LineContentIds = x.Select(x => x.ContentId).ToList()
+            LineContentIds = x.Select(y => y.ContentId).ToList()
         }).ToList();
 
         return await CreateInstance(reportRows);
@@ -126,7 +126,6 @@ public partial class ActivityLogMonthlySummaryWindow
     private void Selector_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (DataContext == null) return;
-        var viewmodel = (ActivityLogMonthlySummaryWindow)DataContext;
         SelectedItems =
             LineStatsDataGrid?.SelectedItems.Cast<ActivityLogMonthlyStatRow>().ToList() ??
             [];

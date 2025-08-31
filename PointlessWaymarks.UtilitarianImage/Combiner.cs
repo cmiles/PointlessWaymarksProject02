@@ -161,7 +161,6 @@ public static class Combiner
 
         var paint = new SKPaint
         {
-            FilterQuality = SKFilterQuality.High,
             IsAntialias = true
         };
 
@@ -331,8 +330,8 @@ public static class Combiner
         // Save the combined image as a JPEG
         using var image = SKImage.FromBitmap(combinedBitmap);
         using var data = image.Encode(SKEncodedImageFormat.Jpeg, jpegQuality);
-        var safeName = UniqueFileTools.UniqueFile(new DirectoryInfo(Path.GetDirectoryName(pdfFileName)),
-            $"{Path.GetFileNameWithoutExtension(pdfFileName)}.jpg");
+        var safeName = UniqueFileTools.UniqueFile(new DirectoryInfo(Path.GetDirectoryName(pdfFileName)!),
+            $"{Path.GetFileNameWithoutExtension(pdfFileName)}.jpg")!;
         await using var outputStream = File.OpenWrite(safeName.FullName);
         data.SaveTo(outputStream);
 

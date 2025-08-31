@@ -249,6 +249,7 @@ public partial class FeatureIntersectTaggerContext
     public static async Task<FeatureIntersectTaggerContext> CreateInstance(StatusControlContext? statusContext,
         WindowIconStatus? windowStatus)
     {
+        statusContext ??= await StatusControlContext.CreateInstance();
         var control = new FeatureIntersectTaggerContext(statusContext, windowStatus);
         await control.Load();
         return control;

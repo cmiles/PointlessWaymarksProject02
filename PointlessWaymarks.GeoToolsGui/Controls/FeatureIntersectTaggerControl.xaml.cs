@@ -1,4 +1,4 @@
-﻿using System.Windows.Input;
+using System.Windows.Input;
 using PointlessWaymarks.WpfCommon.Utility;
 
 namespace PointlessWaymarks.GeoToolsGui.Controls;
@@ -16,6 +16,6 @@ public partial class FeatureIntersectTaggerControl
     private void OpenHyperlink(object sender, ExecutedRoutedEventArgs e)
     {
         if (string.IsNullOrWhiteSpace(e.Parameter.ToString())) return;
-        ProcessHelpers.OpenUrlInExternalBrowser(e.Parameter.ToString());
+        ProcessHelpers.OpenUrlInExternalBrowser(e.Parameter.ToString()!);
     }
 }

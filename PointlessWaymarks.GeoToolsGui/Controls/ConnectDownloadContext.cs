@@ -95,6 +95,7 @@ public partial class ConnectDownloadContext
     public static async Task<ConnectDownloadContext> CreateInstance(StatusControlContext? statusContext,
         WindowIconStatus? windowStatus)
     {
+        statusContext ??= await StatusControlContext.CreateInstance();
         var control = new ConnectDownloadContext(statusContext, windowStatus);
         await control.Load();
         return control;

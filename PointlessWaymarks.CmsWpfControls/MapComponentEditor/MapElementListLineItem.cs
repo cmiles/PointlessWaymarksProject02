@@ -18,7 +18,7 @@ public partial class MapElementListLineItem : LineListListItem, IMapElementListI
     public string ElementType { get; set; } = "line";
     public string Title { get; set; } = string.Empty;
 
-    public new static Task<MapElementListLineItem> CreateInstance(LineContentActions itemActions, LineContent dbEntry, MapElementSettings elementSettings)
+    public static Task<MapElementListLineItem> CreateInstance(LineContentActions itemActions, LineContent dbEntry, MapElementSettings elementSettings)
     {
         var newContent = new MapElementListLineItem(itemActions, dbEntry)
         {

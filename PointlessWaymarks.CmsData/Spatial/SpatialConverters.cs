@@ -56,7 +56,7 @@ public static class SpatialConverters
     public static Envelope PhotoBoundingBox(List<PhotoContent> content, Envelope? envelope = null)
     {
         var photoPointList = content.Where(x => x.HasLocation()).Select(x => GeoJsonTools.Wgs84GeometryFactory()
-            .CreatePoint(new CoordinateZ(x.Longitude.Value, x.Latitude.Value, x.Elevation?.FeetToMeters() ?? 0))).ToList();
+            .CreatePoint(new CoordinateZ(x.Longitude!.Value, x.Latitude!.Value, x.Elevation?.FeetToMeters() ?? 0))).ToList();
 
         return PointBoundingBox(photoPointList, envelope);
     }

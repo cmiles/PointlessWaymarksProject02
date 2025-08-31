@@ -16,7 +16,7 @@ public partial class MapElementListFileItem : FileListListItem, IMapElementListI
     public string ElementType { get; set; } = "file";
     public string Title { get; set; } = string.Empty;
 
-    public new static Task<MapElementListFileItem> CreateInstance(FileContentActions itemActions, FileContent dbEntry, MapElementSettings elementSettings)
+    public static Task<MapElementListFileItem> CreateInstance(FileContentActions itemActions, FileContent dbEntry, MapElementSettings elementSettings)
     {
         var newContent = new MapElementListFileItem(itemActions, dbEntry)
         {

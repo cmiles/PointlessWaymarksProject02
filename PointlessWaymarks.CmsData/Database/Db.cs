@@ -1971,7 +1971,7 @@ public static class Db
     public static async Task<List<string>> MapIconNames()
     {
         var db = await Context();
-        return "".AsList().Concat(await db.MapIcons.Select(x => x.IconName).OrderBy(x => x).ToListAsync()).ToList();
+        return "".AsList().Concat(await db.MapIcons.Select(x => x.IconName ?? "No Name Given").OrderBy(x => x).ToListAsync()).ToList();
     }
 
     public static async Task<string?> MapIconSvgFromMapIconName(string? mapIconName)

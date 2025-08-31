@@ -18,7 +18,7 @@ public partial class MapElementListGeoJsonItem : GeoJsonListListItem, IMapElemen
     public string ElementType { get; set; } = "geojson";
     public string Title { get; set; } = string.Empty;
 
-    public new static Task<MapElementListGeoJsonItem> CreateInstance(GeoJsonContentActions itemActions, GeoJsonContent dbEntry, MapElementSettings elementSettings)
+    public static Task<MapElementListGeoJsonItem> CreateInstance(GeoJsonContentActions itemActions, GeoJsonContent dbEntry, MapElementSettings elementSettings)
     {
         var newContent = new MapElementListGeoJsonItem(itemActions, dbEntry)
         {

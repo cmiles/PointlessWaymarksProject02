@@ -844,24 +844,42 @@ public partial class MapComponentEditorContext : IHasChanges, IHasValidationIssu
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        var parsedJson = JsonNode.Parse(mapMessage);
+        try
+        {
+            var parsedJson = JsonNode.Parse(mapMessage);
+            if (parsedJson == null) return;
 
-        if (parsedJson == null) return;
+            var messageType = parsedJson["messageType"]?.ToString() ?? string.Empty;
 
-        var messageType = parsedJson["messageType"]?.ToString() ?? string.Empty;
-
-        if (messageType == "mapBoundsChange")
-            try
+            if (messageType == "mapBoundsChange")
             {
-                MapBounds = new SpatialBounds(parsedJson["bounds"]["_northEast"]["lat"].GetValue<double>(),
-                    parsedJson["bounds"]["_northEast"]["lng"].GetValue<double>(),
-                    parsedJson["bounds"]["_southWest"]["lat"].GetValue<double>(),
-                    parsedJson["bounds"]["_southWest"]["lng"].GetValue<double>());
+                var boundsNode = parsedJson["bounds"];
+                if (boundsNode == null) return;
+                
+                var northEastNode = boundsNode["_northEast"];
+                var southWestNode = boundsNode["_southWest"];
+                
+                if (northEastNode == null || southWestNode == null) return;
+
+                var northEastLat = northEastNode["lat"]?.GetValue<double>();
+                var northEastLng = northEastNode["lng"]?.GetValue<double>();
+                var southWestLat = southWestNode["lat"]?.GetValue<double>();
+                var southWestLng = southWestNode["lng"]?.GetValue<double>();
+
+                if (northEastLat.HasValue && northEastLng.HasValue && southWestLat.HasValue && southWestLng.HasValue)
+                {
+                    MapBounds = new SpatialBounds(
+                        northEastLat.Value,
+                        northEastLng.Value, 
+                        southWestLat.Value, 
+                        southWestLng.Value);
+                }
             }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
+        }
+        catch (Exception e)
+        {
+            await StatusContext.ToastError($"Error parsing map message: {e.Message}");
+        }
     }
 
     private void OnDataNotificationReceived(object? sender, TinyMessageReceivedEventArgs e)

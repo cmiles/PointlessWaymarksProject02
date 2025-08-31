@@ -328,7 +328,7 @@ public static class Program
                         .Information(
                             "Comparing Local Files to the Cloud File Cache Files produced no backup actions - Nothing To Do, Stopping");
                     Log.Information("Cloud Backup Runner - Finished Run");
-                    DataNotifications.PublishRunFinishedNotification("CloudBackupRunner", Environment.ProcessId, "Run Finished", backupJob.PersistentId, batch.Id);
+                    DataNotifications.PublishRunFinishedNotification("CloudBackupRunner", Environment.ProcessId, "Run Finished", backupJob.PersistentId, batch?.Id);
                     await Log.CloseAndFlushAsync();
                     return 0;
                 }

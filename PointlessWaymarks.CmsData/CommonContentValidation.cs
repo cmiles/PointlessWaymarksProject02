@@ -280,7 +280,7 @@ public static class CommonContentValidation
         try
         {
             var featureCollection = GeoJsonTools.DeserializeStringToFeatureCollection(geoJsonString);
-            if (featureCollection.Count < 1)
+            if (featureCollection is null || featureCollection.Count < 1)
                 return Task.FromResult(new IsValid(false, "The GeoJson appears to have an empty Feature Collection?"));
         }
         catch (Exception e)
@@ -337,7 +337,7 @@ public static class CommonContentValidation
         try
         {
             var featureCollection = GeoJsonTools.DeserializeStringToFeatureCollection(geoJsonString);
-            if (featureCollection.Count < 1)
+            if (featureCollection == null || featureCollection.Count < 1)
                 return new IsValid(false,
                     "The GeoJson for the line appears to have an empty Feature Collection?");
             if (featureCollection.Count > 1)
@@ -816,7 +816,7 @@ public static class CommonContentValidation
         if (string.IsNullOrWhiteSpace(stringToCheck.TrimNullToEmpty()))
             return Task.FromResult(new IsValid(false, "Can not be blank."));
 
-        if (!stringToCheck.Trim().StartsWith("<svg", StringComparison.OrdinalIgnoreCase) ||
+        if (!stringToCheck!.Trim().StartsWith("<svg", StringComparison.OrdinalIgnoreCase) ||
             !stringToCheck.Trim().EndsWith("</svg>", StringComparison.OrdinalIgnoreCase))
             return Task.FromResult(new IsValid(false, "The SVG Tag should start with <svg and end with </svg>"));
 

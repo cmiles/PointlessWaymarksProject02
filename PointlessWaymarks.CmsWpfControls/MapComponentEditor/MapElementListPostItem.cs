@@ -17,7 +17,7 @@ public partial class MapElementListPostItem : PostListListItem, IMapElementListI
     public string ElementType { get; set; } = "post";
     public string Title { get; set; } = string.Empty;
 
-    public new static Task<MapElementListPostItem> CreateInstance(PostContentActions itemActions, PostContent dbEntry, MapElementSettings elementSettings)
+    public static Task<MapElementListPostItem> CreateInstance(PostContentActions itemActions, PostContent dbEntry, MapElementSettings elementSettings)
     {
         var newContent = new MapElementListPostItem(itemActions, dbEntry)
         {

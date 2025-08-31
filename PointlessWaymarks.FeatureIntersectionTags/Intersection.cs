@@ -77,7 +77,7 @@ public static class Intersection
 
         foreach (var loopGeojson in geojsonFiles)
         {
-            var features = GeoJsonTools.DeserializeFileToFeatureCollection(loopGeojson.FileToTag.FullName).ToList();
+            var features = GeoJsonTools.DeserializeFileToFeatureCollection(loopGeojson.FileToTag.FullName)!.ToList();
 
             foreach (var loopFeature in features) loopFeature.Attributes.Add("title", loopGeojson.FileToTag.Name);
 
@@ -316,7 +316,7 @@ public static class Intersection
                 continue;
             }
 
-            var intersectFeatures = GeoJsonTools.DeserializeFileToFeatureCollection(loopIntersectFile.FileName);
+            var intersectFeatures = GeoJsonTools.DeserializeFileToFeatureCollection(loopIntersectFile.FileName)!;
 
             var referenceFeatureCounter = 0;
             progress?.Report(
@@ -440,7 +440,7 @@ public static class Intersection
 
         var doiRegionsFile = regionsFile.First();
 
-        var doiRegionFeatures = GeoJsonTools.DeserializeFileToFeatureCollection(doiRegionsFile.FullName);
+        var doiRegionFeatures = GeoJsonTools.DeserializeFileToFeatureCollection(doiRegionsFile.FullName)!;
 
         var regionIntersections = new List<(string? region, IntersectResult feature)>();
 
@@ -477,7 +477,7 @@ public static class Intersection
             progress?.Report(
                 $"Processing PAD-US DOI Region File - {regionFile.Name} - {counter} of {regionIntersectionsGroupedByRegion.Count}");
 
-            var regionFeatures = GeoJsonTools.DeserializeFileToFeatureCollection(regionFile.FullName).ToList();
+            var regionFeatures = GeoJsonTools.DeserializeFileToFeatureCollection(regionFile.FullName)!.ToList();
 
             var referenceFeatureCounter = 0;
             progress?.Report(

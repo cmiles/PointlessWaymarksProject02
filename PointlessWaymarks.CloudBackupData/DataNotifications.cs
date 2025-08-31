@@ -128,8 +128,6 @@ public static class DataNotifications
         {
             return new InterProcessError { ErrorMessage = e.Message };
         }
-
-        return new InterProcessError { ErrorMessage = "No processing occurred for this message?" };
     }
 }
 

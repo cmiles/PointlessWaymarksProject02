@@ -1,4 +1,5 @@
 using System.Data;
+using System.Diagnostics;
 using System.Globalization;
 using Amazon;
 using FluentMigrator.Runner;
@@ -1496,6 +1497,9 @@ public static class UserSettingsUtilities
     {
         var iniResult = await ReadRawSettingsFromFile(fileToRead, progress);
 
+        if (iniResult is null)
+            throw new NullReferenceException($"Trying to read Settings from {fileToRead.FullName} returned null");
+        
         var currentProperties = typeof(UserSettings).GetProperties()
             .Where(x => !x.Name.Equals(nameof(UserSettings.SitePictureSizes))).ToList();
 
@@ -1565,7 +1569,7 @@ public static class UserSettingsUtilities
             }
             catch (Exception e)
             {
-                // ignored
+                Debug.WriteLine(e.ToString());
             }
 
         var timeStampForMissingValues = $"{DateTime.Now:yyyy-MM-dd--HH-mm-ss-fff}";
@@ -1585,7 +1589,7 @@ public static class UserSettingsUtilities
 
         if (string.IsNullOrWhiteSpace(readResult.LocalSiteRootDirectory))
         {
-            var newLocalSiteRoot = new DirectoryInfo(Path.Combine(fileToRead.Directory.FullName,
+            var newLocalSiteRoot = new DirectoryInfo(Path.Combine(fileToRead.Directory!.FullName,
                 timeStampForMissingValues, $"PointlessWaymarks-Site-{timeStampForMissingValues}"));
 
             newLocalSiteRoot.CreateIfItDoesNotExist();
@@ -1596,7 +1600,7 @@ public static class UserSettingsUtilities
 
         if (string.IsNullOrWhiteSpace(readResult.LocalMediaArchiveDirectory))
         {
-            var newMediaArchive = new DirectoryInfo(Path.Combine(fileToRead.Directory.FullName,
+            var newMediaArchive = new DirectoryInfo(Path.Combine(fileToRead.Directory!.FullName,
                 timeStampForMissingValues, $"PointlessWaymarks-MediaArchive-{timeStampForMissingValues}"));
 
             newMediaArchive.CreateIfItDoesNotExist();
@@ -1682,7 +1686,7 @@ public static class UserSettingsUtilities
 
     /// <summary>
     ///     When reading an Ini file to get IniData prefer this method as it will use a stream reader and properly dispose the
-    ///     stream to maximize the chances of problems with locked files.
+    ///     stream to minimize the chances of problems with locked files.
     /// </summary>
     /// <param name="fileToRead"></param>
     /// <param name="progress"></param>
@@ -1926,7 +1930,7 @@ public static class UserSettingsUtilities
             fileStream.Close();
         }
 
-        var iniResult = await ReadRawSettingsFromFile(currentFile, null);
+        var iniResult = (await ReadRawSettingsFromFile(currentFile))!;
 
         var currentProperties = typeof(UserSettings).GetProperties()
             .Where(x => !x.Name.Equals(nameof(UserSettings.SitePictureSizes))).ToList();

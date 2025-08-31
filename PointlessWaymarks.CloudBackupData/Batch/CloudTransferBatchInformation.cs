@@ -5,12 +5,12 @@ namespace PointlessWaymarks.CloudBackupData.Batch;
 
 public class CloudTransferBatchInformation
 {
-    public CloudTransferBatch Batch { get; set; }
-    public List<CloudCopy> CloudCopies { get; set; }
-    public List<CloudDelete> CloudDeletions { get; set; }
-    public List<CloudFile> CloudFiles { get; set; }
-    public List<CloudUpload> CloudUploads { get; set; }
-    public List<FileSystemFile> FileSystemFiles { get; set; }
+    public required CloudTransferBatch Batch { get; set; }
+    public required List<CloudCopy> CloudCopies { get; set; }
+    public required List<CloudDelete> CloudDeletions { get; set; }
+    public required List<CloudFile> CloudFiles { get; set; }
+    public required List<CloudUpload> CloudUploads { get; set; }
+    public required List<FileSystemFile> FileSystemFiles { get; set; }
     
     public static async Task<CloudTransferBatchInformation> CreateInstance(int batchId)
     {

@@ -98,6 +98,7 @@ public partial class FileBasedGeoTaggerContext
     public static async Task<FileBasedGeoTaggerContext> CreateInstance(StatusControlContext? statusContext,
         WindowIconStatus? windowStatus)
     {
+        statusContext ??= await StatusControlContext.CreateInstance();
         var control = new FileBasedGeoTaggerContext(statusContext, windowStatus);
         await control.Load();
         return control;

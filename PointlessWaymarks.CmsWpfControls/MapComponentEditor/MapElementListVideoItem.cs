@@ -17,7 +17,7 @@ public partial class MapElementListVideoItem : VideoListListItem, IMapElementLis
     public string ElementType { get; set; } = "video";
     public string Title { get; set; } = string.Empty;
 
-    public new static Task<MapElementListVideoItem> CreateInstance(VideoContentActions itemActions, VideoContent dbEntry, MapElementSettings elementSettings)
+    public static Task<MapElementListVideoItem> CreateInstance(VideoContentActions itemActions, VideoContent dbEntry, MapElementSettings elementSettings)
     {
         var newContent = new MapElementListVideoItem(itemActions, dbEntry)
         {

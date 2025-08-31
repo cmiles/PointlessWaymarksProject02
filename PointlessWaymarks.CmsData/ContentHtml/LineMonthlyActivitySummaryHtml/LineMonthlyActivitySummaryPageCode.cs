@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using PointlessWaymarks.CmsData.Database;
 
 namespace PointlessWaymarks.CmsData.ContentHtml.LineMonthlyActivitySummaryHtml;
@@ -8,7 +8,7 @@ public partial class LineMonthlyActivitySummaryPage(DateTime? generationVersion)
     public string DirAttribute { get; set; } = UserSettingsSingleton.CurrentSettings().SiteDirectionAttribute;
     public DateTime? GenerationVersion { get; set; } = generationVersion;
     public string LangAttribute { get; set; } = UserSettingsSingleton.CurrentSettings().SiteLangAttribute;
-    public string SerializedRows { get; set; }
+    public string SerializedRows { get; set; } = string.Empty;
 
     public async Task WriteLocalHtml()
     {
@@ -25,7 +25,7 @@ public partial class LineMonthlyActivitySummaryPage(DateTime? generationVersion)
             Activities = x.Count(),
             Miles = Math.Floor(x.Sum(y => y.LineDistance)),
             Hours = Math.Floor(new TimeSpan(0, (int)x
-                .Select(y => y.RecordingEndedOn.Value - y.RecordingStartedOn.Value)
+                .Select(y => y.RecordingEndedOn!.Value - y.RecordingStartedOn!.Value)
                 .Sum(y => y.TotalMinutes), 0).TotalHours),
             MinElevation = Math.Floor(x.Min(y => y.MinimumElevation)),
             MaxElevation = Math.Floor(x.Max(y => y.MaximumElevation)),

@@ -71,11 +71,11 @@ public static class TrailParts
 
         generatedBlock.AppendLine($"{Environment.NewLine}{Environment.NewLine}{detailsBlock.ToString()}");
 
-        if (dbContent?.StartingPointContentId != null || dbContent?.EndingPointContentId != null)
+        if (dbContent.StartingPointContentId != null || dbContent.EndingPointContentId != null)
         {
             if (dbContent.StartingPointContentId == dbContent.EndingPointContentId)
             {
-                var startEndPoint = await Db.PointContentDto(dbContent.StartingPointContentId.Value);
+                var startEndPoint = await Db.PointContentDto(dbContent.StartingPointContentId!.Value);
 
                 generatedBlock.AppendLine((await PointParts.StandAlonePointDetailsDiv(startEndPoint, "Start/End:")).ToString());
                 //generatedBlock.AppendLine($"  -Start/End{Environment.NewLine}");

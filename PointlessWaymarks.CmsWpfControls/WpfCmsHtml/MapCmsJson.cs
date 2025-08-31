@@ -209,7 +209,7 @@ public static class MapCmsJson
     public static async Task<string> NewMapFeatureCollectionDtoSerialized(
         string featureCollection)
     {
-        var contentFeatureCollection = GeoJsonTools.DeserializeStringToFeatureCollection(featureCollection);
+        var contentFeatureCollection = GeoJsonTools.DeserializeStringToFeatureCollection(featureCollection)!;
 
         var envelope = GeoJsonTools.GeometryBoundingBox(GeoJsonTools.GeoJsonToGeometries(featureCollection));
 
@@ -285,7 +285,7 @@ public static class MapCmsJson
             {
                 case GeoJsonContent { GeoJson: not null } mapGeoJson:
                     var featureCollection =
-                        GeoJsonTools.DeserializeStringToFeatureCollection(mapGeoJson.GeoJson);
+                        GeoJsonTools.DeserializeStringToFeatureCollection(mapGeoJson.GeoJson)!;
                     foreach (var feature in featureCollection)
                         feature.Attributes.Add("displayId", mapGeoJson.ContentId);
                     geoJsonList.Add(featureCollection);
@@ -295,7 +295,7 @@ public static class MapCmsJson
                         mapGeoJson.InitialViewBoundsMinLatitude));
                     break;
                 case LineContent mapLine:
-                    var lineFeatureCollection = GeoJsonTools.DeserializeStringToFeatureCollection(mapLine.Line);
+                    var lineFeatureCollection = GeoJsonTools.DeserializeStringToFeatureCollection(mapLine.Line)!;
                     var line = lineFeatureCollection[0];
                     line.Attributes.Add("displayId", mapLine.ContentId);
                     if (!line.Attributes.Exists("description")) line.Attributes.Add("description", string.Empty);

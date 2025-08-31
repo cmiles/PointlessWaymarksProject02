@@ -18,7 +18,7 @@ public partial class MapElementListPointItem : PointListListItem, IMapElementLis
     public string ElementType { get; set; } = "point";
     public string Title { get; set; } = string.Empty;
 
-    public new static Task<MapElementListPointItem> CreateInstance(PointContentActions itemActions, PointContentDto dbEntry, MapElementSettings elementSettings)
+    public static Task<MapElementListPointItem> CreateInstance(PointContentActions itemActions, PointContentDto dbEntry, MapElementSettings elementSettings)
     {
         var newContent = new MapElementListPointItem(itemActions, dbEntry)
         {

@@ -17,7 +17,7 @@ public partial class MapElementListPhotoItem : PhotoListListItem, IMapElementLis
     public string ElementType { get; set; } = "photo";
     public string Title { get; set; } = string.Empty;
 
-    public new static Task<MapElementListPhotoItem> CreateInstance(PhotoContentActions itemActions, PhotoContent dbEntry, MapElementSettings elementSettings)
+    public static Task<MapElementListPhotoItem> CreateInstance(PhotoContentActions itemActions, PhotoContent dbEntry, MapElementSettings elementSettings)
     {
         var newContent = new MapElementListPhotoItem(itemActions, dbEntry)
         {

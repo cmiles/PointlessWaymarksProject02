@@ -504,7 +504,7 @@ public partial class LineContentEditorContext : IHasChanges, IHasValidationIssue
             .Concat(pointExternalDirectionsLinks)
             .Concat(pointDetailsLinks).Concat(pointLinks).Concat(geoJson).Concat(geoJsonLinks).ToList(), false);
 
-        var lineAsFeatureCollection = GeoJsonTools.DeserializeStringToFeatureCollection(LineGeoJson);
+        var lineAsFeatureCollection = GeoJsonTools.DeserializeStringToFeatureCollection(LineGeoJson)!;
 
         mapInformation.featureList.Add(lineAsFeatureCollection);
 

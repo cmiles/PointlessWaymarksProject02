@@ -184,7 +184,12 @@
                     <CheckBox IsChecked="{Binding FilterForLastRunSuccess}">Last Run Success</CheckBox>
                     <CheckBox IsChecked="{Binding FilterForRunning}">Running</CheckBox>
                 </WrapPanel>
-                <Rectangle Grid.Row="1" Height="1" Fill="LightGray" HorizontalAlignment="Stretch" Margin="1,8,1,1" />
+                <Rectangle
+                    Grid.Row="1"
+                    Height="1"
+                    Margin="1,8,1,1"
+                    HorizontalAlignment="Stretch"
+                    Fill="LightGray" />
                 <ListBox
                     Grid.Row="2"
                     Margin="0,0,0,0"

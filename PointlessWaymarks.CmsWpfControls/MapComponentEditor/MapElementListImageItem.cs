@@ -17,7 +17,7 @@ public partial class MapElementListImageItem : ImageListListItem, IMapElementLis
     public string ElementType { get; set; } = "image";
     public string Title { get; set; } = string.Empty;
 
-    public new static Task<MapElementListImageItem> CreateInstance(ImageContentActions itemActions, ImageContent dbEntry, MapElementSettings elementSettings)
+    public static Task<MapElementListImageItem> CreateInstance(ImageContentActions itemActions, ImageContent dbEntry, MapElementSettings elementSettings)
     {
         var newContent = new MapElementListImageItem(itemActions, dbEntry)
         {

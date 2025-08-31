@@ -12,8 +12,10 @@ namespace PointlessWaymarks.CmsWpfControls.WordPressXmlImport;
 [StaThreadConstructorGuard]
 public partial class WordPressXmlImportWindow
 {
-    private WordPressXmlImportWindow()
+    public WordPressXmlImportWindow(StatusControlContext statusContext)
     {
+        StatusContext = statusContext;
+        
         InitializeComponent();
         DataContext = this;
         ImportContext = new WordPressXmlImportContext(StatusContext);
@@ -21,12 +23,13 @@ public partial class WordPressXmlImportWindow
     }
 
     public WordPressXmlImportContext ImportContext { get; set; }
-    public required StatusControlContext StatusContext { get; set; }
+    public StatusControlContext StatusContext { get; set; }
     public string WindowTitle { get; set; }
 
     public static async Task<WordPressXmlImportWindow> CreateInstance()
     {
         await ThreadSwitcher.ResumeForegroundAsync();
-        return new WordPressXmlImportWindow { StatusContext = await StatusControlContext.CreateInstance() };
+        var statusContext = await StatusControlContext.CreateInstance();
+        return new WordPressXmlImportWindow(statusContext);
     }
 }

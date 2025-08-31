@@ -57,7 +57,7 @@ public static class LineData
             {
                 case GeoJsonContent { GeoJson: not null } mapGeoJson:
                     var featureCollection =
-                        GeoJsonTools.DeserializeStringToFeatureCollection(mapGeoJson.GeoJson);
+                        GeoJsonTools.DeserializeStringToFeatureCollection(mapGeoJson.GeoJson!)!;
                     foreach (var feature in featureCollection)
                         feature.Attributes.Add("displayId", mapGeoJson.ContentId);
                     geoJsonList.Add(featureCollection);
@@ -66,8 +66,8 @@ public static class LineData
                     boundsKeeper.Add(new Point(mapGeoJson.InitialViewBoundsMinLongitude,
                         mapGeoJson.InitialViewBoundsMinLatitude));
                     break;
-                case LineContent mapLine:
-                    var lineFeatureCollection = GeoJsonTools.DeserializeStringToFeatureCollection(mapLine.Line);
+                case LineContent { Line: not null } mapLine:
+                    var lineFeatureCollection = GeoJsonTools.DeserializeStringToFeatureCollection(mapLine.Line!)!;
                     var line = lineFeatureCollection[0];
                     line.Attributes.Add("displayId", mapLine.ContentId);
                     if (!line.Attributes.Exists("description")) line.Attributes.Add("description", string.Empty);
