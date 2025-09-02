@@ -12,6 +12,7 @@ using PointlessWaymarks.CmsData.ContentHtml.LineMonthlyActivitySummaryHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Json;
 using PointlessWaymarks.CmsData.S3;
+using PointlessWaymarks.CmsData.Server;
 using PointlessWaymarks.CmsWpfControls.AllContentList;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.CmsWpfControls.Diagnostics;
@@ -28,7 +29,6 @@ using PointlessWaymarks.CmsWpfControls.PhotoList;
 using PointlessWaymarks.CmsWpfControls.PointList;
 using PointlessWaymarks.CmsWpfControls.PostList;
 using PointlessWaymarks.CmsWpfControls.S3Uploads;
-using PointlessWaymarks.CmsWpfControls.Server;
 using PointlessWaymarks.CmsWpfControls.SnippetList;
 using PointlessWaymarks.CmsWpfControls.TagExclusionEditor;
 using PointlessWaymarks.CmsWpfControls.TagList;
@@ -491,7 +491,7 @@ public partial class MainWindow
 
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        Import.FullImportFromRootDirectory(newDirectory, StatusContext.ProgressTracker());
+        await Import.FullImportFromRootDirectory(newDirectory, StatusContext.ProgressTracker());
 
         StatusContext.Progress("JSON Import Finished");
     }
@@ -582,7 +582,7 @@ public partial class MainWindow
             if (Application.Current.Windows is { Count: 2 } && Application.Current.Windows[1] != null &&
                 Application.Current.Windows[1].GetType().Name.Contains("AdornerWindow")) return;
 
-            StatusContext.ToastError("Please close all related windows first!");
+            _ = StatusContext.ToastError("Please close all related windows first!");
 
             e.Cancel = true;
         }

@@ -1,4 +1,4 @@
-﻿using PointlessWaymarks.CmsData.Database.Models;
+using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.WpfCommon.Utility;
 
 namespace PointlessWaymarks.CmsWpfControls.ContentList;
@@ -8,6 +8,7 @@ public interface IContentListItem : ISelectedTextTracker
     IContentCommon Content();
     Guid? ContentId();
     string DefaultBracketCode();
+    ContentClipboardRepresentation ClipboardObject();
     Task DefaultBracketCodeToClipboard();
     Task Delete();
     Task Edit();

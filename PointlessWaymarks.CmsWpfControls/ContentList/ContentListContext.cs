@@ -1,9 +1,3 @@
-using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.IO;
-using System.Windows;
-using System.Windows.Data;
 using GongSolutions.Wpf.DragDrop;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
@@ -43,6 +37,12 @@ using PointlessWaymarks.WpfCommon.ColumnSort;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
 using Serilog;
+using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.IO;
+using System.Windows;
+using System.Windows.Data;
 using TinyIpc.Messaging;
 using ColumnSortControlContext = PointlessWaymarks.WpfCommon.ColumnSort.ColumnSortControlContext;
 
@@ -165,9 +165,45 @@ public partial class ContentListContext : IDragSource, IDropTarget
 
     public void StartDrag(IDragInfo dragInfo)
     {
-        var defaultBracketCodeList = SelectedListItems().Select(x => x.DefaultBracketCode()).ToList();
-        dragInfo.Data = string.Join(Environment.NewLine, defaultBracketCodeList);
-        dragInfo.DataFormat = DataFormats.GetDataFormat(DataFormats.UnicodeText);
+        var selectedItems = SelectedListItems();
+        if (!selectedItems.Any()) return;
+
+        var defaultBracketCodeList = selectedItems.Select(x => x.DefaultBracketCode()).ToList();
+        var finalString = string.Join(Environment.NewLine, defaultBracketCodeList);
+
+        // Create a DataObject for multiple clipboard formats
+        var dataObject = new DataObject();
+
+        // Add the plain text format for compatibility
+        dataObject.SetText(finalString);
+
+        try
+        {
+            var clipboardObjects = selectedItems.Select(item => item.ClipboardObject()).ToList();
+
+            // If there's only one item selected, use its rich format
+            if (clipboardObjects.Count == 1)
+            {
+                var clipboardJson = System.Text.Json.JsonSerializer.Serialize(clipboardObjects[0]);
+                dataObject.SetData(ContentClipboardRepresentation.ContentClipboardFormat, clipboardJson);
+            }
+            // If multiple items are selected, create a collection representation
+            else if (clipboardObjects.Count > 1)
+            {
+                var collectionJson = System.Text.Json.JsonSerializer.Serialize(clipboardObjects);
+                dataObject.SetData(ContentClipboardRepresentation.ContentClipboardCollectionListFormat, collectionJson);
+            }
+
+            dragInfo.DataObject = dataObject;
+        }
+        catch (Exception ex)
+        {
+            // Fallback to simple text if the rich format fails
+            dragInfo.Data = finalString;
+            Log.Error(ex, "Error setting rich format for drag operation");
+        }
+
+        //dragInfo.DataFormat = DataFormats.GetDataFormat(DataFormats.UnicodeText);
         dragInfo.Effects = DragDropEffects.Copy;
     }
 
@@ -178,6 +214,7 @@ public partial class ContentListContext : IDragSource, IDropTarget
 
     public void DragOver(IDropInfo dropInfo)
     {
+        // First check for files (existing functionality)
         var files = DragAndDropFilesHelper.DroppedFileNames(dropInfo, true, _validDragAndDropFileExtensions);
 
         if (files.Any())
@@ -186,18 +223,143 @@ public partial class ContentListContext : IDragSource, IDropTarget
             return;
         }
 
+        // Check for ContentClipboardRepresentation formats
+        try
+        {
+            if (dropInfo.Data is IDataObject dataObject)
+            {
+                var currentSiteId = UserSettingsSingleton.CurrentSettings().SettingsId;
+
+                // Check for single content representation
+                if (dataObject.GetDataPresent(ContentClipboardRepresentation.ContentClipboardFormat))
+                {
+                    var clipboardData =
+                        dataObject.GetData(ContentClipboardRepresentation.ContentClipboardFormat) as string;
+
+                    if (!string.IsNullOrEmpty(clipboardData))
+                    {
+                        var contentRef =
+                            System.Text.Json.JsonSerializer.Deserialize<ContentClipboardRepresentation>(clipboardData);
+
+                        if (contentRef != null && contentRef.SiteId != Guid.Empty && contentRef.SiteId != currentSiteId)
+                        {
+                            dropInfo.Effects = DragDropEffects.Copy;
+                            return;
+                        }
+                    }
+                }
+
+                // Check for collection of content representations
+                if (dataObject.GetDataPresent(ContentClipboardRepresentation.ContentClipboardCollectionListFormat))
+                {
+                    var collectionData =
+                        dataObject.GetData(ContentClipboardRepresentation.ContentClipboardCollectionListFormat) as
+                            string;
+
+                    if (!string.IsNullOrEmpty(collectionData))
+                    {
+                        var contentRefs =
+                            System.Text.Json.JsonSerializer.Deserialize<List<ContentClipboardRepresentation>>(
+                                collectionData);
+
+                        if (contentRefs != null && contentRefs.Any() && contentRefs.Any(c => c.SiteId != Guid.Empty && c.SiteId != currentSiteId))
+                        {
+                            dropInfo.Effects = DragDropEffects.Copy;
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log the error but continue with default behavior
+            Log.Error(ex, "Error checking for ContentClipboardRepresentation in DragOver");
+        }
+
+        // Default - no drop allowed
         dropInfo.Effects = DragDropEffects.None;
     }
 
     public void Drop(IDropInfo dropInfo)
     {
+        // First check for files (existing functionality)
         var files = DragAndDropFilesHelper.DroppedFiles(dropInfo, FileLocationTools.TempStorageDirectory(), true,
             _validDragAndDropFileExtensions);
 
-        StatusContext.RunBlockingTask(async () =>
-            await TryOpenEditorsForDroppedFiles(files));
-    }
+        if (files.Any())
+        {
+            StatusContext.RunBlockingTask(async () =>
+                await TryOpenEditorsForDroppedFiles(files));
+            return;
+        }
 
+        // Handle ContentClipboardRepresentation formats
+        try
+        {
+            if (dropInfo.Data is IDataObject dataObject)
+            {
+                List<ContentClipboardRepresentation> contentRefs = new();
+
+                // Check for single content representation
+                if (dataObject.GetDataPresent(ContentClipboardRepresentation.ContentClipboardFormat))
+                {
+                    var clipboardData =
+                        dataObject.GetData(ContentClipboardRepresentation.ContentClipboardFormat) as string;
+
+                    if (!string.IsNullOrEmpty(clipboardData))
+                    {
+                        var contentRef =
+                            System.Text.Json.JsonSerializer.Deserialize<ContentClipboardRepresentation>(clipboardData);
+
+                        if (contentRef != null)
+                        {
+                            contentRefs.Add(contentRef);
+                        }
+                    }
+                }
+
+                // Check for collection of content representations
+                else if (dataObject.GetDataPresent(ContentClipboardRepresentation.ContentClipboardCollectionListFormat))
+                {
+                    var collectionData =
+                        dataObject.GetData(ContentClipboardRepresentation.ContentClipboardCollectionListFormat) as
+                            string;
+
+                    if (!string.IsNullOrEmpty(collectionData))
+                    {
+                        var deserializedRefs =
+                            System.Text.Json.JsonSerializer.Deserialize<List<ContentClipboardRepresentation>>(
+                                collectionData);
+
+                        if (deserializedRefs != null && deserializedRefs.Any())
+                        {
+                            contentRefs.AddRange(deserializedRefs);
+                        }
+                    }
+                }
+
+                // Process the content references if we have any
+                if (contentRefs.Any())
+                {
+                    var currentSiteId = UserSettingsSingleton.CurrentSettings().SettingsId;
+                    var contentRefsFromOtherSites = contentRefs.Where(c => c.SiteId != Guid.Empty && c.SiteId != currentSiteId).ToList();
+                    
+                    if (contentRefsFromOtherSites.Any())
+                    {
+                        StatusContext.RunBlockingTask(async () =>
+                            await ContentClipboardRepresentationHandlers.HandleReferencesFromOtherSites(contentRefsFromOtherSites, StatusContext));
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error handling ContentClipboardRepresentation in Drop");
+            StatusContext.RunFireAndForgetNonBlockingTask(async () =>
+                await StatusContext.ToastError($"Error handling content drop: {ex.Message}"));
+        }
+    }
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
@@ -206,12 +368,14 @@ public partial class ContentListContext : IDragSource, IDropTarget
         var currentSelected = SelectedListItems();
 
         var bracketCodes = new List<string>();
+        var clipboardObjects = new List<ContentClipboardRepresentation>();
 
         foreach (var loopSelected in currentSelected)
         {
             cancelToken.ThrowIfCancellationRequested();
 
             bracketCodes.Add(loopSelected.DefaultBracketCode());
+            clipboardObjects.Add(loopSelected.ClipboardObject());
         }
 
         var finalString = string.Join(Environment.NewLine, bracketCodes.Where(x => !string.IsNullOrWhiteSpace(x)));
@@ -222,11 +386,44 @@ public partial class ContentListContext : IDragSource, IDropTarget
             return;
         }
 
-        await ThreadSwitcher.ResumeForegroundAsync();
+        try
+        {
+            await ThreadSwitcher.ResumeForegroundAsync();
 
-        Clipboard.SetText(finalString);
+            // Create a DataObject for multiple clipboard formats
+            var dataObject = new DataObject();
 
-        await StatusContext.ToastSuccess("Bracket Codes copied to Clipboard");
+            // Add the plain text format for compatibility
+            dataObject.SetText(finalString);
+
+            // If there's only one item selected, use its rich format
+            if (clipboardObjects.Count == 1)
+            {
+                var clipboardJson = System.Text.Json.JsonSerializer.Serialize(clipboardObjects[0]);
+                dataObject.SetData(ContentClipboardRepresentation.ContentClipboardFormat, clipboardJson);
+            }
+            // If multiple items are selected, create a collection representation
+            else if (clipboardObjects.Count > 1)
+            {
+                var collectionJson = System.Text.Json.JsonSerializer.Serialize(clipboardObjects);
+                dataObject.SetData(ContentClipboardRepresentation.ContentClipboardCollectionListFormat, collectionJson);
+            }
+
+            // Set the clipboard with multiple formats
+            Clipboard.SetDataObject(dataObject, true);
+
+            await StatusContext.ToastSuccess("Bracket Codes copied to Clipboard");
+        }
+        catch (Exception ex)
+        {
+            // Fallback to simple text if the rich format fails
+            await ThreadSwitcher.ResumeForegroundAsync();
+
+            Clipboard.SetText(finalString);
+
+            await StatusContext.ToastSuccess("Bracket Codes copied to Clipboard (plain text only)");
+            Log.Error(ex, "Error setting rich clipboard data");
+        }
     }
 
     [BlockingCommand]
@@ -956,7 +1153,6 @@ public partial class ContentListContext : IDragSource, IDropTarget
 
         await newWindow.PositionWindowAndShowOnUiThread();
     }
-
 
     [NonBlockingCommand]
     private async Task SearchBuildHelperWindow()

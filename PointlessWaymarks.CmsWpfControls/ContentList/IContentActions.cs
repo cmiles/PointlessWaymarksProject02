@@ -16,6 +16,7 @@ public interface IContentActions<T> : INotifyPropertyChanged
     StatusControlContext StatusContext { get; set; }
     RelayCommand<T> ViewHistoryCommand { get; set; }
     string DefaultBracketCode(T content);
+    ContentClipboardRepresentation ClipboardObject(T content);
     Task DefaultBracketCodeToClipboard(T content);
     Task Delete(T content);
     Task Edit(T content);

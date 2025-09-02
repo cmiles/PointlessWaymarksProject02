@@ -97,6 +97,14 @@ public static class CommonContentValidation
             (await Db.PointDetailsForPoint(point.ContentId, db).ConfigureAwait(false)).ForEach(x =>
                 toSearch += x.StructuredDataAsJson);
 
+        if (content is TrailContent trailContent)
+        {
+            toSearch += trailContent.OtherDetails ?? string.Empty;
+            toSearch += trailContent.BikesNote ?? string.Empty;
+            toSearch += trailContent.DogsNote ?? string.Empty;
+            toSearch += trailContent.FeesNote ?? string.Empty;
+        }
+        
         if (string.IsNullOrWhiteSpace(toSearch) && !extracted.Any())
             return GenerationReturn.Success(
                 $"{Db.ContentTypeDisplayString(content)} {content.Title} - No Content Ids Found", content.ContentId);

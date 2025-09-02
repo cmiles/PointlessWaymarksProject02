@@ -1,16 +1,16 @@
 using System.Text.Json;
-using PointlessWaymarks.CmsData;
 
-namespace PointlessWaymarks.CmsWpfControls.Server;
+namespace PointlessWaymarks.CmsData.Server;
 
 public static class PartialContentPreviewServer
 {
     private static PreviewServer? _previewServer;
 
     public static string PreviewServerLoadPreviewPageUrl =>
-        $"http://localhost:{_previewServer.ServerPort}/localapi/loadpreviewpage";
+        $"http://localhost:{_previewServer?.ServerPort}/localapi/loadpreviewpage";
 
-    public static string PreviewServerUrl => $"http://localhost:{_previewServer.ServerPort}";
+    public static string PreviewServerUrl => $"http://localhost:{_previewServer?.ServerPort}";
+    public static string PreviewServerLocalApiUrl => $"http://localhost:{_previewServer?.ServerPort}/localapi";
 
     public static async Task<PreviewServer> PartialContentServer()
     {

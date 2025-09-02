@@ -8,6 +8,7 @@ using PointlessWaymarks.CmsData.CommonHtml;
 using PointlessWaymarks.CmsData.ContentHtml.VideoHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
+using PointlessWaymarks.CmsData.Server;
 using PointlessWaymarks.CmsWpfControls.ContentHistoryView;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.CmsWpfControls.SitePreview;
@@ -39,6 +40,23 @@ public partial class VideoContentActions : IContentActions<VideoContent>
         return $"{BracketCodeVideoEmbed.Create(content)}";
     }
 
+    public ContentClipboardRepresentation ClipboardObject(VideoContent? content)
+    {
+        if (content == null)
+            return new ContentClipboardRepresentation();
+
+        var settings = UserSettingsSingleton.CurrentSettings();
+
+        return new ContentClipboardRepresentation
+        {
+            FormatIdentifier = ContentClipboardRepresentation.ContentClipboardFormat,
+            SiteId = settings.SettingsId,
+            ContentId = content.ContentId,
+            ContentType = Db.ContentTypeDisplayString(content),
+            SiteLocalApiUrl = PartialContentPreviewServer.PreviewServerLocalApiUrl
+        };
+    }
+
     [BlockingCommand]
     public async Task DefaultBracketCodeToClipboard(VideoContent? content)
     {
@@ -54,11 +72,36 @@ public partial class VideoContentActions : IContentActions<VideoContent>
             ? $"{BracketCodeVideoImageLink.Create(content)}{Environment.NewLine}"
             : $"{BracketCodeVideoEmbed.Create(content)}{Environment.NewLine}";
 
-        await ThreadSwitcher.ResumeForegroundAsync();
+        try
+        {
+            // Get the ContentClipboardRepresentation from ClipboardObject
+            var clipboardRepresentation = ClipboardObject(content);
 
-        Clipboard.SetText(finalString);
+            // Create a DataObject for multiple clipboard formats
+            var dataObject = new DataObject();
 
-        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+            // Add the plain text format for compatibility
+            dataObject.SetText(finalString);
+
+            // Add the ContentClipboardRepresentation as an alternate format
+            // Using the ContentClipboardFormat constant as the format name
+            var clipboardJson = System.Text.Json.JsonSerializer.Serialize(clipboardRepresentation);
+            dataObject.SetData(ContentClipboardRepresentation.ContentClipboardFormat, clipboardJson);
+
+            await ThreadSwitcher.ResumeForegroundAsync();
+
+            // Set the clipboard with multiple formats
+            Clipboard.SetDataObject(dataObject, true);
+
+            await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+        }
+        catch (Exception ex)
+        {
+            // Fallback to simple text if the rich format fails
+            await ThreadSwitcher.ResumeForegroundAsync();
+            Clipboard.SetText(finalString);
+            await StatusContext.ToastWarning($"Simple text copied - rich format failed: {ex.Message}");
+        }
     }
 
     [BlockingCommand]

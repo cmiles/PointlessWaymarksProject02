@@ -36,6 +36,11 @@ public partial class PointListListItem : IContentListItem, IContentListImage
         return ItemActions.DefaultBracketCode(DbEntry);
     }
 
+    public ContentClipboardRepresentation ClipboardObject()
+    {
+        return ItemActions.ClipboardObject(DbEntry);
+    }
+
     public async Task DefaultBracketCodeToClipboard()
     {
         await ItemActions.DefaultBracketCodeToClipboard(DbEntry);

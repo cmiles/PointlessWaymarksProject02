@@ -62,6 +62,11 @@ public partial class LinkListListItem : IContentListItem
         return ItemActions.DefaultBracketCode(DbEntry);
     }
 
+    public ContentClipboardRepresentation ClipboardObject()
+    {
+        return ItemActions.ClipboardObject(DbEntry);
+    }
+
     public async Task DefaultBracketCodeToClipboard()
     {
         await ItemActions.DefaultBracketCodeToClipboard(DbEntry);

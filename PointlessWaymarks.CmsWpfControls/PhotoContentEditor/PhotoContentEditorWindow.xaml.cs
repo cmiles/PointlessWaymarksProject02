@@ -109,7 +109,7 @@ public partial class PhotoContentEditorWindow
     ///     PositionWindowAndShowOnUiThread() from the WindowInitialPositionHelpers.
     /// </summary>
     /// <returns></returns>
-    public static async Task<PhotoContentEditorWindow> CreateInstance(PhotoContent? toLoad, bool positionAndShowWindow = false)
+    public static async Task<PhotoContentEditorWindow> CreateInstance(PhotoContent? toLoad, bool positionAndShowWindow = false, FileInfo? initialPhoto = null)
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -117,7 +117,7 @@ public partial class PhotoContentEditorWindow
 
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        window.PhotoContent = await PhotoContentEditorContext.CreateInstance(window.StatusContext, toLoad);
+        window.PhotoContent = await PhotoContentEditorContext.CreateInstance(window.StatusContext, toLoad, initialPhoto);
 
         if (positionAndShowWindow) window.PositionWindowAndShow();
 

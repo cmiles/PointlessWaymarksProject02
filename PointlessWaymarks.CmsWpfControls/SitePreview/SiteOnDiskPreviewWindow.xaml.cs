@@ -1,5 +1,5 @@
 using PointlessWaymarks.CmsData;
-using PointlessWaymarks.CmsWpfControls.Server;
+using PointlessWaymarks.CmsData.Server;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.Status;

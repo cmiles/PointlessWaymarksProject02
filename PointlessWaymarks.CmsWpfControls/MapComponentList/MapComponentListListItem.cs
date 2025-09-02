@@ -1,4 +1,4 @@
-﻿using PointlessWaymarks.CmsData.Database.Models;
+using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon.Utility;
@@ -42,6 +42,11 @@ public partial class MapComponentListListItem : IContentListItem
     public string DefaultBracketCode()
     {
         return ItemActions.DefaultBracketCode(DbEntry);
+    }
+
+    public ContentClipboardRepresentation ClipboardObject()
+    {
+        return ItemActions.ClipboardObject(DbEntry);
     }
 
     public async Task DefaultBracketCodeToClipboard()

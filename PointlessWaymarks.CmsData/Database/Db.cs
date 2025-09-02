@@ -37,6 +37,15 @@ public static class Db
             .Select(x => x.Key ?? string.Empty).OrderBy(x => x).ToListAsync();
     }
 
+    public static async Task<dynamic?> ContentAndSnippetsFromContentId(this PointlessWaymarksContext db, Guid contentId)
+    {
+        var contentItem = await ContentFromContentId(db, contentId);
+        if (contentItem is not null) return contentItem;
+        var snippet = await db.Snippets.SingleOrDefaultAsync(x => x.ContentId == contentId).ConfigureAwait(false);
+
+        return snippet;
+    }
+
     /// <summary>
     ///     Returns a ContentCommonShell based on the ContentId - all content that types are included but because of the
     ///     transformation to a concrete ContentCommonShell not all data will be available.
@@ -532,7 +541,7 @@ public static class Db
     ///     A standardized conversion of a Content Type into a simple standard display string. In some places in the code
     ///     this string may be used to identify a type (such as a serialized version of the type) BEWARE that for both Point
     ///     and
-    ///     Map the poco and DTO versions will return the same string and you will need to detect or know from context which
+    ///     Map the poco and DTO versions will return the same string, and you will need to detect or know from context which
     ///     type is being used.
     /// </summary>
     /// <param name="content"></param>
@@ -1531,9 +1540,11 @@ public static class Db
                 .Distinct().OrderBy(x => x).Cast<string>().ToListAsync(),
             PostContent => await db.PostContents.Where(x => !string.IsNullOrWhiteSpace(x.Folder)).Select(x => x.Folder)
                 .Distinct().OrderBy(x => x).Cast<string>().ToListAsync(),
-            TrailContent => await db.TrailContents.Where(x => !string.IsNullOrWhiteSpace(x.Folder)).Select(x => x.Folder)
+            TrailContent => await db.TrailContents.Where(x => !string.IsNullOrWhiteSpace(x.Folder))
+                .Select(x => x.Folder)
                 .Distinct().OrderBy(x => x).Cast<string>().ToListAsync(),
-            VideoContent => await db.VideoContents.Where(x => !string.IsNullOrWhiteSpace(x.Folder)).Select(x => x.Folder)
+            VideoContent => await db.VideoContents.Where(x => !string.IsNullOrWhiteSpace(x.Folder))
+                .Select(x => x.Folder)
                 .Distinct().OrderBy(x => x).Cast<string>().ToListAsync(),
             _ => []
         };
@@ -1842,7 +1853,8 @@ public static class Db
             .OrderByDescending(x => x.FeedOn).Cast<IContentCommon>().ToListAsync().ConfigureAwait(false);
 
         return fileContent.Concat(geoJsonContent).Concat(imageContent).Concat(lineContent).Concat(noteContent)
-            .Concat(photoContent).Concat(postContent).Concat(pointContent).Concat(trailContent).Concat(videoContent).OrderBy(x => x.FeedOn)
+            .Concat(photoContent).Concat(postContent).Concat(pointContent).Concat(trailContent).Concat(videoContent)
+            .OrderBy(x => x.FeedOn)
             .Take(numberOfEntries)
             .ToList();
     }
@@ -1948,7 +1960,8 @@ public static class Db
 
         var contentIdListForFeed = fileContentDateList.Concat(geoJsonContentDateList).Concat(imageContentDateList)
             .Concat(lineContentDateList).Concat(noteContentDateList).Concat(photoContentDateList)
-            .Concat(pointContentDateList).Concat(postContentDateList).Concat(trailContentDateList).Concat(videoContentDateList)
+            .Concat(pointContentDateList).Concat(postContentDateList).Concat(trailContentDateList)
+            .Concat(videoContentDateList)
             .OrderByDescending(x => x.FeedOn)
             .Take(topNumberOfEntries).Select(x => x.ContentId).ToList();
 
@@ -1971,7 +1984,9 @@ public static class Db
     public static async Task<List<string>> MapIconNames()
     {
         var db = await Context();
-        return "".AsList().Concat(await db.MapIcons.Select(x => x.IconName ?? "No Name Given").OrderBy(x => x).ToListAsync()).ToList();
+        return "".AsList()
+            .Concat(await db.MapIcons.Select(x => x.IconName ?? "No Name Given").OrderBy(x => x).ToListAsync())
+            .ToList();
     }
 
     public static async Task<string?> MapIconSvgFromMapIconName(string? mapIconName)

@@ -229,7 +229,7 @@ Photo Content Notes:
     }
 
     public static async Task<PhotoContentEditorContext> CreateInstance(StatusControlContext? statusContext,
-        PhotoContent? toLoad)
+        PhotoContent? toLoad, FileInfo? initialPhoto)
     {
         var factoryStatusContext = await StatusControlContext.CreateInstance(statusContext);
 
@@ -237,6 +237,7 @@ Photo Content Notes:
 
         var newContext =
             new PhotoContentEditorContext(factoryStatusContext, PhotoContent.CreateInstance());
+        if (initialPhoto is { Exists: true }) newContext.InitialPhoto = initialPhoto;
         await newContext.LoadData(toLoad);
         return newContext;
     }

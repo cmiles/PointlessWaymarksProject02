@@ -1,4 +1,4 @@
-namespace PointlessWaymarks.CmsWpfControls.Server;
+namespace PointlessWaymarks.CmsData.Server;
 
 public class ServerLoadPreviewPage
 {
