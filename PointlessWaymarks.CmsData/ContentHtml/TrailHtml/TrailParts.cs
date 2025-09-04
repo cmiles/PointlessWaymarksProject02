@@ -43,9 +43,9 @@ public static class TrailParts
         var summaryIsInTitle = dbContent.Title.ContainsFuzzy(dbContent.Summary, 0.8, SimMetricType.JaroWinkler);
         var titleIsInSummary = dbContent.Summary.ContainsFuzzy(dbContent.Title, 0.8, SimMetricType.JaroWinkler);
 
-        if (!summaryIsInTitle && !titleIsInSummary)
+        if (!summaryIsInTitle || !titleIsInSummary)
         {
-            detailsBlock.AppendLine($"*{dbContent.Summary}*");
+            detailsBlock.AppendLine($"**{dbContent.Summary}**");
             detailsBlock.AppendLine();
         }
 
