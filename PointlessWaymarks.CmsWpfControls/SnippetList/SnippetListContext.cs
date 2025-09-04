@@ -240,8 +240,6 @@ public partial class SnippetListContext : IDragSource, IDropTarget
 
                         if (contentRef != null) contentRefs.Add(contentRef);
                     }
-
-                    return;
                 }
 
                 // Check for collection of content representations
@@ -259,8 +257,6 @@ public partial class SnippetListContext : IDragSource, IDropTarget
 
                         if (deserializedRefs != null && deserializedRefs.Any()) contentRefs.AddRange(deserializedRefs);
                     }
-
-                    return;
                 }
 
                 // Process the content references if we have any
@@ -274,6 +270,8 @@ public partial class SnippetListContext : IDragSource, IDropTarget
                         StatusContext.RunBlockingTask(async () =>
                             await ContentClipboardRepresentationHandlers.HandleReferencesFromOtherSites(
                                 contentRefsFromOtherSites, StatusContext));
+
+                    return;
                 }
             }
         }
