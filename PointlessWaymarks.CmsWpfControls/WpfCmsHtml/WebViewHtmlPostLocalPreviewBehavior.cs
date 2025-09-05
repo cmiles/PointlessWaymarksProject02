@@ -122,8 +122,39 @@ public class WebViewHtmlPostLocalPreviewBehavior : Behavior<WebView2CompositionC
         }
         
         AssociatedObject.NavigationStarting += WebView_OnNavigationStarting;
+        AssociatedObject.CoreWebView2.NewWindowRequested += CoreWebView2OnNewWindowRequested;
     }
-    
+
+    private async void CoreWebView2OnNewWindowRequested(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
+    {
+        var navigationUri = new Uri(e.Uri);
+
+        //Primary Navigation - always allow
+        if (navigationUri.AbsolutePath.EndsWith("loadpreviewpage", StringComparison.OrdinalIgnoreCase)
+            || navigationUri.AbsolutePath.Contains("showpreviewpage", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        if (AllowNonPreviewNavigation) return;
+
+        //There is an element of guessing here that localhost means on-site in the Previews this behavior targets
+        if (navigationUri.Host.Equals("localhost", StringComparison.InvariantCultureIgnoreCase))
+        {
+            //Careful with Threading - if you await the Foreground thread here there is a possibility that
+            //that your methods will run but that Navigation won't be correctly cancelled...
+            e.Handled = true;
+
+            var newPreview =
+                await SiteOnDiskPreviewWindow.CreateInstance(
+                    $"{UserSettingsSingleton.CurrentSettings().SiteUrl()}{navigationUri.AbsolutePath}");
+            await newPreview.PositionWindowAndShowOnUiThread();
+            return;
+        }
+
+        ProcessHelpers.OpenUrlInExternalBrowser(e.Uri);
+        e.Handled = true;
+        return;
+    }
+
     private async void WebView_OnNavigationStarting(object? sender, CoreWebView2NavigationStartingEventArgs e)
     {
         await ThreadSwitcher.ResumeForegroundAsync();

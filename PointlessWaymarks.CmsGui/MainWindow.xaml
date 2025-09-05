@@ -38,12 +38,14 @@
     Icon="PointlessWaymarksCmsIcon.ico"
     mc:Ignorable="d">
     <Window.TaskbarItemInfo>
-        <TaskbarItemInfo ProgressState="{Binding WindowStatus.WindowState}" ProgressValue="{Binding WindowStatus.WindowProgress}" />
+        <TaskbarItemInfo ProgressState="{Binding WindowStatus.WindowState}"
+                         ProgressValue="{Binding WindowStatus.WindowProgress}" />
     </Window.TaskbarItemInfo>
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/PointlessWaymarks.CmsWpfControls;component/WpfControlsResourceDictionary.xaml" />
+                <ResourceDictionary
+                    Source="/PointlessWaymarks.CmsWpfControls;component/WpfControlsResourceDictionary.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <valueConverters:BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
             <Style TargetType="Button">
@@ -126,13 +128,15 @@
                                 <StackPanel Orientation="Vertical">
                                     <Button Margin="12" Command="{Binding GenerateChangedHtmlAndStartUploadCommand}">Generate HTML From Content With Changes And Start Upload</Button>
                                     <Button Margin="12" Command="{Binding GenerateChangedHtmlCommand}">Generate HTML From Content With Changes</Button>
-                                    <Button Margin="12" Command="{Binding RemoveUnusedFoldersAndFilesFromContentCommand}">
+                                    <Button Margin="12"
+                                            Command="{Binding RemoveUnusedFoldersAndFilesFromContentCommand}">
                                         Remove Unused Files and Folders from Generated Site
                                     </Button>
                                     <Button Margin="12" Command="{Binding RemoveUnusedFilesFromMediaArchiveCommand}">
                                         Remove Unused Files From Media Archive
                                     </Button>
-                                    <Button Margin="12" Command="{Binding CheckAllContentForInvalidBracketCodeContentIdsCommand}">
+                                    <Button Margin="12"
+                                            Command="{Binding CheckAllContentForInvalidBracketCodeContentIdsCommand}">
                                         Check Content for Invalid Ids in Bracket Codes
                                     </Button>
                                     <Button Margin="12" Command="{Binding GenerateIndexCommand}">Generate Index</Button>
@@ -141,7 +145,8 @@
                             <GroupBox Header="Complete Regenerations" Style="{StaticResource UiComponentGroupBoxStyle}">
                                 <StackPanel Orientation="Vertical">
                                     <Button Margin="12" Command="{Binding GenerateAllHtmlCommand}">Generate All HTML</Button>
-                                    <Button Margin="12" Command="{Binding ConfirmOrGenerateAllPhotosImagesFilesCommand}">
+                                    <Button Margin="12"
+                                            Command="{Binding ConfirmOrGenerateAllPhotosImagesFilesCommand}">
                                         Confirm And Copy/Generate As Needed All Photos, Images and Files (Existing Files Will Not be Deleted)
                                     </Button>
                                     <Button Margin="12" Command="{Binding CleanAndResizePicturesCommand}">Clean And Resize All Photos and Images</Button>
@@ -185,13 +190,15 @@
                                         <Button Command="{Binding GenerateHtmlForAllPointContentCommand}">Points</Button>
                                         <Button Command="{Binding GenerateHtmlForAllPhotoContentCommand}">Photos</Button>
                                         <Button Command="{Binding GenerateHtmlForAllPostContentCommand}">Posts</Button>
+                                        <Button Command="{Binding GenerateHtmlForAllTrailContentCommand}">Trails</Button>
                                         <Button Command="{Binding GenerateHtmlForAllVideoContentCommand}">Videos</Button>
                                         <Button Command="{Binding GenerateSiteResourcesCommand}">Site Resources</Button>
                                         <Button Command="{Binding WriteStyleCssFileCommand}">Style Css</Button>
                                     </WrapPanel>
                                 </Grid>
                             </GroupBox>
-                            <GroupBox Header="Generate Lists and Galleries" Style="{StaticResource UiComponentGroupBoxStyle}">
+                            <GroupBox Header="Generate Lists and Galleries"
+                                      Style="{StaticResource UiComponentGroupBoxStyle}">
                                 <Grid>
                                     <WrapPanel>
                                         <WrapPanel.Resources>
@@ -232,6 +239,23 @@
                                             </Style>
                                         </WrapPanel.Resources>
                                         <Button Command="{Binding ImportJsonFromDirectoryCommand}">Import Json</Button>
+                                    </WrapPanel>
+                                </Grid>
+                            </GroupBox>
+                            <GroupBox Header="Utilities" Style="{StaticResource UiComponentGroupBoxStyle}">
+                                <Grid>
+                                    <WrapPanel>
+                                        <WrapPanel.Resources>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Height" Value="90" />
+                                                <Setter Property="Width" Value="90" />
+                                            </Style>
+                                        </WrapPanel.Resources>
+                                        <Button Command="{Binding ShowS3BucketDestroyerWindowCommand}">
+                                            <Button.Content>
+                                                <TextBlock TextWrapping="Wrap" HorizontalAlignment="Center">S3 Bucket Destroyer</TextBlock>
+                                            </Button.Content>
+                                        </Button>
                                     </WrapPanel>
                                 </Grid>
                             </GroupBox>

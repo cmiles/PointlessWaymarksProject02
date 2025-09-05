@@ -76,7 +76,7 @@ public class S3GeneratedSiteComparisonWithHashesForAdditionsAndChanges
 
         progress?.Report($"Found {fileMetadataList.Count} Files in Generated Site");
 
-        var awsObjects = await S3Tools.ListS3Items(s3Account, "", progress ?? new ConsoleProgress(), CancellationToken.None);
+        var awsObjects = await S3Tools.ListS3ItemsAndMetadata(s3Account, "", progress ?? new ConsoleProgress(), CancellationToken.None);
 
         progress?.Report($"Found {awsObjects.Count} S3 Objects - starting file comparison");
 

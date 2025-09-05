@@ -26,5 +26,8 @@
                 </StackPanel>
             </Grid>
         </GroupBox>
+        <GroupBox Header="Utilities">
+            <Button Command="{Binding ShowBucketDestroyerWindow}">Show Bucket Destroyer</Button>
+        </GroupBox>
     </Grid>
 </UserControl>

@@ -29,7 +29,7 @@ public static class CreationTools
         progress.Report("Deleting Db Cloud Cache Files for Full Refresh");
         await db.CloudCacheFiles.Where(x => x.BackupJobId == backupJobId).ExecuteDeleteAsync(CancellationToken.None);
         
-        var cloudFiles = await S3Tools.ListS3Items(account,
+        var cloudFiles = await S3Tools.ListS3ItemsAndMetadata(account,
             cloudDirectory.EndsWith("/") ? cloudDirectory : $"{cloudDirectory}/", progress);
         
         var frozenNow = DateTime.Now;

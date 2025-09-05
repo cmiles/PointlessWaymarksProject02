@@ -42,6 +42,7 @@ using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.MarkdownDisplay;
 using PointlessWaymarks.WpfCommon.ProgramUpdateMessage;
+using PointlessWaymarks.WpfCommon.S3BucketDestroyer;
 using PointlessWaymarks.WpfCommon.S3Uploads;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
@@ -440,6 +441,12 @@ public partial class MainWindow
     }
 
     [BlockingCommand]
+    public async Task GenerateHtmlForAllTrailContent()
+    {
+        await SiteGenerationAllContent.GenerateAllTrailHtml(null, StatusContext.ProgressTracker());
+    }
+
+    [BlockingCommand]
     public async Task GenerateHtmlForAllVideoContent()
     {
         await SiteGenerationAllContent.GenerateAllVideoHtml(null, StatusContext.ProgressTracker());
@@ -652,6 +659,12 @@ public partial class MainWindow
         (bool isNew, string userString, List<string> recentFiles) e)
     {
         StatusContext.RunFireAndForgetBlockingTask(async () => await SettingsFileChooserOnSettingsFileUpdated(e));
+    }
+
+    [BlockingCommand]
+    public async Task ShowS3BucketDestroyerWindow()
+    {
+        await BucketDestroyerWindow.CreateInstanceAndShow();
     }
 
     [BlockingCommand]

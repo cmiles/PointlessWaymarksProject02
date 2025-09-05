@@ -297,6 +297,12 @@
             </Button.Content>
         </Button>
         <Button
+            Command="{Binding DataContext.ContentUsingSelectedCommand, RelativeSource={RelativeSource AncestorType={x:Type ListBox}}}"
+            CommandParameter="{Binding .}"
+            Visibility="{Binding DbEntry, Converter={StaticResource DbEntryHasLocationToCollapsedVisibility}}">
+            Find Uses of this Content
+        </Button>
+        <Button
             Command="{Binding DataContext.ItemActions.ShowOnMapCommand, RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}}}"
             CommandParameter="{Binding DbEntry}"
             Visibility="{Binding DbEntry, Converter={StaticResource DbEntryHasLocationToCollapsedVisibility}}">
@@ -925,12 +931,6 @@
                                 <Button.Content>
                                     <TextBlock Text="{Binding DbEntry.PhotoCreatedOn, StringFormat='Photo: {0}', TargetNullValue='(No Photo Date)'}" />
                                 </Button.Content>
-                            </Button>
-                            <Button
-                                Command="{Binding DataContext.ContentUsingSelectedCommand, RelativeSource={RelativeSource AncestorType={x:Type ListBox}}}"
-                                CommandParameter="{Binding .}"
-                                Visibility="{Binding DbEntry, Converter={StaticResource DbEntryHasLocationToCollapsedVisibility}}">
-                                Content Using
                             </Button>
                             <Button ToolTip="Camera Make - click to search for other photos with this Camera Make">
                                 <Button.InputBindings>

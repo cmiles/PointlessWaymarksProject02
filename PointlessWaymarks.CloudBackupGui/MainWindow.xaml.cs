@@ -104,7 +104,7 @@ public partial class MainWindow
             HelpMarkdown.CombinedAboutToolsAndPackages
         ]);
 
-        SettingsContext = new AppSettingsContext();
+        SettingsContext = new AppSettingsContext(StatusContext);
 
         StatusContext.RunFireAndForgetBlockingTask(async () =>
         {

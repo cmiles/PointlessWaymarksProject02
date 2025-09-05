@@ -216,7 +216,7 @@ public partial class JobEditorContext : IHasChanges, IHasValidationIssues,
         CloudCredentialsHaveValidationIssues = string.IsNullOrWhiteSpace(currentCredentials.username) ||
                                                string.IsNullOrWhiteSpace(currentCredentials.password);
         
-        if (UserCloudProviderEntry.UserValue != S3Providers.Amazon.ToString())
+        if (UserCloudProviderEntry.UserValue != nameof(S3Providers.Amazon))
         {
             var currentCloudServiceUrl =
                 PasswordVaultTools.GetCredentials(LoadedJob.VaultServiceUrlIdentifier);
@@ -384,7 +384,7 @@ public partial class JobEditorContext : IHasChanges, IHasValidationIssues,
         [
             x =>
             {
-                if (cloudProviderDataEntry.UserValue == S3Providers.Amazon.ToString())
+                if (cloudProviderDataEntry.UserValue == nameof(S3Providers.Amazon))
                     if (string.IsNullOrWhiteSpace(x))
                         return new IsValid(false, "A Cloud Region is required for the job");
                 
@@ -464,7 +464,7 @@ public partial class JobEditorContext : IHasChanges, IHasValidationIssues,
         
         PasswordVaultTools.SaveCredentials(LoadedJob.VaultS3CredentialsIdentifier, cleanedKey, cleanedSecret);
         
-        if (UserCloudProviderEntry.UserValue != S3Providers.Amazon.ToString())
+        if (UserCloudProviderEntry.UserValue != nameof(S3Providers.Amazon))
         {
             var serviceUrl = await StatusContext.ShowStringEntry("Service URL",
                 "Enter the S3 service URL. For Cloudflare this will be https://{accountId}.r2.cloudflarestorage.com - other providers, like Wasabi, will have a Service URL based on region (for example s3.ca-central-1.wasabisys.com for Wasabi-Toronto)",
@@ -681,14 +681,14 @@ public partial class JobEditorContext : IHasChanges, IHasValidationIssues,
             if (item != null) toSave = item;
         }
         
-        var translatedCloudRegion = UserCloudProviderEntry.UserValue == S3Providers.Amazon.ToString()
-            ? UserAwsRegionEntry.UserValue ?? string.Empty
+        var translatedCloudRegion = UserCloudProviderEntry.UserValue == nameof(S3Providers.Amazon)
+            ? UserAwsRegionEntry.UserValue
             : string.Empty;
         
         toSave.Name = UserNameEntry.UserValue;
         toSave.LocalDirectory = UserInitialDirectoryEntry.UserValue.Trim();
         toSave.CloudRegion = translatedCloudRegion;
-        toSave.CloudProvider = UserCloudProviderEntry.UserValue!;
+        toSave.CloudProvider = UserCloudProviderEntry.UserValue;
         toSave.CloudBucket = UserCloudBucketEntry.UserValue;
         if (!UserCloudDirectoryEntry.UserValue.EndsWith("/"))
             UserCloudDirectoryEntry.UserValue = $"{UserCloudDirectoryEntry.UserValue}/";
@@ -823,7 +823,7 @@ public partial class JobEditorContext : IHasChanges, IHasValidationIssues,
         {
             CloudCredentialsCheckForValidationIssues();
             
-            if (UserCloudProviderEntry.UserValue == S3Providers.Amazon.ToString())
+            if (UserCloudProviderEntry.UserValue == nameof(S3Providers.Amazon))
                 UserAwsRegionEntry.ValidationFunctions =
                 [
                     x =>
