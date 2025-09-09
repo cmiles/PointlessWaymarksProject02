@@ -65,7 +65,7 @@ public partial class NoteListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNotOneSelectedListItems]
-    private async Task EmailHtmlToClipboard()
+    public async Task EmailHtmlToClipboard()
     {
         var frozenSelected = SelectedListItems().First();
 
@@ -88,7 +88,7 @@ public partial class NoteListWithActionsContext
 
     public List<NoteListListItem> SelectedListItems()
     {
-        return ListContext.ListSelection.SelectedItems?.Where(x => x is NoteListListItem).Cast<NoteListListItem>()
-            .ToList() ?? [];
+        return ListContext.ListSelection.SelectedItems.Where(x => x is NoteListListItem).Cast<NoteListListItem>()
+            .ToList();
     }
 }

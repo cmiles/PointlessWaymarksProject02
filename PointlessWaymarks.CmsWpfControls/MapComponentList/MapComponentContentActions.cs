@@ -1,10 +1,9 @@
 using System.ComponentModel;
+using System.Text.Json;
 using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.BracketCodes;
-using PointlessWaymarks.CmsData.CommonHtml;
-using PointlessWaymarks.CmsData.ContentHtml.MapComponentData;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsData.Json;
@@ -31,13 +30,6 @@ public partial class MapComponentContentActions : IContentActions<MapComponent>
         BuildCommands();
     }
 
-    public StatusControlContext StatusContext { get; set; }
-
-    public string DefaultBracketCode(MapComponent? content)
-    {
-        return content?.ContentId == null ? string.Empty : $"{BracketCodeMapComponents.Create(content)}";
-    }
-
     public ContentClipboardRepresentation ClipboardObject(MapComponent? content)
     {
         if (content == null)
@@ -53,6 +45,11 @@ public partial class MapComponentContentActions : IContentActions<MapComponent>
             ContentType = Db.ContentTypeDisplayString(content),
             SiteLocalApiUrl = PartialContentPreviewServer.PreviewServerLocalApiUrl
         };
+    }
+
+    public string DefaultBracketCode(MapComponent? content)
+    {
+        return content?.ContentId == null ? string.Empty : $"{BracketCodeMapComponents.Create(content)}";
     }
 
     [BlockingCommand]
@@ -81,7 +78,7 @@ public partial class MapComponentContentActions : IContentActions<MapComponent>
 
             // Add the ContentClipboardRepresentation as an alternate format
             // Using the ContentClipboardFormat constant as the format name
-            var clipboardJson = System.Text.Json.JsonSerializer.Serialize(clipboardRepresentation);
+            var clipboardJson = JsonSerializer.Serialize(clipboardRepresentation);
             dataObject.SetData(ContentClipboardRepresentation.ContentClipboardFormat, clipboardJson);
 
             await ThreadSwitcher.ResumeForegroundAsync();
@@ -181,7 +178,7 @@ public partial class MapComponentContentActions : IContentActions<MapComponent>
         await StatusContext.ToastSuccess("Generated Map Data");
     }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
+    public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
     public async Task ViewHistory(MapComponent? content)
@@ -231,6 +228,8 @@ public partial class MapComponentContentActions : IContentActions<MapComponent>
 
         await StatusContext.ToastWarning("Maps don't have a direct URL to open...");
     }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     public static async Task<MapComponentListListItem> ListItemFromDbItem(MapComponent content,
         MapComponentContentActions itemActions, bool showType)

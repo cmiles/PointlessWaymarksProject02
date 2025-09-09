@@ -1,10 +1,10 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Text.Json;
 using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.BracketCodes;
-using PointlessWaymarks.CmsData.CommonHtml;
 using PointlessWaymarks.CmsData.ContentHtml.FileHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
@@ -32,16 +32,6 @@ public partial class FileContentActions : IContentActions<FileContent>
         BuildCommands();
     }
 
-    public StatusControlContext StatusContext { get; set; }
-
-    public string DefaultBracketCode(FileContent? content)
-    {
-        if (content?.ContentId == null) return string.Empty;
-        return content.MainPicture != null
-            ? $"{BracketCodeFileImageLink.Create(content)}"
-            : $"{BracketCodeFiles.Create(content)}";
-    }
-
     public ContentClipboardRepresentation ClipboardObject(FileContent? content)
     {
         if (content == null)
@@ -57,6 +47,14 @@ public partial class FileContentActions : IContentActions<FileContent>
             ContentType = Db.ContentTypeDisplayString(content),
             SiteLocalApiUrl = PartialContentPreviewServer.PreviewServerLocalApiUrl
         };
+    }
+
+    public string DefaultBracketCode(FileContent? content)
+    {
+        if (content?.ContentId == null) return string.Empty;
+        return content.MainPicture != null
+            ? $"{BracketCodeFileImageLink.Create(content)}"
+            : $"{BracketCodeFiles.Create(content)}";
     }
 
     [BlockingCommand]
@@ -87,7 +85,7 @@ public partial class FileContentActions : IContentActions<FileContent>
 
             // Add the ContentClipboardRepresentation as an alternate format
             // Using the ContentClipboardFormat constant as the format name
-            var clipboardJson = System.Text.Json.JsonSerializer.Serialize(clipboardRepresentation);
+            var clipboardJson = JsonSerializer.Serialize(clipboardRepresentation);
             dataObject.SetData(ContentClipboardRepresentation.ContentClipboardFormat, clipboardJson);
 
             await ThreadSwitcher.ResumeForegroundAsync();
@@ -198,7 +196,7 @@ public partial class FileContentActions : IContentActions<FileContent>
         await StatusContext.ToastSuccess($"Generated {htmlContext.PageUrl}");
     }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
+    public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
     public async Task ViewHistory(FileContent? content)
@@ -273,6 +271,8 @@ public partial class FileContentActions : IContentActions<FileContent>
 
         await sitePreviewWindow.PositionWindowAndShowOnUiThread();
     }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     public static async Task<FileListListItem> ListItemFromDbItem(FileContent content, FileContentActions itemActions,
         bool showType)

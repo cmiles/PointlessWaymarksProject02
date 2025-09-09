@@ -1,10 +1,10 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Text.Json;
 using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.BracketCodes;
-using PointlessWaymarks.CmsData.CommonHtml;
 using PointlessWaymarks.CmsData.ContentHtml.LineHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
@@ -34,13 +34,6 @@ public partial class LineContentActions : IContentActions<LineContent>
         BuildCommands();
     }
 
-    public StatusControlContext StatusContext { get; set; }
-
-    public string DefaultBracketCode(LineContent content)
-    {
-        return $"{BracketCodeLines.Create(content)}";
-    }
-
     public ContentClipboardRepresentation ClipboardObject(LineContent? content)
     {
         if (content == null)
@@ -56,6 +49,11 @@ public partial class LineContentActions : IContentActions<LineContent>
             ContentType = Db.ContentTypeDisplayString(content),
             SiteLocalApiUrl = PartialContentPreviewServer.PreviewServerLocalApiUrl
         };
+    }
+
+    public string DefaultBracketCode(LineContent content)
+    {
+        return $"{BracketCodeLines.Create(content)}";
     }
 
     [BlockingCommand]
@@ -84,7 +82,7 @@ public partial class LineContentActions : IContentActions<LineContent>
 
             // Add the ContentClipboardRepresentation as an alternate format
             // Using the ContentClipboardFormat constant as the format name
-            var clipboardJson = System.Text.Json.JsonSerializer.Serialize(clipboardRepresentation);
+            var clipboardJson = JsonSerializer.Serialize(clipboardRepresentation);
             dataObject.SetData(ContentClipboardRepresentation.ContentClipboardFormat, clipboardJson);
 
             await ThreadSwitcher.ResumeForegroundAsync();
@@ -193,7 +191,7 @@ public partial class LineContentActions : IContentActions<LineContent>
         await StatusContext.ToastSuccess($"Generated {htmlContext.PageUrl}");
     }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
+    public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
     public async Task ViewHistory(LineContent? content)
@@ -269,6 +267,8 @@ public partial class LineContentActions : IContentActions<LineContent>
         await sitePreviewWindow.PositionWindowAndShowOnUiThread();
     }
 
+    public event PropertyChangedEventHandler? PropertyChanged;
+
     public static async Task<LineListListItem> ListItemFromDbItem(LineContent content, LineContentActions itemActions,
         bool showType)
     {
@@ -279,6 +279,22 @@ public partial class LineContentActions : IContentActions<LineContent>
         item.DisplayImageUrl = displayImageUrl;
         item.ShowType = showType;
         return item;
+    }
+
+    /// <summary>
+    ///     Uses the recorded on values of the Line Content to create a date range to search - this will always return a
+    ///     valid date range but if you pass in LineContent with null for both Recorded on values you will get a 'Now' date
+    ///     range (which is valid, but doesn't make sense) - you should guard against that in calling code
+    /// </summary>
+    /// <param name="content"></param>
+    /// <returns></returns>
+    public static (DateTime start, DateTime end) SearchRecordedDatesForPhotoContentDateRange(LineContent content)
+    {
+        var dateSearchStart = content.RecordingStartedOn?.Date ?? content.RecordingEndedOn?.Date ?? DateTime.Now.Date;
+        var dateSearchEnd = content.RecordingEndedOn?.Date.AddDays(1) ??
+                            content.RecordingStartedOn?.Date.AddDays(1) ?? DateTime.Now.Date.AddDays(1);
+
+        return (dateSearchStart, dateSearchEnd);
     }
 
     [NonBlockingCommand]
@@ -303,72 +319,6 @@ public partial class LineContentActions : IContentActions<LineContent>
 
         await PhotoContentActions.RunReport(async () => await SearchRecordedOnDaysForPhotoContentFilter(lineContent),
             $"Line {lineContent.Title ?? string.Empty} - {dateSearchStart.ToLocalTime():M/d/yyyy} to {dateSearchEnd.ToLocalTime():M/d/yyyy}");
-    }
-
-    [NonBlockingCommand]
-    public async Task SearchRecordedOnForPhotoContent(LineContent? lineContent)
-    {
-        if (lineContent == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        if (lineContent.RecordingStartedOnUtc is null || lineContent.RecordingEndedOnUtc is null)
-        {
-            await StatusContext.ToastError(
-                "Line doesn't have Recorded On dates to work with? - Can not search for Photo Content");
-            return;
-        }
-            
-        await PhotoContentActions.RunReport(async () => await SearchRecordedOnForPhotoContentFilter(lineContent),
-            $"Line {lineContent.Title ?? string.Empty} - {lineContent.RecordingStartedOnUtc.Value.AddMinutes(-5):M/d/yyyy hh:mm:ss tt} to {lineContent.RecordingEndedOnUtc.Value.AddMinutes(5):M/d/yyyy hh:mm:ss tt}");
-    }
-
-    /// <summary>
-    ///     Uses the recorded on values of the Line Content to create a date range to search - this will always return a
-    ///     valid date range but if you pass in LineContent with null for both Recorded on values you will get a 'Now' date
-    ///     range (which is valid, but doesn't make sense) - you should guard against that in calling code
-    /// </summary>
-    /// <param name="content"></param>
-    /// <returns></returns>
-    public static (DateTime start, DateTime end) SearchRecordedDatesForPhotoContentDateRange(LineContent content)
-    {
-        var dateSearchStart = content.RecordingStartedOn?.Date ?? content.RecordingEndedOn?.Date ?? DateTime.Now.Date;
-        var dateSearchEnd = content.RecordingEndedOn?.Date.AddDays(1) ??
-                            content.RecordingStartedOn?.Date.AddDays(1) ?? DateTime.Now.Date.AddDays(1);
-
-        return (dateSearchStart, dateSearchEnd);
-    }
-
-    public async Task<List<object>> SearchRecordedOnForPhotoContentFilter(LineContent? content)
-    {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return [];
-        }
-
-        if (content.RecordingStartedOnUtc == null || content.RecordingEndedOnUtc == null)
-        {
-            await StatusContext.ToastError("Line doesn't have Recorded On UTC dates to work with?");
-            return [];
-        }
-
-        var dateSearchStart = content.RecordingStartedOnUtc.Value.AddMinutes(-5);
-        var dateSearchEnd = content.RecordingEndedOnUtc.Value.AddMinutes(5);
-
-        var db = await Db.Context();
-
-        return
-            (await db.PhotoContents
-                .Where(x =>
-                    x.PhotoCreatedOnUtc != null
-                        ? x.PhotoCreatedOnUtc >= dateSearchStart && x.PhotoCreatedOnUtc <= dateSearchEnd
-                        : x.PhotoCreatedOn >= dateSearchStart.ToLocalTime() && x.PhotoCreatedOn <= dateSearchEnd.ToLocalTime())
-                .ToListAsync()).Cast<object>().ToList();
     }
 
     public async Task<List<object>> SearchRecordedOnDaysForPhotoContentFilter(LineContent? content)
@@ -397,7 +347,59 @@ public partial class LineContentActions : IContentActions<LineContent>
                 .Where(x =>
                     x.PhotoCreatedOnUtc != null
                         ? x.PhotoCreatedOnUtc >= dateSearchStart && x.PhotoCreatedOnUtc <= dateSearchEnd
-                        : x.PhotoCreatedOn >= dateSearchStart.ToLocalTime() && x.PhotoCreatedOn <= dateSearchEnd.ToLocalTime())
+                        : x.PhotoCreatedOn >= dateSearchStart.ToLocalTime() &&
+                          x.PhotoCreatedOn <= dateSearchEnd.ToLocalTime())
+                .ToListAsync()).Cast<object>().ToList();
+    }
+
+    [NonBlockingCommand]
+    public async Task SearchRecordedOnForPhotoContent(LineContent? lineContent)
+    {
+        if (lineContent == null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        if (lineContent.RecordingStartedOnUtc is null || lineContent.RecordingEndedOnUtc is null)
+        {
+            await StatusContext.ToastError(
+                "Line doesn't have Recorded On dates to work with? - Can not search for Photo Content");
+            return;
+        }
+
+        await PhotoContentActions.RunReport(async () => await SearchRecordedOnForPhotoContentFilter(lineContent),
+            $"Line {lineContent.Title ?? string.Empty} - {lineContent.RecordingStartedOnUtc.Value.AddMinutes(-5):M/d/yyyy hh:mm:ss tt} to {lineContent.RecordingEndedOnUtc.Value.AddMinutes(5):M/d/yyyy hh:mm:ss tt}");
+    }
+
+    public async Task<List<object>> SearchRecordedOnForPhotoContentFilter(LineContent? content)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (content == null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return [];
+        }
+
+        if (content.RecordingStartedOnUtc == null || content.RecordingEndedOnUtc == null)
+        {
+            await StatusContext.ToastError("Line doesn't have Recorded On UTC dates to work with?");
+            return [];
+        }
+
+        var dateSearchStart = content.RecordingStartedOnUtc.Value.AddMinutes(-5);
+        var dateSearchEnd = content.RecordingEndedOnUtc.Value.AddMinutes(5);
+
+        var db = await Db.Context();
+
+        return
+            (await db.PhotoContents
+                .Where(x =>
+                    x.PhotoCreatedOnUtc != null
+                        ? x.PhotoCreatedOnUtc >= dateSearchStart && x.PhotoCreatedOnUtc <= dateSearchEnd
+                        : x.PhotoCreatedOn >= dateSearchStart.ToLocalTime() &&
+                          x.PhotoCreatedOn <= dateSearchEnd.ToLocalTime())
                 .ToListAsync()).Cast<object>().ToList();
     }
 

@@ -110,7 +110,7 @@ public partial class PointListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task AddIntersectionTagsToSelected(CancellationToken cancellationToken)
+    public async Task AddIntersectionTagsToSelected(CancellationToken cancellationToken)
     {
         var frozenSelect = SelectedListItems();
 
@@ -253,7 +253,7 @@ public partial class PointListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItemsAskIfOverMax(MaxSelectedItems = 100, ActionVerb = "copy to clipboard")]
-    private async Task GeoJsonToClipboardForSelected()
+    public async Task GeoJsonToClipboardForSelected()
     {
         var frozenSelected = SelectedListItems();
 
@@ -276,7 +276,7 @@ public partial class PointListWithActionsContext
 
     [NonBlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task PointDetailsBracketCodesToClipboardForSelected()
+    public async Task PointDetailsBracketCodesToClipboardForSelected()
     {
         var finalString = SelectedListItems().Aggregate(string.Empty,
             (current, loopSelected) =>
@@ -291,7 +291,7 @@ public partial class PointListWithActionsContext
 
     [NonBlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task PointLinkBracketCodesToClipboardForSelected()
+    public async Task PointLinkBracketCodesToClipboardForSelected()
     {
         var finalString = SelectedListItems().Aggregate(string.Empty,
             (current, loopSelected) =>
@@ -306,7 +306,7 @@ public partial class PointListWithActionsContext
 
     [NonBlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task PointLinkExternalDirectionsBracketCodesToClipboardForSelected()
+    public async Task PointLinkExternalDirectionsBracketCodesToClipboardForSelected()
     {
         var finalString = SelectedListItems().Aggregate(string.Empty,
             (current, loopSelected) =>
@@ -321,7 +321,7 @@ public partial class PointListWithActionsContext
     }
 
     [BlockingCommand]
-    private async Task RefreshData()
+    public async Task RefreshData()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -330,13 +330,13 @@ public partial class PointListWithActionsContext
 
     public List<PointListListItem> SelectedListItems()
     {
-        return ListContext.ListSelection.SelectedItems?.Where(x => x is PointListListItem).Cast<PointListListItem>()
-            .ToList() ?? [];
+        return ListContext.ListSelection.SelectedItems.Where(x => x is PointListListItem).Cast<PointListListItem>()
+            .ToList();
     }
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task SelectedToGpxFile()
+    public async Task SelectedToGpxFile()
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -379,7 +379,7 @@ public partial class PointListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task ToClipboardForSelected()
+    public async Task ToClipboardForSelected()
     {
         var frozenSelected = SelectedListItems();
 

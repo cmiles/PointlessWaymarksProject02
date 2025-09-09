@@ -44,7 +44,6 @@ using System.IO;
 using System.Windows;
 using System.Windows.Data;
 using TinyIpc.Messaging;
-using ColumnSortControlContext = PointlessWaymarks.WpfCommon.ColumnSort.ColumnSortControlContext;
 
 namespace PointlessWaymarks.CmsWpfControls.ContentList;
 
@@ -1155,7 +1154,7 @@ public partial class ContentListContext : IDragSource, IDropTarget
     }
 
     [NonBlockingCommand]
-    private async Task SearchBuildHelperWindow()
+    public async Task SearchBuildHelperWindow()
     {
         await ThreadSwitcher.ResumeForegroundAsync();
         var newWindow = await ListFilterBuilderWindow.CreateInstance(ListFilterBuilder);
@@ -1236,7 +1235,6 @@ public partial class ContentListContext : IDragSource, IDropTarget
                     StringComparison.OrdinalIgnoreCase)) return;
         }
 
-        var fileContentExtensions = new List<string> { ".PDF", ".MPG", ".MPEG", ".FLAC", ".MP3", ".WAV" };
         var pictureContentExtensions = new List<string> { ".JPG", ".JPEG", ".WEBP", ".BMP", ".PNG", ".TIF" };
         var lineContentExtensions = new List<string> { ".GPX", ".TCX", ".FIT" };
         var videoContentExtensions = new List<string> { ".MP4", ".OGG", ".WEBM" };
@@ -1248,17 +1246,6 @@ public partial class ContentListContext : IDragSource, IDropTarget
             if (!fileInfo.Exists)
             {
                 await StatusContext.ToastError($"File {loopFile} doesn't exist?");
-                continue;
-            }
-
-            if (fileContentExtensions.Contains(Path.GetExtension(loopFile).ToUpperInvariant()))
-            {
-                StatusContext.RunNonBlockingTask(async () =>
-                {
-                    await FileContentEditorWindow.CreateInstance(new FileInfo(loopFile), true);
-
-                    await StatusContext.ToastSuccess($"{Path.GetFileName(loopFile)} sent to File Editor");
-                });
                 continue;
             }
 
@@ -1333,6 +1320,13 @@ public partial class ContentListContext : IDragSource, IDropTarget
 
                     await StatusContext.ToastSuccess($"{Path.GetFileName(loopFile)} sent to Video Editor");
                 });
+
+            StatusContext.RunNonBlockingTask(async () =>
+            {
+                await FileContentEditorWindow.CreateInstance(new FileInfo(loopFile), true);
+
+                await StatusContext.ToastSuccess($"{Path.GetFileName(loopFile)} sent to File Editor");
+            });
         }
     }
 

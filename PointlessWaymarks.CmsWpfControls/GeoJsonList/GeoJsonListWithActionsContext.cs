@@ -83,7 +83,7 @@ public partial class GeoJsonListWithActionsContext
     public WindowIconStatus? WindowStatus { get; set; }
 
     [BlockingCommand]
-    private async Task AddIntersectionTagsToSelected(CancellationToken cancellationToken)
+    public async Task AddIntersectionTagsToSelected(CancellationToken cancellationToken)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -241,7 +241,7 @@ public partial class GeoJsonListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task LinkBracketCodesToClipboardForSelected()
+    public async Task LinkBracketCodesToClipboardForSelected()
     {
         var finalString = SelectedListItems().Aggregate(string.Empty,
             (current, loopSelected) =>
@@ -255,7 +255,7 @@ public partial class GeoJsonListWithActionsContext
     }
 
     [BlockingCommand]
-    private async Task RefreshData()
+    public async Task RefreshData()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 

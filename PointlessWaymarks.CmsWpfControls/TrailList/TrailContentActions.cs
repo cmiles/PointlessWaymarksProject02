@@ -1,18 +1,18 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Text.Json;
 using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.BracketCodes;
-using PointlessWaymarks.CmsData.CommonHtml;
 using PointlessWaymarks.CmsData.ContentHtml.TrailHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsData.Server;
 using PointlessWaymarks.CmsWpfControls.ContentHistoryView;
 using PointlessWaymarks.CmsWpfControls.ContentList;
-using PointlessWaymarks.CmsWpfControls.TrailContentEditor;
 using PointlessWaymarks.CmsWpfControls.SitePreview;
+using PointlessWaymarks.CmsWpfControls.TrailContentEditor;
 using PointlessWaymarks.CmsWpfControls.Utility;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
@@ -32,14 +32,6 @@ public partial class TrailContentActions : IContentActions<TrailContent>
         BuildCommands();
     }
 
-    public StatusControlContext StatusContext { get; set; }
-
-    public string DefaultBracketCode(TrailContent? content)
-    {
-        if (content?.ContentId == null) return string.Empty;
-        return $"{BracketCodeTrails.Create(content)}";
-    }
-
     public ContentClipboardRepresentation ClipboardObject(TrailContent? content)
     {
         if (content == null)
@@ -55,6 +47,12 @@ public partial class TrailContentActions : IContentActions<TrailContent>
             ContentType = Db.ContentTypeDisplayString(content),
             SiteLocalApiUrl = PartialContentPreviewServer.PreviewServerLocalApiUrl
         };
+    }
+
+    public string DefaultBracketCode(TrailContent? content)
+    {
+        if (content?.ContentId == null) return string.Empty;
+        return $"{BracketCodeTrails.Create(content)}";
     }
 
     [BlockingCommand]
@@ -83,7 +81,7 @@ public partial class TrailContentActions : IContentActions<TrailContent>
 
             // Add the ContentClipboardRepresentation as an alternate format
             // Using the ContentClipboardFormat constant as the format name
-            var clipboardJson = System.Text.Json.JsonSerializer.Serialize(clipboardRepresentation);
+            var clipboardJson = JsonSerializer.Serialize(clipboardRepresentation);
             dataObject.SetData(ContentClipboardRepresentation.ContentClipboardFormat, clipboardJson);
 
             await ThreadSwitcher.ResumeForegroundAsync();
@@ -195,7 +193,7 @@ public partial class TrailContentActions : IContentActions<TrailContent>
         await StatusContext.ToastSuccess($"Generated {htmlContext.PageUrl}");
     }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
+    public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
     public async Task ViewHistory(TrailContent? content)
@@ -271,7 +269,10 @@ public partial class TrailContentActions : IContentActions<TrailContent>
         await sitePreviewWindow.PositionWindowAndShowOnUiThread();
     }
 
-    public static async Task<TrailListListItem> ListItemFromDbItem(TrailContent content, TrailContentActions itemActions,
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    public static async Task<TrailListListItem> ListItemFromDbItem(TrailContent content,
+        TrailContentActions itemActions,
         bool showType)
     {
         var item = await TrailListListItem.CreateInstance(itemActions);

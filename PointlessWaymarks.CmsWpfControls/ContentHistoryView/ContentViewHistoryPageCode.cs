@@ -1,7 +1,6 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.IO;
 using Markdig;
-using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CommonTools;
 
 namespace PointlessWaymarks.CmsWpfControls.ContentHistoryView;

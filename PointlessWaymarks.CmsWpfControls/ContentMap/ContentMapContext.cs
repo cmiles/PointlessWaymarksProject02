@@ -60,7 +60,7 @@ public partial class ContentMapContext : IWebViewMessenger
 
         LocationSearchContext = factoryLocationSearchContext;
 
-        LocationSearchContext.LocationSelected += (sender, args) =>
+        LocationSearchContext.LocationSelected += (_, args) =>
         {
             var centerData = new MapJsonCoordinateDto(args.Latitude, args.Longitude, "CenterCoordinateRequest");
 
@@ -76,7 +76,7 @@ public partial class ContentMapContext : IWebViewMessenger
     public Envelope? ContentBounds { get; set; }
     public ContentListContext ListContext { get; set; }
     public GeoSearchContext LocationSearchContext { get; set; }
-    public SpatialBounds? MapBounds { get; set; } = null;
+    public SpatialBounds? MapBounds { get; set; }
     public Action<Uri, string> MapPreviewNavigationManager { get; set; }
     public bool RefreshMapOnCollectionChanged { get; set; }
     public bool ShowPhotoDirectionBearingLines { get; set; }
@@ -238,10 +238,26 @@ public partial class ContentMapContext : IWebViewMessenger
         if (messageType == "mapBoundsChange")
             try
             {
-                MapBounds = new SpatialBounds(parsedJson["bounds"]["_northEast"]["lat"].GetValue<double>(),
-                    parsedJson["bounds"]["_northEast"]["lng"].GetValue<double>(),
-                    parsedJson["bounds"]["_southWest"]["lat"].GetValue<double>(),
-                    parsedJson["bounds"]["_southWest"]["lng"].GetValue<double>());
+                var bounds = parsedJson["bounds"];
+                var northEast = bounds?["_northEast"];
+                var southWest = bounds?["_southWest"];
+
+                if (northEast?["lat"] is { } neLatNode &&
+                    northEast["lng"] is { } neLngNode &&
+                    southWest?["lat"] is { } swLatNode &&
+                    southWest["lng"] is { } swLngNode &&
+                    neLatNode.GetValue<double?>() is { } neLat &&
+                    neLngNode.GetValue<double?>() is { } neLng &&
+                    swLatNode.GetValue<double?>() is { } swLat &&
+                    swLngNode.GetValue<double?>() is { } swLng)
+                {
+                    MapBounds = new SpatialBounds(neLat, neLng, swLat, swLng);
+                }
+                else
+                {
+                    throw new NullReferenceException(
+                        $"A mapBoundsChange message in {nameof(ContentMapContext)} contained null values.");
+                }
             }
             catch (Exception e)
             {

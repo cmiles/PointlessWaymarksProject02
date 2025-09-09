@@ -374,7 +374,7 @@ public partial class TagListContext
     }
 
     [BlockingCommand]
-    private async Task MakeExcludedTag(TagListListItem? arg)
+    public async Task MakeExcludedTag(TagListListItem? arg)
     {
         if (arg == null) return;
 
@@ -425,7 +425,7 @@ public partial class TagListContext
     }
 
     [BlockingCommand]
-    private async Task RemoveExcludedTag(TagListListItem? arg)
+    public async Task RemoveExcludedTag(TagListListItem? arg)
     {
         if (arg == null) return;
 

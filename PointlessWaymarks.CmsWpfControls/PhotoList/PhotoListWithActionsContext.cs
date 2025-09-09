@@ -61,50 +61,29 @@ public partial class PhotoListWithActionsContext
             {
                 ItemName = "Text Code to Clipboard", ItemCommand = PhotoLinkCodesToClipboardForSelectedCommand
             },
-
             new ContextMenuItemData
             {
                 ItemName = "Picture Gallery to Clipboard",
                 ItemCommand = ListContext.PictureGalleryBracketCodeToClipboardSelectedCommand
             },
-
             new ContextMenuItemData
             {
                 ItemName = "Daily Photo Page Code to Clipboard",
                 ItemCommand = DailyPhotoLinkCodesToClipboardForSelectedCommand
             },
-
-            new ContextMenuItemData { ItemName = "Email Html to Clipboard", ItemCommand = EmailHtmlToClipboardCommand },
+            new ContextMenuItemData { ItemName = "View Photos - Individual", ItemCommand = ViewSelectedFilesCommand },
             new ContextMenuItemData
-                { ItemName = "Photos to Point Content Editors", ItemCommand = PhotoToPointContentEditorCommand },
-            new ContextMenuItemData { ItemName = "View Photos", ItemCommand = ViewSelectedFilesCommand },
+            {
+                ItemName = "View Selected Photos - Group",
+                ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
+            },
             new ContextMenuItemData { ItemName = "Open URL", ItemCommand = ListContext.ViewOnSiteCommand },
-            new ContextMenuItemData
-                { ItemName = "Extract New Links", ItemCommand = ListContext.ExtractNewLinksSelectedCommand },
-            new ContextMenuItemData
-            {
-                ItemName = "Rescan Metadata/Fill Blanks - Selected", ItemCommand = RescanMetadataAndFillBlanksCommand
-            },
-
-            new ContextMenuItemData { ItemName = "Process/Resize Selected", ItemCommand = ForcedResizeCommand },
-            new ContextMenuItemData
-                { ItemName = "Add Intersection Tags", ItemCommand = AddIntersectionTagsToSelectedCommand },
-            new ContextMenuItemData
-            {
-                ItemName = "Generate Html/Process/Resize Selected",
-                ItemCommand = RegenerateHtmlAndReprocessPhotoForSelectedCommand
-            },
-
             new ContextMenuItemData { ItemName = "Delete", ItemCommand = ListContext.DeleteSelectedCommand },
-            new ContextMenuItemData { ItemName = "View History", ItemCommand = ListContext.ViewHistorySelectedCommand },
             new ContextMenuItemData
             {
                 ItemName = "Map Selected Items", ItemCommand = ListContext.SpatialItemsToContentMapWindowSelectedCommand
             },
-            new ContextMenuItemData
-            {
-                ItemName = "View Selected Photos", ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
-            },
+
             new ContextMenuItemData { ItemName = "Refresh Data", ItemCommand = RefreshDataCommand }
         ];
 
@@ -118,7 +97,7 @@ public partial class PhotoListWithActionsContext
     public WindowIconStatus? WindowStatus { get; set; }
 
     [BlockingCommand]
-    private async Task AddIntersectionTagsToSelected(CancellationToken cancellationToken)
+    public async Task AddIntersectionTagsToSelected(CancellationToken cancellationToken)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -144,10 +123,13 @@ public partial class PhotoListWithActionsContext
             return;
         }
 
-        var settings = JsonSerializer.Deserialize<IntersectSettings>(await File.ReadAllTextAsync(settingsFileInfo.FullName, cancellationToken));
+        var settings =
+            JsonSerializer.Deserialize<IntersectSettings>(await File.ReadAllTextAsync(settingsFileInfo.FullName,
+                cancellationToken));
         if (settings == null)
         {
-            StatusContext.Progress($"The settings file {settingsFileInfo.FullName} did not deserialized to valid settings...");
+            StatusContext.Progress(
+                $"The settings file {settingsFileInfo.FullName} did not deserialized to valid settings...");
             return;
         }
 
@@ -164,14 +146,20 @@ public partial class PhotoListWithActionsContext
 
         foreach (var loopSelected in frozenSelect)
         {
-            var feature = settings.BufferPointsAndLinesByFeet > 0 ? loopSelected.DbEntry.FeatureFromPointAsCircle(settings.BufferPointsAndLinesByFeet.Value) : loopSelected.DbEntry.FeatureFromPoint();
+            var feature = settings.BufferPointsAndLinesByFeet > 0
+                ? loopSelected.DbEntry.FeatureFromPointAsCircle(settings.BufferPointsAndLinesByFeet.Value)
+                : loopSelected.DbEntry.FeatureFromPoint();
 
             if (feature == null) continue;
 
             var toAdd = PhotoContent.CreateInstance();
 
             toProcess.Add((PhotoContent)toAdd.InjectFrom(loopSelected.DbEntry));
-            intersectResults.Add(new IntersectResult(feature) { ContentId = loopSelected.DbEntry.ContentId, Description = $"Photo Content - {loopSelected.DbEntry.Title ?? "No Title"}" });
+            intersectResults.Add(new IntersectResult(feature)
+            {
+                ContentId = loopSelected.DbEntry.ContentId,
+                Description = $"Photo Content - {loopSelected.DbEntry.Title ?? "No Title"}"
+            });
         }
 
         await intersectResults.IntersectionTags(settings,
@@ -282,7 +270,7 @@ public partial class PhotoListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task DailyPhotoLinkCodesToClipboardForSelected()
+    public async Task DailyPhotoLinkCodesToClipboardForSelected()
     {
         var finalString = SelectedListItems().Aggregate(string.Empty,
             (current, loopSelected) =>
@@ -297,7 +285,7 @@ public partial class PhotoListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNotOneSelectedListItems]
-    private async Task EmailHtmlToClipboard()
+    public async Task EmailHtmlToClipboard()
     {
         var frozenSelected = SelectedListItems().First();
 
@@ -310,6 +298,61 @@ public partial class PhotoListWithActionsContext
         await StatusContext.ToastSuccess("Email Html on Clipboard");
     }
 
+    [BlockingCommand]
+    public async Task ExportFiles(CancellationToken cancellationToken)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (!SelectedListItems().Any())
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        var frozenSelect = SelectedListItems().ToList();
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        var dialog = new VistaFolderBrowserDialog
+        {
+            Description = "Select folder to export files to",
+            UseDescriptionForTitle = true
+        };
+
+        if (dialog.ShowDialog() != true) return;
+
+        var exportDirectory = new DirectoryInfo(dialog.SelectedPath);
+
+        if (!exportDirectory.Exists)
+        {
+            await StatusContext.ToastError("Selected directory does not exist?");
+            return;
+        }
+
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var exportedCount = 0;
+
+        foreach (var loopSelected in frozenSelect)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var fileToExport = UserSettingsSingleton.CurrentSettings().LocalSitePhotoContentFile(loopSelected.DbEntry);
+
+            if (fileToExport is not { Exists: true }) continue;
+
+            var destinationFileName = UniqueFileTools.UniqueFile(exportDirectory, fileToExport.Name);
+
+            File.Copy(fileToExport.FullName, destinationFileName!.FullName);
+            exportedCount++;
+        }
+
+        if (exportedCount > 0)
+            await StatusContext.ToastSuccess($"Exported {exportedCount} files to {exportDirectory.FullName}");
+        else
+            await StatusContext.ToastWarning("No files to export?");
+    }
+
     [NonBlockingCommand]
     public async Task FileNameAndTakenOnDoNotMatch()
     {
@@ -318,7 +361,7 @@ public partial class PhotoListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task ForcedResize(CancellationToken cancellationToken)
+    public async Task ForcedResize(CancellationToken cancellationToken)
     {
         var totalCount = SelectedListItems().Count;
         var currentLoop = 0;
@@ -353,7 +396,7 @@ public partial class PhotoListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task PhotoLinkCodesToClipboardForSelected()
+    public async Task PhotoLinkCodesToClipboardForSelected()
     {
         var finalString = SelectedListItems().Aggregate(string.Empty,
             (current, loopSelected) =>
@@ -367,7 +410,7 @@ public partial class PhotoListWithActionsContext
     }
 
     [BlockingCommand]
-    private async Task PhotoMetadataFromPickedFile()
+    public async Task PhotoMetadataFromPickedFile()
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -387,7 +430,7 @@ public partial class PhotoListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItemsAskIfOverMax(MaxSelectedItems = 10, ActionVerb = "open")]
-    private async Task PhotoToPointContentEditor(CancellationToken cancellationToken)
+    public async Task PhotoToPointContentEditor(CancellationToken cancellationToken)
     {
         var count = 1;
 
@@ -421,7 +464,7 @@ public partial class PhotoListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task PhotoWithDetailsCodesToClipboardForSelected()
+    public async Task PhotoWithDetailsCodesToClipboardForSelected()
     {
         var finalString = SelectedListItems().Aggregate(string.Empty,
             (current, loopSelected) =>
@@ -444,7 +487,7 @@ public partial class PhotoListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task RegenerateHtmlAndReprocessPhotoForSelected(CancellationToken cancellationToken)
+    public async Task RegenerateHtmlAndReprocessPhotoForSelected(CancellationToken cancellationToken)
     {
         var loopCount = 0;
         var totalCount = SelectedListItems().Count;
@@ -647,7 +690,7 @@ public partial class PhotoListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNotOneSelectedListItems]
-    private async Task ReportPhotoMetadata()
+    public async Task ReportPhotoMetadata()
     {
         var singleSelected = SelectedListItems().First();
 
@@ -723,7 +766,7 @@ public partial class PhotoListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task RescanMetadataAndFillBlanks(CancellationToken cancellationToken)
+    public async Task RescanMetadataAndFillBlanks(CancellationToken cancellationToken)
     {
         var frozenSelected = SelectedListItems().ToList();
 
@@ -886,7 +929,7 @@ public partial class PhotoListWithActionsContext
     public List<PhotoListListItem> SelectedListItems()
     {
         return ListContext.ListSelection.SelectedItems.Where(x => x is PhotoListListItem).Cast<PhotoListListItem>()
-            .ToList() ?? [];
+            .ToList();
     }
 
     [BlockingCommand]

@@ -65,12 +65,12 @@ public partial class MapIconListContext
     public ObservableCollection<MapIconListListItem> Items { get; set; }
     public ContentListSelected<MapIconListListItem> ListSelection { get; set; }
     public ColumnSortControlContext ListSort { get; set; }
-    public ScrollToItemRequest ScrollTo { get; set; }
+    public ScrollToItemRequest? ScrollTo { get; set; }
     public StatusControlContext StatusContext { get; set; }
     public string UserFilterText { get; set; } = string.Empty;
 
     [BlockingCommand]
-    private async Task AddDefaultLibraryIcons()
+    public async Task AddDefaultLibraryIcons()
     {
         var defaultLibraryIcons = MapIconDefaultLibrary.DefaultIcons();
 

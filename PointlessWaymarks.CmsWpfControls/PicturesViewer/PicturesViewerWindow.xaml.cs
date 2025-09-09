@@ -97,7 +97,7 @@ public partial class PicturesViewerWindow
     }
 
     [BlockingCommand]
-    private async Task JpgScreenshot()
+    public async Task JpgScreenshot()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 

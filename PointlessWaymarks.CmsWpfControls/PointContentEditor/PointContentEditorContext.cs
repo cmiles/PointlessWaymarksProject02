@@ -1,8 +1,3 @@
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Windows;
 using NetTopologySuite.Features;
 using Omu.ValueInjecter;
 using PointlessWaymarks.CmsData;
@@ -13,6 +8,7 @@ using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsData.Spatial;
 using PointlessWaymarks.CmsWpfControls.BodyContentEditor;
 using PointlessWaymarks.CmsWpfControls.ContentIdViewer;
+using PointlessWaymarks.CmsWpfControls.ContentMap;
 using PointlessWaymarks.CmsWpfControls.ContentSiteFeedAndIsDraft;
 using PointlessWaymarks.CmsWpfControls.CreatedAndUpdatedByAndOnDisplay;
 using PointlessWaymarks.CmsWpfControls.DataEntry;
@@ -38,6 +34,11 @@ using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.StringDataEntry;
 using PointlessWaymarks.WpfCommon.WebViewVirtualDomain;
 using PointlessWaymarks.WpfCommon.WpfHtml;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Windows;
 using Point = NetTopologySuite.Geometries.Point;
 
 namespace PointlessWaymarks.CmsWpfControls.PointContentEditor;
@@ -75,7 +76,7 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
 
         LocationSearchContext = factoryLocationSearchContext;
 
-        LocationSearchContext.LocationSelected += (sender, args) =>
+        LocationSearchContext.LocationSelected += (_, args) =>
         {
             var centerData = new MapJsonCoordinateDto(args.Latitude, args.Longitude, "CenterCoordinateRequest");
 
@@ -97,14 +98,14 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
     public GeoSearchContext LocationSearchContext { get; set; }
     public ConversionDataEntryContext<double>? LongitudeEntry { get; set; }
     public ContentSiteFeedAndIsDraftContext? MainSiteFeed { get; set; }
-    public SpatialBounds? MapBounds { get; set; } = null;
-    public ContentMapIconContext MapIconEntry { get; set; }
+    public SpatialBounds? MapBounds { get; set; }
+    public ContentMapIconContext? MapIconEntry { get; set; }
     public string? MapIconSvg { get; set; }
     public StringDataEntryContext? MapLabelContentEntry { get; set; }
-    public ContentMapMarkerColorContext MapMarkerColorEntry { get; set; }
+    public ContentMapMarkerColorContext? MapMarkerColorEntry { get; set; }
     public Action<Uri, string> MapPreviewNavigationManager { get; set; }
     public PointDetailListContext? PointDetails { get; set; }
-    public BoolDataEntryContext ShowInSearch { get; set; }
+    public BoolDataEntryContext? ShowInSearch { get; set; }
     public StatusControlContext StatusContext { get; set; }
     public TagsEditorContext? TagEdit { get; set; }
     public TitleSummarySlugEditorContext? TitleSummarySlugFolder { get; set; }
@@ -122,7 +123,7 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
     public WorkQueue<ToWebViewRequest> ToWebView { get; set; }
 
     [BlockingCommand]
-    private async Task AddFeatureIntersectTags()
+    public async Task AddFeatureIntersectTags()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -160,7 +161,7 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         var centerData =
-            new MapJsonCoordinateDto(LatitudeEntry.UserValue, LongitudeEntry.UserValue, "CenterCoordinateRequest");
+            new MapJsonCoordinateDto(LatitudeEntry!.UserValue, LongitudeEntry!.UserValue, "CenterCoordinateRequest");
 
         var serializedData = JsonSerializer.Serialize(centerData);
 
@@ -199,7 +200,7 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
     {
         var factoryStatusContext = await StatusControlContext.CreateInstance(statusContext);
 
-        ThreadSwitcher.ResumeBackgroundAsync();
+        await ThreadSwitcher.ResumeBackgroundAsync();
 
         var factoryMapIcons = await MapIconGenerator.SerializedMapIcons();
         var factoryLocationSearchContext = await GeoSearchContext.CreateInstance(factoryStatusContext);
@@ -228,7 +229,7 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
         newEntry.ShowInMainSiteFeed = MainSiteFeed!.ShowInMainSiteFeedEntry.UserValue;
         newEntry.FeedOn = MainSiteFeed.FeedOnEntry.UserValue;
         newEntry.IsDraft = MainSiteFeed.IsDraftEntry.UserValue;
-        newEntry.ShowInSearch = ShowInSearch.UserValue;
+        newEntry.ShowInSearch = ShowInSearch!.UserValue;
         newEntry.Tags = TagEdit!.TagListString();
         newEntry.Title = TitleSummarySlugFolder.TitleEntry.UserValue.TrimNullToEmpty();
         newEntry.CreatedBy = CreatedUpdatedDisplay!.CreatedByEntry.UserValue.TrimNullToEmpty();
@@ -319,7 +320,7 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
     }
 
     [BlockingCommand]
-    private async Task LinkToClipboard()
+    public async Task LinkToClipboard()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -433,7 +434,7 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
             DisplayedContentGuids.Union(closeByFeatures.Select(x => x.ContentId).Cast<Guid>()).ToList();
 
         ToWebView.Enqueue(
-            FileBuilder.CreateRequest(mapInformation.fileCopyList.Select(x => new FileBuilderCopy(x, false)).ToList(),
+            FileBuilder.CreateRequest(mapInformation.fileCopyList.Select(x => new FileBuilderCopy(x)).ToList(),
                 []));
         ToWebView.Enqueue(JsonData.CreateRequest(await MapCmsJson.NewMapFeatureCollectionDtoSerialized(
             mapInformation.featureList,
@@ -469,13 +470,34 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
         }
 
         if (messageType == "mapBoundsChange")
-        {
-            MapBounds = new SpatialBounds(parsedJson["bounds"]["_northEast"]["lat"].GetValue<double>(),
-                parsedJson["bounds"]["_northEast"]["lng"].GetValue<double>(),
-                parsedJson["bounds"]["_southWest"]["lat"].GetValue<double>(),
-                parsedJson["bounds"]["_southWest"]["lng"].GetValue<double>());
-            return;
-        }
+            try
+            {
+                var bounds = parsedJson["bounds"];
+                var northEast = bounds?["_northEast"];
+                var southWest = bounds?["_southWest"];
+
+                if (northEast?["lat"] is { } neLatNode &&
+                    northEast["lng"] is { } neLngNode &&
+                    southWest?["lat"] is { } swLatNode &&
+                    southWest["lng"] is { } swLngNode &&
+                    neLatNode.GetValue<double?>() is { } neLat &&
+                    neLngNode.GetValue<double?>() is { } neLng &&
+                    swLatNode.GetValue<double?>() is { } swLat &&
+                    swLngNode.GetValue<double?>() is { } swLng)
+                {
+                    MapBounds = new SpatialBounds(neLat, neLng, swLat, swLng);
+                }
+                else
+                {
+                    throw new NullReferenceException(
+                        $"A mapBoundsChange message in {nameof(PointContentEditorContext)} contained null values.");
+                }
+            }
+            catch (Exception e)
+            {
+                //TODO: Add visibility to this?
+                Console.WriteLine(e);
+            }
     }
 
     private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -562,7 +584,7 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
             DisplayedContentGuids.Union(searchResult.Select(x => x.ContentId).Cast<Guid>()).ToList();
 
         ToWebView.Enqueue(
-            FileBuilder.CreateRequest(mapInformation.fileCopyList.Select(x => new FileBuilderCopy(x, false)).ToList(),
+            FileBuilder.CreateRequest(mapInformation.fileCopyList.Select(x => new FileBuilderCopy(x)).ToList(),
                 []));
         ToWebView.Enqueue(JsonData.CreateRequest(await MapCmsJson.NewMapFeatureCollectionDtoSerialized(
             mapInformation.featureList,
@@ -588,7 +610,7 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
     }
 
     [BlockingCommand]
-    private async Task ViewOnSite()
+    public async Task ViewOnSite()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 

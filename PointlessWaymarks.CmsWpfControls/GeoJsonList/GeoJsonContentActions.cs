@@ -1,10 +1,10 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Text.Json;
 using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.BracketCodes;
-using PointlessWaymarks.CmsData.CommonHtml;
 using PointlessWaymarks.CmsData.ContentHtml.GeoJsonHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
@@ -33,13 +33,6 @@ public partial class GeoJsonContentActions : IContentActions<GeoJsonContent>
         BuildCommands();
     }
 
-    public StatusControlContext StatusContext { get; set; }
-
-    public string DefaultBracketCode(GeoJsonContent content)
-    {
-        return $"{BracketCodeGeoJson.Create(content)}";
-    }
-
     public ContentClipboardRepresentation ClipboardObject(GeoJsonContent? content)
     {
         if (content == null)
@@ -55,6 +48,11 @@ public partial class GeoJsonContentActions : IContentActions<GeoJsonContent>
             ContentType = Db.ContentTypeDisplayString(content),
             SiteLocalApiUrl = PartialContentPreviewServer.PreviewServerLocalApiUrl
         };
+    }
+
+    public string DefaultBracketCode(GeoJsonContent content)
+    {
+        return $"{BracketCodeGeoJson.Create(content)}";
     }
 
     [BlockingCommand]
@@ -83,7 +81,7 @@ public partial class GeoJsonContentActions : IContentActions<GeoJsonContent>
 
             // Add the ContentClipboardRepresentation as an alternate format
             // Using the ContentClipboardFormat constant as the format name
-            var clipboardJson = System.Text.Json.JsonSerializer.Serialize(clipboardRepresentation);
+            var clipboardJson = JsonSerializer.Serialize(clipboardRepresentation);
             dataObject.SetData(ContentClipboardRepresentation.ContentClipboardFormat, clipboardJson);
 
             await ThreadSwitcher.ResumeForegroundAsync();
@@ -196,7 +194,7 @@ public partial class GeoJsonContentActions : IContentActions<GeoJsonContent>
         await StatusContext.ToastSuccess($"Generated {htmlContext.PageUrl}");
     }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
+    public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
     public async Task ViewHistory(GeoJsonContent? content)
@@ -271,6 +269,8 @@ public partial class GeoJsonContentActions : IContentActions<GeoJsonContent>
 
         await sitePreviewWindow.PositionWindowAndShowOnUiThread();
     }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     public static async Task<GeoJsonListListItem> ListItemFromDbItem(GeoJsonContent content,
         GeoJsonContentActions itemActions,

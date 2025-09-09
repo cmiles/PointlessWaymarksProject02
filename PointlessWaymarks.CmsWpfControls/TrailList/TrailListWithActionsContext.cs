@@ -72,7 +72,7 @@ public partial class TrailListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task BracketCodesToClipboardForSelected()
+    public async Task BracketCodesToClipboardForSelected()
     {
         var finalString = SelectedListItems().Aggregate(string.Empty,
             (current, loopSelected) =>
@@ -101,7 +101,7 @@ public partial class TrailListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNotOneSelectedListItems]
-    private async Task EmailHtmlToClipboard()
+    public async Task EmailHtmlToClipboard()
     {
         var frozenSelected = SelectedListItems().First();
 
@@ -115,7 +115,7 @@ public partial class TrailListWithActionsContext
     }
 
     [BlockingCommand]
-    private async Task RefreshData()
+    public async Task RefreshData()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -124,7 +124,7 @@ public partial class TrailListWithActionsContext
 
     public List<TrailListListItem> SelectedListItems()
     {
-        return ListContext.ListSelection.SelectedItems?.Where(x => x is TrailListListItem).Cast<TrailListListItem>()
-            .ToList() ?? [];
+        return ListContext.ListSelection.SelectedItems.Where(x => x is TrailListListItem).Cast<TrailListListItem>()
+            .ToList();
     }
 }

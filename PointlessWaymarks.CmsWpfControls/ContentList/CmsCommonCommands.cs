@@ -65,7 +65,7 @@ public partial class CmsCommonCommands
     public WindowIconStatus? WindowStatus { get; }
 
     [BlockingCommand]
-    private async Task GenerateChangedHtml()
+    public async Task GenerateChangedHtml()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -84,7 +84,7 @@ public partial class CmsCommonCommands
     }
 
     [BlockingCommand]
-    private async Task GenerateChangedHtmlAndShowSitePreview()
+    public async Task GenerateChangedHtmlAndShowSitePreview()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -106,7 +106,7 @@ public partial class CmsCommonCommands
     }
 
     [BlockingCommand]
-    private async Task GenerateChangedHtmlAndStartUpload()
+    public async Task GenerateChangedHtmlAndStartUpload()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -126,7 +126,7 @@ public partial class CmsCommonCommands
 
 
     [NonBlockingCommand]
-    private async Task NewAllContentListWindow()
+    public async Task NewAllContentListWindow()
     {
         var newWindow =
             await AllContentListWindow.CreateInstance(
@@ -135,11 +135,11 @@ public partial class CmsCommonCommands
     }
 
     [NonBlockingCommand]
-    private async Task NewCmsWindow()
+    public async Task NewCmsWindow()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        //6/18/2023 - Assembly.GetEntryAssembly()!.Location might be more expected but I saw some indication
+        //6/18/2023 - Assembly.GetEntryAssembly()!.Location might be more expected, but I saw some indication
         //in the online material that the method below might be more durable. The dll/exe swap is a bit of 
         //a guess but at the least seems to help inside Visual Studio...
         var command = Environment.GetCommandLineArgs()[0];
@@ -149,7 +149,7 @@ public partial class CmsCommonCommands
     }
 
     [NonBlockingCommand]
-    private async Task NewContentMapWindow()
+    public async Task NewContentMapWindow()
     {
         var newWindow =
             await ContentMapWindow.CreateInstance(new ContentMapListLoader("Content View/Search", []));
@@ -164,7 +164,7 @@ public partial class CmsCommonCommands
     }
 
     [BlockingCommand]
-    private async Task NewFileContentFromFiles(CancellationToken cancellationToken)
+    public async Task NewFileContentFromFiles(CancellationToken cancellationToken)
     {
         await WindowIconStatus.IndeterminateTask(WindowStatus,
             async () => await NewFileContentFromFilesBase(cancellationToken),
@@ -217,7 +217,7 @@ public partial class CmsCommonCommands
     }
 
     [NonBlockingCommand]
-    private async Task NewFileListWindow()
+    public async Task NewFileListWindow()
     {
         var newWindow =
             await FileListWindow.CreateInstance(
@@ -236,7 +236,7 @@ public partial class CmsCommonCommands
     }
 
     [NonBlockingCommand]
-    private async Task NewGeoJsonListWindow()
+    public async Task NewGeoJsonListWindow()
     {
         var newWindow =
             await GeoJsonListWindow.CreateInstance(
@@ -337,7 +337,7 @@ public partial class CmsCommonCommands
 
 
     [NonBlockingCommand]
-    private async Task NewImageListWindow()
+    public async Task NewImageListWindow()
     {
         var newWindow =
             await ImageListWindow.CreateInstance(
@@ -354,7 +354,7 @@ public partial class CmsCommonCommands
     }
 
     [BlockingCommand]
-    private async Task NewLineContentFromFiles(CancellationToken cancellationToken)
+    public async Task NewLineContentFromFiles(CancellationToken cancellationToken)
     {
         await WindowIconStatus.IndeterminateTask(WindowStatus,
             async () => await NewLineContentFromFilesBase(cancellationToken, false, false, StatusContext, WindowStatus),
@@ -466,7 +466,7 @@ public partial class CmsCommonCommands
                 }
                 else
                 {
-                    var editor = await LineContentEditorWindow.CreateInstance(newEntry, true);
+                    await LineContentEditorWindow.CreateInstance(newEntry, true);
                 }
 
                 statusContext.Progress(
@@ -502,7 +502,7 @@ public partial class CmsCommonCommands
                 }
                 else
                 {
-                    var editor = await LineContentEditorWindow.CreateInstance(newEntry, true);
+                    await LineContentEditorWindow.CreateInstance(newEntry, true);
                 }
 
                 statusContext.Progress(
@@ -512,7 +512,7 @@ public partial class CmsCommonCommands
     }
 
     [BlockingCommand]
-    private async Task NewLineContentFromFilesWithAutosave(CancellationToken cancellationToken)
+    public async Task NewLineContentFromFilesWithAutosave(CancellationToken cancellationToken)
     {
         await WindowIconStatus.IndeterminateTask(WindowStatus,
             async () => await NewLineContentFromFilesBase(cancellationToken, false, true, StatusContext, WindowStatus),
@@ -520,7 +520,7 @@ public partial class CmsCommonCommands
     }
 
     [BlockingCommand]
-    private async Task NewLineContentFromFilesWithPhotos(CancellationToken cancellationToken)
+    public async Task NewLineContentFromFilesWithPhotos(CancellationToken cancellationToken)
     {
         await WindowIconStatus.IndeterminateTask(WindowStatus,
             async () => await NewLineContentFromFilesBase(cancellationToken, true, false, StatusContext, WindowStatus),
@@ -528,7 +528,7 @@ public partial class CmsCommonCommands
     }
 
     [BlockingCommand]
-    private async Task NewLineContentFromFilesWithPhotosWithAutosave(CancellationToken cancellationToken)
+    public async Task NewLineContentFromFilesWithPhotosWithAutosave(CancellationToken cancellationToken)
     {
         await WindowIconStatus.IndeterminateTask(WindowStatus,
             async () => await NewLineContentFromFilesBase(cancellationToken, true, true, StatusContext, WindowStatus),
@@ -536,7 +536,7 @@ public partial class CmsCommonCommands
     }
 
     [NonBlockingCommand]
-    private async Task NewLineListWindow()
+    public async Task NewLineListWindow()
     {
         var newWindow =
             await LineListWindow.CreateInstance(
@@ -554,7 +554,7 @@ public partial class CmsCommonCommands
 
 
     [NonBlockingCommand]
-    private async Task NewLinkListWindow()
+    public async Task NewLinkListWindow()
     {
         var newWindow =
             await LinkListWindow.CreateInstance(
@@ -563,7 +563,7 @@ public partial class CmsCommonCommands
     }
 
     [NonBlockingCommand]
-    private async Task NewMapComponentListWindow()
+    public async Task NewMapComponentListWindow()
     {
         var newWindow =
             await MapComponentListWindow.CreateInstance(
@@ -580,7 +580,7 @@ public partial class CmsCommonCommands
     }
 
     [NonBlockingCommand]
-    private async Task NewMapIconListWindow()
+    public async Task NewMapIconListWindow()
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -598,7 +598,7 @@ public partial class CmsCommonCommands
     }
 
     [NonBlockingCommand]
-    private async Task NewNoteListWindow()
+    public async Task NewNoteListWindow()
     {
         var newWindow =
             await NoteListWindow.CreateInstance(
@@ -615,7 +615,7 @@ public partial class CmsCommonCommands
     }
 
     [BlockingCommand]
-    private async Task NewPhotoContentFromFiles(CancellationToken cancellationToken)
+    public async Task NewPhotoContentFromFiles(CancellationToken cancellationToken)
     {
         await WindowIconStatus.IndeterminateTask(WindowStatus,
             async () => await NewPhotoContentFromFilesBase(false, false, cancellationToken),
@@ -760,7 +760,7 @@ public partial class CmsCommonCommands
     }
 
     [BlockingCommand]
-    private async Task NewPhotoContentFromFilesWithAutosave(CancellationToken cancellationToken)
+    public async Task NewPhotoContentFromFilesWithAutosave(CancellationToken cancellationToken)
     {
         await WindowIconStatus.IndeterminateTask(WindowStatus,
             async () => await NewPhotoContentFromFilesBase(true, true, cancellationToken),
@@ -769,7 +769,7 @@ public partial class CmsCommonCommands
 
 
     [NonBlockingCommand]
-    private async Task NewPhotoListWindow()
+    public async Task NewPhotoListWindow()
     {
         var newWindow =
             await PhotoListWindow.CreateInstance(
@@ -786,7 +786,7 @@ public partial class CmsCommonCommands
     }
 
     [NonBlockingCommand]
-    private async Task NewPointListWindow()
+    public async Task NewPointListWindow()
     {
         var newWindow =
             await PointListWindow.CreateInstance(
@@ -803,7 +803,7 @@ public partial class CmsCommonCommands
     }
 
     [NonBlockingCommand]
-    private async Task NewPostListWindow()
+    public async Task NewPostListWindow()
     {
         var newWindow =
             await PostListWindow.CreateInstance(
@@ -812,7 +812,7 @@ public partial class CmsCommonCommands
     }
 
     [NonBlockingCommand]
-    private async Task NewSnippetListWindow()
+    public async Task NewSnippetListWindow()
     {
         var newWindow =
             await SnippetListWindow.CreateInstance(await SnippetListContext.CreateInstance(null));
@@ -828,7 +828,7 @@ public partial class CmsCommonCommands
     }
 
     [NonBlockingCommand]
-    private async Task NewTrailListWindow()
+    public async Task NewTrailListWindow()
     {
         var newWindow =
             await TrailListWindow.CreateInstance(
@@ -906,7 +906,7 @@ public partial class CmsCommonCommands
     }
 
     [NonBlockingCommand]
-    private async Task NewVideoListWindow()
+    public async Task NewVideoListWindow()
     {
         var newWindow =
             await VideoListWindow.CreateInstance(
@@ -915,14 +915,14 @@ public partial class CmsCommonCommands
     }
 
     [NonBlockingCommand]
-    private async Task SearchHelpWindow()
+    public async Task SearchHelpWindow()
     {
         var newWindow = await MarkdownViewerWindow.CreateInstance("Search Help", SearchHelpMarkdown.HelpBlock);
         await newWindow.PositionWindowAndShowOnUiThread();
     }
 
     [NonBlockingCommand]
-    private async Task ShowSitePreviewWindow()
+    public async Task ShowSitePreviewWindow()
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 

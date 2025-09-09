@@ -19,7 +19,7 @@ public partial class LineListListItem : IContentListItem, IContentListImage
 
     public LineContent DbEntry { get; set; }
     public LineContentActions ItemActions { get; set; }
-    public double? RecordedOnLengthInMinutes { get; set; } = null;
+    public double? RecordedOnLengthInMinutes { get; set; }
     public bool ShowType { get; set; }
     public string? DisplayImageUrl { get; set; }
     public string? SmallImageUrl { get; set; }

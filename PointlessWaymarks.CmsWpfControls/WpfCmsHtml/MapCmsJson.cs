@@ -102,7 +102,7 @@ public static class MapCmsJson
 
     public static Action<Uri, string> LocalActionNavigation(StatusControlContext statusContext)
     {
-        return (Uri navigationUri, string virtualDomain) =>
+        return (navigationUri, _) =>
         {
             if (navigationUri.Segments.Last().Equals("LocalEdit", StringComparison.OrdinalIgnoreCase))
             {
@@ -260,7 +260,7 @@ public static class MapCmsJson
             List<Guid> contentIds, bool showPhotoDirectionBearingLines)
     {
         var db = await Db.Context();
-        var content = await db.ContentFromContentIds(contentIds, true);
+        var content = await db.ContentFromContentIds(contentIds);
 
         return await ProcessContentToMapInformation(content.Cast<object>().ToList(), showPhotoDirectionBearingLines);
     }
@@ -270,6 +270,7 @@ public static class MapCmsJson
     ///     database for point information and process on disk content for photo image information.
     /// </summary>
     /// <param name="dbEntries"></param>
+    /// <param name="showPhotoDirectionBearingLines"></param>
     /// <returns></returns>
     public static async Task<(SpatialBounds bounds, List<FeatureCollection> featureList, List<string> fileCopyList)>
         ProcessContentToMapInformation(
@@ -348,7 +349,7 @@ public static class MapCmsJson
                             $"""<a href="http://[[VirtualDomain]]/LocalPreview?{WebUtility.UrlEncode(UserSettingsSingleton.CurrentSettings().PointPageUrl(loopElements))}">{(string.IsNullOrWhiteSpace(loopElements.Title) ? "Preview" : loopElements.Title)}</a> <a href="http://[[VirtualDomain]]/LocalEdit?{WebUtility.UrlEncode(loopElements.ContentId.ToString())}">Edit</a>"""
                         },
                         { "description", descriptionAndImage.description },
-                        { "mapLabel", loopElements.MapLabel },
+                        { "mapLabel", loopElements.MapLabel ?? "(No Label?)" },
                         { "displayId", loopElements.ContentId },
                         {
                             "mapIcon",
@@ -404,7 +405,7 @@ public static class MapCmsJson
                     filesToCopy.Add(descriptionAndImage.imageFileToCopy);
 
                 featureCollection.Add(new Feature(
-                    PointTools.Wgs84Point(loopElements.Longitude.Value, loopElements.Latitude.Value,
+                    PointTools.Wgs84Point(loopElements!.Longitude!.Value, loopElements.Latitude!.Value,
                         loopElements.Elevation?.FeetToMeters() ?? 0),
                     new AttributesTable(new Dictionary<string, object>
                     {

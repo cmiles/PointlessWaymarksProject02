@@ -48,26 +48,26 @@ public partial class TrailContentEditorContext : IHasChanges, IHasValidationIssu
         PropertyChanged += OnPropertyChanged;
     }
 
-    public BoolDataEntryContext BikesEntry { get; set; }
-    public StringDataEntryContext BikesNoteEntry { get; set; }
+    public BoolDataEntryContext? BikesEntry { get; set; }
+    public StringDataEntryContext? BikesNoteEntry { get; set; }
     public BodyContentEditorContext? BodyContent { get; set; }
     public ContentIdViewerControlContext? ContentId { get; set; }
     public CreatedAndUpdatedByAndOnDisplayContext? CreatedUpdatedDisplay { get; set; }
     public TrailContent DbEntry { get; set; }
-    public BoolDataEntryContext DogsEntry { get; set; }
-    public StringDataEntryContext DogsNoteEntry { get; set; }
-    public ContentDropdownDataEntryContext EndingPointContentIdEntry { get; set; }
-    public BoolDataEntryContext FeeEntry { get; set; }
-    public StringDataEntryContext FeeNoteEntry { get; set; }
+    public BoolDataEntryContext? DogsEntry { get; set; }
+    public StringDataEntryContext? DogsNoteEntry { get; set; }
+    public ContentDropdownDataEntryContext? EndingPointContentIdEntry { get; set; }
+    public BoolDataEntryContext? FeeEntry { get; set; }
+    public StringDataEntryContext? FeeNoteEntry { get; set; }
     public HelpDisplayContext? HelpContext { get; set; }
-    public ContentDropdownDataEntryContext LineContentIdEntry { get; set; }
-    public StringDataEntryContext LocationAreaEntry { get; set; }
+    public ContentDropdownDataEntryContext? LineContentIdEntry { get; set; }
+    public StringDataEntryContext? LocationAreaEntry { get; set; }
     public ContentSiteFeedAndIsDraftContext? MainSiteFeed { get; set; }
-    public ContentDropdownDataEntryContext MapComponentIdEntry { get; set; }
+    public ContentDropdownDataEntryContext? MapComponentIdEntry { get; set; }
     public OptionalLocationEntryContext? OptionalLocationEntry { get; set; }
-    public StringDataEntryContext OtherDetailsEntry { get; set; }
-    public BoolDataEntryContext ShowInSearch { get; set; }
-    public ContentDropdownDataEntryContext StartingPointContentIdEntry { get; set; }
+    public StringDataEntryContext? OtherDetailsEntry { get; set; }
+    public BoolDataEntryContext? ShowInSearch { get; set; }
+    public ContentDropdownDataEntryContext? StartingPointContentIdEntry { get; set; }
     public StatusControlContext StatusContext { get; set; }
     public TagsEditorContext? TagEdit { get; set; }
     public TitleSummarySlugEditorContext? TitleSummarySlugFolder { get; set; }
@@ -80,7 +80,7 @@ Trail Content can bring together a Map, Line, Start and End Points and structure
 
 ";
 
-    public StringDataEntryContext TrailShapeEntry { get; set; }
+    public StringDataEntryContext? TrailShapeEntry { get; set; }
     public UpdateNotesEditorContext? UpdateNotes { get; set; }
 
     public void CheckForChangesAndValidationIssues()
@@ -93,7 +93,7 @@ Trail Content can bring together a Map, Line, Start and End Points and structure
     public bool HasValidationIssues { get; set; }
 
     [BlockingCommand]
-    private async Task AddFeatureIntersectTags()
+    public async Task AddFeatureIntersectTags()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -135,7 +135,7 @@ Trail Content can bring together a Map, Line, Start and End Points and structure
         newEntry.ShowInMainSiteFeed = MainSiteFeed!.ShowInMainSiteFeedEntry.UserValue;
         newEntry.FeedOn = MainSiteFeed.FeedOnEntry.UserValue;
         newEntry.IsDraft = MainSiteFeed.IsDraftEntry.UserValue;
-        newEntry.ShowInSearch = ShowInSearch.UserValue;
+        newEntry.ShowInSearch = ShowInSearch!.UserValue;
         newEntry.Tags = TagEdit!.TagListString();
         newEntry.Title = TitleSummarySlugFolder.TitleEntry.UserValue.TrimNullToEmpty();
         newEntry.CreatedBy = CreatedUpdatedDisplay!.CreatedByEntry.UserValue.TrimNullToEmpty();
@@ -144,20 +144,20 @@ Trail Content can bring together a Map, Line, Start and End Points and structure
         newEntry.BodyContent = BodyContent!.UserValue.TrimNullToEmpty();
         newEntry.BodyContentFormat = BodyContent.BodyContentFormat.SelectedContentFormatAsString;
 
-        newEntry.Fees = FeeEntry.UserValue;
-        newEntry.FeesNote = FeeNoteEntry.UserValue.TrimNullToEmpty();
-        newEntry.Dogs = DogsEntry.UserValue;
-        newEntry.DogsNote = DogsNoteEntry.UserValue.TrimNullToEmpty();
-        newEntry.Bikes = BikesEntry.UserValue;
-        newEntry.BikesNote = BikesNoteEntry.UserValue.TrimNullToEmpty();
-        newEntry.OtherDetails = OtherDetailsEntry.UserValue.TrimNullToEmpty();
-        newEntry.LocationArea = LocationAreaEntry.UserValue.TrimNullToEmpty();
-        newEntry.TrailShape = TrailShapeEntry.UserValue.TrimNullToEmpty();
+        newEntry.Fees = FeeEntry!.UserValue;
+        newEntry.FeesNote = FeeNoteEntry!.UserValue.TrimNullToEmpty();
+        newEntry.Dogs = DogsEntry!.UserValue;
+        newEntry.DogsNote = DogsNoteEntry!.UserValue.TrimNullToEmpty();
+        newEntry.Bikes = BikesEntry!.UserValue;
+        newEntry.BikesNote = BikesNoteEntry!.UserValue.TrimNullToEmpty();
+        newEntry.OtherDetails = OtherDetailsEntry!.UserValue.TrimNullToEmpty();
+        newEntry.LocationArea = LocationAreaEntry!.UserValue.TrimNullToEmpty();
+        newEntry.TrailShape = TrailShapeEntry!.UserValue.TrimNullToEmpty();
 
-        newEntry.MapComponentId = MapComponentIdEntry.UserValue;
-        newEntry.LineContentId = LineContentIdEntry.UserValue;
-        newEntry.StartingPointContentId = StartingPointContentIdEntry.UserValue;
-        newEntry.EndingPointContentId = EndingPointContentIdEntry.UserValue;
+        newEntry.MapComponentId = MapComponentIdEntry!.UserValue;
+        newEntry.LineContentId = LineContentIdEntry!.UserValue;
+        newEntry.StartingPointContentId = StartingPointContentIdEntry!.UserValue;
+        newEntry.EndingPointContentId = EndingPointContentIdEntry!.UserValue;
 
         return newEntry;
     }
@@ -171,7 +171,7 @@ Trail Content can bring together a Map, Line, Start and End Points and structure
     }
 
     [BlockingCommand]
-    private async Task LinkToClipboard()
+    public async Task LinkToClipboard()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -307,7 +307,7 @@ Trail Content can bring together a Map, Line, Start and End Points and structure
     }
 
     [BlockingCommand]
-    private async Task PointFromLocation()
+    public async Task PointFromLocation()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -390,7 +390,7 @@ Trail Content can bring together a Map, Line, Start and End Points and structure
     }
 
     [BlockingCommand]
-    private async Task ViewOnSite()
+    public async Task ViewOnSite()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 

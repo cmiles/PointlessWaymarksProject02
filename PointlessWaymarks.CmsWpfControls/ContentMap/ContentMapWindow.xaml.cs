@@ -1,4 +1,3 @@
-using System.Windows;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
@@ -6,7 +5,7 @@ using PointlessWaymarks.WpfCommon;
 namespace PointlessWaymarks.CmsWpfControls.ContentMap;
 
 [NotifyPropertyChanged]
-public  partial class ContentMapWindow : Window
+public partial class ContentMapWindow
 {
     private ContentMapWindow(ContentMapContext toLoad)
     {
@@ -23,7 +22,7 @@ public  partial class ContentMapWindow : Window
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        var window = new ContentMapWindow(await ContentMapContext.CreateInstance(null, toLoad, true));
+        var window = new ContentMapWindow(await ContentMapContext.CreateInstance(null, toLoad));
 
         return window;
     }

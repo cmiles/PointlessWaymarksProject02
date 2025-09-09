@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     x:Class="PointlessWaymarks.CmsWpfControls.ImageList.ImageListWithActionsControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -31,18 +31,18 @@
                 <MenuItem Command="{Binding ListContext.ImportFromExcelFileCommand}" Header="Import From Excel File" />
                 <MenuItem Command="{Binding ListContext.ImportFromOpenExcelInstanceCommand}" Header="Import From Open Excel Application" />
             </MenuItem>
-            <MenuItem Header="Email">
-                <MenuItem Command="{Binding EmailHtmlToClipboardCommand}" Header="Selected To Html Email on Clipboard" />
-            </MenuItem>
-            <MenuItem Header="On the Web">
-                <MenuItem Command="{Binding ListContext.ViewOnSiteCommand}" Header="Open Selected on Public Site In Browser" />
-            </MenuItem>
             <MenuItem Header="History">
                 <MenuItem Command="{Binding ListContext.ViewHistorySelectedCommand}" Header="View History" />
             </MenuItem>
             <MenuItem Header="Processing">
                 <MenuItem Command="{Binding ListContext.GenerateHtmlSelectedCommand}" Header="Generate Html" />
+                <MenuItem Command="{Binding ForcedResizeCommand}" Header="Reprocess Image" />
+                <MenuItem Command="{Binding RegenerateHtmlAndReprocessImageForSelectedCommand}" Header="Reprocess Image and Generate Html" />
                 <MenuItem Command="{Binding ListContext.ExtractNewLinksSelectedCommand}" Header="Extract Links" />
+            </MenuItem>
+            <MenuItem Header="Export">
+                <MenuItem Command="{Binding ExportFilesCommand}" Header="Export Selected Files" />
+                <MenuItem Command="{Binding EmailHtmlToClipboardCommand}" Header="Selected To Html Email on Clipboard" />
             </MenuItem>
             <StaticResource ResourceKey="ViewMenu" />
             <StaticResource ResourceKey="SiteMenu" />

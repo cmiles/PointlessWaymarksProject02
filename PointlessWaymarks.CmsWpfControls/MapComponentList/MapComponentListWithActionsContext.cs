@@ -73,7 +73,7 @@ public partial class MapComponentListWithActionsContext
 
     public List<MapComponentListListItem> SelectedListItems()
     {
-        return ListContext.ListSelection.SelectedItems?.Where(x => x is MapComponentListListItem)
-            .Cast<MapComponentListListItem>().ToList() ?? [];
+        return ListContext.ListSelection.SelectedItems.Where(x => x is MapComponentListListItem)
+            .Cast<MapComponentListListItem>().ToList();
     }
 }

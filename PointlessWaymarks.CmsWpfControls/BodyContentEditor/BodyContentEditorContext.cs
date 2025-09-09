@@ -51,7 +51,7 @@ public partial class BodyContentEditorContext : IHasChanges, IHasValidationIssue
     public ContentFormatChooserContext BodyContentFormat { get; set; }
     public bool BodyContentHasChanges { get; set; }
     public IBodyContent? DbEntry { get; set; }
-    public string HtmlPreview { get; set; }
+    public string HtmlPreview { get; set; } = string.Empty;
     public string? SelectedBodyText { get; set; }
     public StatusControlContext StatusContext { get; set; }
     public int UserBodyContentUserSelectionLength { get; set; }
@@ -121,7 +121,7 @@ public partial class BodyContentEditorContext : IHasChanges, IHasValidationIssue
     }
 
     [BlockingCommand]
-    private async Task RemoveLineBreaksFromSelected()
+    public async Task RemoveLineBreaksFromSelected()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 

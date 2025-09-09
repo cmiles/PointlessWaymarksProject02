@@ -82,7 +82,7 @@ If your intent is just to put a single piece of content onto the main page of th
     public bool HasValidationIssues { get; set; }
 
     [BlockingCommand]
-    private async Task AddFeatureIntersectTags()
+    public async Task AddFeatureIntersectTags()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -150,7 +150,7 @@ If your intent is just to put a single piece of content onto the main page of th
 
 
     [BlockingCommand]
-    private async Task LinkToClipboard()
+    public async Task LinkToClipboard()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -203,7 +203,7 @@ If your intent is just to put a single piece of content onto the main page of th
     }
 
     [BlockingCommand]
-    private async Task PointFromLocation()
+    public async Task PointFromLocation()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -286,7 +286,7 @@ If your intent is just to put a single piece of content onto the main page of th
     }
 
     [BlockingCommand]
-    private async Task ViewOnSite()
+    public async Task ViewOnSite()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 

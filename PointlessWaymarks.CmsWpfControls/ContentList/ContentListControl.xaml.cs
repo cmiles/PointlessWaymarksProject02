@@ -1,4 +1,4 @@
-﻿using System.Windows.Controls;
+using System.Windows.Controls;
 
 namespace PointlessWaymarks.CmsWpfControls.ContentList;
 
@@ -13,6 +13,6 @@ public partial class ContentListControl
     {
         if (DataContext == null) return;
         var viewmodel = (ContentListContext) DataContext;
-        viewmodel.ListSelection.SelectedItems = ContentListBox?.SelectedItems.Cast<IContentListItem>().ToList();
+        viewmodel.ListSelection.SelectedItems = ContentListBox?.SelectedItems.Cast<IContentListItem>().ToList() ?? [];
     }
 }

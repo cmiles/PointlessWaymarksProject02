@@ -136,7 +136,7 @@ public partial class LineListWithActionsContext
     public WindowIconStatus? WindowStatus { get; set; }
 
     [BlockingCommand]
-    private async Task ActivityLogMonthlyStatsWindowForAllLineContent()
+    public async Task ActivityLogMonthlyStatsWindowForAllLineContent()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -153,7 +153,7 @@ public partial class LineListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task ActivityLogMonthlyStatsWindowForSelected()
+    public async Task ActivityLogMonthlyStatsWindowForSelected()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -166,7 +166,7 @@ public partial class LineListWithActionsContext
         await window.PositionWindowAndShowOnUiThread();
     }
 
-    private async Task AddIntersectionTagsToSelected(bool includeOsm, CancellationToken cancellationToken)
+    public async Task AddIntersectionTagsToSelected(bool includeOsm, CancellationToken cancellationToken)
     {
         var frozenSelect = SelectedListItems();
 
@@ -304,14 +304,14 @@ public partial class LineListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task AddIntersectionTagsWithOsmToSelected(CancellationToken cancellationToken)
+    public async Task AddIntersectionTagsWithOsmToSelected(CancellationToken cancellationToken)
     {
         await AddIntersectionTagsToSelected(true, cancellationToken);
     }
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task AddIntersectionTagsWithoutOsmToSelected(CancellationToken cancellationToken)
+    public async Task AddIntersectionTagsWithoutOsmToSelected(CancellationToken cancellationToken)
     {
         await AddIntersectionTagsToSelected(false, cancellationToken);
     }
@@ -331,7 +331,7 @@ public partial class LineListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task ElevationChartBracketCodesToClipboardForSelected()
+    public async Task ElevationChartBracketCodesToClipboardForSelected()
     {
         var finalString = SelectedListItems().Aggregate(string.Empty,
             (current, loopSelected) =>
@@ -346,7 +346,7 @@ public partial class LineListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItemsAskIfOverMax(MaxSelectedItems = 3, ActionVerb = "copy to clipboard")]
-    private async Task GeoJsonToClipboardForSelected()
+    public async Task GeoJsonToClipboardForSelected()
     {
         var frozenSelected = SelectedListItems();
 
@@ -386,6 +386,8 @@ public partial class LineListWithActionsContext
     [StopAndWarnIfNoSelectedListItems]
     public async Task LineStatsToExcelForSelected()
     {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+        
         var selectedItems = SelectedListItems();
         StatusContext.Progress($"Starting transfer of {selectedItems.Count} to Excel");
 
@@ -455,7 +457,7 @@ public partial class LineListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task LinkBracketCodesToClipboardForSelected()
+    public async Task LinkBracketCodesToClipboardForSelected()
     {
         var finalString = SelectedListItems().Aggregate(string.Empty,
             (current, loopSelected) =>
@@ -469,7 +471,7 @@ public partial class LineListWithActionsContext
     }
 
     [BlockingCommand]
-    private async Task RefreshData()
+    public async Task RefreshData()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -521,12 +523,12 @@ public partial class LineListWithActionsContext
     public List<LineListListItem> SelectedListItems()
     {
         return ListContext.ListSelection.SelectedItems.Where(x => x is LineListListItem).Cast<LineListListItem>()
-            .ToList() ?? [];
+            .ToList();
     }
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task SelectedToGpxFile()
+    public async Task SelectedToGpxFile()
     {
         var frozenSelected = SelectedListItems();
 
@@ -565,7 +567,7 @@ public partial class LineListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task SelectedToGpxFiles()
+    public async Task SelectedToGpxFiles()
     {
         var frozenSelected = SelectedListItems();
 
@@ -611,7 +613,7 @@ public partial class LineListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoOrMoreThanSelectedListItems(MaxSelectedItems = 5)]
-    private async Task ShowIntersectionTagsForSelected(CancellationToken cancellationToken)
+    public async Task ShowIntersectionTagsForSelected(CancellationToken cancellationToken)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -666,7 +668,7 @@ public partial class LineListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task StatsBracketCodesToClipboardForSelected()
+    public async Task StatsBracketCodesToClipboardForSelected()
     {
         var finalString = SelectedListItems().Aggregate(string.Empty,
             (current, loopSelected) =>
@@ -681,7 +683,7 @@ public partial class LineListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task TextStatsBracketCodesToClipboardForSelected()
+    public async Task TextStatsBracketCodesToClipboardForSelected()
     {
         var finalString = SelectedListItems().Aggregate(string.Empty,
             (current, loopSelected) =>

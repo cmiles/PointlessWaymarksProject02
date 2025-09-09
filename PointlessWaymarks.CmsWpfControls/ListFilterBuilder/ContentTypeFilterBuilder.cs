@@ -23,7 +23,7 @@ public partial class ContentTypeListFilterFieldBuilder
             new ContentTypeListFilterChoice { TypeDescription = Db.ContentTypeDisplayStringForVideo }
         ];
 
-        ContentTypeChoices.ForEach(x => x.PropertyChanged += (sender, args) =>
+        ContentTypeChoices.ForEach(x => x.PropertyChanged += (_, _) =>
         {
             OnPropertyChanged(nameof(ContentTypeChoices));
         });

@@ -139,8 +139,7 @@ public partial class ContentDropdownDataEntryContext : IDropTarget
         }
 
         if (translatedMessage.UpdateType == DataNotificationUpdateType.LocalContent ||
-            (OnlyIncludeDataNotificationsForTypes.Any() &&
-             !OnlyIncludeDataNotificationsForTypes.Contains(translatedMessage.ContentType))) return;
+            OnlyIncludeDataNotificationsForTypes.Contains(translatedMessage.ContentType)) return;
 
         await ThreadSwitcher.ResumeBackgroundAsync();
 

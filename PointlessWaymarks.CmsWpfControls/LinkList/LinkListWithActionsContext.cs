@@ -149,7 +149,7 @@ public partial class LinkListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task MdLinkCodesToClipboardForSelected()
+    public async Task MdLinkCodesToClipboardForSelected()
     {
         var finalString = string.Join(", ", SelectedListItems().Select(x => $"[{x.DbEntry.Title}]({x.DbEntry.Url})"));
 
@@ -161,7 +161,7 @@ public partial class LinkListWithActionsContext
     }
 
     [BlockingCommand]
-    private async Task RefreshData()
+    public async Task RefreshData()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -171,6 +171,6 @@ public partial class LinkListWithActionsContext
     public List<LinkListListItem> SelectedListItems()
     {
         return ListContext.ListSelection.SelectedItems.Where(x => x is LinkListListItem).Cast<LinkListListItem>()
-            .ToList() ?? [];
+            .ToList();
     }
 }

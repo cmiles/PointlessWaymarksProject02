@@ -1,9 +1,13 @@
+using System.IO;
 using System.Windows;
+using Ookii.Dialogs.Wpf;
+using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentHtml.FileHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.CmsWpfControls.Utility;
+using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.Status;
@@ -63,22 +67,18 @@ public partial class FileListWithActionsContext : IListSelectionWithContext<File
                 ItemName = "Picture Gallery to Clipboard",
                 ItemCommand = ListContext.PictureGalleryBracketCodeToClipboardSelectedCommand
             },
-            new ContextMenuItemData { ItemName = "Email Html to Clipboard", ItemCommand = EmailHtmlToClipboardCommand },
+
             new ContextMenuItemData { ItemName = "View Files", ItemCommand = ViewSelectedFilesCommand },
             new ContextMenuItemData { ItemName = "Open URL", ItemCommand = ListContext.ViewOnSiteCommand },
-            new ContextMenuItemData
-                { ItemName = "Extract New Links", ItemCommand = ListContext.ExtractNewLinksSelectedCommand },
-            new ContextMenuItemData
-                { ItemName = "Generate Html", ItemCommand = ListContext.GenerateHtmlSelectedCommand },
             new ContextMenuItemData { ItemName = "Delete", ItemCommand = ListContext.DeleteSelectedCommand },
-            new ContextMenuItemData { ItemName = "View History", ItemCommand = ListContext.ViewHistorySelectedCommand },
             new ContextMenuItemData
             {
                 ItemName = "Map Selected Items", ItemCommand = ListContext.SpatialItemsToContentMapWindowSelectedCommand
             },
             new ContextMenuItemData
             {
-                ItemName = "View Selected Pictures", ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
+                ItemName = "View Selected Pictures",
+                ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
             },
             new ContextMenuItemData { ItemName = "Refresh Data", ItemCommand = RefreshDataCommand }
         ];
@@ -119,7 +119,7 @@ public partial class FileListWithActionsContext : IListSelectionWithContext<File
 
     [BlockingCommand]
     [StopAndWarnIfNotOneSelectedListItems]
-    private async Task EmailHtmlToClipboard()
+    public async Task EmailHtmlToClipboard()
     {
         var frozenSelected = SelectedListItems().First();
 
@@ -133,8 +133,57 @@ public partial class FileListWithActionsContext : IListSelectionWithContext<File
     }
 
     [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItemsAskIfOverMax(MaxSelectedItems = 10)]
+    public async Task ExportFiles(CancellationToken cancellationToken)
+    {
+        var frozenSelect = SelectedListItems().ToList();
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        var dialog = new VistaFolderBrowserDialog
+        {
+            Description = "Select folder to export files to",
+            UseDescriptionForTitle = true
+        };
+
+        if (dialog.ShowDialog() != true) return;
+
+        var exportDirectory = new DirectoryInfo(dialog.SelectedPath);
+
+        if (!exportDirectory.Exists)
+        {
+            await StatusContext.ToastError("Selected directory does not exist?");
+            return;
+        }
+
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var exportedCount = 0;
+
+        foreach (var loopSelected in frozenSelect)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var fileToExport = UserSettingsSingleton.CurrentSettings()
+                .LocalMediaArchiveFileContentFile(loopSelected.DbEntry);
+
+            if (fileToExport is not { Exists: true }) continue;
+
+            var destinationFileName = UniqueFileTools.UniqueFile(exportDirectory, fileToExport.Name);
+
+            File.Copy(fileToExport.FullName, destinationFileName!.FullName);
+            exportedCount++;
+        }
+
+        if (exportedCount > 0)
+            await StatusContext.ToastSuccess($"Exported {exportedCount} files to {exportDirectory.FullName}");
+        else
+            await StatusContext.ToastWarning("No files to export?");
+    }
+
+    [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task FileDownloadLinkCodesToClipboardForSelected()
+    public async Task FileDownloadLinkCodesToClipboardForSelected()
     {
         var finalString = string.Empty;
 
@@ -150,7 +199,7 @@ public partial class FileListWithActionsContext : IListSelectionWithContext<File
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task FileEmbedCodesToClipboardForSelected()
+    public async Task FileEmbedCodesToClipboardForSelected()
     {
         var finalString = string.Empty;
 
@@ -166,7 +215,7 @@ public partial class FileListWithActionsContext : IListSelectionWithContext<File
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task FilePageLinkCodesToClipboardForSelected()
+    public async Task FilePageLinkCodesToClipboardForSelected()
     {
         var finalString = string.Empty;
 
@@ -182,7 +231,7 @@ public partial class FileListWithActionsContext : IListSelectionWithContext<File
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task FileUrlLinkCodesToClipboardForSelected()
+    public async Task FileUrlLinkCodesToClipboardForSelected()
     {
         var finalString = string.Empty;
 
@@ -198,7 +247,7 @@ public partial class FileListWithActionsContext : IListSelectionWithContext<File
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItemsAskIfOverMax(MaxSelectedItems = 10)]
-    private async Task FirstPagePreviewFromPdf()
+    public async Task FirstPagePreviewFromPdf()
     {
         var frozenSelected = SelectedListItems();
 
@@ -206,7 +255,7 @@ public partial class FileListWithActionsContext : IListSelectionWithContext<File
     }
 
     [BlockingCommand]
-    private async Task RefreshData()
+    public async Task RefreshData()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 

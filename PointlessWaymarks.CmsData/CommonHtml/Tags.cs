@@ -1,3 +1,4 @@
+using DocumentFormat.OpenXml.Wordprocessing;
 using HtmlTags;
 using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentHtml.PhotoHtml;
@@ -32,6 +33,43 @@ public static class Tags
         }
 
         return coreLinksDiv;
+    }
+
+    public static async Task<HtmlTag> CoreLinksCollapsibleDiv(IProgress<string>? progress = null)
+    {
+        var db = Db.Context().Result;
+        var items = db.MenuLinks.OrderBy(x => x.MenuOrder).ToList();
+        if (!items.Any()) return HtmlTag.Empty();
+
+        // Create container for toggle and menu
+        var menuContainer = new HtmlTag("div").AddClass("menu-container");
+        
+        // Add checkbox for toggle
+        menuContainer.Children.Add(new HtmlTag("input")
+            .Attr("type", "checkbox")
+            .Attr("id", "menu-toggle")
+            .AddClass("menu-toggle"));
+        
+        // Add label for toggle
+        menuContainer.Children.Add(new HtmlTag("label")
+            .Attr("for", "menu-toggle")
+            .AddClass("menu-toggle-label"));
+
+        // Create the existing menu
+        var coreLinksDiv = new HtmlTag("nav").AddClass("core-links-container");
+        foreach (var loopItems in items)
+        {
+            var html = ContentProcessing.ProcessContent(
+                await BracketCodeCommon.ProcessCodesForSite(loopItems.LinkTag ?? string.Empty, progress)
+                    .ConfigureAwait(false),
+                ContentFormatEnum.MarkdigMarkdown01);
+
+            var coreLinkContainer = new DivTag().AddClass("core-links-item").Text(html).Encoded(false);
+            coreLinksDiv.Children.Add(coreLinkContainer);
+        }
+        
+        menuContainer.Children.Add(coreLinksDiv);
+        return menuContainer;
     }
 
     /// <summary>
@@ -652,7 +690,7 @@ public static class Tags
             secondaryDiv.Children.Add(titleSiteSummary);
         }
 
-        secondaryDiv.Children.Add(await CoreLinksDiv().ConfigureAwait(false));
+        secondaryDiv.Children.Add(await CoreLinksCollapsibleDiv().ConfigureAwait(false));
 
         return titleContainer;
     }

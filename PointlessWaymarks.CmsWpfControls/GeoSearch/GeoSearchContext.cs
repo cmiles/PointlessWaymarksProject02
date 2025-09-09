@@ -21,7 +21,7 @@ public partial class GeoSearchContext
 
         BuildCommands();
 
-        PropertyChanged += (sender, args) =>
+        PropertyChanged += (_, args) =>
         {
             if (args.PropertyName == nameof(UserSearchString)) StatusContext.RunNonBlockingTask(RunSearch);
         };

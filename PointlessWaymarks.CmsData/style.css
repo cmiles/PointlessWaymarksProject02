@@ -331,6 +331,13 @@ a.info-list-link-item {
     text-align: center;
 }
 
+.site-header-icon {
+    height: 1.8rem; /* Slightly smaller than the font size */
+    width: auto;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+}
+
 a.site-header-title-link {
     color: var(--foreground-color);
     text-decoration: none;
@@ -941,9 +948,63 @@ a.tag-list-link {
     color: var(--foreground-secondary-color);
     margin-left: .3rem;
 }
+
 /*
     Content Gallery End
 */
+
+.menu-toggle {
+  display: none;
+}
+
+@media screen and (max-width: 639px) {
+  /* Hide the checkbox but make it accessible */
+  .menu-toggle {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+  
+  /* Hamburger icon */
+  .menu-toggle-label {
+    display: block;
+    cursor: pointer;
+    text-align: center;
+    margin: 0.5rem auto;
+    font-size: 1.5rem;
+  }
+  
+  /* Show icon as hamburger by default */
+  .menu-toggle-label:before {
+    content: "☰";
+  }
+  
+  /* When checked, show X instead */
+  .menu-toggle:checked ~ .menu-toggle-label:before {
+    content: "✕";
+  }
+  
+  /* Hide menu by default on mobile */
+  .core-links-container {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+  
+  /* Show menu when checkbox is checked */
+  .menu-toggle:checked ~ .core-links-container {
+    display: flex;
+  }
+  
+  /* Full width menu items */
+  .core-links-item {
+    margin: 0.5rem 0;
+    width: 100%;
+    text-align: center;
+  }
+}
+
 @media screen and (min-width: 640px) {
     .post-body-content p:not(.info-list-text-item):not(div.leaflet-container *) {
         margin-left: 4%;

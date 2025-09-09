@@ -1,28 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
-namespace PointlessWaymarks.CmsWpfControls.SnippetList
+namespace PointlessWaymarks.CmsWpfControls.SnippetList;
+
+/// <summary>
+///     Interaction logic for SnippetListControl.xaml
+/// </summary>
+public partial class SnippetListControl
 {
-    /// <summary>
-    /// Interaction logic for SnippetListControl.xaml
-    /// </summary>
-    public partial class SnippetListControl : UserControl
+    public SnippetListControl()
     {
-        public SnippetListControl()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

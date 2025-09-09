@@ -1,4 +1,6 @@
+using System.IO;
 using System.Windows;
+using Ookii.Dialogs.Wpf;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentGeneration;
@@ -6,6 +8,7 @@ using PointlessWaymarks.CmsData.ContentHtml.ImageHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.ImageHelpers;
 using PointlessWaymarks.CmsWpfControls.ContentList;
+using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.Status;
@@ -49,28 +52,20 @@ public partial class ImageListWithActionsContext
                 ItemCommand = ListContext.PictureGalleryBracketCodeToClipboardSelectedCommand
             },
 
-            new ContextMenuItemData { ItemName = "Email Html to Clipboard", ItemCommand = EmailHtmlToClipboardCommand },
-            new ContextMenuItemData { ItemName = "View Images", ItemCommand = ViewSelectedFilesCommand },
-            new ContextMenuItemData { ItemName = "Open URL", ItemCommand = ListContext.ViewOnSiteCommand },
-            new ContextMenuItemData
-                { ItemName = "Extract New Links", ItemCommand = ListContext.ExtractNewLinksSelectedCommand },
-            new ContextMenuItemData { ItemName = "Process/Resize Selected", ItemCommand = ForcedResizeCommand },
+            new ContextMenuItemData { ItemName = "View Images - Individual", ItemCommand = ViewSelectedFilesCommand },
             new ContextMenuItemData
             {
-                ItemName = "Generate Html/Process/Resize Selected",
-                ItemCommand = RegenerateHtmlAndReprocessImageForSelectedCommand
+                ItemName = "View Images - Group",
+                ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
             },
+            new ContextMenuItemData { ItemName = "Open URL", ItemCommand = ListContext.ViewOnSiteCommand },
 
             new ContextMenuItemData { ItemName = "Delete", ItemCommand = ListContext.DeleteSelectedCommand },
-            new ContextMenuItemData { ItemName = "View History", ItemCommand = ListContext.ViewHistorySelectedCommand },
             new ContextMenuItemData
             {
                 ItemName = "Map Selected Items", ItemCommand = ListContext.SpatialItemsToContentMapWindowSelectedCommand
             },
-            new ContextMenuItemData
-            {
-                ItemName = "View Selected Pictures", ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
-            },
+
             new ContextMenuItemData { ItemName = "Refresh Data", ItemCommand = RefreshDataCommand }
         ];
 
@@ -92,12 +87,13 @@ public partial class ImageListWithActionsContext
             await ContentListContext.CreateInstance(factoryStatusContext, new ImageListLoader(100),
                 [Db.ContentTypeDisplayStringForImage], windowStatus);
 
-        return new ImageListWithActionsContext(factoryStatusContext, windowStatus, factoryListContext, loadInBackground);
+        return new ImageListWithActionsContext(factoryStatusContext, windowStatus, factoryListContext,
+            loadInBackground);
     }
 
     [BlockingCommand]
     [StopAndWarnIfNotOneSelectedListItems]
-    private async Task EmailHtmlToClipboard()
+    public async Task EmailHtmlToClipboard()
     {
         var frozenSelected = SelectedListItems().First();
 
@@ -111,8 +107,65 @@ public partial class ImageListWithActionsContext
     }
 
     [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItemsAskIfOverMax(MaxSelectedItems = 10)]
+    public async Task ExportFiles(CancellationToken cancellationToken)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (!SelectedListItems().Any())
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        var frozenSelect = SelectedListItems().ToList();
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        var dialog = new VistaFolderBrowserDialog
+        {
+            Description = "Select folder to export files to",
+            UseDescriptionForTitle = true
+        };
+
+        if (dialog.ShowDialog() != true) return;
+
+        var exportDirectory = new DirectoryInfo(dialog.SelectedPath);
+
+        if (!exportDirectory.Exists)
+        {
+            await StatusContext.ToastError("Selected directory does not exist?");
+            return;
+        }
+
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var exportedCount = 0;
+
+        foreach (var loopSelected in frozenSelect)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var fileToExport = UserSettingsSingleton.CurrentSettings()
+                .LocalMediaArchiveImageContentFile(loopSelected.DbEntry);
+
+            if (fileToExport is not { Exists: true }) continue;
+
+            var destinationFileName = UniqueFileTools.UniqueFile(exportDirectory, fileToExport.Name);
+
+            File.Copy(fileToExport.FullName, destinationFileName!.FullName);
+            exportedCount++;
+        }
+
+        if (exportedCount > 0)
+            await StatusContext.ToastSuccess($"Exported {exportedCount} files to {exportDirectory.FullName}");
+        else
+            await StatusContext.ToastWarning("No files to export?");
+    }
+
+    [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task ForcedResize(CancellationToken cancellationToken)
+    public async Task ForcedResize(CancellationToken cancellationToken)
     {
         var totalCount = SelectedListItems().Count;
         var currentLoop = 0;
@@ -147,7 +200,7 @@ public partial class ImageListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task ImageBracketLinkCodesToClipboardForSelected()
+    public async Task ImageBracketLinkCodesToClipboardForSelected()
     {
         var finalString = SelectedListItems().Aggregate(string.Empty,
             (current, loopSelected) =>
@@ -170,7 +223,7 @@ public partial class ImageListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task RegenerateHtmlAndReprocessImageForSelected(CancellationToken cancellationToken)
+    public async Task RegenerateHtmlAndReprocessImageForSelected(CancellationToken cancellationToken)
     {
         var loopCount = 0;
         var totalCount = SelectedListItems().Count;
@@ -246,8 +299,8 @@ public partial class ImageListWithActionsContext
 
     public List<ImageListListItem> SelectedListItems()
     {
-        return ListContext.ListSelection.SelectedItems?.Where(x => x is ImageListListItem).Cast<ImageListListItem>()
-            .ToList() ?? [];
+        return ListContext.ListSelection.SelectedItems.Where(x => x is ImageListListItem).Cast<ImageListListItem>()
+            .ToList();
     }
 
     [BlockingCommand]

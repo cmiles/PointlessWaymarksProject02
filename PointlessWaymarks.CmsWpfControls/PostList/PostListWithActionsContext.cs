@@ -72,7 +72,7 @@ public partial class PostListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task BracketCodesToClipboardForSelected()
+    public async Task BracketCodesToClipboardForSelected()
     {
         var finalString = SelectedListItems().Aggregate(string.Empty,
             (current, loopSelected) =>
@@ -101,7 +101,7 @@ public partial class PostListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNotOneSelectedListItems]
-    private async Task EmailHtmlToClipboard()
+    public async Task EmailHtmlToClipboard()
     {
         var frozenSelected = SelectedListItems().First();
 
@@ -124,7 +124,7 @@ public partial class PostListWithActionsContext
 
     public List<PostListListItem> SelectedListItems()
     {
-        return ListContext.ListSelection.SelectedItems?.Where(x => x is PostListListItem).Cast<PostListListItem>()
-            .ToList() ?? [];
+        return ListContext.ListSelection.SelectedItems.Where(x => x is PostListListItem).Cast<PostListListItem>()
+            .ToList();
     }
 }

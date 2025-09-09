@@ -86,7 +86,7 @@ public partial class FileContentEditorWindow
         window.WindowTitle =
             $"File Editor - {UserSettingsSingleton.CurrentSettings().SiteName} - {window.FileContent.TitleSummarySlugFolder.TitleEntry.UserValue}";
 
-        window.FileContent.TitleSummarySlugFolder.TitleEntry.PropertyChanged += (_, args) =>
+        window.FileContent.TitleSummarySlugFolder.TitleEntry.PropertyChanged += (_, _) =>
         {
             window.WindowTitle =
                 $"File Editor - {UserSettingsSingleton.CurrentSettings().SiteName} - {window.FileContent.TitleSummarySlugFolder.TitleEntry.UserValue}";
@@ -124,7 +124,7 @@ public partial class FileContentEditorWindow
         window.WindowTitle =
             $"File Editor - {UserSettingsSingleton.CurrentSettings().SiteName} - {window.FileContent.TitleSummarySlugFolder.TitleEntry.UserValue}";
 
-        window.FileContent.TitleSummarySlugFolder.TitleEntry.PropertyChanged += (_, args) =>
+        window.FileContent.TitleSummarySlugFolder.TitleEntry.PropertyChanged += (_, _) =>
         {
             window.WindowTitle =
                 $"File Editor - {UserSettingsSingleton.CurrentSettings().SiteName} - {window.FileContent.TitleSummarySlugFolder.TitleEntry.UserValue}";

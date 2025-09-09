@@ -7,7 +7,7 @@ namespace PointlessWaymarks.CmsWpfControls.PointList;
 
 public class MapMarkerColorConverter : IValueConverter
 {
-    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         var colorString = value?.ToString() ?? string.Empty;
 
@@ -19,10 +19,10 @@ public class MapMarkerColorConverter : IValueConverter
 
         var color = colorLookup[colorString.ToLowerInvariant()];
 
-        return (SolidColorBrush)new BrushConverter().ConvertFrom(color);
+        return new BrushConverter().ConvertFrom(color) as SolidColorBrush ?? Brushes.Transparent;
     }
 
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         throw new NotSupportedException();
     }

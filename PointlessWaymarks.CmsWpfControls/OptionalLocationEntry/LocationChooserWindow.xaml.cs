@@ -31,7 +31,7 @@ public partial class LocationChooserWindow
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        if (LocationChooser.HasValidationIssues)
+        if (LocationChooser!.HasValidationIssues)
         {
             await StatusContext.ToastError("Validation Error...");
             return;

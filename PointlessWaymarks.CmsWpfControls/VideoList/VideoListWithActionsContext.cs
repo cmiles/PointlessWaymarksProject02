@@ -6,6 +6,7 @@ using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentHtml.VideoHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsWpfControls.ContentList;
+using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.FileMetadataDisplay;
@@ -55,24 +56,18 @@ public partial class VideoListWithActionsContext
                 ItemName = "Picture Gallery to Clipboard",
                 ItemCommand = ListContext.PictureGalleryBracketCodeToClipboardSelectedCommand
             },
-
-            new ContextMenuItemData { ItemName = "Email Html to Clipboard", ItemCommand = EmailHtmlToClipboardCommand },
-            new ContextMenuItemData { ItemName = "View Videos", ItemCommand = ViewSelectedVideosCommand },
+            new ContextMenuItemData { ItemName = "View Videos - Individual", ItemCommand = ViewSelectedVideosCommand },
+            new ContextMenuItemData
+            {
+                ItemName = "View Videos - Group", ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
+            },
             new ContextMenuItemData { ItemName = "Open URL", ItemCommand = ListContext.ViewOnSiteCommand },
-            new ContextMenuItemData
-                { ItemName = "Extract New Links", ItemCommand = ListContext.ExtractNewLinksSelectedCommand },
-            new ContextMenuItemData
-                { ItemName = "Generate Html", ItemCommand = ListContext.GenerateHtmlSelectedCommand },
             new ContextMenuItemData { ItemName = "Delete", ItemCommand = ListContext.DeleteSelectedCommand },
-            new ContextMenuItemData { ItemName = "View History", ItemCommand = ListContext.ViewHistorySelectedCommand },
             new ContextMenuItemData
             {
                 ItemName = "Map Selected Items", ItemCommand = ListContext.SpatialItemsToContentMapWindowSelectedCommand
             },
-            new ContextMenuItemData
-            {
-                ItemName = "View Selected Videos", ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
-            },
+
             new ContextMenuItemData { ItemName = "Refresh Data", ItemCommand = RefreshDataCommand }
         ];
 
@@ -112,6 +107,63 @@ public partial class VideoListWithActionsContext
         HtmlClipboardHelpers.CopyToClipboard(emailHtml, emailHtml);
 
         await StatusContext.ToastSuccess("Email Html on Clipboard");
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItemsAskIfOverMax(MaxSelectedItems = 10)]
+    private async Task ExportFiles(CancellationToken cancellationToken)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (!SelectedListItems().Any())
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        var frozenSelect = SelectedListItems().ToList();
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        var dialog = new VistaFolderBrowserDialog
+        {
+            Description = "Select folder to export files to",
+            UseDescriptionForTitle = true
+        };
+
+        if (dialog.ShowDialog() != true) return;
+
+        var exportDirectory = new DirectoryInfo(dialog.SelectedPath);
+
+        if (!exportDirectory.Exists)
+        {
+            await StatusContext.ToastError("Selected directory does not exist?");
+            return;
+        }
+
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var exportedCount = 0;
+
+        foreach (var loopSelected in frozenSelect)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var fileToExport = UserSettingsSingleton.CurrentSettings()
+                .LocalMediaArchiveVideoContentFile(loopSelected.DbEntry);
+
+            if (fileToExport is not { Exists: true }) continue;
+
+            var destinationFileName = UniqueFileTools.UniqueFile(exportDirectory, fileToExport.Name);
+
+            File.Copy(fileToExport.FullName, destinationFileName!.FullName);
+            exportedCount++;
+        }
+
+        if (exportedCount > 0)
+            await StatusContext.ToastSuccess($"Exported {exportedCount} files to {exportDirectory.FullName}");
+        else
+            await StatusContext.ToastWarning("No files to export?");
     }
 
     [BlockingCommand]

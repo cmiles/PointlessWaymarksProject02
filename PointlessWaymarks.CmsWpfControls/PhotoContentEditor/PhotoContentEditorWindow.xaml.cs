@@ -50,7 +50,7 @@ public partial class PhotoContentEditorWindow
         window.WindowTitle =
             $"Photo Editor - {UserSettingsSingleton.CurrentSettings().SiteName} - {window.PhotoContent.TitleSummarySlugFolder.TitleEntry.UserValue}";
 
-        window.PhotoContent.TitleSummarySlugFolder.TitleEntry.PropertyChanged += (_, args) =>
+        window.PhotoContent.TitleSummarySlugFolder.TitleEntry.PropertyChanged += (_, _) =>
         {
             window.WindowTitle =
                 $"Photo Editor - {UserSettingsSingleton.CurrentSettings().SiteName} - {window.PhotoContent.TitleSummarySlugFolder.TitleEntry.UserValue}";
@@ -87,7 +87,7 @@ public partial class PhotoContentEditorWindow
         window.WindowTitle =
             $"Photo Editor - {UserSettingsSingleton.CurrentSettings().SiteName} - {window.PhotoContent.TitleSummarySlugFolder.TitleEntry.UserValue}";
 
-        window.PhotoContent.TitleSummarySlugFolder.TitleEntry.PropertyChanged += (_, args) =>
+        window.PhotoContent.TitleSummarySlugFolder.TitleEntry.PropertyChanged += (_, _) =>
         {
             window.WindowTitle =
                 $"Photo Editor - {UserSettingsSingleton.CurrentSettings().SiteName} - {window.PhotoContent.TitleSummarySlugFolder.TitleEntry.UserValue}";
