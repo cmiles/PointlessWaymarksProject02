@@ -36,7 +36,17 @@ public partial class TrailListWithActionsContext
 
             new ContextMenuItemData
             {
-                ItemName = "Image Code to Clipboard", ItemCommand = BracketCodesToClipboardForSelectedCommand
+                ItemName = "Image Code to Clipboard", ItemCommand = ImageBracketCodesToClipboardForSelectedCommand
+            },
+
+            new ContextMenuItemData
+            {
+                ItemName = "Stats Code to Clipboard", ItemCommand = TextStatsBracketCodesToClipboardForSelectedCommand
+            },
+
+            new ContextMenuItemData
+            {
+                ItemName = "Extended Stats Code to Clipboard", ItemCommand = TextStatsExtendedBracketCodesToClipboardForSelectedCommand
             },
 
             new ContextMenuItemData
@@ -77,6 +87,53 @@ public partial class TrailListWithActionsContext
         var finalString = SelectedListItems().Aggregate(string.Empty,
             (current, loopSelected) =>
                 current + $"{BracketCodeTrails.Create(loopSelected.DbEntry)}{Environment.NewLine}");
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        Clipboard.SetText(finalString);
+
+        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task ImageBracketCodesToClipboardForSelected()
+    {
+        var finalString = SelectedListItems().Aggregate(string.Empty,
+            (current, loopSelected) =>
+                current + $"{BracketCodeTrailImageLink.Create(loopSelected.DbEntry)}{Environment.NewLine}");
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        Clipboard.SetText(finalString);
+
+        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+    }
+
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task TextStatsBracketCodesToClipboardForSelected()
+    {
+        var finalString = SelectedListItems().Aggregate(string.Empty,
+            (current, loopSelected) =>
+                current + $"{BracketCodeTrailTextStats.Create(loopSelected.DbEntry)}{Environment.NewLine}");
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        Clipboard.SetText(finalString);
+
+        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+    }
+
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task TextStatsExtendedBracketCodesToClipboardForSelected()
+    {
+        var finalString = SelectedListItems().Aggregate(string.Empty,
+            (current, loopSelected) =>
+                current + $"{BracketCodeTrailTextStats.CreateExtended(loopSelected.DbEntry)}{Environment.NewLine}");
 
         await ThreadSwitcher.ResumeForegroundAsync();
 

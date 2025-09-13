@@ -217,6 +217,9 @@ public static partial class BracketCodeCommon
         input = await BracketCodePointImageLink.ProcessToFigureWithLink(input, progress).ConfigureAwait(false);
         input = await BracketCodePosts.Process(input, progress).ConfigureAwait(false);
         input = await BracketCodePostImageLink.ProcessForEmail(input, progress).ConfigureAwait(false);
+        input = await BracketCodeTrails.Process(input, progress).ConfigureAwait(false);
+        input = await BracketCodeTrailImageLink.ProcessToFigureWithLink(input, progress).ConfigureAwait(false);
+        input = await BracketCodeTrailTextStats.Process(input, progress).ConfigureAwait(false);
         input = await BracketCodeVideoImageLink.ProcessToFigureWithLink(input, progress).ConfigureAwait(false);
         input = BracketCodeSpecialPages.Process(input, progress);
 
@@ -269,6 +272,9 @@ public static partial class BracketCodeCommon
         input = await BracketCodePostImageLink.ProcessToFigureWithLink(input, progress).ConfigureAwait(false);
         input = await BracketCodePosts.Process(input, progress).ConfigureAwait(false);
         input = await BracketCodePostImageLink.ProcessToFigureWithLink(input, progress).ConfigureAwait(false);
+        input = await BracketCodeTrails.Process(input, progress);
+        input = await BracketCodeTrailTextStats.Process(input, progress);
+        input = await BracketCodeTrailImageLink.ProcessToFigureWithLink(input, progress);
         input = await BracketCodeVideoLinks.Process(input, progress).ConfigureAwait(false);
         input = await BracketCodeVideoImageLink.ProcessToFigureWithLink(input, progress).ConfigureAwait(false);
         input = await BracketCodeVideoEmbed.Process(input, progress).ConfigureAwait(false);

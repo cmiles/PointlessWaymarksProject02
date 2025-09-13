@@ -36,7 +36,7 @@ public partial class PostListWithActionsContext
 
             new ContextMenuItemData
             {
-                ItemName = "Image Code to Clipboard", ItemCommand = BracketCodesToClipboardForSelectedCommand
+                ItemName = "Image Code to Clipboard", ItemCommand = ImageBracketCodesToClipboardForSelectedCommand
             },
 
             new ContextMenuItemData
@@ -77,6 +77,21 @@ public partial class PostListWithActionsContext
         var finalString = SelectedListItems().Aggregate(string.Empty,
             (current, loopSelected) =>
                 current + $"{BracketCodePosts.Create(loopSelected.DbEntry)}{Environment.NewLine}");
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        Clipboard.SetText(finalString);
+
+        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task ImageBracketCodesToClipboardForSelected()
+    {
+        var finalString = SelectedListItems().Aggregate(string.Empty,
+            (current, loopSelected) =>
+                current + $"{BracketCodePostImageLink.Create(loopSelected.DbEntry)}{Environment.NewLine}");
 
         await ThreadSwitcher.ResumeForegroundAsync();
 

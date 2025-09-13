@@ -3,6 +3,7 @@ using Windows.Data.Pdf;
 using Windows.Graphics.Imaging;
 using Windows.Media.Editing;
 using Windows.Storage;
+using PDFtoImage;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.CommonHtml;
@@ -172,27 +173,30 @@ public static class ImageExtractionHelpers
         //This call may seem un-needed but should be left in place!
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        //One of the calls below to get the image preview from Windows will switch to the UI Thread...
-        var file = await StorageFile.GetFileFromPathAsync(targetFile.FullName);
-        var pdfDocument = await PdfDocument.LoadFromFileAsync(file);
-        var pageIndex = (uint)pageNumber - 1;
+        await using var pdfStream = File.OpenRead(targetFile.FullName);
+        Conversion.SaveJpeg(destinationFile.FullName, pdfStream, pageNumber - 1);
+        
+        ////One of the calls below to get the image preview from Windows will switch to the UI Thread...
+        //var file = await StorageFile.GetFileFromPathAsync(targetFile.FullName);
+        //var pdfDocument = await PdfDocument.LoadFromFileAsync(file);
+        //var pageIndex = (uint)pageNumber - 1;
 
-        var destinationStorageDirectory =
-            await StorageFolder.GetFolderFromPathAsync(destinationFile.Directory.FullName);
-        var destinationStorageFile = await destinationStorageDirectory.CreateFileAsync(destinationFile.Name);
+        //var destinationStorageDirectory =
+        //    await StorageFolder.GetFolderFromPathAsync(destinationFile.Directory.FullName);
+        //var destinationStorageFile = await destinationStorageDirectory.CreateFileAsync(destinationFile.Name);
 
-        using (var pdfPage = pdfDocument.GetPage(pageIndex))
-        using (var transaction = await destinationStorageFile.OpenTransactedWriteAsync())
-        {
-            var pdfPageRenderOptions = new PdfPageRenderOptions
-            {
-                DestinationHeight = (uint)pdfPage.Size.Height * 2,
-                DestinationWidth = (uint)pdfPage.Size.Width * 2,
-                BitmapEncoderId = BitmapEncoder.JpegEncoderId
-            };
+        //using (var pdfPage = pdfDocument.GetPage(pageIndex))
+        //using (var transaction = await destinationStorageFile.OpenTransactedWriteAsync())
+        //{
+        //    var pdfPageRenderOptions = new PdfPageRenderOptions
+        //    {
+        //        DestinationHeight = (uint)pdfPage.Size.Height * 2,
+        //        DestinationWidth = (uint)pdfPage.Size.Width * 2,
+        //        BitmapEncoderId = BitmapEncoder.JpegEncoderId
+        //    };
 
-            await pdfPage.RenderToStreamAsync(transaction.Stream, pdfPageRenderOptions);
-        }
+        //    await pdfPage.RenderToStreamAsync(transaction.Stream, pdfPageRenderOptions);
+        //}
 
         destinationFile.Refresh();
 

@@ -96,7 +96,7 @@ public partial class VideoListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNotOneSelectedListItems]
-    private async Task EmailHtmlToClipboard()
+    public async Task EmailHtmlToClipboard()
     {
         var frozenSelected = SelectedListItems().First();
 
@@ -111,7 +111,7 @@ public partial class VideoListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItemsAskIfOverMax(MaxSelectedItems = 10)]
-    private async Task ExportFiles(CancellationToken cancellationToken)
+    public async Task ExportFiles(CancellationToken cancellationToken)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -176,7 +176,7 @@ public partial class VideoListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNotOneSelectedListItems]
-    private async Task ReportVideoMetadata()
+    public async Task ReportVideoMetadata()
     {
         var singleSelected = SelectedListItems().First();
 
@@ -198,13 +198,13 @@ public partial class VideoListWithActionsContext
 
     public List<VideoListListItem> SelectedListItems()
     {
-        return ListContext.ListSelection.SelectedItems?.Where(x => x is VideoListListItem).Cast<VideoListListItem>()
-            .ToList() ?? [];
+        return ListContext.ListSelection.SelectedItems.Where(x => x is VideoListListItem).Cast<VideoListListItem>()
+            .ToList();
     }
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task VideoCoverImageLinkCodesToClipboardForSelected()
+    public async Task VideoCoverImageLinkCodesToClipboardForSelected()
     {
         var finalString = string.Empty;
 
@@ -232,7 +232,7 @@ public partial class VideoListWithActionsContext
     }
 
     [BlockingCommand]
-    private async Task VideoMetadataFromPickedFile()
+    public async Task VideoMetadataFromPickedFile()
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -252,7 +252,7 @@ public partial class VideoListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    private async Task VideoPageLinkCodesToClipboardForSelected()
+    public async Task VideoPageLinkCodesToClipboardForSelected()
     {
         var finalString = string.Empty;
 

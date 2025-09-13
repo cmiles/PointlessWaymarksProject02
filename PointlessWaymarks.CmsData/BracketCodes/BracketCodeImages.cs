@@ -86,7 +86,7 @@ public static class BracketCodeImages
     }
 
     /// <summary>
-    ///     This method processes a image code for use in email.
+    ///     This method processes an image code for use in email.
     /// </summary>
     /// <param name="toProcess"></param>
     /// <param name="progress"></param>

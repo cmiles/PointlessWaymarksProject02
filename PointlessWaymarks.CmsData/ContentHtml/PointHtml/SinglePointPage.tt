@@ -57,9 +57,10 @@
                     PointParts.PointDivAndScript(DbEntry.ContentId) #>
     <#= PointParts.PointTextInfoDiv(DbEntry) #>
     <#=
-                    Tags.PostBodyDiv(DbEntry).Result.ToString() #>
-    <#=
                     PointParts.PointDetailsDiv(DbEntry).Result.ToString() #>
+    <#=
+                    Tags.PostBodyDiv(DbEntry).Result.ToString() #>
+
     <#= HorizontalRule.StandardRule() #>
     <div class="information-section">
         <#= Tags.TagList(DbEntry).ToString() #>

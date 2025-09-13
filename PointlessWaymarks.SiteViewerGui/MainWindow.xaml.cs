@@ -250,12 +250,16 @@ public partial class MainWindow
         {
             await ThreadSwitcher.ResumeForegroundAsync();
 
-            navigationArgs.Handled = true;
-
             var uri = navigationArgs.Uri;
 
             StatusContext.RunFireAndForgetBlockingTask(async () => await NewAdditionalTab(uri));
         }
+        else
+        {
+            ProcessHelpers.OpenUrlInExternalBrowser(navigationArgs.Uri);
+        }
+
+        navigationArgs.Handled = true;
     }
 
     private async Task SettingsFileChooserOnDirectoryUpdated(

@@ -214,7 +214,7 @@ public partial class ContentListContext : IDragSource, IDropTarget
     public void DragOver(IDropInfo dropInfo)
     {
         // First check for files (existing functionality)
-        var files = DragAndDropFilesHelper.DroppedFileNames(dropInfo, true, _validDragAndDropFileExtensions);
+        var files = DragAndDropFilesHelper.DroppedFileNames(dropInfo, true);
 
         if (files.Any())
         {
@@ -283,8 +283,7 @@ public partial class ContentListContext : IDragSource, IDropTarget
     public void Drop(IDropInfo dropInfo)
     {
         // First check for files (existing functionality)
-        var files = DragAndDropFilesHelper.DroppedFiles(dropInfo, FileLocationTools.TempStorageDirectory(), true,
-            _validDragAndDropFileExtensions);
+        var files = DragAndDropFilesHelper.DroppedFiles(dropInfo, FileLocationTools.TempStorageDirectory(), true);
 
         if (files.Any())
         {

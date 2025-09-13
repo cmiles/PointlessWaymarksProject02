@@ -1,3 +1,4 @@
+using HtmlTags;
 using Microsoft.EntityFrameworkCore;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
@@ -11,7 +12,13 @@ public static class BracketCodeTrailTextStats
     public static string Create(TrailContent content)
     {
         return
-            $"{{{{{BracketCodeToken} {content.ContentId};text [distance] miles, [climb]' ascent, [descent]' descent;{content.Title}}}}}";
+            $"{{{{{BracketCodeToken} {content.ContentId};text [shape] - [distance] miles, [climb]' ascent, [descent]' descent;{content.Title}}}}}";
+    }
+
+    public static string CreateExtended(TrailContent content)
+    {
+        return
+            $"{{{{{BracketCodeToken} {content.ContentId};text [titlelink]: [shape] - [distance] miles, [climb]' ascent, [descent]' descent. [fee], [dogs], [bikes].;{content.Title}}}}}";
     }
 
     public static async Task<List<TrailContent>> DbContentFromBracketCodes(string? toProcess,
@@ -79,6 +86,14 @@ public static class BracketCodeTrailTextStats
             else
             {
                 statsString = loopMatch.displayText.Trim();
+                statsString = statsString.Replace("[shape]", $"{trailContent.TrailShape}");
+                statsString = statsString.Replace("[titlelink]",
+                    new LinkTag(trailContent.Title, UserSettingsSingleton.CurrentSettings().TrailPageUrl(trailContent), "trail-page-link").ToString());
+                statsString = statsString.Replace("[title]", $"{trailContent.Title}");
+                statsString = statsString.Replace("[fee]", $"{(trailContent.Fees ? "Fee: Yes" : "Fee: No")}");
+                statsString = statsString.Replace("[dogs]", $"{(trailContent.Dogs ? "Dogs: Yes" : "Dogs: No")}");
+                statsString = statsString.Replace("[bikes]", $"{(trailContent.Bikes ? "Bikes: Yes" : "Bikes: No")}");
+                statsString = statsString.Replace("[location]", $"{(trailContent.LocationArea)}");
                 statsString = statsString.Replace("[distance]", $"{dbContent.LineDistance:N1}");
                 statsString = statsString.Replace("[climb]", $"{dbContent.ClimbElevation:N0}");
                 statsString = statsString.Replace("[descent]", $"{dbContent.DescentElevation:N0}");

@@ -1,13 +1,18 @@
-﻿using PointlessWaymarks.CmsData.Database;
+using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 
 namespace PointlessWaymarks.CmsWpfControls.ContentMap;
 
-public class ContentMapListLoader(string headerName, List<Guid> contentIdsToLoad)
-    : ContentListLoaderBase(headerName, null)
+public class ContentMapListLoader : ContentListLoaderBase
 {
-    public List<Guid> ContentIdsToLoad { get; set; } = contentIdsToLoad;
+    public ContentMapListLoader(string headerName, List<Guid> contentIdsToLoad) : base(headerName, null)
+    {
+        ContentIdsToLoad = contentIdsToLoad;
+        AddNewItemsFromDataNotifications = false;
+    }
 
+    public List<Guid> ContentIdsToLoad { get; set; }
+    
     public override async Task<List<object>> LoadItems(IProgress<string>? progress = null)
     {
         var db = await Db.Context();

@@ -35,14 +35,14 @@ public partial class FileListWithActionsContext : IListSelectionWithContext<File
             new ContextMenuItemData { ItemName = "Edit", ItemCommand = ListContext.EditSelectedCommand },
             new ContextMenuItemData
             {
-                ItemName = "Image Code to Clipboard",
+                ItemName = "Code to Clipboard",
                 ItemCommand = ListContext.BracketCodeToClipboardSelectedCommand
             },
 
             new ContextMenuItemData
             {
-                ItemName = "Text Code to Clipboard",
-                ItemCommand = FilePageLinkCodesToClipboardForSelectedCommand
+                ItemName = "Image Code to Clipboard",
+                ItemCommand = FileImageLinkCodesToClipboardForSelectedCommand
             },
 
             new ContextMenuItemData
@@ -221,6 +221,22 @@ public partial class FileListWithActionsContext : IListSelectionWithContext<File
 
         foreach (var loopSelected in SelectedListItems())
             finalString += $"{BracketCodeFiles.Create(loopSelected.DbEntry)}{Environment.NewLine}";
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        Clipboard.SetText(finalString);
+
+        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task FileImageLinkCodesToClipboardForSelected()
+    {
+        var finalString = string.Empty;
+
+        foreach (var loopSelected in SelectedListItems())
+            finalString += $"{BracketCodeFileImageLink.Create(loopSelected.DbEntry)}{Environment.NewLine}";
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
