@@ -470,7 +470,6 @@ public partial class MainWindow
         await new LineMonthlyActivitySummaryPage(null).WriteLocalHtml();
     }
 
-
     [BlockingCommand]
     public async Task GenerateSiteResources()
     {

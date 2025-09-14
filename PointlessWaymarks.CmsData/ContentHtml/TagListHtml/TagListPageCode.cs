@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using HtmlTags;
 
 namespace PointlessWaymarks.CmsData.ContentHtml.TagListHtml;
@@ -47,6 +47,9 @@ public partial class TagListPage
 
         if (htmlFileInfo.Exists)
         {
+            if (await FileManagement.FileAndHtmlStringIgnoringContentAndGenerationVersionAreEqual(htmlFileInfo, htmlString))
+                return;
+
             htmlFileInfo.Delete();
             htmlFileInfo.Refresh();
         }

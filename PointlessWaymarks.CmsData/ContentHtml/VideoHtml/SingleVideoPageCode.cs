@@ -1,4 +1,4 @@
-﻿using PointlessWaymarks.CmsData.CommonHtml;
+using PointlessWaymarks.CmsData.CommonHtml;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CommonTools;
 
@@ -53,9 +53,9 @@ public partial class SingleVideoPage
 
         var htmlString = TransformText();
 
-        var htmlVideoInfo = settings.LocalSiteVideoHtmlFile(DbEntry);
+        var htmlFileInfo = settings.LocalSiteVideoHtmlFile(DbEntry);
 
-        if (htmlVideoInfo == null)
+        if (htmlFileInfo == null)
         {
             var toThrow =
                 new Exception("The Video DbEntry did not have valid information to determine a file for the html");
@@ -63,12 +63,15 @@ public partial class SingleVideoPage
             throw toThrow;
         }
 
-        if (htmlVideoInfo.Exists)
+        if (htmlFileInfo.Exists)
         {
-            htmlVideoInfo.Delete();
-            htmlVideoInfo.Refresh();
+            if (await FileManagement.FileAndHtmlStringIgnoringContentAndGenerationVersionAreEqual(htmlFileInfo, htmlString))
+                return;
+
+            htmlFileInfo.Delete();
+            htmlFileInfo.Refresh();
         }
 
-        await FileManagement.WriteAllTextToFileAndLog(htmlVideoInfo.FullName, htmlString).ConfigureAwait(false);
+        await FileManagement.WriteAllTextToFileAndLog(htmlFileInfo.FullName, htmlString).ConfigureAwait(false);
     }
 }

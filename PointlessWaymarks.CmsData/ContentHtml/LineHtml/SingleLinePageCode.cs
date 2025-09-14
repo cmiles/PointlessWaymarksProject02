@@ -63,6 +63,9 @@ public partial class SingleLinePage
 
         if (htmlFileInfo.Exists)
         {
+            if (await FileManagement.FileAndHtmlStringIgnoringContentAndGenerationVersionAreEqual(htmlFileInfo, htmlString))
+                return;
+
             htmlFileInfo.Delete();
             htmlFileInfo.Refresh();
         }

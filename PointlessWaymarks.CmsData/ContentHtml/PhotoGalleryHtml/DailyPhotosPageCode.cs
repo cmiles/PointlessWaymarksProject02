@@ -1,4 +1,4 @@
-﻿using PointlessWaymarks.CmsData.CommonHtml;
+using PointlessWaymarks.CmsData.CommonHtml;
 using PointlessWaymarks.CmsData.Database;
 
 namespace PointlessWaymarks.CmsData.ContentHtml.PhotoGalleryHtml;
@@ -29,6 +29,9 @@ public partial class DailyPhotosPage
 
         if (htmlFileInfo.Exists)
         {
+            if (await FileManagement.FileAndHtmlStringIgnoringContentAndGenerationVersionAreEqual(htmlFileInfo, htmlString))
+                return;
+
             htmlFileInfo.Delete();
             htmlFileInfo.Refresh();
         }

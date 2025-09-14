@@ -153,13 +153,20 @@ public static class Export
         var jsonFile = new FileInfo(Path.Combine(settings.LocalSiteContentDataDirectory().FullName,
             $"{dbEntry.ContentId}.json"));
 
+        var pictureInfo = PictureAssetProcessing.ProcessPictureDirectory(dbEntry.ContentId);
+        var smallImageUrl = pictureInfo?.SmallPicture?.SiteUrl;
+        var displayImageUrl = pictureInfo?.DisplayPicture?.SiteUrl;
+
         if (jsonFile.Exists)
             try
             {
                 await using var jsonFileStream = jsonFile.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
                 var onDiskObject = await JsonSerializer.DeserializeAsync<ImageContentOnDiskData>(jsonFileStream);
 
-                if (new CompareLogic().Compare(dbEntry, onDiskObject?.Content).AreEqual)
+                if (new CompareLogic().Compare(dbEntry, onDiskObject?.Content).AreEqual
+                    && (onDiskObject?.SmallPictureUrl?.Equals(smallImageUrl) ?? false)
+                    && (onDiskObject.DisplayPictureUrl?.Equals(displayImageUrl) ?? false)
+                   )
                 {
                     progress?.Report($"Image - {dbEntry.Title} - Current and On Disk Json are the same - continuing");
                     return;
@@ -177,10 +184,6 @@ public static class Export
 
         if (jsonFile.Exists) jsonFile.Delete();
         jsonFile.Refresh();
-
-        var pictureInfo = PictureAssetProcessing.ProcessPictureDirectory(dbEntry.ContentId);
-        var smallImageUrl = pictureInfo?.SmallPicture?.SiteUrl;
-        var displayImageUrl = pictureInfo?.DisplayPicture?.SiteUrl;
 
         var onDiskData = new ImageContentOnDiskData(Db.ContentTypeDisplayString(dbEntry), dbEntry, smallImageUrl,
             displayImageUrl);
@@ -219,13 +222,19 @@ public static class Export
         var jsonFile = new FileInfo(Path.Combine(settings.LocalSiteContentDataDirectory().FullName,
             $"{dbEntry.ContentId}.json"));
 
+        var lineElevationDataList = LineData.GenerateLineElevationDataList(dbEntry);
+        var spatialContentReferences = await LineData.SpatialContentIdReferencesFromBodyContentReferences(dbEntry);
+
         if (jsonFile.Exists)
             try
             {
                 await using var jsonFileStream = jsonFile.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
                 var onDiskObject = await JsonSerializer.DeserializeAsync<LineContentOnDiskData>(jsonFileStream);
 
-                if (new CompareLogic().Compare(dbEntry, onDiskObject?.Content).AreEqual)
+                if (new CompareLogic().Compare(dbEntry, onDiskObject?.Content).AreEqual
+                    && new CompareLogic().Compare(lineElevationDataList, onDiskObject?.ElevationPlotData).AreEqual
+                    && new CompareLogic().Compare(spatialContentReferences, onDiskObject?.MapElements).AreEqual
+                    )
                 {
                     progress?.Report($"Line - {dbEntry.Title} - Current and On Disk Json are the same - continuing");
                     return;
@@ -245,8 +254,7 @@ public static class Export
         jsonFile.Refresh();
 
         var onDiskData = new LineContentOnDiskData(Db.ContentTypeDisplayString(dbEntry), dbEntry,
-            LineData.GenerateLineElevationDataList(dbEntry),
-            await LineData.SpatialContentIdReferencesFromBodyContentReferences(dbEntry));
+            lineElevationDataList, spatialContentReferences);
 
         var jsonDbEntry = await GeoJsonTools.SerializeWithGeoJsonSerializer(onDiskData);
 
@@ -339,35 +347,6 @@ public static class Export
         var jsonFile = new FileInfo(Path.Combine(settings.LocalSiteContentDataDirectory().FullName,
             $"{dbEntry.ContentId}.json"));
 
-        if (jsonFile.Exists)
-        {
-            await using var jsonFileStream = jsonFile.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
-
-            try
-            {
-                var onDiskObject = await JsonSerializer.DeserializeAsync<MapComponentOnDiskData>(jsonFileStream);
-
-                if (new CompareLogic().Compare(dbEntry, onDiskObject?.Content).AreEqual)
-                {
-                    progress?.Report(
-                        $"MapComponent - {dbEntry.Title} - Current and On Disk Json are the same - continuing");
-                    return;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.ForContext(nameof(dbEntry), dbEntry.SafeObjectDump()).ForContext(nameof(jsonFile), jsonFile)
-                    .ForContext("Exception", e.ToString()).Debug(
-                        "Map '{contentTitle}' had an invalid Json File on Disk",
-                        dbEntry.Title);
-            }
-        }
-
-        progress?.Report($"MapComponent - {dbEntry.Title} - Serializing and Writing Current Entry");
-
-        if (jsonFile.Exists) jsonFile.Delete();
-        jsonFile.Refresh();
-
         var dtoElements = dbEntry.Elements.ToList();
         var dtoElementsContentIds = dtoElements.Select(x => x.ElementContentId).Distinct().ToList();
 
@@ -437,6 +416,35 @@ public static class Export
             new SpatialContentReferences(fileSpatialContent, geoJsonSpatialContent, imageSpatialContent,
                 lineSpatialContent, photoSpatialContent, pointSpatialContent,
                 postSpatialContent, videoSpatialContent), showDetailsGuids);
+
+        if (jsonFile.Exists)
+        {
+            await using var jsonFileStream = jsonFile.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
+
+            try
+            {
+                var onDiskObject = await JsonSerializer.DeserializeAsync<MapComponentOnDiskData>(jsonFileStream);
+
+                if (new CompareLogic().Compare(onDiskData, onDiskObject).AreEqual)
+                {
+                    progress?.Report(
+                        $"MapComponent - {dbEntry.Title} - Current and On Disk Json are the same - continuing");
+                    return;
+                }
+            }
+            catch (Exception e)
+            {
+                Log.ForContext(nameof(dbEntry), dbEntry.SafeObjectDump()).ForContext(nameof(jsonFile), jsonFile)
+                    .ForContext("Exception", e.ToString()).Debug(
+                        "Map '{contentTitle}' had an invalid Json File on Disk",
+                        dbEntry.Title);
+            }
+        }
+
+        progress?.Report($"MapComponent - {dbEntry.Title} - Serializing and Writing Current Entry");
+
+        if (jsonFile.Exists) jsonFile.Delete();
+        jsonFile.Refresh();
 
         var jsonDbEntry = JsonSerializer.Serialize(onDiskData, JsonTools.WriteIndentedOptions);
 
@@ -568,13 +576,20 @@ public static class Export
         var jsonFile = new FileInfo(Path.Combine(settings.LocalSiteContentDataDirectory().FullName,
             $"{dbEntry.ContentId}.json"));
 
+        var pictureInfo = PictureAssetProcessing.ProcessPictureDirectory(dbEntry.ContentId);
+        var smallImageUrl = pictureInfo?.SmallPicture?.SiteUrl;
+        var displayImageUrl = pictureInfo?.DisplayPicture?.SiteUrl;
+
         if (jsonFile.Exists)
             try
             {
                 await using var jsonFileStream = jsonFile.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
                 var onDiskObject = await JsonSerializer.DeserializeAsync<PhotoContentOnDiskData>(jsonFileStream);
 
-                if (new CompareLogic().Compare(dbEntry, onDiskObject?.Content).AreEqual)
+                if (new CompareLogic().Compare(dbEntry, onDiskObject?.Content).AreEqual 
+                    && (onDiskObject?.SmallPictureUrl?.Equals(smallImageUrl) ?? false)
+                    && (onDiskObject.DisplayPictureUrl?.Equals(displayImageUrl) ?? false)
+                    )
                 {
                     progress?.Report($"Photo - {dbEntry.Title} - Current and On Disk Json are the same - continuing");
                     return;
@@ -593,9 +608,7 @@ public static class Export
         if (jsonFile.Exists) jsonFile.Delete();
         jsonFile.Refresh();
 
-        var pictureInfo = PictureAssetProcessing.ProcessPictureDirectory(dbEntry.ContentId);
-        var smallImageUrl = pictureInfo?.SmallPicture?.SiteUrl;
-        var displayImageUrl = pictureInfo?.DisplayPicture?.SiteUrl;
+        
 
         var onDiskData = new PhotoContentOnDiskData(Db.ContentTypeDisplayString(dbEntry), dbEntry, smallImageUrl,
             displayImageUrl);

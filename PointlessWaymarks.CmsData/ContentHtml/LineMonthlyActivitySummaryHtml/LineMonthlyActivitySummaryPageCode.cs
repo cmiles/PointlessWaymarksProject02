@@ -43,6 +43,9 @@ public partial class LineMonthlyActivitySummaryPage(DateTime? generationVersion)
 
         if (htmlFileInfo.Exists)
         {
+            if (await FileManagement.FileAndHtmlStringIgnoringContentAndGenerationVersionAreEqual(htmlFileInfo, htmlString))
+                return;
+
             htmlFileInfo.Delete();
             htmlFileInfo.Refresh();
         }

@@ -1,5 +1,7 @@
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using PointlessWaymarks.CmsData.ContentGeneration;
@@ -14,6 +16,27 @@ namespace PointlessWaymarks.CmsData;
 
 public static class FileManagement
 {
+    private static readonly Regex VersionAttributesRegex = new(
+        @"\s*data-(contentversion|generationversion)=""[^""]*""",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled
+    );
+
+    // Use this method wherever you need to strip the attributes
+    private static string RemoveContentAndGenerationVersionAttributes(string input) =>
+        VersionAttributesRegex.Replace(input, string.Empty);
+
+
+    public static async Task<bool> FileAndHtmlStringIgnoringContentAndGenerationVersionAreEqual(FileInfo htmlFileInfo,
+        string referenceHtml)
+    {
+        var existingContent = await File.ReadAllTextAsync(htmlFileInfo.FullName).ConfigureAwait(false);
+
+        var normalizedExisting = RemoveContentAndGenerationVersionAttributes(existingContent);
+        var normalizedNew = RemoveContentAndGenerationVersionAttributes(referenceHtml);
+
+        return string.Equals(normalizedExisting, normalizedNew, StringComparison.Ordinal);
+    }
+    
     public static async Task<List<GenerationReturn>> CheckContentFolderStructure(this UserSettings settings)
     {
         var db = await Db.Context().ConfigureAwait(false);

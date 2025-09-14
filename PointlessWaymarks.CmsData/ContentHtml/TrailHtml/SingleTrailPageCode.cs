@@ -61,6 +61,9 @@ public partial class SingleTrailPage
 
         if (htmlFileInfo.Exists)
         {
+            if (await FileManagement.FileAndHtmlStringIgnoringContentAndGenerationVersionAreEqual(htmlFileInfo, htmlString))
+                return;
+
             htmlFileInfo.Delete();
             htmlFileInfo.Refresh();
         }

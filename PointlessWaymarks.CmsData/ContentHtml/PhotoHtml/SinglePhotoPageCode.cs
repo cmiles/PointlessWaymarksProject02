@@ -1,4 +1,4 @@
-﻿using PointlessWaymarks.CmsData.CommonHtml;
+using PointlessWaymarks.CmsData.CommonHtml;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CommonTools;
 
@@ -67,6 +67,9 @@ public partial class SinglePhotoPage
 
         if (htmlFileInfo.Exists)
         {
+            if (await FileManagement.FileAndHtmlStringIgnoringContentAndGenerationVersionAreEqual(htmlFileInfo, htmlString))
+                return;
+
             htmlFileInfo.Delete();
             htmlFileInfo.Refresh();
         }
