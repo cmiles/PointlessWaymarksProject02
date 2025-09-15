@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.CommonHtml;
 using PointlessWaymarks.CmsData.ContentHtml.LineHtml;
+using PointlessWaymarks.CmsData.ContentHtml.MapComponentData;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CommonTools;
@@ -342,6 +343,8 @@ public static class Export
 
     public static async Task WriteMapComponentContentData(MapComponentDto dbEntry, IProgress<string>? progress)
     {
+        await MapParts.WriteGpxData(dbEntry);
+        
         var settings = UserSettingsSingleton.CurrentSettings();
 
         var jsonFile = new FileInfo(Path.Combine(settings.LocalSiteContentDataDirectory().FullName,

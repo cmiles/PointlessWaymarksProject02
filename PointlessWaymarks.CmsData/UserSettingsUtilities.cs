@@ -195,7 +195,7 @@ public static class UserSettingsUtilities
         //TODO: Mid-July 2023 I started having problems with this code - REVISIT
         //When compiled as a Single File Self Contained Executable an error is triggered in this code and
         //for now I have been unable to determine why. The error is listed below and occurs in the Publish
-        //to S3 program and the CMS - but not in Visual Studio and not outside of a Self Contained Executable?
+        //to S3 program and the CMS - but not in Visual Studio and not outside a Self Contained Executable?
         //
 
         //       System.AggregateException: One or more errors occurred. (Value cannot be null. (Parameter 'path1'))
@@ -351,6 +351,11 @@ public static class UserSettingsUtilities
     public static string LineGpxDownloadUrl(this UserSettings settings, LineContent content)
     {
         return $"{settings.SiteUrl()}/Lines/GpxData/{content.ContentId}.gpx";
+    }
+
+    public static string MapGpxDownloadUrl(this UserSettings settings, MapComponent content)
+    {
+        return $"{settings.SiteUrl()}/Maps/GpxData/{content.ContentId}.gpx";
     }
 
     public static string LineMonthlyActivitySummaryUrl(this UserSettings settings)
@@ -831,6 +836,7 @@ public static class UserSettingsUtilities
         return new FileInfo($"{Path.Combine(directory.FullName, content.ContentId.ToString())}.gpx");
     }
 
+
     public static FileInfo? LocalSiteLineHtmlFile(this UserSettings settings, LineContent? content)
     {
         if (string.IsNullOrWhiteSpace(content?.Slug)) return null;
@@ -903,6 +909,22 @@ public static class UserSettingsUtilities
         directory.Refresh();
 
         return directory;
+    }
+
+    public static DirectoryInfo LocalSiteMapGpxDirectory(this UserSettings settings)
+    {
+        var directory = new DirectoryInfo(Path.Combine(settings.LocalSiteMapComponentDirectory().FullName, "GpxData"));
+        if (!directory.Exists) directory.Create();
+
+        directory.Refresh();
+
+        return directory;
+    }
+
+    public static FileInfo LocalSiteMapGpxFile(this UserSettings settings, MapComponent content)
+    {
+        var directory = settings.LocalSiteMapGpxDirectory();
+        return new FileInfo($"{Path.Combine(directory.FullName, content.ContentId.ToString())}.gpx");
     }
 
     public static FileInfo LocalSiteMapIconsDataFile(this UserSettings settings)
@@ -1443,12 +1465,9 @@ public static class UserSettingsUtilities
 
     public static string? PictureSmallUrl(this UserSettings settings, Guid contentGuid)
     {
-        var db = Db.Context().Result;
-
         var processedContent = PictureAssetProcessing.ProcessPictureDirectory(contentGuid);
 
         return processedContent?.SmallPicture?.SiteUrl;
-        ;
     }
 
     public static string PointPageUrl(this UserSettings settings, PointContent content)
@@ -1499,7 +1518,7 @@ public static class UserSettingsUtilities
 
         if (iniResult is null)
             throw new NullReferenceException($"Trying to read Settings from {fileToRead.FullName} returned null");
-        
+
         var currentProperties = typeof(UserSettings).GetProperties()
             .Where(x => !x.Name.Equals(nameof(UserSettings.SitePictureSizes))).ToList();
 
@@ -1780,7 +1799,7 @@ public static class UserSettingsUtilities
         newSettings.LongitudeDefault = ProjectDefaultLongitude;
         newSettings.NumberOfItemsOnMainSitePage = 4;
         newSettings.ProgramUpdateLocation =
-            @"https://software.pointlesswaymarks.com/Software/PointlessWaymarksSoftwareList.json";
+            "https://software.pointlesswaymarks.com/Software/PointlessWaymarksSoftwareList.json";
         newSettings.SettingsId = Guid.NewGuid();
         newSettings.SitePictureSizes = PictureResizing.SrcSetSizeAndQualityDefaultSettingsList();
 

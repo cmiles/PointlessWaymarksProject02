@@ -33,8 +33,19 @@ public static class TrailParts
         {
             var line = await db.LineContents.SingleOrDefaultAsync(x => x.ContentId == dbContent.LineContentId);
 
-            if (line is not null)
-                generatedBlock.AppendLine(LineParts.LineStatisticsGeneralDisplayDiv(line).ToString());
+            if (dbContent.MapComponentId is not null && line is not null)
+            {
+                var map = await db.MapComponents.SingleOrDefaultAsync(x => x.ContentId == dbContent.MapComponentId);
+
+                if (map is not null)
+                    generatedBlock.AppendLine(LineParts.LineStatisticsGeneralDisplayDiv(line, UserSettingsSingleton.CurrentSettings().MapGpxDownloadUrl(map), dbContent.Title).ToString());
+            }
+            else
+            {
+                if (line is not null)
+                    generatedBlock.AppendLine(LineParts.LineStatisticsGeneralDisplayDiv(line).ToString());
+            }
+
         }
 
         var detailsBlock = new StringBuilder();

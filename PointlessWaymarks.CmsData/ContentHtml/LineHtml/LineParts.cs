@@ -123,8 +123,10 @@ public static class LineParts
     ///     shown on a Line Page so that the stats are as likely as possible to be relevant and useful.
     /// </summary>
     /// <param name="dbEntry"></param>
+    /// <param name="gpxDownloadUrl">Overrides the normal Line Gpx Url</param>
+    /// <param name="gpxDownloadFileName">Overrides the normal Gpx File Download Name</param>
     /// <returns></returns>
-    public static HtmlTag LineStatisticsGeneralDisplayDiv(LineContent dbEntry)
+    public static HtmlTag LineStatisticsGeneralDisplayDiv(LineContent dbEntry, string? gpxDownloadUrl = null, string? gpxDownloadFileName = null)
     {
         var outerContainer = new DivTag().AddClasses("photo-details-container", "info-list-container");
 
@@ -150,14 +152,19 @@ public static class LineParts
         outerContainer.Children.Add(Tags.InfoTextDivTag($"{dbEntry.DescentElevation:N0}' Descent", "line-detail",
             "descent", dbEntry.DescentElevation.ToString("F0")));
 
-        if (dbEntry.PublicDownloadLink)
+        if (dbEntry.PublicDownloadLink || !string.IsNullOrWhiteSpace(gpxDownloadUrl))
         {
+            
             var settings = UserSettingsSingleton.CurrentSettings();
-            outerContainer.Children.Add(Tags.InfoLinkDownloadDivTag(settings.LineGpxDownloadUrl(dbEntry),
+            
+            var urlToUse = string.IsNullOrWhiteSpace(gpxDownloadUrl) ? settings.LineGpxDownloadUrl(dbEntry) : gpxDownloadUrl;
+
+            var nameToUse = FileAndFolderTools.TryMakeFilenameValid(gpxDownloadFileName ?? dbEntry.Title ?? dbEntry.Slug ?? dbEntry.ContentId.ToString()) +
+                            ".gpx";
+
+            outerContainer.Children.Add(Tags.InfoLinkDownloadDivTag(urlToUse,
                 "Download GPX",
-                "line-detail", FileAndFolderTools.TryMakeFilenameValid(dbEntry.Title ??
-                                                                       dbEntry.Slug ?? dbEntry.ContentId.ToString()) +
-                               ".gpx"));
+                "line-detail", nameToUse));
         }
 
         //Return empty if there are no details

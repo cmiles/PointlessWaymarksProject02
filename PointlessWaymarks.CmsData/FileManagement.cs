@@ -1913,15 +1913,27 @@ public static class FileManagement
                 new FileInfo(Path.Combine(UserSettingsSingleton.CurrentSettings().LocalSiteRootFullDirectory().FullName,
                     filePathStyleName));
 
+            // Read the stream to a string
+            fileAsStream.Seek(0, SeekOrigin.Begin);
+            string newContent;
+            using (var reader = new StreamReader(fileAsStream, Encoding.UTF8, true, 4096, leaveOpen: true))
+            {
+                newContent = await reader.ReadToEndAsync().ConfigureAwait(false);
+            }
+
+            // If the file exists, read its content and compare
+            if (destinationFile.Exists)
+            {
+                var existingContent = await File.ReadAllTextAsync(destinationFile.FullName).ConfigureAwait(false);
+
+                if (string.Equals(newContent, existingContent, StringComparison.Ordinal))
+                    continue;
+            }
+
             var destinationDirectory = destinationFile.Directory;
             if (destinationDirectory is { Exists: false }) destinationDirectory.Create();
 
-            var fileStream = File.Create(destinationFile.FullName);
-            fileAsStream.Seek(0, SeekOrigin.Begin);
-            await fileAsStream.CopyToAsync(fileStream).ConfigureAwait(false);
-            fileStream.Close();
-
-            await LogFileWriteAsync(destinationFile.FullName).ConfigureAwait(false);
+            await WriteAllTextToFileAndLogAsync(destinationFile.FullName, newContent);
 
             progress?.Report($"Site Resources - Writing {loopSiteResources.Name} to {destinationFile.FullName}");
         }
