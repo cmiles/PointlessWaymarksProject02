@@ -35,14 +35,14 @@ public partial class FileListWithActionsContext : IListSelectionWithContext<File
             new ContextMenuItemData { ItemName = "Edit", ItemCommand = ListContext.EditSelectedCommand },
             new ContextMenuItemData
             {
-                ItemName = "Code to Clipboard",
-                ItemCommand = ListContext.BracketCodeToClipboardSelectedCommand
+                ItemName = "Text Code to Clipboard",
+                ItemCommand = FilePageLinkCodesToClipboardForSelectedCommand
             },
 
             new ContextMenuItemData
             {
                 ItemName = "Image Code to Clipboard",
-                ItemCommand = FileImageLinkCodesToClipboardForSelectedCommand
+                ItemCommand = ListContext.BracketCodeToClipboardSelectedCommand
             },
 
             new ContextMenuItemData
