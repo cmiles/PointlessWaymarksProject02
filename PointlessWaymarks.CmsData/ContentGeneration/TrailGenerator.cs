@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using PointlessWaymarks.CmsData.ContentHtml.TrailHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
@@ -71,6 +72,63 @@ public static class TrailGenerator
         var updateFormatCheck = CommonContentValidation.ValidateUpdateContentFormat(trailContent.UpdateNotesFormat);
         if (!updateFormatCheck.Valid)
             return GenerationReturn.Error(updateFormatCheck.Explanation, trailContent.ContentId);
+
+        var db = await Db.Context();
+
+        // Validate MapComponentId exists (if set)
+        if (trailContent.MapComponentId is { } mapComponentId)
+        {
+            var mapComponentExists =
+                await db.MapComponents.AnyAsync(x => x.ContentId == mapComponentId).ConfigureAwait(false);
+            if (!mapComponentExists)
+                return GenerationReturn.Error($"MapComponentId {mapComponentId} does not exist in the database.",
+                    trailContent.ContentId);
+        }
+
+        // Validate LineContentId exists (if set)
+        if (trailContent.LineContentId is { } lineContentId)
+        {
+            var lineContentExists =
+                await db.LineContents.AnyAsync(x => x.ContentId == lineContentId).ConfigureAwait(false);
+            if (!lineContentExists)
+                return GenerationReturn.Error($"LineContentId {lineContentId} does not exist in the database.",
+                    trailContent.ContentId);
+        }
+
+        // Validate StartingPointContentId exists (if set)
+        if (trailContent.StartingPointContentId is { } startingPointId)
+        {
+            var startingPointExists =
+                await db.PointContents.AnyAsync(x => x.ContentId == startingPointId).ConfigureAwait(false);
+            if (!startingPointExists)
+                return GenerationReturn.Error(
+                    $"StartingPointContentId {startingPointId} does not exist in the database.",
+                    trailContent.ContentId);
+        }
+
+        // Validate EndingPointContentId exists (if set)
+        if (trailContent.EndingPointContentId is { } endingPointId)
+        {
+            var endingPointExists =
+                await db.PointContents.AnyAsync(x => x.ContentId == endingPointId).ConfigureAwait(false);
+            if (!endingPointExists)
+                return GenerationReturn.Error($"EndingPointContentId {endingPointId} does not exist in the database.",
+                    trailContent.ContentId);
+        }
+
+        // Validate LineContentId appears in the MapComponent's Elements (if both are set)
+        if (trailContent is { MapComponentId: { } mapId, LineContentId: { } lineId })
+        {
+            var mapComponent = await Db.MapComponentDtoFromContentId(mapId);
+
+            // Assuming MapComponent.Elements is a collection of element objects with an ElementContentId property
+            var mapElements = mapComponent.Elements;
+            var lineInMap = mapElements.Any(e => e.ElementContentId == lineId);
+
+            if (!lineInMap)
+                return GenerationReturn.Error($"LineContentId {lineId} is not present in the MapComponent's elements.",
+                    trailContent.ContentId);
+        }
 
         return GenerationReturn.Success("Trail Content Validation Successful");
     }
