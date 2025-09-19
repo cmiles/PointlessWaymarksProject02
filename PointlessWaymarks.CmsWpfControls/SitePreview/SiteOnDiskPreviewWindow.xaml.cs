@@ -1,8 +1,10 @@
+using Microsoft.Web.WebView2.Core;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.Server;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.Status;
+using PointlessWaymarks.WpfCommon.Utility;
 
 namespace PointlessWaymarks.CmsWpfControls.SitePreview;
 
@@ -22,6 +24,8 @@ public partial class SiteOnDiskPreviewWindow
     }
 
     public SitePreviewContext? PreviewContext { get; set; }
+    public string PreviewServerHost { get; set; } = string.Empty;
+    public required string SiteUrl { get; set; }
     public required StatusControlContext StatusContext { get; set; }
 
     /// <summary>
@@ -34,7 +38,11 @@ public partial class SiteOnDiskPreviewWindow
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        var window = new SiteOnDiskPreviewWindow { StatusContext = await StatusControlContext.CreateInstance() };
+        var window = new SiteOnDiskPreviewWindow
+        {
+            StatusContext = await StatusControlContext.CreateInstance(),
+            SiteUrl = UserSettingsSingleton.CurrentSettings().SiteDomainName
+        };
 
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -50,12 +58,43 @@ public partial class SiteOnDiskPreviewWindow
             });
         }
 
+        window.PreviewServerHost = $"localhost:{_previewServer.ServerPort}";
+
         window.PreviewContext = new SitePreviewContext(UserSettingsSingleton.CurrentSettings().SiteDomainName,
             UserSettingsSingleton.CurrentSettings().LocalSiteRootFullDirectory().FullName,
             UserSettingsSingleton.CurrentSettings().SiteName, $"localhost:{_previewServer.ServerPort}",
             window.StatusContext,
             initialUrl);
 
+        window.PreviewContext.NewWindowRequestedAction += window.NewWindowRequestedAction;
+
         return window;
+    }
+
+    private async void NewWindowRequestedAction(CoreWebView2NewWindowRequestedEventArgs navigationArgs)
+    {
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        if (string.IsNullOrWhiteSpace(navigationArgs.Uri)) return;
+
+        var uri = navigationArgs.Uri;
+
+        if (navigationArgs.Uri.Contains(SiteUrl) || navigationArgs.Uri.Contains(PreviewServerHost))
+        {
+            await ThreadSwitcher.ResumeForegroundAsync();
+
+
+            StatusContext.RunFireAndForgetBlockingTask(async () =>
+            {
+                var window = await CreateInstance(uri);
+                await window.PositionWindowAndShowOnUiThread();
+            });
+        }
+        else
+        {
+            ProcessHelpers.OpenUrlInExternalBrowser(uri);
+        }
+
+        navigationArgs.Handled = true;
     }
 }

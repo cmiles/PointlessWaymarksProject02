@@ -5,6 +5,7 @@ using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.Utility;
+using Serilog;
 
 namespace PointlessWaymarks.CmsWpfControls.SitePreview;
 
@@ -36,16 +37,24 @@ public partial class SitePreviewControl
 
     private async void InitializeAsync()
     {
-        //TODO: Change for a mydocs folder with cleanup?
-        var env = await CoreWebView2Environment.CreateAsync(userDataFolder: Path.Combine(Path.GetTempPath(),
-            "PointWaymarksCms_SitePreviewBrowserData"));
+        try
+        {
+            //TODO: Change for a my-docs folder with cleanup?
+            var env = await CoreWebView2Environment.CreateAsync(userDataFolder: Path.Combine(Path.GetTempPath(),
+                "PointWaymarksCms_SitePreviewBrowserData"));
 
-        await ThreadSwitcher.ResumeForegroundAsync();
-        // Note this waits until the first page is navigated!
-        await SitePreviewWebView.EnsureCoreWebView2Async(env);
-        if (PreviewContext != null) SitePreviewWebView.CoreWebView2.Navigate(PreviewContext.InitialPage);
-        SitePreviewWebView.CoreWebView2.NewWindowRequested += CoreWebView2_NewWindowRequested;
-        SitePreviewWebView.CoreWebView2.NavigationCompleted += CoreWebView2OnNavigationCompleted;
+            await ThreadSwitcher.ResumeForegroundAsync();
+            // Note this waits until the first page is navigated!
+            await SitePreviewWebView.EnsureCoreWebView2Async(env);
+            if (PreviewContext != null) SitePreviewWebView.CoreWebView2.Navigate(PreviewContext.InitialPage);
+            SitePreviewWebView.CoreWebView2.NewWindowRequested += CoreWebView2_NewWindowRequested;
+            SitePreviewWebView.CoreWebView2.NavigationCompleted += CoreWebView2OnNavigationCompleted;
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "SitePreviewControl Exception in private async void InitializeAsync()");
+            _ = PreviewContext?.StatusContext.ShowMessageWithOkButton("Fatal Web Load Error", e.ToString());
+        }
     }
 
     public void LoadData()
@@ -68,14 +77,14 @@ public partial class SitePreviewControl
         if (string.IsNullOrEmpty(e.Uri))
         {
             e.Cancel = true;
-            PreviewContext!.StatusContext.ToastError("Blank URL for navigation?");
+            _ = PreviewContext!.StatusContext.ToastError("Blank URL for navigation?");
             return;
         }
 
         if (!e.Uri.StartsWith("http", StringComparison.OrdinalIgnoreCase))
         {
             e.Cancel = true;
-            PreviewContext!.StatusContext.ToastError("This window only supports http and https (no ftp, etc.)");
+            _ = PreviewContext!.StatusContext.ToastError("This window only supports http and https (no ftp, etc.)");
             return;
         }
 
@@ -102,7 +111,7 @@ public partial class SitePreviewControl
         catch (Exception exception)
         {
             e.Cancel = true;
-            PreviewContext.StatusContext.ToastError($"Trouble parsing {e.Uri}? {exception.Message}");
+            _ = PreviewContext.StatusContext.ToastError($"Trouble parsing {e.Uri}? {exception.Message}");
             return;
         }
 
@@ -111,7 +120,7 @@ public partial class SitePreviewControl
         {
             e.Cancel = true;
             ProcessHelpers.OpenUrlInExternalBrowser(e.Uri);
-            PreviewContext.StatusContext.ToastSuccess($"Sending external link {e.Uri} to the default browser.");
+            _ = PreviewContext.StatusContext.ToastSuccess($"Sending external link {e.Uri} to the default browser.");
             PreviewContext.TextBarAddress = new Uri(PreviewContext.CurrentAddress).PathAndQuery;
             return;
         }

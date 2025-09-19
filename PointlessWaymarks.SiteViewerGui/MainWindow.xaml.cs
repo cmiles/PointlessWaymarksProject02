@@ -211,9 +211,10 @@ public partial class MainWindow
 
         var newTabContext = new SitePreviewContext(SiteUrl,
             LocalFolder,
-            SiteName, PreviewServerHost, StatusContext, requestedAddress);
-
-        newTabContext.NewWindowRequestedAction = NewWindowRequestedAction;
+            SiteName, PreviewServerHost, StatusContext, requestedAddress)
+        {
+            NewWindowRequestedAction = NewWindowRequestedAction
+        };
 
         var newSitePreviewControl = new SitePreviewControl
         {
@@ -244,22 +245,31 @@ public partial class MainWindow
 
     private async void NewWindowRequestedAction(CoreWebView2NewWindowRequestedEventArgs navigationArgs)
     {
-        if (string.IsNullOrWhiteSpace(navigationArgs.Uri)) return;
-
-        if (navigationArgs.Uri.Contains(SiteUrl) || navigationArgs.Uri.Contains(PreviewServerHost))
+        try
         {
-            await ThreadSwitcher.ResumeForegroundAsync();
+            if (string.IsNullOrWhiteSpace(navigationArgs.Uri)) return;
 
             var uri = navigationArgs.Uri;
 
-            StatusContext.RunFireAndForgetBlockingTask(async () => await NewAdditionalTab(uri));
-        }
-        else
-        {
-            ProcessHelpers.OpenUrlInExternalBrowser(navigationArgs.Uri);
-        }
+            if (navigationArgs.Uri.Contains(SiteUrl) || navigationArgs.Uri.Contains(PreviewServerHost))
+            {
+                await ThreadSwitcher.ResumeForegroundAsync();
 
-        navigationArgs.Handled = true;
+
+                StatusContext.RunFireAndForgetBlockingTask(async () => await NewAdditionalTab(uri));
+            }
+            else
+            {
+                ProcessHelpers.OpenUrlInExternalBrowser(uri);
+            }
+
+            navigationArgs.Handled = true;
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "SiteViewerGui MainWindow exception in private async void NewWindowRequestedAction(CoreWebView2NewWindowRequestedEventArgs navigationArgs)");
+            _ = StatusContext.ShowMessageWithOkButton("Error With New Window Request", e.ToString());
+        }
     }
 
     private async Task SettingsFileChooserOnDirectoryUpdated(
