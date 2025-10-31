@@ -1,3 +1,7 @@
+using System.IO;
+using System.IO.Compression;
+using System.Net.Http;
+using System.Text.Json;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentGeneration;
@@ -20,39 +24,88 @@ using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
 using Serilog;
-using System.IO;
-using System.Net.Http;
-using System.Text.Json;
 
 namespace PointlessWaymarks.CmsWpfControls.ContentList;
 
+//TODO: Handle Point Types
+//TODO: Trails and Points and ?Others better Handle missing Content References
 public static class ContentClipboardRepresentationHandlers
 {
+    public static async Task CopyLinkSnapshotImagesFromRemote(Guid contentId, string remoteApiBaseUrl,
+        StatusControlContext statusContext)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var httpClient = new HttpClient();
+        var localArchiveDir = UserSettingsSingleton.CurrentSettings().LocalMediaArchiveLinkDirectory();
+
+        // Get the list of files from the remote API
+        var snapshotsApiUrl = $"{remoteApiBaseUrl}/localapi/linksnapshots/{contentId}";
+        statusContext.Progress($"Requesting link snapshot images for {contentId} from {snapshotsApiUrl}");
+
+        var response = await httpClient.GetAsync(snapshotsApiUrl);
+        if (!response.IsSuccessStatusCode)
+        {
+            await statusContext.ToastError(
+                $"Failed to retrieve link snapshot images for {contentId}: {response.ReasonPhrase}");
+            return;
+        }
+
+        // The API returns a zip file if there are files
+        var zipFileName = $"LinkSnapshots_{contentId}.zip";
+        var tempZipPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}_{zipFileName}");
+
+        await using (var fs = new FileStream(tempZipPath, FileMode.Create, FileAccess.Write, FileShare.None))
+        {
+            await response.Content.CopyToAsync(fs);
+        }
+
+        // Extract and copy files
+        using (var archive = new ZipArchive(new FileStream(tempZipPath, FileMode.Open, FileAccess.Read),
+                   ZipArchiveMode.Read))
+        {
+            foreach (var entry in archive.Entries)
+            {
+                var destFilePath = Path.Combine(localArchiveDir.FullName, entry.Name);
+
+                if (File.Exists(destFilePath))
+                {
+                    statusContext.Progress($"File already exists, skipping: {destFilePath}");
+                    continue;
+                }
+
+                statusContext.Progress($"Copying snapshot image: {entry.Name} to {destFilePath}");
+                entry.ExtractToFile(destFilePath);
+            }
+        }
+
+        // Clean up temp zip
+        try
+        {
+            File.Delete(tempZipPath);
+        }
+        catch
+        {
+            /* ignore */
+        }
+
+        await statusContext.ToastSuccess($"Finished copying link snapshot images for {contentId}");
+    }
+
     private static string FakeMainPhotoBracketCode(Guid? mainPhoto)
     {
         if (mainPhoto == null) return string.Empty;
         return
             $"{{{{{BracketCodePhotos.BracketCodeToken} {mainPhoto.ToString()}; Fake Bracket Code for Content Ref Import}}}}";
     }
-    
-    //TODO: Handle Point Types
-    //TODO: Trails and Points and ?Others better Handle missing Content References
-    //TODO: Check Main Image Values
-    public static async Task HandleFileContentReferences(List<ContentClipboardRepresentation> contentRefs,
+
+    public static async Task<List<string>> HandleFileContentReferences(List<ContentClipboardRepresentation> contentRefs,
         StatusControlContext statusContext)
     {
-        await ThreadSwitcher.ResumeForegroundAsync();
+        var errors = new List<string>();
+        await ThreadSwitcher.ResumeBackgroundAsync();
 
         statusContext.Progress("Starting file content load.");
-
-        if (contentRefs.Count > 10)
-        {
-            await statusContext.ToastError(
-                "Dragging in new content is limited to 10 files at a time...");
-            return;
-        }
-
-        await ThreadSwitcher.ResumeBackgroundAsync();
 
         var loopCount = 0;
 
@@ -76,7 +129,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (string.IsNullOrEmpty(contentJsonResponse))
                 {
-                    await statusContext.ToastError($"Failed to retrieve content data for {loopRef.ContentId}");
+                    var err = $"Failed to retrieve content data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -86,7 +141,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (fileContent == null)
                 {
-                    await statusContext.ToastError($"Failed to parse content data for {loopRef.ContentId}");
+                    var err = $"Failed to parse content data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -98,7 +155,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (string.IsNullOrEmpty(mediaFileResponse))
                 {
-                    await statusContext.ToastError($"Failed to retrieve media file data for {loopRef.ContentId}");
+                    var err = $"Failed to retrieve media file data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -109,7 +168,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (mediaFileInfo is not { Exists: true })
                 {
-                    await statusContext.ToastError($"Media file not found for {loopRef.ContentId}");
+                    var err = $"Media file not found for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -117,11 +178,12 @@ public static class ContentClipboardRepresentationHandlers
 
                 var (saveGenerationReturn, _) = await FileGenerator.SaveAndGenerateHtml(fileContent, fileFile,
                     null, statusContext.ProgressTracker());
-                
+
                 var bracketCodeCheck = await CommonContentValidation.CheckStringForBadContentReferences(
-                    $"{fileContent.BodyContent ?? string.Empty} {fileContent.UpdateNotes ?? string.Empty} {FakeMainPhotoBracketCode(fileContent.MainPicture)}", db,
+                    $"{fileContent.BodyContent ?? string.Empty} {fileContent.UpdateNotes ?? string.Empty} {FakeMainPhotoBracketCode(fileContent.MainPicture)}",
+                    db,
                     statusContext.ProgressTracker());
-                
+
                 if (saveGenerationReturn.HasError || bracketCodeCheck.HasError)
                 {
                     var editor = await FileContentEditorWindow.CreateInstance(fileContent);
@@ -131,6 +193,8 @@ public static class ContentClipboardRepresentationHandlers
                     _ = editor.StatusContext.ShowMessageWithOkButton("Problem Saving",
                         saveGenerationReturn.GenerationNote);
 
+                    errors.Add(
+                        $"Error saving or validating file content {loopRef.ContentId}: {saveGenerationReturn.GenerationNote} {bracketCodeCheck.GenerationNote}");
                     continue;
                 }
 
@@ -140,27 +204,24 @@ public static class ContentClipboardRepresentationHandlers
             }
             catch (Exception ex)
             {
-                await statusContext.ToastError($"Error processing content {loopRef.ContentId}: {ex.Message}");
+                var err = $"Error processing content {loopRef.ContentId}: {ex.Message}";
+                await statusContext.ToastError(err);
                 Log.Error(ex, "Error processing content from other site: {ContentId}", loopRef.ContentId);
+                errors.Add(err);
             }
         }
+
+        return errors;
     }
 
-    public static async Task HandleGeoJsonContentReferences(List<ContentClipboardRepresentation> contentRefs,
+    public static async Task<List<string>> HandleGeoJsonContentReferences(
+        List<ContentClipboardRepresentation> contentRefs,
         StatusControlContext statusContext)
     {
-        await ThreadSwitcher.ResumeForegroundAsync();
+        var errors = new List<string>();
+        await ThreadSwitcher.ResumeBackgroundAsync();
 
         statusContext.Progress("Starting GeoJson content load.");
-
-        if (contentRefs.Count > 10)
-        {
-            await statusContext.ToastError(
-                "Dragging in new content is limited to 10 GeoJson items at a time...");
-            return;
-        }
-
-        await ThreadSwitcher.ResumeBackgroundAsync();
 
         var loopCount = 0;
 
@@ -184,7 +245,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (string.IsNullOrEmpty(contentJsonResponse))
                 {
-                    await statusContext.ToastError($"Failed to retrieve content data for {loopRef.ContentId}");
+                    var err = $"Failed to retrieve content data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -194,7 +257,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (geoJsonContent == null)
                 {
-                    await statusContext.ToastError($"Failed to parse content data for {loopRef.ContentId}");
+                    var err = $"Failed to parse content data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -204,7 +269,8 @@ public static class ContentClipboardRepresentationHandlers
                     null, statusContext.ProgressTracker());
 
                 var bracketCodeCheck = await CommonContentValidation.CheckStringForBadContentReferences(
-                    $"{geoJsonContent.BodyContent ?? string.Empty} {geoJsonContent.UpdateNotes ?? string.Empty} {FakeMainPhotoBracketCode(geoJsonContent.MainPicture)}", db,
+                    $"{geoJsonContent.BodyContent ?? string.Empty} {geoJsonContent.UpdateNotes ?? string.Empty} {FakeMainPhotoBracketCode(geoJsonContent.MainPicture)}",
+                    db,
                     statusContext.ProgressTracker());
 
                 if (saveGenerationReturn.HasError || bracketCodeCheck.HasError)
@@ -216,6 +282,8 @@ public static class ContentClipboardRepresentationHandlers
                     _ = editor.StatusContext.ShowMessageWithOkButton("Problem Saving",
                         saveGenerationReturn.GenerationNote);
 
+                    errors.Add(
+                        $"Error saving or validating GeoJson content {loopRef.ContentId}: {saveGenerationReturn.GenerationNote} {bracketCodeCheck.GenerationNote}");
                     continue;
                 }
 
@@ -225,27 +293,24 @@ public static class ContentClipboardRepresentationHandlers
             }
             catch (Exception ex)
             {
-                await statusContext.ToastError($"Error processing content {loopRef.ContentId}: {ex.Message}");
+                var err = $"Error processing content {loopRef.ContentId}: {ex.Message}";
+                await statusContext.ToastError(err);
                 Log.Error(ex, "Error processing content from other site: {ContentId}", loopRef.ContentId);
+                errors.Add(err);
             }
         }
+
+        return errors;
     }
 
-    public static async Task HandleImageContentReferences(List<ContentClipboardRepresentation> contentRefs,
+    public static async Task<List<string>> HandleImageContentReferences(
+        List<ContentClipboardRepresentation> contentRefs,
         StatusControlContext statusContext)
     {
-        await ThreadSwitcher.ResumeForegroundAsync();
+        var errors = new List<string>();
+        await ThreadSwitcher.ResumeBackgroundAsync();
 
         statusContext.Progress("Starting image content load.");
-
-        if (contentRefs.Count > 10)
-        {
-            await statusContext.ToastError(
-                "Dragging in new content is limited to 10 images at a time...");
-            return;
-        }
-
-        await ThreadSwitcher.ResumeBackgroundAsync();
 
         var loopCount = 0;
 
@@ -269,7 +334,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (string.IsNullOrEmpty(contentJsonResponse))
                 {
-                    await statusContext.ToastError($"Failed to retrieve content data for {loopRef.ContentId}");
+                    var err = $"Failed to retrieve content data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -279,7 +346,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (imageContent == null)
                 {
-                    await statusContext.ToastError($"Failed to parse content data for {loopRef.ContentId}");
+                    var err = $"Failed to parse content data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -291,7 +360,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (string.IsNullOrEmpty(mediaFileResponse))
                 {
-                    await statusContext.ToastError($"Failed to retrieve media file data for {loopRef.ContentId}");
+                    var err = $"Failed to retrieve media file data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -302,7 +373,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (mediaFileInfo is not { Exists: true })
                 {
-                    await statusContext.ToastError($"Media file not found for {loopRef.ContentId}");
+                    var err = $"Media file not found for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -312,7 +385,8 @@ public static class ContentClipboardRepresentationHandlers
                     null, statusContext.ProgressTracker());
 
                 var bracketCodeCheck = await CommonContentValidation.CheckStringForBadContentReferences(
-                    $"{imageContent.BodyContent ?? string.Empty} {imageContent.UpdateNotes ?? string.Empty} {FakeMainPhotoBracketCode(imageContent.MainPicture)}", db,
+                    $"{imageContent.BodyContent ?? string.Empty} {imageContent.UpdateNotes ?? string.Empty} {FakeMainPhotoBracketCode(imageContent.MainPicture)}",
+                    db,
                     statusContext.ProgressTracker());
 
                 if (saveGenerationReturn.HasError || bracketCodeCheck.HasError)
@@ -324,6 +398,8 @@ public static class ContentClipboardRepresentationHandlers
                     _ = editor.StatusContext.ShowMessageWithOkButton("Problem Saving",
                         saveGenerationReturn.GenerationNote);
 
+                    errors.Add(
+                        $"Error saving or validating image content {loopRef.ContentId}: {saveGenerationReturn.GenerationNote} {bracketCodeCheck.GenerationNote}");
                     continue;
                 }
 
@@ -333,27 +409,23 @@ public static class ContentClipboardRepresentationHandlers
             }
             catch (Exception ex)
             {
-                await statusContext.ToastError($"Error processing content {loopRef.ContentId}: {ex.Message}");
+                var err = $"Error processing content {loopRef.ContentId}: {ex.Message}";
+                await statusContext.ToastError(err);
                 Log.Error(ex, "Error processing content from other site: {ContentId}", loopRef.ContentId);
+                errors.Add(err);
             }
         }
+
+        return errors;
     }
 
-    public static async Task HandleLineContentReferences(List<ContentClipboardRepresentation> contentRefs,
+    public static async Task<List<string>> HandleLineContentReferences(List<ContentClipboardRepresentation> contentRefs,
         StatusControlContext statusContext)
     {
-        await ThreadSwitcher.ResumeForegroundAsync();
+        var errors = new List<string>();
+        await ThreadSwitcher.ResumeBackgroundAsync();
 
         statusContext.Progress("Starting line content load.");
-
-        if (contentRefs.Count > 10)
-        {
-            await statusContext.ToastError(
-                "Dragging in new content is limited to 10 lines at a time...");
-            return;
-        }
-
-        await ThreadSwitcher.ResumeBackgroundAsync();
 
         var loopCount = 0;
 
@@ -377,7 +449,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (string.IsNullOrEmpty(contentJsonResponse))
                 {
-                    await statusContext.ToastError($"Failed to retrieve content data for {loopRef.ContentId}");
+                    var err = $"Failed to retrieve content data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -387,7 +461,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (lineContent == null)
                 {
-                    await statusContext.ToastError($"Failed to parse content data for {loopRef.ContentId}");
+                    var err = $"Failed to parse content data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -397,7 +473,8 @@ public static class ContentClipboardRepresentationHandlers
                     null, statusContext.ProgressTracker());
 
                 var bracketCodeCheck = await CommonContentValidation.CheckStringForBadContentReferences(
-                    $"{lineContent.BodyContent ?? string.Empty} {lineContent.UpdateNotes ?? string.Empty} {FakeMainPhotoBracketCode(lineContent.MainPicture)}", db,
+                    $"{lineContent.BodyContent ?? string.Empty} {lineContent.UpdateNotes ?? string.Empty} {FakeMainPhotoBracketCode(lineContent.MainPicture)}",
+                    db,
                     statusContext.ProgressTracker());
 
                 if (saveGenerationReturn.HasError || bracketCodeCheck.HasError)
@@ -409,6 +486,8 @@ public static class ContentClipboardRepresentationHandlers
                     _ = editor.StatusContext.ShowMessageWithOkButton("Problem Saving",
                         saveGenerationReturn.GenerationNote);
 
+                    errors.Add(
+                        $"Error saving or validating line content {loopRef.ContentId}: {saveGenerationReturn.GenerationNote} {bracketCodeCheck.GenerationNote}");
                     continue;
                 }
 
@@ -418,27 +497,23 @@ public static class ContentClipboardRepresentationHandlers
             }
             catch (Exception ex)
             {
-                await statusContext.ToastError($"Error processing content {loopRef.ContentId}: {ex.Message}");
+                var err = $"Error processing content {loopRef.ContentId}: {ex.Message}";
+                await statusContext.ToastError(err);
                 Log.Error(ex, "Error processing content from other site: {ContentId}", loopRef.ContentId);
+                errors.Add(err);
             }
         }
+
+        return errors;
     }
 
-    public static async Task HandleLinkContentReferences(List<ContentClipboardRepresentation> contentRefs,
+    public static async Task<List<string>> HandleLinkContentReferences(List<ContentClipboardRepresentation> contentRefs,
         StatusControlContext statusContext)
     {
-        await ThreadSwitcher.ResumeForegroundAsync();
+        var errors = new List<string>();
+        await ThreadSwitcher.ResumeBackgroundAsync();
 
         statusContext.Progress("Starting link content load.");
-
-        if (contentRefs.Count > 10)
-        {
-            await statusContext.ToastError(
-                "Dragging in new content is limited to 10 links at a time...");
-            return;
-        }
-
-        await ThreadSwitcher.ResumeBackgroundAsync();
 
         var loopCount = 0;
 
@@ -462,7 +537,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (string.IsNullOrEmpty(contentJsonResponse))
                 {
-                    await statusContext.ToastError($"Failed to retrieve content data for {loopRef.ContentId}");
+                    var err = $"Failed to retrieve content data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -472,11 +549,15 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (linkContent == null)
                 {
-                    await statusContext.ToastError($"Failed to parse content data for {loopRef.ContentId}");
+                    var err = $"Failed to parse content data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
                 linkContent.Id = 0;
+
+                await CopyLinkSnapshotImagesFromRemote(linkContent.ContentId, loopRef.SiteLocalApiUrl, statusContext);
 
                 var (saveGenerationReturn, _) = await LinkGenerator.SaveAndGenerateHtml(linkContent,
                     null, statusContext.ProgressTracker());
@@ -494,6 +575,8 @@ public static class ContentClipboardRepresentationHandlers
                     _ = editor.StatusContext.ShowMessageWithOkButton("Problem Saving",
                         saveGenerationReturn.GenerationNote);
 
+                    errors.Add(
+                        $"Error saving or validating link content {loopRef.ContentId}: {saveGenerationReturn.GenerationNote} {bracketCodeCheck.GenerationNote}");
                     continue;
                 }
 
@@ -503,27 +586,23 @@ public static class ContentClipboardRepresentationHandlers
             }
             catch (Exception ex)
             {
-                await statusContext.ToastError($"Error processing content {loopRef.ContentId}: {ex.Message}");
+                var err = $"Error processing content {loopRef.ContentId}: {ex.Message}";
+                await statusContext.ToastError(err);
                 Log.Error(ex, "Error processing content from other site: {ContentId}", loopRef.ContentId);
+                errors.Add(err);
             }
         }
+
+        return errors;
     }
 
-    public static async Task HandleNoteContentReferences(List<ContentClipboardRepresentation> contentRefs,
+    public static async Task<List<string>> HandleNoteContentReferences(List<ContentClipboardRepresentation> contentRefs,
         StatusControlContext statusContext)
     {
-        await ThreadSwitcher.ResumeForegroundAsync();
+        var errors = new List<string>();
+        await ThreadSwitcher.ResumeBackgroundAsync();
 
         statusContext.Progress("Starting note content load.");
-
-        if (contentRefs.Count > 10)
-        {
-            await statusContext.ToastError(
-                "Dragging in new content is limited to 10 notes at a time...");
-            return;
-        }
-
-        await ThreadSwitcher.ResumeBackgroundAsync();
 
         var loopCount = 0;
 
@@ -547,7 +626,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (string.IsNullOrEmpty(contentJsonResponse))
                 {
-                    await statusContext.ToastError($"Failed to retrieve content data for {loopRef.ContentId}");
+                    var err = $"Failed to retrieve content data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -557,7 +638,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (noteContent == null)
                 {
-                    await statusContext.ToastError($"Failed to parse content data for {loopRef.ContentId}");
+                    var err = $"Failed to parse content data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -567,7 +650,8 @@ public static class ContentClipboardRepresentationHandlers
                     null, statusContext.ProgressTracker());
 
                 var bracketCodeCheck = await CommonContentValidation.CheckStringForBadContentReferences(
-                    $"{noteContent.BodyContent ?? string.Empty} {noteContent.Summary ?? string.Empty} {FakeMainPhotoBracketCode(noteContent.MainPicture)}", db,
+                    $"{noteContent.BodyContent ?? string.Empty} {noteContent.Summary ?? string.Empty} {FakeMainPhotoBracketCode(noteContent.MainPicture)}",
+                    db,
                     statusContext.ProgressTracker());
 
                 if (saveGenerationReturn.HasError || bracketCodeCheck.HasError)
@@ -579,6 +663,8 @@ public static class ContentClipboardRepresentationHandlers
                     _ = editor.StatusContext.ShowMessageWithOkButton("Problem Saving",
                         saveGenerationReturn.GenerationNote);
 
+                    errors.Add(
+                        $"Error saving or validating note content {loopRef.ContentId}: {saveGenerationReturn.GenerationNote} {bracketCodeCheck.GenerationNote}");
                     continue;
                 }
 
@@ -588,27 +674,24 @@ public static class ContentClipboardRepresentationHandlers
             }
             catch (Exception ex)
             {
-                await statusContext.ToastError($"Error processing content {loopRef.ContentId}: {ex.Message}");
+                var err = $"Error processing content {loopRef.ContentId}: {ex.Message}";
+                await statusContext.ToastError(err);
                 Log.Error(ex, "Error processing content from other site: {ContentId}", loopRef.ContentId);
+                errors.Add(err);
             }
         }
+
+        return errors;
     }
 
-    public static async Task HandlePhotoContentReferences(List<ContentClipboardRepresentation> contentRefs,
+    public static async Task<List<string>> HandlePhotoContentReferences(
+        List<ContentClipboardRepresentation> contentRefs,
         StatusControlContext statusContext)
     {
-        await ThreadSwitcher.ResumeForegroundAsync();
+        var errors = new List<string>();
+        await ThreadSwitcher.ResumeBackgroundAsync();
 
         statusContext.Progress("Starting photo load.");
-
-        if (contentRefs.Count > 10)
-        {
-            await statusContext.ToastError(
-                "Dragging in new content is limited to 10 photos at a time...");
-            return;
-        }
-
-        await ThreadSwitcher.ResumeBackgroundAsync();
 
         var loopCount = 0;
 
@@ -632,7 +715,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (string.IsNullOrEmpty(contentJsonResponse))
                 {
-                    await statusContext.ToastError($"Failed to retrieve content data for {loopRef.ContentId}");
+                    var err = $"Failed to retrieve content data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -642,7 +727,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (photoContent == null)
                 {
-                    await statusContext.ToastError($"Failed to parse content data for {loopRef.ContentId}");
+                    var err = $"Failed to parse content data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -654,7 +741,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (string.IsNullOrEmpty(mediaFileResponse))
                 {
-                    await statusContext.ToastError($"Failed to retrieve media file data for {loopRef.ContentId}");
+                    var err = $"Failed to retrieve media file data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -665,7 +754,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (mediaFileInfo is not { Exists: true })
                 {
-                    await statusContext.ToastError($"Media file not found for {loopRef.ContentId}");
+                    var err = $"Media file not found for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -675,7 +766,8 @@ public static class ContentClipboardRepresentationHandlers
                     null, statusContext.ProgressTracker());
 
                 var bracketCodeCheck = await CommonContentValidation.CheckStringForBadContentReferences(
-                    $"{photoContent.BodyContent ?? string.Empty} {photoContent.UpdateNotes ?? string.Empty} {FakeMainPhotoBracketCode(photoContent.MainPicture)}", db,
+                    $"{photoContent.BodyContent ?? string.Empty} {photoContent.UpdateNotes ?? string.Empty} {FakeMainPhotoBracketCode(photoContent.MainPicture)}",
+                    db,
                     statusContext.ProgressTracker());
 
                 if (saveGenerationReturn.HasError || bracketCodeCheck.HasError)
@@ -687,6 +779,8 @@ public static class ContentClipboardRepresentationHandlers
                     _ = editor.StatusContext.ShowMessageWithOkButton("Problem Saving",
                         saveGenerationReturn.GenerationNote);
 
+                    errors.Add(
+                        $"Error saving or validating photo content {loopRef.ContentId}: {saveGenerationReturn.GenerationNote} {bracketCodeCheck.GenerationNote}");
                     continue;
                 }
 
@@ -696,27 +790,23 @@ public static class ContentClipboardRepresentationHandlers
             }
             catch (Exception ex)
             {
-                await statusContext.ToastError($"Error processing content {loopRef.ContentId}: {ex.Message}");
+                var err = $"Error processing content {loopRef.ContentId}: {ex.Message}";
+                await statusContext.ToastError(err);
                 Log.Error(ex, "Error processing content from other site: {ContentId}", loopRef.ContentId);
+                errors.Add(err);
             }
         }
+
+        return errors;
     }
 
-    public static async Task HandlePostContentReferences(List<ContentClipboardRepresentation> contentRefs,
+    public static async Task<List<string>> HandlePostContentReferences(List<ContentClipboardRepresentation> contentRefs,
         StatusControlContext statusContext)
     {
-        await ThreadSwitcher.ResumeForegroundAsync();
+        var errors = new List<string>();
+        await ThreadSwitcher.ResumeBackgroundAsync();
 
         statusContext.Progress("Starting post content load.");
-
-        if (contentRefs.Count > 10)
-        {
-            await statusContext.ToastError(
-                "Dragging in new content is limited to 10 posts at a time...");
-            return;
-        }
-
-        await ThreadSwitcher.ResumeBackgroundAsync();
 
         var loopCount = 0;
 
@@ -740,7 +830,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (string.IsNullOrEmpty(contentJsonResponse))
                 {
-                    await statusContext.ToastError($"Failed to retrieve content data for {loopRef.ContentId}");
+                    var err = $"Failed to retrieve content data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -750,7 +842,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (postContent == null)
                 {
-                    await statusContext.ToastError($"Failed to parse content data for {loopRef.ContentId}");
+                    var err = $"Failed to parse content data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -760,7 +854,8 @@ public static class ContentClipboardRepresentationHandlers
                     null, statusContext.ProgressTracker());
 
                 var bracketCodeCheck = await CommonContentValidation.CheckStringForBadContentReferences(
-                    $"{postContent.BodyContent ?? string.Empty} {postContent.UpdateNotes ?? string.Empty} {FakeMainPhotoBracketCode(postContent.MainPicture)}", db,
+                    $"{postContent.BodyContent ?? string.Empty} {postContent.UpdateNotes ?? string.Empty} {FakeMainPhotoBracketCode(postContent.MainPicture)}",
+                    db,
                     statusContext.ProgressTracker());
 
                 if (saveGenerationReturn.HasError || bracketCodeCheck.HasError)
@@ -772,6 +867,8 @@ public static class ContentClipboardRepresentationHandlers
                     _ = editor.StatusContext.ShowMessageWithOkButton("Problem Saving",
                         saveGenerationReturn.GenerationNote);
 
+                    errors.Add(
+                        $"Error saving or validating post content {loopRef.ContentId}: {saveGenerationReturn.GenerationNote} {bracketCodeCheck.GenerationNote}");
                     continue;
                 }
 
@@ -781,27 +878,152 @@ public static class ContentClipboardRepresentationHandlers
             }
             catch (Exception ex)
             {
-                await statusContext.ToastError($"Error processing content {loopRef.ContentId}: {ex.Message}");
+                var err = $"Error processing content {loopRef.ContentId}: {ex.Message}";
+                await statusContext.ToastError(err);
                 Log.Error(ex, "Error processing content from other site: {ContentId}", loopRef.ContentId);
+                errors.Add(err);
             }
+        }
+
+        return errors;
+    }
+
+    public static async Task HandleReferencesFromOtherSites(List<ContentClipboardRepresentation> contentRefs,
+        StatusControlContext statusContext)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        statusContext.Progress($"Processing {contentRefs.Count} content items from other sites...");
+
+        if (contentRefs.Count > 10)
+            if (await statusContext.ShowMessageWithYesNoButton(
+                    "Confirm > 10 Items to Import...",
+                    $"You are about to import {contentRefs.Count} items. Do you want to do this?") == "No")
+                return;
+
+        var contentDescriptions =
+            contentRefs.Select(c => $"Content Type: {c.ContentType}, ID: {c.ContentId}, From Site: {c.SiteId}");
+        var message = string.Join(Environment.NewLine, contentDescriptions);
+
+        await statusContext.ToastSuccess($"Received content references:{Environment.NewLine}{message}");
+
+        var allErrors = new List<string>();
+
+        var fileContentRefs = contentRefs.Where(c =>
+            c.ContentType.Equals(Db.ContentTypeDisplayStringForFile, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (fileContentRefs.Any())
+        {
+            statusContext.Progress($"Found {fileContentRefs.Count} file content items to import");
+            var fileErrors = await HandleFileContentReferences(fileContentRefs, statusContext);
+            allErrors.AddRange(fileErrors);
+        }
+
+        var geoJsonContentRefs = contentRefs.Where(c =>
+            c.ContentType.Equals(Db.ContentTypeDisplayStringForGeoJson, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (geoJsonContentRefs.Any())
+        {
+            statusContext.Progress($"Found {geoJsonContentRefs.Count} GeoJson content items to import");
+            var geoJsonErrors = await HandleGeoJsonContentReferences(geoJsonContentRefs, statusContext);
+            allErrors.AddRange(geoJsonErrors);
+        }
+
+        var imageContentRefs = contentRefs.Where(c =>
+            c.ContentType.Equals(Db.ContentTypeDisplayStringForImage, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (imageContentRefs.Any())
+        {
+            statusContext.Progress($"Found {imageContentRefs.Count} image content items to import");
+            var imageErrors = await HandleImageContentReferences(imageContentRefs, statusContext);
+            allErrors.AddRange(imageErrors);
+        }
+
+        var lineContentRefs = contentRefs.Where(c =>
+            c.ContentType.Equals(Db.ContentTypeDisplayStringForLine, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (lineContentRefs.Any())
+        {
+            statusContext.Progress($"Found {lineContentRefs.Count} line content items to import");
+            var lineErrors = await HandleLineContentReferences(lineContentRefs, statusContext);
+            allErrors.AddRange(lineErrors);
+        }
+
+        var linkContentRefs = contentRefs.Where(c =>
+            c.ContentType.Equals(Db.ContentTypeDisplayStringForLink, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (linkContentRefs.Any())
+        {
+            statusContext.Progress($"Found {linkContentRefs.Count} link content items to import");
+            var linkErrors = await HandleLinkContentReferences(linkContentRefs, statusContext);
+            allErrors.AddRange(linkErrors);
+        }
+
+        var noteContentRefs = contentRefs.Where(c =>
+            c.ContentType.Equals(Db.ContentTypeDisplayStringForNote, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (noteContentRefs.Any())
+        {
+            statusContext.Progress($"Found {noteContentRefs.Count} note content items to import");
+            var noteErrors = await HandleNoteContentReferences(noteContentRefs, statusContext);
+            allErrors.AddRange(noteErrors);
+        }
+
+        var photoContentRefs = contentRefs.Where(c =>
+            c.ContentType.Equals(Db.ContentTypeDisplayStringForPhoto, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (photoContentRefs.Any())
+        {
+            statusContext.Progress($"Found {photoContentRefs.Count} photo content items to import");
+            var photoErrors = await HandlePhotoContentReferences(photoContentRefs, statusContext);
+            allErrors.AddRange(photoErrors);
+        }
+
+        var postContentRefs = contentRefs.Where(c =>
+            c.ContentType.Equals(Db.ContentTypeDisplayStringForPost, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (postContentRefs.Any())
+        {
+            statusContext.Progress($"Found {postContentRefs.Count} post content items to import");
+            var postErrors = await HandlePostContentReferences(postContentRefs, statusContext);
+            allErrors.AddRange(postErrors);
+        }
+
+        var snippetContentRefs = contentRefs.Where(c =>
+            c.ContentType.Equals(Db.ContentTypeDisplayStringForSnippet, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (snippetContentRefs.Any())
+        {
+            statusContext.Progress($"Found {snippetContentRefs.Count} snippet content items to import");
+            var snippetErrors = await HandleSnippetContentReferences(snippetContentRefs, statusContext);
+            allErrors.AddRange(snippetErrors);
+        }
+
+        var trailContentRefs = contentRefs.Where(c =>
+            c.ContentType.Equals(Db.ContentTypeDisplayStringForTrail, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (trailContentRefs.Any())
+        {
+            statusContext.Progress($"Found {trailContentRefs.Count} trail content items to import");
+            var trailErrors = await HandleTrailContentReferences(trailContentRefs, statusContext);
+            allErrors.AddRange(trailErrors);
+        }
+
+        var videoContentRefs = contentRefs.Where(c =>
+            c.ContentType.Equals(Db.ContentTypeDisplayStringForVideo, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (videoContentRefs.Any())
+        {
+            statusContext.Progress($"Found {videoContentRefs.Count} video content items to import");
+            var videoErrors = await HandleVideoContentReferences(videoContentRefs, statusContext);
+            allErrors.AddRange(videoErrors);
+        }
+
+        // Show all errors at the end
+        if (allErrors.Any())
+        {
+            var errorMessage = "Import completed with errors:\n" + string.Join("\n", allErrors);
+            await statusContext.ShowMessageWithOkButton("Import Errors", errorMessage);
         }
     }
 
-    public static async Task HandleSnippetContentReferences(List<ContentClipboardRepresentation> contentRefs,
+    public static async Task<List<string>> HandleSnippetContentReferences(
+        List<ContentClipboardRepresentation> contentRefs,
         StatusControlContext statusContext)
     {
-        await ThreadSwitcher.ResumeForegroundAsync();
+        var errors = new List<string>();
+        await ThreadSwitcher.ResumeBackgroundAsync();
 
         statusContext.Progress("Starting snippet content load.");
-
-        if (contentRefs.Count > 10)
-        {
-            await statusContext.ToastError(
-                "Dragging in new content is limited to 10 snippets at a time...");
-            return;
-        }
-
-        await ThreadSwitcher.ResumeBackgroundAsync();
 
         var loopCount = 0;
 
@@ -825,7 +1047,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (string.IsNullOrEmpty(contentJsonResponse))
                 {
-                    await statusContext.ToastError($"Failed to retrieve content data for {loopRef.ContentId}");
+                    var err = $"Failed to retrieve content data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -835,7 +1059,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (snippetContent == null)
                 {
-                    await statusContext.ToastError($"Failed to parse content data for {loopRef.ContentId}");
+                    var err = $"Failed to parse content data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -857,6 +1083,8 @@ public static class ContentClipboardRepresentationHandlers
                     _ = editor.StatusContext.ShowMessageWithOkButton("Problem Saving",
                         saveGenerationReturn.GenerationNote);
 
+                    errors.Add(
+                        $"Error saving or validating snippet content {loopRef.ContentId}: {saveGenerationReturn.GenerationNote} {bracketCodeCheck.GenerationNote}");
                     continue;
                 }
 
@@ -866,27 +1094,24 @@ public static class ContentClipboardRepresentationHandlers
             }
             catch (Exception ex)
             {
-                await statusContext.ToastError($"Error processing content {loopRef.ContentId}: {ex.Message}");
+                var err = $"Error processing content {loopRef.ContentId}: {ex.Message}";
+                await statusContext.ToastError(err);
                 Log.Error(ex, "Error processing content from other site: {ContentId}", loopRef.ContentId);
+                errors.Add(err);
             }
         }
+
+        return errors;
     }
 
-    public static async Task HandleTrailContentReferences(List<ContentClipboardRepresentation> contentRefs,
+    public static async Task<List<string>> HandleTrailContentReferences(
+        List<ContentClipboardRepresentation> contentRefs,
         StatusControlContext statusContext)
     {
-        await ThreadSwitcher.ResumeForegroundAsync();
+        var errors = new List<string>();
+        await ThreadSwitcher.ResumeBackgroundAsync();
 
         statusContext.Progress("Starting trail content load.");
-
-        if (contentRefs.Count > 10)
-        {
-            await statusContext.ToastError(
-                "Dragging in new content is limited to 10 trails at a time...");
-            return;
-        }
-
-        await ThreadSwitcher.ResumeBackgroundAsync();
 
         var loopCount = 0;
 
@@ -910,7 +1135,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (string.IsNullOrEmpty(contentJsonResponse))
                 {
-                    await statusContext.ToastError($"Failed to retrieve content data for {loopRef.ContentId}");
+                    var err = $"Failed to retrieve content data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -920,7 +1147,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (trailContent == null)
                 {
-                    await statusContext.ToastError($"Failed to parse content data for {loopRef.ContentId}");
+                    var err = $"Failed to parse content data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -932,7 +1161,8 @@ public static class ContentClipboardRepresentationHandlers
                 var bracketCodeCheck = await CommonContentValidation.CheckStringForBadContentReferences(
                     $"{trailContent.BodyContent ?? string.Empty} {trailContent.UpdateNotes ?? string.Empty} " +
                     $"{trailContent.BikesNote ?? string.Empty} {trailContent.DogsNote ?? string.Empty} " +
-                    $"{trailContent.FeesNote ?? string.Empty} {trailContent.OtherDetails ?? string.Empty} {FakeMainPhotoBracketCode(trailContent.MainPicture)}", db,
+                    $"{trailContent.FeesNote ?? string.Empty} {trailContent.OtherDetails ?? string.Empty} {FakeMainPhotoBracketCode(trailContent.MainPicture)}",
+                    db,
                     statusContext.ProgressTracker());
 
                 if (saveGenerationReturn.HasError || bracketCodeCheck.HasError)
@@ -944,6 +1174,8 @@ public static class ContentClipboardRepresentationHandlers
                     _ = editor.StatusContext.ShowMessageWithOkButton("Problem Saving",
                         saveGenerationReturn.GenerationNote);
 
+                    errors.Add(
+                        $"Error saving or validating trail content {loopRef.ContentId}: {saveGenerationReturn.GenerationNote} {bracketCodeCheck.GenerationNote}");
                     continue;
                 }
 
@@ -953,27 +1185,24 @@ public static class ContentClipboardRepresentationHandlers
             }
             catch (Exception ex)
             {
-                await statusContext.ToastError($"Error processing content {loopRef.ContentId}: {ex.Message}");
+                var err = $"Error processing content {loopRef.ContentId}: {ex.Message}";
+                await statusContext.ToastError(err);
                 Log.Error(ex, "Error processing content from other site: {ContentId}", loopRef.ContentId);
+                errors.Add(err);
             }
         }
+
+        return errors;
     }
 
-    public static async Task HandleVideoContentReferences(List<ContentClipboardRepresentation> contentRefs,
+    public static async Task<List<string>> HandleVideoContentReferences(
+        List<ContentClipboardRepresentation> contentRefs,
         StatusControlContext statusContext)
     {
-        await ThreadSwitcher.ResumeForegroundAsync();
+        var errors = new List<string>();
+        await ThreadSwitcher.ResumeBackgroundAsync();
 
         statusContext.Progress("Starting video content load.");
-
-        if (contentRefs.Count > 10)
-        {
-            await statusContext.ToastError(
-                "Dragging in new content is limited to 10 videos at a time...");
-            return;
-        }
-
-        await ThreadSwitcher.ResumeBackgroundAsync();
 
         var loopCount = 0;
 
@@ -997,7 +1226,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (string.IsNullOrEmpty(contentJsonResponse))
                 {
-                    await statusContext.ToastError($"Failed to retrieve content data for {loopRef.ContentId}");
+                    var err = $"Failed to retrieve content data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -1007,7 +1238,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (videoContent == null)
                 {
-                    await statusContext.ToastError($"Failed to parse content data for {loopRef.ContentId}");
+                    var err = $"Failed to parse content data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -1019,7 +1252,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (string.IsNullOrEmpty(mediaFileResponse))
                 {
-                    await statusContext.ToastError($"Failed to retrieve media file data for {loopRef.ContentId}");
+                    var err = $"Failed to retrieve media file data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -1030,7 +1265,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (mediaFileInfo is not { Exists: true })
                 {
-                    await statusContext.ToastError($"Media file not found for {loopRef.ContentId}");
+                    var err = $"Media file not found for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
                     continue;
                 }
 
@@ -1040,7 +1277,8 @@ public static class ContentClipboardRepresentationHandlers
                     null, statusContext.ProgressTracker());
 
                 var bracketCodeCheck = await CommonContentValidation.CheckStringForBadContentReferences(
-                    $"{videoContent.BodyContent ?? string.Empty} {videoContent.UpdateNotes ?? string.Empty} {FakeMainPhotoBracketCode(videoContent.MainPicture)}", db,
+                    $"{videoContent.BodyContent ?? string.Empty} {videoContent.UpdateNotes ?? string.Empty} {FakeMainPhotoBracketCode(videoContent.MainPicture)}",
+                    db,
                     statusContext.ProgressTracker());
 
                 if (saveGenerationReturn.HasError || bracketCodeCheck.HasError)
@@ -1052,6 +1290,8 @@ public static class ContentClipboardRepresentationHandlers
                     _ = editor.StatusContext.ShowMessageWithOkButton("Problem Saving",
                         saveGenerationReturn.GenerationNote);
 
+                    errors.Add(
+                        $"Error saving or validating video content {loopRef.ContentId}: {saveGenerationReturn.GenerationNote} {bracketCodeCheck.GenerationNote}");
                     continue;
                 }
 
@@ -1061,117 +1301,13 @@ public static class ContentClipboardRepresentationHandlers
             }
             catch (Exception ex)
             {
-                await statusContext.ToastError($"Error processing content {loopRef.ContentId}: {ex.Message}");
+                var err = $"Error processing content {loopRef.ContentId}: {ex.Message}";
+                await statusContext.ToastError(err);
                 Log.Error(ex, "Error processing content from other site: {ContentId}", loopRef.ContentId);
+                errors.Add(err);
             }
         }
-    }
 
-    public static async Task HandleReferencesFromOtherSites(List<ContentClipboardRepresentation> contentRefs,
-        StatusControlContext statusContext)
-    {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        statusContext.Progress($"Processing {contentRefs.Count} content items from other sites...");
-
-        // For now, just show what we received
-        var contentDescriptions =
-            contentRefs.Select(c => $"Content Type: {c.ContentType}, ID: {c.ContentId}, From Site: {c.SiteId}");
-        var message = string.Join(Environment.NewLine, contentDescriptions);
-
-        await statusContext.ToastSuccess($"Received content references:{Environment.NewLine}{message}");
-
-        // Find and process content references by type
-        var fileContentRefs = contentRefs.Where(c =>
-            c.ContentType.Equals(Db.ContentTypeDisplayStringForFile, StringComparison.OrdinalIgnoreCase)).ToList();
-        if (fileContentRefs.Any())
-        {
-            statusContext.Progress($"Found {fileContentRefs.Count} file content items to import");
-            await HandleFileContentReferences(fileContentRefs, statusContext);
-        }
-
-        var geoJsonContentRefs = contentRefs.Where(c =>
-            c.ContentType.Equals(Db.ContentTypeDisplayStringForGeoJson, StringComparison.OrdinalIgnoreCase)).ToList();
-        if (geoJsonContentRefs.Any())
-        {
-            statusContext.Progress($"Found {geoJsonContentRefs.Count} GeoJson content items to import");
-            await HandleGeoJsonContentReferences(geoJsonContentRefs, statusContext);
-        }
-
-        var imageContentRefs = contentRefs.Where(c =>
-            c.ContentType.Equals(Db.ContentTypeDisplayStringForImage, StringComparison.OrdinalIgnoreCase)).ToList();
-        if (imageContentRefs.Any())
-        {
-            statusContext.Progress($"Found {imageContentRefs.Count} image content items to import");
-            await HandleImageContentReferences(imageContentRefs, statusContext);
-        }
-
-        var lineContentRefs = contentRefs.Where(c =>
-            c.ContentType.Equals(Db.ContentTypeDisplayStringForLine, StringComparison.OrdinalIgnoreCase)).ToList();
-        if (lineContentRefs.Any())
-        {
-            statusContext.Progress($"Found {lineContentRefs.Count} line content items to import");
-            await HandleLineContentReferences(lineContentRefs, statusContext);
-        }
-
-        var linkContentRefs = contentRefs.Where(c =>
-            c.ContentType.Equals(Db.ContentTypeDisplayStringForLink, StringComparison.OrdinalIgnoreCase)).ToList();
-        if (linkContentRefs.Any())
-        {
-            statusContext.Progress($"Found {linkContentRefs.Count} link content items to import");
-            await HandleLinkContentReferences(linkContentRefs, statusContext);
-        }
-
-        var noteContentRefs = contentRefs.Where(c =>
-            c.ContentType.Equals(Db.ContentTypeDisplayStringForNote, StringComparison.OrdinalIgnoreCase)).ToList();
-        if (noteContentRefs.Any())
-        {
-            statusContext.Progress($"Found {noteContentRefs.Count} note content items to import");
-            await HandleNoteContentReferences(noteContentRefs, statusContext);
-        }
-
-        var photoContentRefs = contentRefs.Where(c =>
-            c.ContentType.Equals(Db.ContentTypeDisplayStringForPhoto, StringComparison.OrdinalIgnoreCase)).ToList();
-        if (photoContentRefs.Any())
-        {
-            statusContext.Progress($"Found {photoContentRefs.Count} photo content items to import");
-            await HandlePhotoContentReferences(photoContentRefs, statusContext);
-        }
-
-        var postContentRefs = contentRefs.Where(c =>
-            c.ContentType.Equals(Db.ContentTypeDisplayStringForPost, StringComparison.OrdinalIgnoreCase)).ToList();
-        if (postContentRefs.Any())
-        {
-            statusContext.Progress($"Found {postContentRefs.Count} post content items to import");
-            await HandlePostContentReferences(postContentRefs, statusContext);
-        }
-
-        var snippetContentRefs = contentRefs.Where(c =>
-            c.ContentType.Equals(Db.ContentTypeDisplayStringForSnippet, StringComparison.OrdinalIgnoreCase)).ToList();
-        if (snippetContentRefs.Any())
-        {
-            statusContext.Progress($"Found {snippetContentRefs.Count} snippet content items to import");
-            await HandleSnippetContentReferences(snippetContentRefs, statusContext);
-        }
-
-        var trailContentRefs = contentRefs.Where(c =>
-            c.ContentType.Equals(Db.ContentTypeDisplayStringForTrail, StringComparison.OrdinalIgnoreCase)).ToList();
-        if (trailContentRefs.Any())
-        {
-            statusContext.Progress($"Found {trailContentRefs.Count} trail content items to import");
-            await HandleTrailContentReferences(trailContentRefs, statusContext);
-        }
-
-        var videoContentRefs = contentRefs.Where(c =>
-            c.ContentType.Equals(Db.ContentTypeDisplayStringForVideo, StringComparison.OrdinalIgnoreCase)).ToList();
-        if (videoContentRefs.Any())
-        {
-            statusContext.Progress($"Found {videoContentRefs.Count} video content items to import");
-            await HandleVideoContentReferences(videoContentRefs, statusContext);
-        }
-
-        // Log that we received the content
-        Log.Information("Received content references from other sites: {ContentRefs}",
-            contentRefs.Select(c => new { c.ContentType, c.ContentId, c.SiteId, c.SiteLocalApiUrl }).ToList());
+        return errors;
     }
 }
