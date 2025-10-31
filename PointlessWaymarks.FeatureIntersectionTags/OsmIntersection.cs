@@ -269,9 +269,21 @@ public static class OsmIntersection
 
             var options = new JsonSerializerOptions();
             options.Converters.Add(new OsmElementConverter());
-            var features = JsonSerializer.Deserialize<OsmResponse>(jsonString, options);
 
-            if (features?.Elements is null) continue;
+            OsmResponse? features;
+            try
+            {
+                features = JsonSerializer.Deserialize<OsmResponse>(jsonString, options);
+                if (features?.Elements == null)
+                    throw new JsonException("Deserialized OsmResponse is null or missing elements.");
+            }
+            catch (Exception ex)
+            {
+                Log.ForContext("jsonString", jsonString)
+                    .Error(ex, "Failed to deserialize OSM Overpass API response. Raw response logged for analysis.");
+                throw new InvalidOperationException(
+                    $"Failed to deserialize OSM Overpass API response. See inner exception and logs for details. Raw response: {jsonString}", ex);
+            }
 
             foreach (var osmElement in features.Elements)
                 if (osmElement.Tags.TryGetValue("name", out var nameTag))
