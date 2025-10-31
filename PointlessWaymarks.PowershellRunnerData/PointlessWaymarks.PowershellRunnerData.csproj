@@ -5,10 +5,10 @@
     <ItemGroup>
         <PackageReference Include="FluentMigrator" Version="7.1.0" />
         <PackageReference Include="FluentMigrator.Runner.SQLite" Version="7.1.0" />
-        <PackageReference Include="Metalama.Framework" Version="2025.1.13" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.9" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.9" />
-        <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.5.3" />
+        <PackageReference Include="Metalama.Framework" Version="2025.1.16" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.10" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.10" />
+        <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.5.4" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\PointlessWaymarksTools\PointlessWaymarks.CommonTools\PointlessWaymarks.CommonTools.csproj" />

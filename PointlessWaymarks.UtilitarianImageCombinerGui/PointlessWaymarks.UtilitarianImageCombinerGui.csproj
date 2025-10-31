@@ -26,10 +26,10 @@
 
     <ItemGroup>
         <PackageReference Include="Jot" Version="2.1.17" />
-        <PackageReference Include="Metalama.Framework" Version="2025.1.13" />
-        <PackageReference Include="Metalama.Patterns.Observability" Version="2025.1.13" />
+        <PackageReference Include="Metalama.Framework" Version="2025.1.16" />
+        <PackageReference Include="Metalama.Patterns.Observability" Version="2025.1.16" />
         <PackageReference Include="Microsoft.Playwright" Version="1.55.0" />
-        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3485.44" />
+        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3537.50" />
     </ItemGroup>
 
     <ItemGroup>
