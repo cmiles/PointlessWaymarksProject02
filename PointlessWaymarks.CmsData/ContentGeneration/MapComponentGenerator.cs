@@ -29,9 +29,7 @@ public static class MapComponentGenerator
             descentFeet = x.DescentElevation
         }).OrderByDescending(x => x.start).AsNoTracking().ToListAsync();
 
-        var jsonFile = new FileInfo(Path.Combine(
-            UserSettingsSingleton.CurrentSettings().LocalSiteContentDataDirectory().FullName,
-            $"anonymousActivityData.json"));
+        var jsonFile = UserSettingsSingleton.CurrentSettings().LocalSiteLineMonthlyAnonymousActivityHtmlFile();
 
         var json = JsonSerializer.Serialize(activityLines, new JsonSerializerOptions
         {

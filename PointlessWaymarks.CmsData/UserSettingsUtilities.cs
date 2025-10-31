@@ -861,6 +861,32 @@ public static class UserSettingsUtilities
         return new FileInfo($"{Path.Combine(directory.FullName, "LineMonthlyActivitySummary")}.html");
     }
 
+    public static FileInfo LocalSiteLineMonthlyAnonymousActivityHtmlFile(this UserSettings settings)
+    {
+        var directory = settings.LocalSiteLineDirectory();
+        return new FileInfo($"{Path.Combine(directory.FullName, "AnonymousActivityData")}.json");
+    }
+
+    public static List<FileInfo> LinkSnapshotImages(this UserSettings settings, Guid linkContentId)
+    {
+        var images =
+            new DirectoryInfo(UserSettingsSingleton.CurrentSettings().LocalMediaArchiveLinkDirectory().FullName)
+                .GetFiles($"{linkContentId}--*.jpg");
+
+        var fileList = new List<FileInfo>();
+
+        if (!images.Any()) return fileList;
+
+        foreach (var loopImageFile in images)
+        {
+            var parts = Path.GetFileNameWithoutExtension(loopImageFile.Name).Split("--");
+            if (parts.Length < 2) continue;
+            fileList.Add(loopImageFile);
+        }
+
+        return fileList;
+    }
+
     public static FileInfo LocalSiteLineRssFile(this UserSettings settings)
     {
         var directory = settings.LocalSiteLineDirectory();

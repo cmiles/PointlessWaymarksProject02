@@ -113,9 +113,7 @@ public partial class LinkListListItem : IContentListItem
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        var images =
-            new DirectoryInfo(UserSettingsSingleton.CurrentSettings().LocalMediaArchiveLinkDirectory().FullName)
-                .GetFiles($"{DbEntry.ContentId}--*.jpg");
+        var images = UserSettingsSingleton.CurrentSettings().LinkSnapshotImages(DbEntry.ContentId);
 
         if (!images.Any()) return;
 
