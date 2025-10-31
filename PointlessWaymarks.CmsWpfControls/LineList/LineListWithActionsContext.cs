@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Xml;
 using ClosedXML.Excel;
+using MathNet.Numerics;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Features;
 using NetTopologySuite.IO;
@@ -405,6 +406,11 @@ public partial class LineListWithActionsContext
             x.DbEntry.DescentElevation,
             x.DbEntry.MinimumElevation,
             x.DbEntry.MaximumElevation,
+            Hours = x.DbEntry is { RecordingStartedOn: null, RecordingEndedOn: null }
+                ? null
+                : (x.DbEntry.RecordingEndedOn - x.DbEntry.RecordingStartedOn)?.TotalHours.Round(2),
+            x.DbEntry.ActivityType,
+            x.DbEntry.RecordingStartedOn,
             x.DbEntry.Tags,
             Url = settings.LinePageUrl(x.DbEntry)
         });
@@ -423,14 +429,15 @@ public partial class LineListWithActionsContext
         StatusContext.Progress("Applying Formatting");
 
         foreach (var loopRow in table.DataRange.Rows())
-            loopRow.Cell(2).SetHyperlink(new XLHyperlink(loopRow.Cell(9).GetString()));
+            loopRow.Cell(2).SetHyperlink(new XLHyperlink(loopRow.Cell(12).GetString()));
 
         table.DataRange.Column(3).Style.NumberFormat.Format = "#0.0";
         table.DataRange.Column(4).Style.NumberFormat.Format = "#,##0";
         table.DataRange.Column(5).Style.NumberFormat.Format = "#,##0";
         table.DataRange.Column(6).Style.NumberFormat.Format = "#,##0";
         table.DataRange.Column(7).Style.NumberFormat.Format = "#,##0";
-        table.Column(9).Delete();
+        table.DataRange.Column(8).Style.NumberFormat.Format = "#,##0.0";
+        table.DataRange.Column(10).Style.NumberFormat.Format = "yyyy-mm-dd h AM/PM";
 
         ws.Columns().AdjustToContents();
 
@@ -517,6 +524,7 @@ public partial class LineListWithActionsContext
         }
 
         await MapComponentGenerator.GenerateAllLinesData();
+        await MapComponentGenerator.GenerateAllActivityAnonymousDataFile();
         await new LineMonthlyActivitySummaryPage(generationVersion).WriteLocalHtml();
     }
 
