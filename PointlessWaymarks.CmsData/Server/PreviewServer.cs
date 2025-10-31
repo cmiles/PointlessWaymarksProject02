@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -126,6 +127,45 @@ public class PreviewServer
 
                 var json = JsonSerializer.Serialize(content, JsonTools.WriteIndentedOptions);
                 return Results.Content(json, "application/json");
+            }
+            catch (Exception ex)
+            {
+                return Results.Problem(
+                    ex.Message,
+                    title: "Error retrieving content",
+                    statusCode: 500
+                );
+            }
+        });
+
+        app.MapGet("/localapi/linksnapshots/{contentId}", async (Guid contentId) =>
+        {
+            try
+            {
+                var imageFiles = UserSettingsSingleton.CurrentSettings()
+                    .LinkSnapshotImages(contentId);
+
+                if (!imageFiles.Any())
+                    return Results.NotFound($"No link snapshot images found for content ID {contentId}");
+
+                // Create a memory stream for the zip archive
+                using var zipStream = new MemoryStream();
+                using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create, true))
+                {
+                    foreach (var file in imageFiles)
+                        if (file.Exists)
+                        {
+                            var entry = archive.CreateEntry(file.Name, CompressionLevel.Fastest);
+                            await using var entryStream = entry.Open();
+                            await using var fileStream = file.OpenRead();
+                            await fileStream.CopyToAsync(entryStream);
+                        }
+                }
+
+                zipStream.Seek(0, SeekOrigin.Begin);
+
+                // Return the zip file
+                return Results.File(zipStream, "application/zip", $"LinkSnapshots_{contentId}.zip");
             }
             catch (Exception ex)
             {
