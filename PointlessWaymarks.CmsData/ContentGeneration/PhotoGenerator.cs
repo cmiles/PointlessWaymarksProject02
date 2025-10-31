@@ -244,8 +244,15 @@ public static class PhotoGenerator
         //like DSC001 style out of camera names but after having experimented with loading files I think 'default' is better
         //than an invalid blank.
         if (string.IsNullOrWhiteSpace(toReturn.Title))
-            toReturn.Title = Path.GetFileNameWithoutExtension(selectedFile.Name).Replace("-", " ").Replace("_", " ")
-                .CamelCaseToSpacedString();
+        {
+            var fileName = Path.GetFileNameWithoutExtension(selectedFile.Name);
+
+            // Replace '-' and '_' only if not surrounded by spaces or by the same character
+            fileName = Regex.Replace(fileName, @"(?<![\s\-])-(?![\s\-])", " ");
+            fileName = Regex.Replace(fileName, @"(?<![\s_])_(?![\s_])", " ");
+
+            toReturn.Title = fileName.CamelCaseToSpacedString();
+        }
 
         if (string.IsNullOrWhiteSpace(toReturn.Title)) toReturn.Title = string.Empty;
 
