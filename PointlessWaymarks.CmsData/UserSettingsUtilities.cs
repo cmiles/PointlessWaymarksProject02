@@ -118,6 +118,10 @@ public static class UserSettingsUtilities
             .ConfigureAwait(false);
         if (possiblePost != null) return settings.PostPageUrl(possiblePost);
 
+        var possibleTrail = await db.TrailContents.SingleOrDefaultAsync(x => x.ContentId == toLink)
+            .ConfigureAwait(false);
+        if (possibleTrail != null) return settings.TrailPageUrl(possibleTrail);
+
         var possibleVideo = await db.VideoContents.SingleOrDefaultAsync(x => x.ContentId == toLink)
             .ConfigureAwait(false);
         if (possibleVideo != null) return settings.VideoPageUrl(possibleVideo);
