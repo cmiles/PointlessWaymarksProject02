@@ -288,22 +288,36 @@ public partial class GpxImportContext : IWebViewMessenger
         var newLine =
             await LineGenerator.NewFromGpxTrack(toImport.RouteInformation, false, false, StatusContext.ProgressTracker());
 
-        newLine.ContentId = Guid.NewGuid();
-        newLine.Title = toImport.UserContentName;
-        newLine.Slug = SlugTools.CreateSlug(true, toImport.UserContentName);
-        newLine.Summary = string.IsNullOrWhiteSpace(toImport.Route.Comment)
-            ? string.IsNullOrWhiteSpace(toImport.Route.Description)
-                ? toImport.UserContentName
-                : toImport.Route.Description
-            : toImport.Route.Comment;
-        newLine.BodyContent = string.IsNullOrWhiteSpace(toImport.Route.Comment)
-            ? string.Empty
-            : toImport.Route.Description;
+        if (!string.IsNullOrWhiteSpace(toImport.UserContentName))
+        {
+            newLine.Title = toImport.UserContentName;
+            newLine.Slug = SlugTools.CreateSlug(true, toImport.UserContentName);
+        }
+
+        if (!string.IsNullOrWhiteSpace(toImport.Route.Comment))
+            newLine.Summary = toImport.Route.Comment;
+        else if (!string.IsNullOrWhiteSpace(toImport.Route.Description))
+            newLine.Summary = toImport.Route.Description;
+        else
+        {
+            newLine.Summary = toImport.UserContentName;
+            if (!char.IsPunctuation(newLine.Summary[^1]))
+                newLine.Summary += ".";
+        }
+
         newLine.CreatedBy = string.IsNullOrWhiteSpace(UserSettingsSingleton.CurrentSettings().DefaultCreatedBy)
             ? "GPX Importer"
             : UserSettingsSingleton.CurrentSettings().DefaultCreatedBy;
-        newLine.Folder = FolderEntry.UserValue;
-        newLine.Tags = TagEntry.TagListString();
+
+        if (!string.IsNullOrWhiteSpace(FolderEntry.UserValue))
+            newLine.Folder = FolderEntry.UserValue;
+
+        if (!string.IsNullOrWhiteSpace(TagEntry.TagListString()))
+        {
+            var slugs = Db.TagListParse(newLine.Tags);
+            slugs = slugs.Union(TagEntry.TagList()).ToList();
+            newLine.Tags = Db.TagListJoin(slugs);
+        }
 
         var validationResult = await LineGenerator.Validate(newLine);
 
@@ -400,25 +414,39 @@ public partial class GpxImportContext : IWebViewMessenger
         }
 
         var newLine =
-            await LineGenerator.NewFromGpxTrack(toImport.TrackInformation, false, false, false,
+            await LineGenerator.NewFromGpxTrack(toImport.TrackInformation, false, false, true,
                 StatusContext.ProgressTracker());
 
-        newLine.ContentId = Guid.NewGuid();
-        newLine.Title = toImport.UserContentName;
-        newLine.Slug = SlugTools.CreateSlug(true, toImport.UserContentName);
-        newLine.Summary = string.IsNullOrWhiteSpace(toImport.Track.Comment)
-            ? string.IsNullOrWhiteSpace(toImport.Track.Description)
-                ? toImport.UserContentName
-                : toImport.Track.Description
-            : toImport.Track.Comment;
-        newLine.BodyContent = string.IsNullOrWhiteSpace(toImport.Track.Comment)
-            ? string.Empty
-            : toImport.Track.Description;
+        if (!string.IsNullOrWhiteSpace(toImport.UserContentName))
+        {
+            newLine.Title = toImport.UserContentName;
+            newLine.Slug = SlugTools.CreateSlug(true, toImport.UserContentName);
+        }
+
+        if (!string.IsNullOrWhiteSpace(toImport.Track.Comment))
+            newLine.Summary = toImport.Track.Comment;
+        else if (!string.IsNullOrWhiteSpace(toImport.Track.Description))
+            newLine.Summary = toImport.Track.Description;
+        else
+        {
+            newLine.Summary = toImport.UserContentName;
+            if (!char.IsPunctuation(newLine.Summary[^1]))
+                newLine.Summary += ".";
+        }
+
         newLine.CreatedBy = string.IsNullOrWhiteSpace(UserSettingsSingleton.CurrentSettings().DefaultCreatedBy)
             ? "GPX Importer"
             : UserSettingsSingleton.CurrentSettings().DefaultCreatedBy;
-        newLine.Folder = FolderEntry.UserValue;
-        newLine.Tags = TagEntry.TagListString();
+
+        if(!string.IsNullOrWhiteSpace(FolderEntry.UserValue))
+            newLine.Folder = FolderEntry.UserValue;
+        
+        if(!string.IsNullOrWhiteSpace(TagEntry.TagListString()))
+        {
+            var slugs = Db.TagListParse(newLine.Tags);
+            slugs = slugs.Union(TagEntry.TagList()).ToList();
+            newLine.Tags = Db.TagListJoin(slugs);
+        }
 
         var validationResult = await LineGenerator.Validate(newLine);
 
@@ -456,20 +484,6 @@ public partial class GpxImportContext : IWebViewMessenger
         {
             await StatusContext.ShowMessageWithOkButton("Import Validation Error",
                 "With Auto-Save selected all items for import must have a Name that isn't blank.");
-            return;
-        }
-
-        if (AutoSaveImports && FolderEntry.HasValidationIssues)
-        {
-            await StatusContext.ShowMessageWithOkButton("Auto-Save Folder Validation",
-                $"Folder Validation Problems... {FolderEntry.ValidationMessage}");
-            return;
-        }
-
-        if (AutoSaveImports && TagEntry.HasValidationIssues)
-        {
-            await StatusContext.ShowMessageWithOkButton("Auto-Save Tag Validation",
-                $"Tag Validation Problems... {TagEntry.TagsValidationMessage}");
             return;
         }
 
