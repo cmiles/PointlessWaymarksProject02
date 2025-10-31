@@ -783,6 +783,7 @@ public static class SiteGenerationChangedContent
         if (allItems.Any())
         {
             await MapComponentGenerator.GenerateAllLinesData();
+            await MapComponentGenerator.GenerateAllActivityAnonymousDataFile();
             await new LineMonthlyActivitySummaryPage(generationVersion).WriteLocalHtml();
         }
     }

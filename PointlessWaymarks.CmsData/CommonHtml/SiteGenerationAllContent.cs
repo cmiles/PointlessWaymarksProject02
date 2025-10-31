@@ -113,6 +113,7 @@ public static class SiteGenerationAllContent
         }).ConfigureAwait(false);
 
         await MapComponentGenerator.GenerateAllLinesData();
+        await MapComponentGenerator.GenerateAllActivityAnonymousDataFile();
         await new LineMonthlyActivitySummaryPage(generationVersion).WriteLocalHtml();
     }
 

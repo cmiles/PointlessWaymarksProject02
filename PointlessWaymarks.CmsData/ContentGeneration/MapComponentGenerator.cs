@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
 using PointlessWaymarks.CmsData.Database;
@@ -9,6 +10,42 @@ namespace PointlessWaymarks.CmsData.ContentGeneration;
 
 public static class MapComponentGenerator
 {
+    public static async Task<(GenerationReturn generationReturn, string dataFilePath)> GenerateAllActivityAnonymousDataFile(
+        Progress<string>? progress = null)
+    {
+        var db = await Db.Context();
+        var activityLines = await db.LineContents.Where(x =>
+            !x.IsDraft && x.ActivityType != null && x.ActivityType != "" && x.RecordingStartedOn != null &&
+            x.RecordingEndedOn != null).Select(x => new
+        {
+            folder = x.Folder,
+            activityType = x.ActivityType,
+            start = x.RecordingStartedOn,
+            end = x.RecordingEndedOn,
+            distanceMiles = x.LineDistance,
+            lowestElevationFeet = x.MinimumElevation,
+            highestElevationFeet = x.MaximumElevation,
+            climbFeet = x.ClimbElevation,
+            descentFeet = x.DescentElevation
+        }).OrderByDescending(x => x.start).AsNoTracking().ToListAsync();
+
+        var jsonFile = new FileInfo(Path.Combine(
+            UserSettingsSingleton.CurrentSettings().LocalSiteContentDataDirectory().FullName,
+            $"anonymousActivityData.json"));
+
+        var json = JsonSerializer.Serialize(activityLines, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+
+        await File.WriteAllTextAsync(jsonFile.FullName, json);
+
+        return (
+            GenerationReturn.Success(
+                $"Saved and Generated Anonymous Activity Data to {jsonFile.FullName}"),
+            jsonFile.FullName);
+    }
+
     public static async Task<(GenerationReturn generationReturn, MapComponentDto? mapDto)> GenerateAllLinesData(
         Progress<string>? progress = null)
     {

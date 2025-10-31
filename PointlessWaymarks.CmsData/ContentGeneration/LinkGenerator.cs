@@ -1,4 +1,5 @@
 using AngleSharp;
+using Microsoft.Playwright;
 using pinboard.net;
 using pinboard.net.Models;
 using PointlessWaymarks.CmsData.ContentHtml.LinkListHtml;
@@ -13,13 +14,86 @@ public static class LinkGenerator
     {
         progress?.Report("Link Content - Generate HTML");
 
-        var htmlContext = new LinkListPage {GenerationVersion = generationVersion};
+        var htmlContext = new LinkListPage { GenerationVersion = generationVersion };
 
         await htmlContext.WriteLocalHtmlRssAndJson().ConfigureAwait(false);
     }
 
-    public static async Task<(GenerationReturn generationReturn, LinkMetadata? metadata)> LinkMetadataFromUrl(
-        string url, IProgress<string>? progress = null)
+    // Tries AngleSharp first (with timeout), then falls back to Playwright (with timeout).
+    // Defaults: AngleSharp 10s, Playwright 30s.
+    public static async Task<(GenerationReturn generationReturn, LinkMetadata? metadata)> LinkMetadataFromUrlBestEffort(
+        string url,
+        IProgress<string>? progress = null,
+        TimeSpan? angleSharpTimeout = null,
+        TimeSpan? playwrightTimeout = null)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return (GenerationReturn.Error("No URL?"), null);
+
+        angleSharpTimeout ??= TimeSpan.FromSeconds(10);
+        playwrightTimeout ??= TimeSpan.FromSeconds(30);
+
+        // Try AngleSharp first
+        try
+        {
+            progress?.Report($"Metadata: Trying AngleSharp (timeout {angleSharpTimeout.Value.TotalSeconds:N0}s)...");
+            var angleTask = LinkMetadataFromUrlWithAngleSharp(url, progress);
+
+            if (await Task.WhenAny(angleTask, Task.Delay(angleSharpTimeout.Value)).ConfigureAwait(false) == angleTask)
+            {
+                var angleResult = await angleTask.ConfigureAwait(false);
+                if (angleResult is { metadata: not null, generationReturn.HasError: false })
+                {
+                    progress?.Report("Metadata: AngleSharp succeeded.");
+                    return angleResult;
+                }
+
+                progress?.Report(
+                    "Metadata: AngleSharp completed without usable metadata, falling back to Playwright...");
+            }
+            else
+            {
+                progress?.Report("Metadata: AngleSharp timed out, falling back to Playwright...");
+            }
+        }
+        catch (Exception ex)
+        {
+            progress?.Report($"Metadata: AngleSharp threw an exception: {ex.Message}. Falling back to Playwright...");
+        }
+
+        // Fallback to Playwright
+        try
+        {
+            progress?.Report($"Metadata: Trying Playwright (timeout {playwrightTimeout.Value.TotalSeconds:N0}s)...");
+            var pwTask = LinkMetadataFromUrlWithPlaywright(url, progress);
+
+            if (await Task.WhenAny(pwTask, Task.Delay(playwrightTimeout.Value)).ConfigureAwait(false) == pwTask)
+            {
+                var pwResult = await pwTask.ConfigureAwait(false);
+                if (pwResult is { metadata: not null, generationReturn.HasError: false })
+                {
+                    progress?.Report("Metadata: Playwright succeeded.");
+                    return pwResult;
+                }
+
+                progress?.Report("Metadata: Playwright completed but did not return usable metadata.");
+                return pwResult; // Return whatever Playwright reported (likely an error)
+            }
+
+            progress?.Report("Metadata: Playwright timed out.");
+            return (
+                GenerationReturn.Error(
+                    $"Timed out obtaining metadata for {url} (AngleSharp {angleSharpTimeout}, Playwright {playwrightTimeout})."),
+                null);
+        }
+        catch (Exception ex)
+        {
+            return (GenerationReturn.Error($"Playwright metadata parse failed for {url}: {ex.Message}"), null);
+        }
+    }
+
+    public static async Task<(GenerationReturn generationReturn, LinkMetadata? metadata)>
+        LinkMetadataFromUrlWithAngleSharp(
+            string url, IProgress<string>? progress = null)
     {
         if (string.IsNullOrWhiteSpace(url)) return (GenerationReturn.Error("No URL?"), null);
 
@@ -153,8 +227,190 @@ public static class LinkGenerator
         return (GenerationReturn.Success($"Parsed URL Metadata for {url} without error"), toReturn);
     }
 
+    // New: Playwright-based version (handles JS-heavy sites)
+    public static async Task<(GenerationReturn generationReturn, LinkMetadata? metadata)>
+        LinkMetadataFromUrlWithPlaywright(
+            string url, IProgress<string>? progress = null)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return (GenerationReturn.Error("No URL?"), null);
+
+        try
+        {
+            progress?.Report("Playwright: Launching browser");
+
+            using var playwright = await Playwright.CreateAsync().ConfigureAwait(false);
+            await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+            {
+                Headless = true
+            }).ConfigureAwait(false);
+
+            var page = await browser.NewPageAsync().ConfigureAwait(false);
+
+            progress?.Report($"Playwright: Navigating to {url}");
+            try
+            {
+                await page.GotoAsync(url,
+                        new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 60000 })
+                    .ConfigureAwait(false);
+
+                // Try to wait for network to be quiet, but don't fail the whole operation if it never settles.
+                try
+                {
+                    await page.WaitForLoadStateAsync(LoadState.NetworkIdle,
+                            new PageWaitForLoadStateOptions { Timeout = 15000 })
+                        .ConfigureAwait(false);
+                }
+                catch
+                {
+                    progress?.Report("Playwright: Network idle not reached within timeout; continuing");
+                }
+            }
+            catch (TimeoutException tex)
+            {
+                progress?.Report($"Playwright: Timeout navigating to {url} - {tex.Message}");
+            }
+
+            var result = new LinkMetadata();
+
+            // Helpers
+            static async Task<string?> FirstAttr(IPage p, string selector, string attr)
+            {
+                try
+                {
+                    var v = await p.Locator(selector).First.GetAttributeAsync(attr).ConfigureAwait(false);
+                    return string.IsNullOrWhiteSpace(v) ? null : v.Trim();
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+
+            static async Task<string?> FirstText(IPage p, string selector)
+            {
+                try
+                {
+                    var loc = p.Locator(selector);
+                    if (await loc.CountAsync().ConfigureAwait(false) == 0) return null;
+                    var txt = await loc.First.InnerTextAsync().ConfigureAwait(false);
+                    return string.IsNullOrWhiteSpace(txt) ? null : txt.Trim();
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+
+            // Title
+            progress?.Report("Playwright: Looking for Title");
+            var title = (await page.TitleAsync().ConfigureAwait(false)).Trim();
+
+            if (string.IsNullOrWhiteSpace(title))
+                title = await FirstAttr(page, "meta[property='og:title']", "content").ConfigureAwait(false);
+
+            if (string.IsNullOrWhiteSpace(title))
+                title = await FirstAttr(page, "meta[name='DC.title']", "content").ConfigureAwait(false);
+
+            if (string.IsNullOrWhiteSpace(title))
+                title = await FirstAttr(page, "meta[name='twitter:title']", "value").ConfigureAwait(false);
+
+            if (!string.IsNullOrWhiteSpace(title)) result.Title = title;
+
+            // Author
+            progress?.Report("Playwright: Looking for Author");
+            var author = await FirstAttr(page, "meta[property='og:author']", "content").ConfigureAwait(false);
+
+            if (string.IsNullOrWhiteSpace(author))
+                author = await FirstAttr(page, "meta[name='DC.contributor']", "content").ConfigureAwait(false);
+
+            if (string.IsNullOrWhiteSpace(author))
+                author = await FirstAttr(page, "meta[property='article:author']", "content").ConfigureAwait(false);
+
+            if (string.IsNullOrWhiteSpace(author))
+                author = await FirstAttr(page, "meta[name='author']", "content").ConfigureAwait(false);
+
+            if (string.IsNullOrWhiteSpace(author))
+                author = await FirstText(page, "a[rel~=\"author\"]").ConfigureAwait(false);
+
+            if (string.IsNullOrWhiteSpace(author))
+                author = await FirstText(page, ".author__name").ConfigureAwait(false);
+
+            if (string.IsNullOrWhiteSpace(author))
+                author = await FirstText(page, ".author_name").ConfigureAwait(false);
+
+            if (!string.IsNullOrWhiteSpace(author)) result.Author = author;
+            progress?.Report($"Playwright: Author - Found {result.Author}");
+
+            // Date
+            progress?.Report("Playwright: Looking for Date Time");
+            var dateString = await FirstAttr(page, "meta[property='article:modified_time']", "content")
+                .ConfigureAwait(false);
+
+            if (string.IsNullOrWhiteSpace(dateString))
+                dateString = await FirstAttr(page, "meta[property='og:updated_time']", "content").ConfigureAwait(false);
+
+            if (string.IsNullOrWhiteSpace(dateString))
+                dateString = await FirstAttr(page, "meta[property='article:published_time']", "content")
+                    .ConfigureAwait(false);
+
+            if (string.IsNullOrWhiteSpace(dateString))
+                dateString = await FirstAttr(page, "meta[name='DC.date.created']", "content").ConfigureAwait(false);
+
+            progress?.Report($"Playwright: Date - Found {dateString}");
+
+            if (!string.IsNullOrWhiteSpace(dateString))
+            {
+                if (DateTime.TryParse(dateString, out var parsed))
+                {
+                    result.LinkDate = parsed;
+                    progress?.Report($"Playwright: Date - Parsed to {parsed}");
+                }
+                else
+                {
+                    progress?.Report("Playwright: Date - Could not parse");
+                }
+            }
+
+            // Site
+            progress?.Report("Playwright: Looking for Site Name");
+            var site = await FirstAttr(page, "meta[property='og:site_name']", "content").ConfigureAwait(false);
+
+            if (string.IsNullOrWhiteSpace(site))
+                site = await FirstAttr(page, "meta[name='DC.publisher']", "content").ConfigureAwait(false);
+
+            if (string.IsNullOrWhiteSpace(site))
+            {
+                var twitterSite = await FirstAttr(page, "meta[name='twitter:site']", "value").ConfigureAwait(false);
+                if (!string.IsNullOrWhiteSpace(twitterSite)) site = twitterSite.Replace("@", "");
+            }
+
+            if (!string.IsNullOrWhiteSpace(site)) result.Site = site;
+            progress?.Report($"Playwright: Site - Found {result.Site}");
+
+            // Description
+            progress?.Report("Playwright: Looking for Description");
+            var description = await FirstAttr(page, "meta[name='description']", "content").ConfigureAwait(false);
+
+            if (string.IsNullOrWhiteSpace(description))
+                description = await FirstAttr(page, "meta[property='og:description']", "content").ConfigureAwait(false);
+
+            if (string.IsNullOrWhiteSpace(description))
+                description = await FirstAttr(page, "meta[name='twitter:description']", "content")
+                    .ConfigureAwait(false);
+
+            if (!string.IsNullOrWhiteSpace(description)) result.Description = description;
+            progress?.Report($"Playwright: Description - Found {result.Description}");
+
+            return (GenerationReturn.Success($"Parsed URL Metadata for {url} with Playwright"), result);
+        }
+        catch (Exception ex)
+        {
+            return (GenerationReturn.Error($"Playwright metadata parse failed for {url}: {ex.Message}"), null);
+        }
+    }
+
     /// <summary>
-    /// Callers must check the generationReturn for success or failure!
+    ///     Callers must check the generationReturn for success or failure!
     /// </summary>
     /// <param name="toSave"></param>
     /// <param name="generationVersion"></param>
@@ -255,7 +511,8 @@ public static class LinkGenerator
             return GenerationReturn.Error(createdUpdatedValidationMessage, linkContent.ContentId);
 
         var urlValidation =
-            await CommonContentValidation.ValidateLinkContentLinkUrl(linkContent.Url, linkContent.ContentId).ConfigureAwait(false);
+            await CommonContentValidation.ValidateLinkContentLinkUrl(linkContent.Url, linkContent.ContentId)
+                .ConfigureAwait(false);
 
         if (!urlValidation.Valid)
             return GenerationReturn.Error(urlValidation.Explanation, linkContent.ContentId);
@@ -266,7 +523,6 @@ public static class LinkGenerator
     public class LinkMetadata
     {
         public string? Author { get; set; }
-
         public string? Description { get; set; }
         public DateTime? LinkDate { get; set; }
         public string? Site { get; set; }
