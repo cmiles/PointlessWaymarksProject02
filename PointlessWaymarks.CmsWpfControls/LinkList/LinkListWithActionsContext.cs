@@ -40,6 +40,7 @@ public partial class LinkListWithActionsContext
             new ContextMenuItemData
                 { ItemName = "Extract New Links", ItemCommand = ListContext.ExtractNewLinksSelectedCommand },
             new ContextMenuItemData { ItemName = "Open URL", ItemCommand = ListContext.ViewOnSiteCommand },
+            new ContextMenuItemData { ItemName = "Save Link Snapshot Images", ItemCommand = LinkSnapshotImagesCommand },
             new ContextMenuItemData { ItemName = "Delete", ItemCommand = ListContext.DeleteSelectedCommand },
             new ContextMenuItemData { ItemName = "View History", ItemCommand = ListContext.ViewHistorySelectedCommand },
             new ContextMenuItemData { ItemName = "Refresh Data", ItemCommand = RefreshDataCommand }
@@ -65,6 +66,24 @@ public partial class LinkListWithActionsContext
                 [Db.ContentTypeDisplayStringForLink], windowStatus);
 
         return new LinkListWithActionsContext(factoryStatusContext, windowStatus, factoryListContext, loadInBackground);
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItemsAskIfOverMax(ActionVerb = "snapshot", MaxSelectedItems = 10)]
+    public async Task LinkSnapshotImages(CancellationToken cancellationToken)
+    {
+        var frozenSelected = SelectedListItems();
+
+        var counter = 0;
+        foreach (var loopSelected in frozenSelected)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            StatusContext.Progress($" Link Image {++counter} of {frozenSelected.Count}");
+            await ListContext.LinkItemActions.LinkSnapshotImage(loopSelected.DbEntry);
+        }
+
+        await StatusContext.ToastSuccess("Finished Link Snapshots");
     }
 
     [BlockingCommand]

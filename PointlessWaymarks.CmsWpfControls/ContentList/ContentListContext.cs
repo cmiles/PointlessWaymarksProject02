@@ -637,7 +637,10 @@ public partial class ContentListContext : IDragSource, IDropTarget
 
             if (translatedMessage.UpdateType == DataNotificationUpdateType.Update)
                 // ReSharper disable All
+            {
                 ((dynamic)existingItem).DbEntry = (dynamic)loopItem;
+                if (existingItem is LinkListListItem linkItem) await linkItem.LoadSnapshotImages();
+            }
             // ReSharper restore All
 
             if (loopItem is IMainImage mainImage && existingItem is IContentListImage itemWithListImage)

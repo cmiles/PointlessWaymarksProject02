@@ -100,10 +100,12 @@ public partial class LinkContentEditorContext : IHasChanges, IHasValidationIssue
     }
 
     [BlockingCommand]
-    private async Task ExtractDataFromLink()
+    public async Task ExtractDataFromLink()
     {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
         var (generationReturn, linkMetadata) =
-            await LinkGenerator.LinkMetadataFromUrl(LinkUrlEntry!.UserValue, StatusContext.ProgressTracker());
+            await LinkGenerator.LinkMetadataFromUrlBestEffort(LinkUrlEntry!.UserValue, StatusContext.ProgressTracker());
 
         if (generationReturn.HasError)
         {

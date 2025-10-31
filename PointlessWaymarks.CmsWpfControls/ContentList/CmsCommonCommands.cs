@@ -713,11 +713,15 @@ public partial class CmsCommonCommands
 
                     if (renameResult is { Exists: true })
                     {
+                        var initialTitle = metaContent.Title;
+
                         metaContent.OriginalFileName = renameResult.FullName;
                         photoFile = renameResult;
 
                         (metaGenerationReturn, metaContent) = await
                             PhotoGenerator.PhotoMetadataToNewPhotoContent(photoFile, StatusContext.ProgressTracker());
+
+                        if (!string.IsNullOrWhiteSpace(initialTitle) && metaContent is not null) metaContent.Title = initialTitle;
                     }
                 }
 

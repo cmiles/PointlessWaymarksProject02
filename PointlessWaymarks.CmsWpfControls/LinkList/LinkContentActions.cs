@@ -316,6 +316,9 @@ public partial class LinkContentActions : IContentActions<LinkContent>
 
             var ps = new ProcessStartInfo(fileName) { UseShellExecute = true, Verb = "open" };
             Process.Start(ps);
+
+            DataNotifications.PublishDataNotification("Link Snapshot Image", DataNotificationContentType.Link,
+                DataNotificationUpdateType.Update, [content.ContentId]);
         }
         catch (Exception e)
         {
