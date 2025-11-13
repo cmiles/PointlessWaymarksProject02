@@ -250,10 +250,10 @@ public partial class FilesWrittenLogListContext
     private async Task<List<S3UploadRequest>> FileItemsToUploaderItems(List<FilesWrittenLogListListItem> items)
     {
         return await items.ToAsyncEnumerable().Where(x => x.IsInGenerationDirectory && File.Exists(x.WrittenFile))
-            .SelectAwait(async x => await S3Tools.UploadRequest(new FileInfo(x.WrittenFile),
+            .SelectInSequenceAsync(async x => await S3Tools.UploadRequest(new FileInfo(x.WrittenFile),
                 S3CmsTools.FileInfoInGeneratedSiteToS3Key(
                     new FileInfo(x.WrittenFile)), UserBucketName, UserBucketRegion,
-                $"From Files Written Log - {x.WrittenOn}")).ToListAsync();
+                $"From Files Written Log - {x.WrittenOn}"));
     }
 
     private async Task FilesToClipboard(List<FilesWrittenLogListListItem> items)
@@ -475,11 +475,10 @@ public partial class FilesWrittenLogListContext
 
             var newUploaderWindow =
                 await S3UploadsWindow.CreateInstance(S3CmsTools.S3AccountInformationFromSettings(),
-                    await items.ToAsyncEnumerable().SelectAwait(async x =>
+                    await items.ToAsyncEnumerable().SelectInSequenceAsync(async x =>
                             await S3Tools.UploadRequest(new FileInfo(x.FileFullName), x.S3Key, x.BucketName,
                                 x.ServiceUrl,
-                                x.Note))
-                        .ToListAsync(), UserSettingsSingleton.CurrentSettings().SiteName,
+                                x.Note)), UserSettingsSingleton.CurrentSettings().SiteName,
                     false);
             await newUploaderWindow.PositionWindowAndShowOnUiThread();
         }

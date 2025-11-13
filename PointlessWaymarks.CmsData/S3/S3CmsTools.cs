@@ -89,11 +89,11 @@ public static class S3CmsTools
         }
 
         var s3Items = await transformedItems.Where(x => x.IsInGenerationDirectory && File.Exists(x.WrittenFile))
-            .ToAsyncEnumerable().SelectAwait(
+            .ToAsyncEnumerable().SelectInSequenceAsync(
                 async x => await S3Tools.UploadRequest(new FileInfo(x.WrittenFile),
                     FileInfoInGeneratedSiteToS3Key(
                         new FileInfo(x.WrittenFile)), userBucketName, userBucketRegion,
-                    $"From Files Written Log - {x.WrittenOn}")).ToListAsync();
+                    $"From Files Written Log - {x.WrittenOn}"));
 
 
         return (new IsValid(true, string.Empty), s3Items);
