@@ -71,7 +71,7 @@ public partial class FileContentEditorWindow
     ///     switch to the UI thread as needed.
     /// </summary>
     /// <returns></returns>
-    public static async Task<FileContentEditorWindow> CreateInstance(FileInfo initialFile, bool positionAndShowWindow = false)
+    public static async Task<FileContentEditorWindow> CreateInstance(FileInfo initialFile, bool positionAndShowWindow = false, bool skipMetadataLoadFromFile = false)
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -109,7 +109,7 @@ public partial class FileContentEditorWindow
     ///     PositionWindowAndShowOnUiThread() from the WindowInitialPositionHelpers.
     /// </summary>
     /// <returns></returns>
-    public static async Task<FileContentEditorWindow> CreateInstance(FileContent toLoad, bool positionAndShowWindow = false)
+    public static async Task<FileContentEditorWindow> CreateInstance(FileContent toLoad, bool positionAndShowWindow = false, bool skipMetadataLoadFromFile = false)
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -119,7 +119,7 @@ public partial class FileContentEditorWindow
 
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        window.FileContent = await FileContentEditorContext.CreateInstance(window.StatusContext, toLoad);
+        window.FileContent = await FileContentEditorContext.CreateInstance(window.StatusContext, toLoad, skipMetadataLoadFromFile);
 
         window.WindowTitle =
             $"File Editor - {UserSettingsSingleton.CurrentSettings().SiteName} - {window.FileContent.TitleSummarySlugFolder.TitleEntry.UserValue}";

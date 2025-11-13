@@ -36,7 +36,7 @@ public partial class ImageContentEditorWindow
     /// </summary>
     /// <returns></returns>
     public static async Task<ImageContentEditorWindow> CreateInstance(ImageContent? contentToLoad = null,
-        FileInfo? initialImage = null, bool positionAndShowWindow = false)
+        FileInfo? initialImage = null, bool positionAndShowWindow = false, bool skipImageMetadataLoad = false)
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -47,7 +47,7 @@ public partial class ImageContentEditorWindow
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         window.ImageEditor =
-            await ImageContentEditorContext.CreateInstance(window.StatusContext, contentToLoad, initialImage);
+            await ImageContentEditorContext.CreateInstance(window.StatusContext, contentToLoad, initialImage, skipImageMetadataLoad);
 
         window.WindowTitle =
             $"Image Editor - {UserSettingsSingleton.CurrentSettings().SiteName} - {window.ImageEditor.TitleSummarySlugFolder.TitleEntry.UserValue}";

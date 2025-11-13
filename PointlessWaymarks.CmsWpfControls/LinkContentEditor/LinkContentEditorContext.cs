@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.ContentGeneration;
 using PointlessWaymarks.CmsData.Database;
@@ -51,6 +52,7 @@ public partial class LinkContentEditorContext : IHasChanges, IHasValidationIssue
     public TagsEditorContext? TagEdit { get; set; }
     public StringDataEntryContext? TitleEntry { get; set; }
 
+
     public void CheckForChangesAndValidationIssues()
     {
         HasChanges = PropertyScanners.ChildPropertiesHaveChanges(this);
@@ -77,10 +79,14 @@ public partial class LinkContentEditorContext : IHasChanges, IHasValidationIssue
     {
         var newEntry = LinkContent.CreateInstance();
 
+        newEntry.ContentId = DbEntry.ContentId;
+        newEntry.CreatedOn = DbEntry.CreatedOn;
+
+        if (DbEntry.LastUpdatedOn is not null) newEntry.LastUpdatedOn = DbEntry.LastUpdatedOn;
+        if (DbEntry.LastUpdatedBy is not null) newEntry.LastUpdatedBy = DbEntry.LastUpdatedBy;
+
         if (DbEntry.Id > 0)
         {
-            newEntry.ContentId = DbEntry.ContentId;
-            newEntry.CreatedOn = DbEntry.CreatedOn;
             newEntry.LastUpdatedOn = DateTime.Now;
             newEntry.LastUpdatedBy = CreatedUpdatedDisplay!.UpdatedByEntry.UserValue.TrimNullToEmpty();
         }
@@ -99,26 +105,26 @@ public partial class LinkContentEditorContext : IHasChanges, IHasValidationIssue
         return newEntry;
     }
 
-    [BlockingCommand]
+    [NonBlockingCommand]
     public async Task ExtractDataFromLink()
     {
-        await ThreadSwitcher.ResumeBackgroundAsync();
+        await ThreadSwitcher.ResumeForegroundAsync();
+        var url = LinkUrlEntry!.UserValue;
+        var progress = StatusContext.ProgressTracker();
 
         var (generationReturn, linkMetadata) =
-            await LinkGenerator.LinkMetadataFromUrlBestEffort(LinkUrlEntry!.UserValue, StatusContext.ProgressTracker());
+            await LinkGenerator.LinkMetadataFromUrlBestEffort(url, progress);
 
-        if (generationReturn.HasError)
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        if (generationReturn.HasError || linkMetadata == null)
         {
+            progress.Report("Error extracting link metadata");
             await StatusContext.ToastError(generationReturn.GenerationNote);
             return;
         }
 
-        if (linkMetadata == null)
-        {
-            await StatusContext.ToastError("No Link Data?");
-            return;
-        }
-
+        progress.Report("Link metadata extracted successfully");
         if (!string.IsNullOrWhiteSpace(linkMetadata.Title))
             TitleEntry!.UserValue = linkMetadata.Title.TrimNullToEmpty();
         if (!string.IsNullOrWhiteSpace(linkMetadata.Author))
@@ -127,10 +133,11 @@ public partial class LinkContentEditorContext : IHasChanges, IHasValidationIssue
             DescriptionEntry!.UserValue = linkMetadata.Description.TrimNullToEmpty();
         if (!string.IsNullOrWhiteSpace(linkMetadata.Site))
             SiteEntry!.UserValue = linkMetadata.Site.TrimNullToEmpty();
+
         if (linkMetadata.LinkDate != null)
-            LinkDateTimeEntry!.UserText = linkMetadata.LinkDate == null
-                ? string.Empty
-                : linkMetadata.LinkDate.Value.ToString("M/d/yyyy h:mm:ss tt");
+            LinkDateTimeEntry!.UserText = linkMetadata.LinkDate.Value.ToString("M/d/yyyy h:mm:ss tt");
+
+        progress.Report("Ending Metadata Extraction");
     }
 
     private async Task LoadData(LinkContent? toLoad, bool extractDataOnLoad = false)

@@ -229,7 +229,7 @@ Photo Content Notes:
     }
 
     public static async Task<PhotoContentEditorContext> CreateInstance(StatusControlContext? statusContext,
-        PhotoContent? toLoad, FileInfo? initialPhoto)
+        PhotoContent? toLoad, FileInfo? initialPhoto, bool skipPhotoMetadataLoad)
     {
         var factoryStatusContext = await StatusControlContext.CreateInstance(statusContext);
 
@@ -238,7 +238,7 @@ Photo Content Notes:
         var newContext =
             new PhotoContentEditorContext(factoryStatusContext, PhotoContent.CreateInstance());
         if (initialPhoto is { Exists: true }) newContext.InitialPhoto = initialPhoto;
-        await newContext.LoadData(toLoad);
+        await newContext.LoadData(toLoad, skipMediaDirectoryCheck: skipPhotoMetadataLoad);
         return newContext;
     }
 
@@ -246,10 +246,14 @@ Photo Content Notes:
     {
         var newEntry = PhotoContent.CreateInstance();
 
+        newEntry.ContentId = DbEntry.ContentId;
+        newEntry.CreatedOn = DbEntry.CreatedOn;
+
+        if (DbEntry.LastUpdatedOn is not null) newEntry.LastUpdatedOn = DbEntry.LastUpdatedOn;
+        if (DbEntry.LastUpdatedBy is not null) newEntry.LastUpdatedBy = DbEntry.LastUpdatedBy;
+
         if (DbEntry.Id > 0)
         {
-            newEntry.ContentId = DbEntry.ContentId;
-            newEntry.CreatedOn = DbEntry.CreatedOn;
             newEntry.LastUpdatedOn = DateTime.Now;
             newEntry.LastUpdatedBy = CreatedUpdatedDisplay!.UpdatedByEntry.UserValue.TrimNullToEmpty();
         }
@@ -319,7 +323,8 @@ Photo Content Notes:
         await StatusContext.ToastSuccess($"To Clipboard: {linkString}");
     }
 
-    public async Task LoadData(PhotoContent? toLoad, bool skipMediaDirectoryCheck = false)
+    public async Task LoadData(PhotoContent? toLoad, bool skipMediaDirectoryCheck = false,
+        bool skipPhotoMetadataLoad = false)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -475,15 +480,20 @@ Photo Content Notes:
             PhotoEditorHelpText, CommonFields.TitleSlugFolderSummary, BracketCodeHelpMarkdown.HelpBlock
         ]);
 
-        if (DbEntry.Id < 1 && InitialPhoto is { Exists: true } && PhotoGenerator.PhotoFileTypeNativeIsSupported(InitialPhoto))
+        if (DbEntry.Id < 1 && InitialPhoto is { Exists: true } &&
+            PhotoGenerator.PhotoFileTypeNativeIsSupported(InitialPhoto))
         {
             SelectedFile = InitialPhoto;
             ResizeSelectedFile = true;
             InitialPhoto = null;
-            var (generationReturn, metadataReturn) =
-                await PhotoGenerator.PhotoMetadataFromFile(SelectedFile, false, StatusContext.ProgressTracker());
-            if (!generationReturn.HasError && metadataReturn != null)
-                await PhotoMetadataToCurrentContent(metadataReturn);
+
+            if (!skipPhotoMetadataLoad)
+            {
+                var (generationReturn, metadataReturn) =
+                    await PhotoGenerator.PhotoMetadataFromFile(SelectedFile, false, StatusContext.ProgressTracker());
+                if (!generationReturn.HasError && metadataReturn != null)
+                    await PhotoMetadataToCurrentContent(metadataReturn);
+            }
         }
 
         PropertyScanners.SubscribeToChildHasChangesAndHasValidationIssues(this, CheckForChangesAndValidationIssues);

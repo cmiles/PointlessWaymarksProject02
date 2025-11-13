@@ -117,7 +117,7 @@ public partial class VideoContentEditorWindow
     ///     PositionWindowAndShowOnUiThread() from the WindowInitialPositionHelpers.
     /// </summary>
     /// <returns></returns>
-    public static async Task<VideoContentEditorWindow> CreateInstance(VideoContent? toLoad, bool positionAndShowWindow = false)
+    public static async Task<VideoContentEditorWindow> CreateInstance(VideoContent? toLoad, bool positionAndShowWindow = false, bool skipMetadataLoadFromVideo = false)
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -127,7 +127,7 @@ public partial class VideoContentEditorWindow
 
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        window.VideoContent = await VideoContentEditorContext.CreateInstance(window.StatusContext, toLoad);
+        window.VideoContent = await VideoContentEditorContext.CreateInstance(window.StatusContext, toLoad, skipMetadataLoadFromVideo: skipMetadataLoadFromVideo);
 
         window.WindowTitle =
             $"Video Editor - {UserSettingsSingleton.CurrentSettings().SiteName} - {window.VideoContent.TitleSummarySlugFolder.TitleEntry.UserValue}";

@@ -110,10 +110,14 @@ If your intent is just to put a single piece of content onto the main page of th
     {
         var newEntry = PostContent.CreateInstance();
 
+        newEntry.ContentId = DbEntry.ContentId;
+        newEntry.CreatedOn = DbEntry.CreatedOn;
+
+        if (DbEntry.LastUpdatedOn is not null) newEntry.LastUpdatedOn = DbEntry.LastUpdatedOn;
+        if (DbEntry.LastUpdatedBy is not null) newEntry.LastUpdatedBy = DbEntry.LastUpdatedBy;
+
         if (DbEntry.Id > 0)
         {
-            newEntry.ContentId = DbEntry.ContentId;
-            newEntry.CreatedOn = DbEntry.CreatedOn;
             newEntry.LastUpdatedOn = DateTime.Now;
             newEntry.LastUpdatedBy = CreatedUpdatedDisplay!.UpdatedByEntry.UserValue.TrimNullToEmpty();
         }

@@ -27,8 +27,7 @@ using Serilog;
 
 namespace PointlessWaymarks.CmsWpfControls.ContentList;
 
-//TODO: Handle Point Types
-//TODO: Trails and Points and ?Others better Handle missing Content References
+//TODO: Validate any Bracket Codes in Point Details?
 public static class ContentClipboardRepresentationHandlers
 {
     public static async Task CopyLinkSnapshotImagesFromRemote(Guid contentId, string remoteApiBaseUrl,
@@ -44,6 +43,7 @@ public static class ContentClipboardRepresentationHandlers
         statusContext.Progress($"Requesting link snapshot images for {contentId} from {snapshotsApiUrl}");
 
         var response = await httpClient.GetAsync(snapshotsApiUrl);
+
         if (!response.IsSuccessStatusCode)
         {
             await statusContext.ToastError(
@@ -186,7 +186,8 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (saveGenerationReturn.HasError || bracketCodeCheck.HasError)
                 {
-                    var editor = await FileContentEditorWindow.CreateInstance(fileContent);
+                    var editor =
+                        await FileContentEditorWindow.CreateInstance(fileContent, skipMetadataLoadFromFile: true);
                     await editor.PositionWindowAndShowOnUiThread();
 
                     //Allow execution to continue so Automation can continue
@@ -391,7 +392,9 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (saveGenerationReturn.HasError || bracketCodeCheck.HasError)
                 {
-                    var editor = await ImageContentEditorWindow.CreateInstance(imageContent, imageFile);
+                    var editor =
+                        await ImageContentEditorWindow.CreateInstance(imageContent, imageFile,
+                            skipImageMetadataLoad: true);
                     await editor.PositionWindowAndShowOnUiThread();
 
                     //Allow execution to continue so Automation can continue
@@ -596,6 +599,89 @@ public static class ContentClipboardRepresentationHandlers
         return errors;
     }
 
+    public static async Task<List<string>> HandleMapContentReferences(
+        List<ContentClipboardRepresentation> contentRefs,
+        StatusControlContext statusContext)
+    {
+        var errors = new List<string>();
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        statusContext.Progress("Starting map content load.");
+
+        var loopCount = 0;
+
+        using var httpClient = new HttpClient();
+
+        foreach (var loopRef in contentRefs)
+        {
+            loopCount++;
+
+            statusContext.Progress($"Processing {loopCount} of {contentRefs.Count} Maps from Clipboard");
+
+            await ThreadSwitcher.ResumeBackgroundAsync();
+
+            var db = await Db.Context();
+            
+            try
+            {
+                // Get the MapDto from the source site's API
+                var mapJsonUrl = $"{loopRef.SiteLocalApiUrl}/mapcomponentdto/{loopRef.ContentId}";
+                var mapJsonResponse = await httpClient.GetStringAsync(mapJsonUrl);
+
+                if (string.IsNullOrEmpty(mapJsonResponse))
+                {
+                    var err = $"Failed to retrieve map data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
+                    continue;
+                }
+
+                // Deserialize MapDto
+                var mapDto =
+                    JsonSerializer.Deserialize<MapComponentDto>(mapJsonResponse, JsonTools.WriteIndentedOptions);
+
+                if (mapDto == null)
+                {
+                    var err = $"Failed to parse map data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
+                    continue;
+                }
+
+                mapDto.Id = 0;
+                mapDto.Elements.ForEach(x => x.Id = 0);
+
+                // Save and generate HTML for the map
+                var (saveGenerationReturn, _) =
+                    await MapComponentGenerator.SaveAndGenerateData(mapDto, null, statusContext.ProgressTracker());
+
+                var bracketCodeCheck = await CommonContentValidation.CheckStringForBadContentReferences(
+                    $"{mapDto.UpdateNotes ?? string.Empty}", db,
+                    statusContext.ProgressTracker());
+
+                if (saveGenerationReturn.HasError || bracketCodeCheck.HasError)
+                {
+                    errors.Add(
+                        $"Error saving or validating map content {loopRef.ContentId}: {saveGenerationReturn.GenerationNote} {bracketCodeCheck.GenerationNote}");
+                    continue;
+                }
+
+                statusContext.Progress($"Imported Map - based on {loopRef.ContentId}");
+
+                await ThreadSwitcher.ResumeBackgroundAsync();
+            }
+            catch (Exception ex)
+            {
+                var err = $"Error processing map content {loopRef.ContentId}: {ex.Message}";
+                await statusContext.ToastError(err);
+                Log.Error(ex, "Error processing map content from other site: {ContentId}", loopRef.ContentId);
+                errors.Add(err);
+            }
+        }
+
+        return errors;
+    }
+
     public static async Task<List<string>> HandleNoteContentReferences(List<ContentClipboardRepresentation> contentRefs,
         StatusControlContext statusContext)
     {
@@ -772,7 +858,7 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (saveGenerationReturn.HasError || bracketCodeCheck.HasError)
                 {
-                    var editor = await PhotoContentEditorWindow.CreateInstance(photoContent, false, photoFile);
+                    var editor = await PhotoContentEditorWindow.CreateInstance(photoContent, false, photoFile, true);
                     await editor.PositionWindowAndShowOnUiThread();
 
                     //Allow execution to continue so Automation can continue
@@ -793,6 +879,89 @@ public static class ContentClipboardRepresentationHandlers
                 var err = $"Error processing content {loopRef.ContentId}: {ex.Message}";
                 await statusContext.ToastError(err);
                 Log.Error(ex, "Error processing content from other site: {ContentId}", loopRef.ContentId);
+                errors.Add(err);
+            }
+        }
+
+        return errors;
+    }
+
+    public static async Task<List<string>> HandlePointContentReferences(
+        List<ContentClipboardRepresentation> contentRefs,
+        StatusControlContext statusContext)
+    {
+        var errors = new List<string>();
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        statusContext.Progress("Starting point content load.");
+
+        var loopCount = 0;
+
+        using var httpClient = new HttpClient();
+
+        foreach (var loopRef in contentRefs)
+        {
+            loopCount++;
+
+            statusContext.Progress($"Processing {loopCount} of {contentRefs.Count} Points from Clipboard");
+
+            await ThreadSwitcher.ResumeBackgroundAsync();
+
+            var db = await Db.Context();
+
+            try
+            {
+                // Get the PointContentDto from the source site's API
+                var pointJsonUrl = $"{loopRef.SiteLocalApiUrl}/pointdto/{loopRef.ContentId}";
+                var pointJsonResponse = await httpClient.GetStringAsync(pointJsonUrl);
+
+                if (string.IsNullOrEmpty(pointJsonResponse))
+                {
+                    var err = $"Failed to retrieve point data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
+                    continue;
+                }
+
+                // Deserialize PointContentDto
+                var pointDto =
+                    JsonSerializer.Deserialize<PointContentDto>(pointJsonResponse, JsonTools.WriteIndentedOptions);
+
+                if (pointDto == null)
+                {
+                    var err = $"Failed to parse point data for {loopRef.ContentId}";
+                    await statusContext.ToastError(err);
+                    errors.Add(err);
+                    continue;
+                }
+
+                pointDto.Id = 0;
+                pointDto.PointDetails.ForEach(x => x.Id = 0);
+
+                // Save and generate HTML/data for the point
+                var (saveGenerationReturn, _) =
+                    await PointGenerator.SaveAndGenerateHtml(pointDto, null, statusContext.ProgressTracker());
+
+                var bracketCodeCheck = await CommonContentValidation.CheckStringForBadContentReferences(
+                    $"{pointDto.BodyContent ?? string.Empty} {pointDto.UpdateNotes ?? string.Empty}", db,
+                    statusContext.ProgressTracker());
+
+                if (saveGenerationReturn.HasError || bracketCodeCheck.HasError)
+                {
+                    errors.Add(
+                        $"Error saving or validating point content {loopRef.ContentId}: {saveGenerationReturn.GenerationNote} {bracketCodeCheck.GenerationNote}");
+                    continue;
+                }
+
+                statusContext.Progress($"Imported Point - based on {loopRef.ContentId}");
+
+                await ThreadSwitcher.ResumeBackgroundAsync();
+            }
+            catch (Exception ex)
+            {
+                var err = $"Error processing point content {loopRef.ContentId}: {ex.Message}";
+                await statusContext.ToastError(err);
+                Log.Error(ex, "Error processing point content from other site: {ContentId}", loopRef.ContentId);
                 errors.Add(err);
             }
         }
@@ -954,6 +1123,15 @@ public static class ContentClipboardRepresentationHandlers
             allErrors.AddRange(linkErrors);
         }
 
+        var mapContentRefs = contentRefs.Where(c =>
+            c.ContentType.Equals(Db.ContentTypeDisplayStringForMap, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (mapContentRefs.Any())
+        {
+            statusContext.Progress($"Found {mapContentRefs.Count} map content items to import");
+            var mapErrors = await HandleMapContentReferences(mapContentRefs, statusContext);
+            allErrors.AddRange(mapErrors);
+        }
+
         var noteContentRefs = contentRefs.Where(c =>
             c.ContentType.Equals(Db.ContentTypeDisplayStringForNote, StringComparison.OrdinalIgnoreCase)).ToList();
         if (noteContentRefs.Any())
@@ -970,6 +1148,15 @@ public static class ContentClipboardRepresentationHandlers
             statusContext.Progress($"Found {photoContentRefs.Count} photo content items to import");
             var photoErrors = await HandlePhotoContentReferences(photoContentRefs, statusContext);
             allErrors.AddRange(photoErrors);
+        }
+
+        var pointContentRefs = contentRefs.Where(c =>
+            c.ContentType.Equals(Db.ContentTypeDisplayStringForPoint, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (pointContentRefs.Any())
+        {
+            statusContext.Progress($"Found {pointContentRefs.Count} point content items to import");
+            var pointErrors = await HandlePointContentReferences(pointContentRefs, statusContext);
+            allErrors.AddRange(pointErrors);
         }
 
         var postContentRefs = contentRefs.Where(c =>
@@ -1283,7 +1470,8 @@ public static class ContentClipboardRepresentationHandlers
 
                 if (saveGenerationReturn.HasError || bracketCodeCheck.HasError)
                 {
-                    var editor = await VideoContentEditorWindow.CreateInstance(videoContent);
+                    var editor =
+                        await VideoContentEditorWindow.CreateInstance(videoContent, skipMetadataLoadFromVideo: true);
                     await editor.PositionWindowAndShowOnUiThread();
 
                     //Allow execution to continue so Automation can continue

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
@@ -138,6 +139,54 @@ public class PreviewServer
             }
         });
 
+        app.MapGet("/localapi/pointdto/{contentId}", async (Guid contentId) =>
+        {
+            try
+            {
+                var db = await Db.Context();
+                var content = await db.PointContents.SingleOrDefaultAsync(x => x.ContentId == contentId);
+
+                if (content == null) return Results.NotFound($"Point with ID {contentId} not found");
+
+                var dto = await Db.PointContentDtoFromPoint(content, db);
+
+                var json = JsonSerializer.Serialize(dto, JsonTools.WriteIndentedOptions);
+                return Results.Content(json, "application/json");
+            }
+            catch (Exception ex)
+            {
+                return Results.Problem(
+                    ex.Message,
+                    title: "Error retrieving PointDto",
+                    statusCode: 500
+                );
+            }
+        });
+
+        app.MapGet("/localapi/mapcomponentdto/{contentId}", async (Guid contentId) =>
+        {
+            try
+            {
+                var db = await Db.Context();
+                var content = await db.MapComponents.SingleOrDefaultAsync(x => x.ContentId == contentId);
+
+                if (content == null) return Results.NotFound($"Map with ID {contentId} not found");
+
+                var dto = await content.ToMapComponentDto(db);
+
+                var json = JsonSerializer.Serialize(dto, JsonTools.WriteIndentedOptions);
+                return Results.Content(json, "application/json");
+            }
+            catch (Exception ex)
+            {
+                return Results.Problem(
+                    ex.Message,
+                    title: "Error retrieving MapDto",
+                    statusCode: 500
+                );
+            }
+        });
+
         app.MapGet("/localapi/linksnapshots/{contentId}", async (Guid contentId) =>
         {
             try
@@ -145,10 +194,6 @@ public class PreviewServer
                 var imageFiles = UserSettingsSingleton.CurrentSettings()
                     .LinkSnapshotImages(contentId);
 
-                if (!imageFiles.Any())
-                    return Results.NotFound($"No link snapshot images found for content ID {contentId}");
-
-                // Create a memory stream for the zip archive
                 using var zipStream = new MemoryStream();
                 using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create, true))
                 {
@@ -162,9 +207,8 @@ public class PreviewServer
                         }
                 }
 
+                // If no files, the ZIP will be empty
                 zipStream.Seek(0, SeekOrigin.Begin);
-
-                // Return the zip file
                 return Results.File(zipStream, "application/zip", $"LinkSnapshots_{contentId}.zip");
             }
             catch (Exception ex)

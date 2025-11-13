@@ -214,10 +214,14 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
     {
         var newEntry = PointContent.CreateInstance();
 
+        newEntry.ContentId = DbEntry.ContentId;
+        newEntry.CreatedOn = DbEntry.CreatedOn;
+
+        if (DbEntry.LastUpdatedOn is not null) newEntry.LastUpdatedOn = DbEntry.LastUpdatedOn;
+        if (DbEntry.LastUpdatedBy is not null) newEntry.LastUpdatedBy = DbEntry.LastUpdatedBy;
+
         if (DbEntry.Id > 0)
         {
-            newEntry.ContentId = DbEntry.ContentId;
-            newEntry.CreatedOn = DbEntry.CreatedOn;
             newEntry.LastUpdatedOn = DateTime.Now;
             newEntry.LastUpdatedBy = CreatedUpdatedDisplay!.UpdatedByEntry.UserValue.TrimNullToEmpty();
         }

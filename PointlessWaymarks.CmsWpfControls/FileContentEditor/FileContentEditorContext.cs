@@ -199,14 +199,14 @@ Notes:
     }
 
     public static async Task<FileContentEditorContext> CreateInstance(StatusControlContext? statusContext,
-        FileContent initialContent)
+        FileContent initialContent, bool skipMetadataLoadFromFile = false)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         var factoryStatusContext = await StatusControlContext.CreateInstance(statusContext);
 
         var newContext = new FileContentEditorContext(factoryStatusContext, FileContent.CreateInstance());
-        await newContext.LoadData(initialContent);
+        await newContext.LoadData(initialContent, skipMetadataLoadFromFile:skipMetadataLoadFromFile);
         return newContext;
     }
 
@@ -222,10 +222,14 @@ Notes:
     {
         var newEntry = FileContent.CreateInstance();
 
+        newEntry.ContentId = DbEntry.ContentId;
+        newEntry.CreatedOn = DbEntry.CreatedOn;
+
+        if (DbEntry.LastUpdatedOn is not null) newEntry.LastUpdatedOn = DbEntry.LastUpdatedOn;
+        if (DbEntry.LastUpdatedBy is not null) newEntry.LastUpdatedBy = DbEntry.LastUpdatedBy;
+
         if (DbEntry.Id > 0)
         {
-            newEntry.ContentId = DbEntry.ContentId;
-            newEntry.CreatedOn = DbEntry.CreatedOn;
             newEntry.LastUpdatedOn = DateTime.Now;
             newEntry.LastUpdatedBy = CreatedUpdatedDisplay!.UpdatedByEntry.UserValue.TrimNullToEmpty();
         }
@@ -344,7 +348,7 @@ Notes:
         await StatusContext.ToastSuccess($"To Clipboard: {linkString}");
     }
 
-    private async Task LoadData(FileContent? toLoad, bool skipMediaDirectoryCheck = false)
+    private async Task LoadData(FileContent? toLoad, bool skipMediaDirectoryCheck = false, bool skipMetadataLoadFromFile = false)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -457,23 +461,27 @@ Notes:
             SelectedFile = InitialFile;
             InitialFile = null;
 
-            if (SelectedFile.Extension == ".mp4")
+            if (!skipMetadataLoadFromFile)
             {
-                var (generationReturn, metadata) =
-                    await PhotoGenerator.PhotoMetadataFromFile(SelectedFile, false, StatusContext.ProgressTracker());
-
-                if (!generationReturn.HasError && metadata != null)
+                if (SelectedFile.Extension == ".mp4")
                 {
-                    TitleSummarySlugFolder.SummaryEntry.UserValue = metadata.Summary ?? string.Empty;
-                    TagEdit.Tags = metadata.Tags ?? string.Empty;
-                    TitleSummarySlugFolder.TitleEntry.UserValue = metadata.Title ?? string.Empty;
-                    await TitleSummarySlugFolder.TitleToSlug();
-                    TitleSummarySlugFolder.FolderEntry.UserValue = metadata.PhotoCreatedOn.Year.ToString("F0");
-                    EmbedFile.UserValue = true;
-                }
-            }
+                    var (generationReturn, metadata) =
+                        await PhotoGenerator.PhotoMetadataFromFile(SelectedFile, false,
+                            StatusContext.ProgressTracker());
 
-            if (SelectedFile.Extension == ".pdf") EmbedFile.UserValue = true;
+                    if (!generationReturn.HasError && metadata != null)
+                    {
+                        TitleSummarySlugFolder.SummaryEntry.UserValue = metadata.Summary ?? string.Empty;
+                        TagEdit.Tags = metadata.Tags ?? string.Empty;
+                        TitleSummarySlugFolder.TitleEntry.UserValue = metadata.Title ?? string.Empty;
+                        await TitleSummarySlugFolder.TitleToSlug();
+                        TitleSummarySlugFolder.FolderEntry.UserValue = metadata.PhotoCreatedOn.Year.ToString("F0");
+                        EmbedFile.UserValue = true;
+                    }
+                }
+
+                if (SelectedFile.Extension == ".pdf") EmbedFile.UserValue = true;
+            }
 
             if (string.IsNullOrWhiteSpace(TitleSummarySlugFolder.SummaryEntry.UserValue))
                 TitleSummarySlugFolder.TitleEntry.UserValue = Regex.Replace(

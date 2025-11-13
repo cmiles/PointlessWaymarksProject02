@@ -233,7 +233,7 @@ Notes:
     }
 
     public static async Task<VideoContentEditorContext> CreateInstance(StatusControlContext? statusContext,
-        VideoContent? initialContent)
+        VideoContent? initialContent, bool skipMetadataLoadFromVideo = false)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -242,7 +242,7 @@ Notes:
         var newControl =
             new VideoContentEditorContext(factoryStatusContext,
                 NewContentModels.InitializeVideoContent(initialContent));
-        await newControl.LoadData(initialContent);
+        await newControl.LoadData(initialContent, skipMetadataLoadFromVideo: skipMetadataLoadFromVideo);
         return newControl;
     }
 
@@ -258,10 +258,14 @@ Notes:
     {
         var newEntry = VideoContent.CreateInstance();
 
+        newEntry.ContentId = DbEntry.ContentId;
+        newEntry.CreatedOn = DbEntry.CreatedOn;
+
+        if (DbEntry.LastUpdatedOn is not null) newEntry.LastUpdatedOn = DbEntry.LastUpdatedOn;
+        if (DbEntry.LastUpdatedBy is not null) newEntry.LastUpdatedBy = DbEntry.LastUpdatedBy;
+
         if (DbEntry.Id > 0)
         {
-            newEntry.ContentId = DbEntry.ContentId;
-            newEntry.CreatedOn = DbEntry.CreatedOn;
             newEntry.LastUpdatedOn = DateTime.Now;
             newEntry.LastUpdatedBy = CreatedUpdatedDisplay!.UpdatedByEntry.UserValue.TrimNullToEmpty();
         }
@@ -352,7 +356,7 @@ Notes:
         await StatusContext.ToastSuccess($"To Clipboard: {linkString}");
     }
 
-    private async Task LoadData(VideoContent? toLoad, bool skipMediaDirectoryCheck = false)
+    private async Task LoadData(VideoContent? toLoad, bool skipMediaDirectoryCheck = false, bool skipMetadataLoadFromVideo = false)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -457,9 +461,13 @@ Notes:
         {
             SelectedFile = InitialVideo;
             InitialVideo = null;
-            var (generationReturn, metadataReturn) =
-                await PhotoGenerator.PhotoMetadataFromFile(SelectedFile, false, StatusContext.ProgressTracker());
-            if (!generationReturn.HasError && metadataReturn != null) VideoMetadataToCurrentContent(metadataReturn);
+
+            if (!skipMetadataLoadFromVideo)
+            {
+                var (generationReturn, metadataReturn) =
+                    await PhotoGenerator.PhotoMetadataFromFile(SelectedFile, false, StatusContext.ProgressTracker());
+                if (!generationReturn.HasError && metadataReturn != null) VideoMetadataToCurrentContent(metadataReturn);
+            }
         }
 
         if (string.IsNullOrWhiteSpace(TitleSummarySlugFolder.SummaryEntry.UserValue) && SelectedFile != null)
