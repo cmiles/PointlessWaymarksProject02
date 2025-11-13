@@ -36,23 +36,26 @@ public static class LinkGenerator
         try
         {
             progress?.Report($"Metadata: Trying AngleSharp (timeout {angleSharpTimeout.Value.TotalSeconds:N0}s)...");
-            var angleTask = LinkMetadataFromUrlWithAngleSharp(url, progress);
-
-            if (await Task.WhenAny(angleTask, Task.Delay(angleSharpTimeout.Value)).ConfigureAwait(false) == angleTask)
+            using (var cts = new CancellationTokenSource(angleSharpTimeout.Value))
             {
-                var angleResult = await angleTask.ConfigureAwait(false);
-                if (angleResult is { metadata: not null, generationReturn.HasError: false })
+                var angleTask = Task.Run(() => LinkMetadataFromUrlWithAngleSharp(url, progress), cts.Token);
+
+                try
                 {
-                    progress?.Report("Metadata: AngleSharp succeeded.");
-                    return angleResult;
-                }
+                    var angleResult = await angleTask.ConfigureAwait(false);
+                    if (angleResult is { metadata: not null, generationReturn.HasError: false })
+                    {
+                        progress?.Report("Metadata: AngleSharp succeeded.");
+                        return angleResult;
+                    }
 
-                progress?.Report(
-                    "Metadata: AngleSharp completed without usable metadata, falling back to Playwright...");
-            }
-            else
-            {
-                progress?.Report("Metadata: AngleSharp timed out, falling back to Playwright...");
+                    progress?.Report(
+                        "Metadata: AngleSharp completed without usable metadata, falling back to Playwright...");
+                }
+                catch (OperationCanceledException)
+                {
+                    progress?.Report("Metadata: AngleSharp timed out, falling back to Playwright...");
+                }
             }
         }
         catch (Exception ex)
@@ -64,26 +67,31 @@ public static class LinkGenerator
         try
         {
             progress?.Report($"Metadata: Trying Playwright (timeout {playwrightTimeout.Value.TotalSeconds:N0}s)...");
-            var pwTask = LinkMetadataFromUrlWithPlaywright(url, progress);
-
-            if (await Task.WhenAny(pwTask, Task.Delay(playwrightTimeout.Value)).ConfigureAwait(false) == pwTask)
+            using (var cts = new CancellationTokenSource(playwrightTimeout.Value))
             {
-                var pwResult = await pwTask.ConfigureAwait(false);
-                if (pwResult is { metadata: not null, generationReturn.HasError: false })
+                var pwTask = Task.Run(() => LinkMetadataFromUrlWithPlaywright(url, progress), cts.Token);
+
+                try
                 {
-                    progress?.Report("Metadata: Playwright succeeded.");
-                    return pwResult;
+                    var pwResult = await pwTask.ConfigureAwait(false);
+                    if (pwResult is { metadata: not null, generationReturn.HasError: false })
+                    {
+                        progress?.Report("Metadata: Playwright succeeded.");
+                        return pwResult;
+                    }
+
+                    progress?.Report("Metadata: Playwright completed but did not return usable metadata.");
+                    return pwResult; // Return whatever Playwright reported (likely an error)
                 }
-
-                progress?.Report("Metadata: Playwright completed but did not return usable metadata.");
-                return pwResult; // Return whatever Playwright reported (likely an error)
+                catch (OperationCanceledException)
+                {
+                    progress?.Report("Metadata: Playwright timed out.");
+                    return (
+                        GenerationReturn.Error(
+                            $"Timed out obtaining metadata for {url} (AngleSharp {angleSharpTimeout}, Playwright {playwrightTimeout})."),
+                        null);
+                }
             }
-
-            progress?.Report("Metadata: Playwright timed out.");
-            return (
-                GenerationReturn.Error(
-                    $"Timed out obtaining metadata for {url} (AngleSharp {angleSharpTimeout}, Playwright {playwrightTimeout})."),
-                null);
         }
         catch (Exception ex)
         {
