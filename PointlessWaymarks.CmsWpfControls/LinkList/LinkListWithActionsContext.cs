@@ -40,7 +40,13 @@ public partial class LinkListWithActionsContext
             new ContextMenuItemData
                 { ItemName = "Extract New Links", ItemCommand = ListContext.ExtractNewLinksSelectedCommand },
             new ContextMenuItemData { ItemName = "Open URL", ItemCommand = ListContext.ViewOnSiteCommand },
-            new ContextMenuItemData { ItemName = "Save Link Snapshot Images", ItemCommand = LinkSnapshotImagesCommand },
+            new ContextMenuItemData { ItemName = "Save Link Snapshot Image", ItemCommand = LinkSnapshotImageCommand },
+            new ContextMenuItemData
+            {
+                ItemName = "Save Link Snapshot Image - Interactive", ItemCommand = LinkSnapshotInteractiveImageCommand
+            },
+            new ContextMenuItemData
+                { ItemName = "Link Snapshot From File", ItemCommand = LinkSnapshotFromFileImageCommand },
             new ContextMenuItemData { ItemName = "Delete", ItemCommand = ListContext.DeleteSelectedCommand },
             new ContextMenuItemData { ItemName = "View History", ItemCommand = ListContext.ViewHistorySelectedCommand },
             new ContextMenuItemData { ItemName = "Refresh Data", ItemCommand = RefreshDataCommand }
@@ -69,8 +75,17 @@ public partial class LinkListWithActionsContext
     }
 
     [BlockingCommand]
+    [StopAndWarnIfNotOneSelectedListItems]
+    public async Task LinkSnapshotFromFileImage(CancellationToken cancellationToken)
+    {
+        await ListContext.LinkItemActions.LinkSnapshotImageFromSelectedFile(SelectedListItems().First().DbEntry);
+
+        await StatusContext.ToastSuccess("Finished Link Snapshot From Image");
+    }
+
+    [BlockingCommand]
     [StopAndWarnIfNoSelectedListItemsAskIfOverMax(ActionVerb = "snapshot", MaxSelectedItems = 10)]
-    public async Task LinkSnapshotImages(CancellationToken cancellationToken)
+    public async Task LinkSnapshotImage(CancellationToken cancellationToken)
     {
         var frozenSelected = SelectedListItems();
 
@@ -83,7 +98,16 @@ public partial class LinkListWithActionsContext
             await ListContext.LinkItemActions.LinkSnapshotImage(loopSelected.DbEntry);
         }
 
-        await StatusContext.ToastSuccess("Finished Link Snapshots");
+        await StatusContext.ToastSuccess("Finished Link Snapshot");
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNotOneSelectedListItems]
+    public async Task LinkSnapshotInteractiveImage(CancellationToken cancellationToken)
+    {
+        await ListContext.LinkItemActions.LinkSnapshotImageInteractive(SelectedListItems().First().DbEntry);
+
+        await StatusContext.ToastSuccess("Finished Link Snapshot Interactive");
     }
 
     [BlockingCommand]

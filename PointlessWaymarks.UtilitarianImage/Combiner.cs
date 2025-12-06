@@ -1,5 +1,4 @@
-using PDFtoImage;
-using PointlessWaymarks.CommonTools;
+using PointlessWaymarks.WpfCommon.Utility;
 using SkiaSharp;
 
 namespace PointlessWaymarks.UtilitarianImage;
@@ -33,7 +32,7 @@ public static class Combiner
         for (var i = 0; i < imagesToCombine.Count; i++)
             if (Path.GetExtension(imagesToCombine[i]) == ".pdf")
             {
-                var jpgFilename = await PdfToJpeg(imagesToCombine[i], maxWidth, quality, backgroundColor);
+                var jpgFilename = await ImageHelpers.PdfToJpeg(imagesToCombine[i], maxWidth, quality, backgroundColor);
                 imagesToCombine[i] = jpgFilename;
             }
 
@@ -72,7 +71,7 @@ public static class Combiner
         for (var i = 0; i < imagesToCombine.Count; i++)
             if (Path.GetExtension(imagesToCombine[i]) == ".pdf")
             {
-                var jpgFilename = await PdfToJpeg(imagesToCombine[i], maxWidth, quality, backgroundColor);
+                var jpgFilename = await ImageHelpers.PdfToJpeg(imagesToCombine[i], maxWidth, quality, backgroundColor);
                 imagesToCombine[i] = jpgFilename;
             }
 
@@ -110,7 +109,7 @@ public static class Combiner
         for (var i = 0; i < imagesToCombine.Count; i++)
             if (Path.GetExtension(imagesToCombine[i]) == ".pdf")
             {
-                var jpgFilename = await PdfToJpeg(imagesToCombine[i], maxWidth, quality, backgroundColor);
+                var jpgFilename = await ImageHelpers.PdfToJpeg(imagesToCombine[i], maxWidth, quality, backgroundColor);
                 imagesToCombine[i] = jpgFilename;
             }
 
@@ -286,56 +285,6 @@ public static class Combiner
     public static async Task<FileInfo?> Flip(string fullFileName)
     {
         return await Rotate(new FileInfo(fullFileName), ImageRotation.Flip).ConfigureAwait(false);
-    }
-
-    public static async Task<string> PdfToJpeg(string pdfFileName, int maxWidth,
-        int jpegQuality, SKColor backgroundColor)
-    {
-        // Convert PDF pages to images asynchronously
-        await using var pdfStream = File.OpenRead(pdfFileName);
-        var skBitmaps = await Conversion.ToImagesAsync(pdfStream).ToListAsync();
-
-        // Calculate the total height and maximum width
-        var totalHeight = 0;
-        var combinedWidth = 0;
-        foreach (var bitmap in skBitmaps)
-        {
-            totalHeight += bitmap.Height;
-            combinedWidth = Math.Max(combinedWidth, bitmap.Width);
-        }
-
-        // Scale the combined width to the max width if necessary
-        if (combinedWidth > maxWidth)
-        {
-            var scale = (float)maxWidth / combinedWidth;
-            combinedWidth = maxWidth;
-            totalHeight = (int)(totalHeight * scale);
-        }
-
-        // Create a new bitmap to hold the combined image
-        using var combinedBitmap = new SKBitmap(combinedWidth, totalHeight);
-        using var canvas = new SKCanvas(combinedBitmap);
-        canvas.Clear(backgroundColor);
-
-        // Draw each image onto the combined bitmap
-        var yOffset = 0;
-        foreach (var bitmap in skBitmaps)
-        {
-            var scaledHeight = (int)(bitmap.Height * ((float)combinedWidth / bitmap.Width));
-            var destRect = new SKRect(0, yOffset, combinedWidth, yOffset + scaledHeight);
-            canvas.DrawBitmap(bitmap, destRect);
-            yOffset += scaledHeight;
-        }
-
-        // Save the combined image as a JPEG
-        using var image = SKImage.FromBitmap(combinedBitmap);
-        using var data = image.Encode(SKEncodedImageFormat.Jpeg, jpegQuality);
-        var safeName = UniqueFileTools.UniqueFile(new DirectoryInfo(Path.GetDirectoryName(pdfFileName)!),
-            $"{Path.GetFileNameWithoutExtension(pdfFileName)}.jpg")!;
-        await using var outputStream = File.OpenWrite(safeName.FullName);
-        data.SaveTo(outputStream);
-
-        return safeName.FullName;
     }
 
     public static async Task<FileInfo?> Rotate(FileInfo toRotate, ImageRotation orientation)

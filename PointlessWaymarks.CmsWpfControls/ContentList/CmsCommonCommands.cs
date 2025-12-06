@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.IO;
+using System.Windows;
+using System.Windows.Media.Imaging;
 using System.Windows.Shell;
 using Ookii.Dialogs.Wpf;
 using PointlessWaymarks.CmsData;
@@ -45,6 +47,7 @@ using PointlessWaymarks.SpatialTools;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
+using PointlessWaymarks.WpfCommon.WpfHtml;
 
 namespace PointlessWaymarks.CmsWpfControls.ContentList;
 
@@ -264,6 +267,78 @@ public partial class CmsCommonCommands
         newContentWindow.PositionWindowAndShow();
     }
 
+    [NonBlockingCommand]
+    public async Task NewImageContentFromClipboard()
+    {
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        StatusContext.Progress("Checking clipboard for an image...");
+
+        if (!Clipboard.ContainsImage())
+        {
+            await StatusContext.ToastError("Clipboard does not contain an image.");
+            return;
+        }
+
+        BitmapSource? clipboardImage;
+        try
+        {
+            clipboardImage = Clipboard.GetImage();
+        }
+        catch (Exception ex)
+        {
+            await StatusContext.ToastError($"Failed to read image from clipboard: {ex.Message}");
+            return;
+        }
+
+        if (clipboardImage == null)
+        {
+            await StatusContext.ToastError("Could not retrieve image from clipboard.");
+            return;
+        }
+
+        byte[] jpegBytes;
+        try
+        {
+            var encoder = new JpegBitmapEncoder { QualityLevel = 100 };
+            encoder.Frames.Add(BitmapFrame.Create(clipboardImage));
+            await using var mem = new MemoryStream();
+            encoder.Save(mem);
+            jpegBytes = mem.ToArray();
+        }
+        catch (Exception ex)
+        {
+            await StatusContext.ToastError($"Error encoding clipboard image: {ex.Message}");
+            return;
+        }
+
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        try
+        {
+            var tempDirectory = FileLocationTools.TempStorageDirectory();
+
+            var desiredName = $"Image-From-Clipboard-{DateTime.Now:yyyy-MM-dd-HHmmss}.jpg";
+            var safeFile = UniqueFileTools.UniqueFile(tempDirectory, desiredName) ??
+                           new FileInfo(Path.Combine(tempDirectory.FullName, desiredName));
+            var destinationPath = safeFile.FullName;
+
+            await File.WriteAllBytesAsync(destinationPath, jpegBytes);
+
+            await ThreadSwitcher.ResumeForegroundAsync();
+
+            await StatusContext.ToastSuccess($"Clipboard image saved to {destinationPath}");
+
+            var fileInfo = new FileInfo(destinationPath);
+            var editor = await ImageContentEditorWindow.CreateInstance(null, fileInfo);
+            await editor.PositionWindowAndShowOnUiThread();
+        }
+        catch (Exception ex)
+        {
+            await StatusContext.ShowMessageWithOkButton("Error Adding Image from Clipboard", ex.ToString());
+        }
+    }
+
     [BlockingCommand]
     public async Task NewImageContentFromFiles(CancellationToken cancellationToken)
     {
@@ -333,6 +408,64 @@ public partial class CmsCommonCommands
 
             await ThreadSwitcher.ResumeBackgroundAsync();
         }
+    }
+
+
+    [NonBlockingCommand]
+    public async Task NewImageContentFromUrl()
+    {
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        var jpegUrlWindow =
+            await InteractiveWebViewJpegImageWindow.CreateInstance(await StatusControlContext.CreateInstance());
+        jpegUrlWindow.CloseOnSave = true;
+
+        void OnImageSaved(object? sender, InteractiveWebViewJpegImageWindowSavedEventArgs e)
+        {
+            StatusContext.RunBlockingTask(async () =>
+            {
+                try
+                {
+                    await StatusContext.ToastSuccess($"Adding from URL - {e.NewFilename}");
+
+                    await ThreadSwitcher.ResumeForegroundAsync();
+
+                    var newContentWindow =
+                        await ImageContentEditorWindow.CreateInstance(null, new FileInfo(e.NewFilename));
+
+                    newContentWindow.PositionWindowAndShow();
+
+                    if (!string.IsNullOrWhiteSpace(e.Url) &&
+                        newContentWindow.ImageEditor?.TitleSummarySlugFolder is not null)
+                        newContentWindow.ImageEditor.TitleSummarySlugFolder.SummaryEntry.UserValue =
+                            $"Image from {e.Url}";
+                }
+                catch (Exception exception)
+                {
+                    await StatusContext.ToastError($"Error adding image from URL - {exception.Message}");
+                    Debug.WriteLine(exception);
+                }
+            });
+        }
+
+        jpegUrlWindow.ImageSaved += OnImageSaved;
+
+        void OnWindowClosed(object? sender, EventArgs e)
+        {
+            try
+            {
+                jpegUrlWindow.ImageSaved -= OnImageSaved;
+                jpegUrlWindow.Closed -= OnWindowClosed;
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(exception);
+            }
+        }
+
+        jpegUrlWindow.Closed += OnWindowClosed;
+
+        await jpegUrlWindow.PositionWindowAndShowOnUiThread();
     }
 
 
@@ -614,6 +747,78 @@ public partial class CmsCommonCommands
         await newContentWindow.PositionWindowAndShowOnUiThread();
     }
 
+    [NonBlockingCommand]
+    public async Task NewPhotoContentFromClipboard()
+    {
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        StatusContext.Progress("Checking clipboard for an image...");
+
+        if (!Clipboard.ContainsImage())
+        {
+            await StatusContext.ToastError("Clipboard does not contain an image.");
+            return;
+        }
+
+        BitmapSource? clipboardImage;
+        try
+        {
+            clipboardImage = Clipboard.GetImage();
+        }
+        catch (Exception ex)
+        {
+            await StatusContext.ToastError($"Failed to read image from clipboard: {ex.Message}");
+            return;
+        }
+
+        if (clipboardImage == null)
+        {
+            await StatusContext.ToastError("Could not retrieve image from clipboard.");
+            return;
+        }
+
+        byte[] jpegBytes;
+        try
+        {
+            var encoder = new JpegBitmapEncoder { QualityLevel = 100 };
+            encoder.Frames.Add(BitmapFrame.Create(clipboardImage));
+            await using var mem = new MemoryStream();
+            encoder.Save(mem);
+            jpegBytes = mem.ToArray();
+        }
+        catch (Exception ex)
+        {
+            await StatusContext.ToastError($"Error encoding clipboard image: {ex.Message}");
+            return;
+        }
+
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        try
+        {
+            var tempDirectory = FileLocationTools.TempStorageDirectory();
+
+            var desiredName = $"Photo-From-Clipboard-{DateTime.Now:yyyy-MM-dd-HHmmss}.jpg";
+            var safeFile = UniqueFileTools.UniqueFile(tempDirectory, desiredName) ??
+                           new FileInfo(Path.Combine(tempDirectory.FullName, desiredName));
+            var destinationPath = safeFile.FullName;
+
+            await File.WriteAllBytesAsync(destinationPath, jpegBytes);
+
+            await ThreadSwitcher.ResumeForegroundAsync();
+
+            await StatusContext.ToastSuccess($"Clipboard image saved to {destinationPath}");
+
+            var fileInfo = new FileInfo(destinationPath);
+            var editor = await PhotoContentEditorWindow.CreateInstance(fileInfo);
+            await editor.PositionWindowAndShowOnUiThread();
+        }
+        catch (Exception ex)
+        {
+            await StatusContext.ShowMessageWithOkButton("Error Adding Photo from Clipboard", ex.ToString());
+        }
+    }
+
     [BlockingCommand]
     public async Task NewPhotoContentFromFiles(CancellationToken cancellationToken)
     {
@@ -721,7 +926,8 @@ public partial class CmsCommonCommands
                         (metaGenerationReturn, metaContent) = await
                             PhotoGenerator.PhotoMetadataToNewPhotoContent(photoFile, StatusContext.ProgressTracker());
 
-                        if (!string.IsNullOrWhiteSpace(initialTitle) && metaContent is not null) metaContent.Title = initialTitle;
+                        if (!string.IsNullOrWhiteSpace(initialTitle) && metaContent is not null)
+                            metaContent.Title = initialTitle;
                     }
                 }
 

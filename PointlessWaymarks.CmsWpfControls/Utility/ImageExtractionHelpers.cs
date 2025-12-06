@@ -6,15 +6,14 @@ using Windows.Storage;
 using PDFtoImage;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.BracketCodes;
-using PointlessWaymarks.CmsData.CommonHtml;
 using PointlessWaymarks.CmsData.ContentGeneration;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsWpfControls.ImageContentEditor;
 using PointlessWaymarks.CommonTools;
+using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
-using PointlessWaymarks.WpfCommon;
 
 namespace PointlessWaymarks.CmsWpfControls.Utility;
 
@@ -31,7 +30,8 @@ public static class ImageExtractionHelpers
         {
             if (string.IsNullOrWhiteSpace(loopSelected.OriginalFileName))
             {
-                await statusContext.ToastError($"File Content without Original File? {loopSelected.Title ?? "Unknown Title"}...");
+                await statusContext.ToastError(
+                    $"File Content without Original File? {loopSelected.Title ?? "Unknown Title"}...");
                 continue;
             }
 
@@ -175,7 +175,7 @@ public static class ImageExtractionHelpers
 
         await using var pdfStream = File.OpenRead(targetFile.FullName);
         Conversion.SaveJpeg(destinationFile.FullName, pdfStream, pageNumber - 1);
-        
+
         ////One of the calls below to get the image preview from Windows will switch to the UI Thread...
         //var file = await StorageFile.GetFileFromPathAsync(targetFile.FullName);
         //var pdfDocument = await PdfDocument.LoadFromFileAsync(file);
@@ -408,7 +408,7 @@ public static class ImageExtractionHelpers
     }
 
     public static async Task<Guid?> VideoFrameToImageAutoSave(StatusControlContext statusContext,
-    VideoContent selected, double millisecondPosition = 100)
+        VideoContent selected, double millisecondPosition = 100)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 

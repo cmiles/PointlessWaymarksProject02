@@ -25,6 +25,11 @@ public partial class LinkListListItem : IContentListItem
     public bool ShowType { get; set; }
     public List<LinkSnapshotImageItem> SnapshotImages { get; set; } = [];
 
+    public ContentClipboardRepresentation ClipboardObject()
+    {
+        return ItemActions.ClipboardObject(DbEntry);
+    }
+
     public IContentCommon Content()
     {
         return new ContentCommonShell
@@ -60,11 +65,6 @@ public partial class LinkListListItem : IContentListItem
     public string DefaultBracketCode()
     {
         return ItemActions.DefaultBracketCode(DbEntry);
-    }
-
-    public ContentClipboardRepresentation ClipboardObject()
-    {
-        return ItemActions.ClipboardObject(DbEntry);
     }
 
     public async Task DefaultBracketCodeToClipboard()
@@ -115,7 +115,11 @@ public partial class LinkListListItem : IContentListItem
 
         var images = UserSettingsSingleton.CurrentSettings().LinkSnapshotImages(DbEntry.ContentId);
 
-        if (!images.Any()) return;
+        if (!images.Any())
+        {
+            if (SnapshotImages.Any()) SnapshotImages = [];
+            return;
+        }
 
         var fileList = new List<LinkSnapshotImageItem>();
 

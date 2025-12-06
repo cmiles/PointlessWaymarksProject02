@@ -14,6 +14,7 @@ using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.ConversionDataEntry;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
+using PointlessWaymarks.WpfCommon.WpfHtml;
 using SkiaSharp;
 using Path = System.IO.Path;
 
@@ -108,7 +109,7 @@ public partial class CombinerListContext : IDropTarget
             {
                 if (Path.GetExtension(file).Equals(".pdf", StringComparison.OrdinalIgnoreCase))
                 {
-                    var newFile = await Combiner.PdfToJpeg(file, ItemMaxWidthEntryContext.UserValue,
+                    var newFile = await ImageHelpers.PdfToJpeg(file, ItemMaxWidthEntryContext.UserValue,
                         FinalImageJpegQuality.UserValue, SelectedBackgroundColor?.SkiaColor ?? SKColors.White);
                     listItems.Add(await CombinerListListItem.CreateInstance(newFile, StatusContext));
                 }
@@ -397,9 +398,9 @@ public partial class CombinerListContext : IDropTarget
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        var jpegUrlWindow = await WebPageAsJpegWindow.CreateInstance(await StatusControlContext.CreateInstance());
+        var jpegUrlWindow = await InteractiveWebViewJpegImageWindow.CreateInstance(await StatusControlContext.CreateInstance());
 
-        void OnImageSaved(object? sender, WebPageAsJpegWindowImageSavedEventArgs e)
+        void OnImageSaved(object? sender, InteractiveWebViewJpegImageWindowSavedEventArgs e)
         {
             StatusContext.RunBlockingTask(async () =>
             {
