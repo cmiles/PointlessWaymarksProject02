@@ -18,7 +18,7 @@ try
     var decodedBytes = Convert.FromBase64String(combineArgs);
     var decodedString = Encoding.UTF8.GetString(decodedBytes);
 
-    var compiler = new ScriptCompiler(EmptyLogFactory, false) { AssemblyLoadContext = new ScriptAssemblyLoadContext() };
+    var compiler = new ScriptCompiler(EmptyLogFactory, string.Empty, false) { AssemblyLoadContext = new ScriptAssemblyLoadContext() };
     var runner = new ScriptRunner(compiler, EmptyLogFactory, ScriptConsole.Default);
     var sourceText = SourceText.From(decodedString);
     var context = new ScriptContext(sourceText, directory.FullName, [], scriptMode: ScriptMode.Eval);
