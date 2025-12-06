@@ -1298,7 +1298,7 @@
                             Height="20"
                             VerticalAlignment="Center"
                             Command="{Binding ItemActions.CopyLinkAsMarkdownCommand}"
-                            CommandParameter="{Binding DbEntry.Url}">
+                            CommandParameter="{Binding DbEntry}">
                             Markdown
                         </Button>
                         <Button
@@ -1306,7 +1306,7 @@
                             Height="20"
                             VerticalAlignment="Center"
                             Command="{Binding ItemActions.CopyLinkAsHtmlCommand}"
-                            CommandParameter="{Binding DbEntry.Url}">
+                            CommandParameter="{Binding DbEntry}">
                             HTML
                         </Button>
                     </WrapPanel>

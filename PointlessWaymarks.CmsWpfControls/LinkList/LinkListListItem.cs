@@ -1,10 +1,11 @@
-using System.IO;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.Utility;
+using System.Globalization;
+using System.IO;
 
 namespace PointlessWaymarks.CmsWpfControls.LinkList;
 
@@ -127,7 +128,19 @@ public partial class LinkListListItem : IContentListItem
         {
             var parts = Path.GetFileNameWithoutExtension(loopImageFile.Name).Split("--");
             if (parts.Length < 2) continue;
-            var newEntry = new LinkSnapshotImageItem { FileName = loopImageFile.FullName, Description = parts[1] };
+            var dateTimePart = parts[1];
+            if (!string.IsNullOrWhiteSpace(dateTimePart))
+            {
+                // Expected format: yyyy-MM-dd-HHmm
+                if (DateTime.TryParseExact(dateTimePart, "yyyy-MM-dd-HHmm", CultureInfo.InvariantCulture,
+                        DateTimeStyles.None, out var parsed))
+                {
+                    // Make sortable human-readable date with AM/PM time
+                    dateTimePart = parsed.ToString("yyyy-MM-dd h:mm tt", CultureInfo.InvariantCulture);
+                }
+            }
+
+            var newEntry = new LinkSnapshotImageItem { FileName = loopImageFile.FullName, Description = dateTimePart };
             fileList.Add(newEntry);
         }
 
