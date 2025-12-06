@@ -100,8 +100,8 @@
         <PackageReference Include="AngleSharp.Js" Version="0.15.0" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
         <PackageReference Include="CompareNETObjects" Version="4.84.0" />
-        <PackageReference Include="FluentMigrator" Version="7.1.0" />
-        <PackageReference Include="FluentMigrator.Runner.SQLite" Version="7.1.0" />
+        <PackageReference Include="FluentMigrator" Version="7.2.0" />
+        <PackageReference Include="FluentMigrator.Runner.SQLite" Version="7.2.0" />
         <PackageReference Include="GeoAPI" Version="1.7.5" />
         <PackageReference Include="HtmlTableHelper" Version="1.2.4" />
         <PackageReference Include="HtmlTags" Version="10.0.0" />
@@ -112,7 +112,7 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
-        <PackageReference Include="Microsoft.Playwright" Version="1.56.0" />
+        <PackageReference Include="Microsoft.Playwright" Version="1.57.0" />
         <PackageReference Include="NetTopologySuite" Version="2.6.0" />
         <PackageReference Include="NetTopologySuite.IO.GeoJSON" Version="4.0.0" />
         <PackageReference Include="PhotoSauce.MagicScaler" Version="0.15.0" />
