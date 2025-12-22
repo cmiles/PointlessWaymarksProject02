@@ -1,4 +1,4 @@
-﻿using PointlessWaymarks.CmsData;
+using PointlessWaymarks.CmsData;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
 
@@ -29,7 +29,7 @@ public partial class VideoListWindow
     public static async Task<VideoListWindow> CreateInstance(VideoListWithActionsContext? toLoad)
     {
         await ThreadSwitcher.ResumeForegroundAsync();
-        var window = new VideoListWindow(toLoad ?? await VideoListWithActionsContext.CreateInstance(null));
+        var window = new VideoListWindow(toLoad ?? await VideoListWithActionsContext.CreateInstance(null, null, null));
 
         return window;
     }

@@ -729,7 +729,7 @@ Photo Content Notes:
     [BlockingCommand]
     public async Task ViewPhotoMetadata()
     {
-        await FileMetadataReport.AllFileMetadataToHtmlDocumentAndOpen(SelectedFile, StatusContext);
+        await FileMetadataReport.AllFileMetadataToHtmlDocumentAndOpen(SelectedFile, UserSettingsSingleton.CurrentSettings().FfprobeExe(), StatusContext);
     }
 
     [BlockingCommand]

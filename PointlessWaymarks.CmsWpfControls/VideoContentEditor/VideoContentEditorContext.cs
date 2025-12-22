@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
 using Ookii.Dialogs.Wpf;
@@ -84,6 +85,7 @@ public partial class VideoContentEditorContext : IHasChanges, IHasValidationIssu
     public ConversionDataEntryContext<Guid?>? UserMainPictureEntry { get; set; }
     public IContentCommon? UserMainPictureEntryContent { get; set; }
     public string? UserMainPictureEntrySmallImageUrl { get; set; }
+    public bool VideoCanBeReEncodedWithFfmpeg { get; set; }
     public SimpleMediaPlayerContext? VideoContext { get; set; }
     public StringDataEntryContext? VideoCreatedByEntry { get; set; }
     public ConversionDataEntryContext<DateTime>? VideoCreatedOnEntry { get; set; }
@@ -111,6 +113,8 @@ Notes:
  - If appropriate consider including links to the original source in the Body Content
  - If what you are writing about is a 'file' but you don't want/need to store the file itself on your site you should probably just create a Post (or other content type like and Image) - use Video Content when you want to store the file. 
 ";
+
+    public bool VideoIsNotHtmlVideoEmbedFriendly { get; set; }
 
 
     public void CheckForChangesAndValidationIssues()
@@ -356,7 +360,8 @@ Notes:
         await StatusContext.ToastSuccess($"To Clipboard: {linkString}");
     }
 
-    private async Task LoadData(VideoContent? toLoad, bool skipMediaDirectoryCheck = false, bool skipMetadataLoadFromVideo = false)
+    private async Task LoadData(VideoContent? toLoad, bool skipMediaDirectoryCheck = false,
+        bool skipMetadataLoadFromVideo = false)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -610,6 +615,155 @@ Notes:
     }
 
     [BlockingCommand]
+    public async Task ReEncodeWithFfmpeg()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (SelectedFile is not { Exists: true })
+        {
+            await StatusContext.ToastError("No video file selected to re-encode.");
+            return;
+        }
+
+        if (!VideoCanBeReEncodedWithFfmpeg)
+        {
+            await StatusContext.ToastError("This video cannot be automatically re-encoded with ffmpeg.");
+            return;
+        }
+
+        var settings = UserSettingsSingleton.CurrentSettings();
+
+        if (!settings.FfmpegAndFfprobeExist())
+        {
+            await StatusContext.ToastError("ffmpeg and ffprobe must be configured in settings to re-encode videos.");
+            return;
+        }
+
+        var outputExtension = SelectedFile.Extension.ToLowerInvariant();
+
+        var outputFile = new FileInfo(Path.Combine(
+            SelectedFile.Directory!.FullName,
+            $"{Path.GetFileNameWithoutExtension(SelectedFile.Name)}-reencoding-temp{outputExtension}"));
+
+        outputFile = UniqueFileTools.UniqueFile(outputFile.Directory!, outputFile.Name)!;
+
+        var ffmpegExe = settings.FfmpegExe();
+
+        // Build ffmpeg arguments for HTML5-compatible encoding
+        var ffmpegArgs = outputExtension switch
+        {
+            ".webm" =>
+                $"-i \"{SelectedFile.FullName}\" -c:v libvpx-vp9 -lossless 1 -c:a libopus -b:a 256k -y \"{outputFile.FullName}\"",
+            ".ogg" => $"-i \"{SelectedFile.FullName}\" -c:v libtheora -q:v 10 -c:a flac -y \"{outputFile.FullName}\"",
+            _ =>
+                $"-i \"{SelectedFile.FullName}\" -c:v libx264 -preset slow -crf 18 -profile:v high -level 4.2 -pix_fmt yuv420p -c:a aac -b:a 192k -movflags +faststart -y \"{outputFile.FullName}\""
+        };
+
+        try
+        {
+            StatusContext.Progress("Re-encoding video with ffmpeg...");
+
+            var processStartInfo = new ProcessStartInfo
+            {
+                FileName = ffmpegExe,
+                Arguments = ffmpegArgs,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = new Process();
+
+            process.StartInfo = processStartInfo;
+            var outputBuilder = new StringBuilder();
+            var errorBuilder = new StringBuilder();
+
+            process.OutputDataReceived += (_, args) =>
+            {
+                if (!string.IsNullOrEmpty(args.Data)) outputBuilder.AppendLine(args.Data);
+            };
+
+            process.ErrorDataReceived += (_, args) =>
+            {
+                if (!string.IsNullOrEmpty(args.Data))
+                {
+                    errorBuilder.AppendLine(args.Data);
+                    // ffmpeg writes progress to stderr, update status
+                    if (args.Data.Contains("frame=") || args.Data.Contains("time="))
+                        StatusContext.Progress($"Re-encoding: {args.Data.Trim()}");
+                }
+            };
+
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+
+            await process.WaitForExitAsync();
+
+            if (process.ExitCode != 0)
+            {
+                Log.ForContext("SelectedFile", SelectedFile.FullName)
+                    .ForContext("OutputFile", outputFile.FullName)
+                    .ForContext("ExitCode", process.ExitCode)
+                    .ForContext("StdOut", outputBuilder.ToString())
+                    .ForContext("StdError", errorBuilder.ToString())
+                    .Error("ffmpeg re-encoding failed");
+
+                await StatusContext.ShowMessageWithOkButton("Re-encoding Failed",
+                    $"ffmpeg failed to re-encode the video. Exit code: {process.ExitCode}\n\nCheck logs for details.");
+                return;
+            }
+
+            outputFile.Refresh();
+
+            if (!outputFile.Exists)
+            {
+                await StatusContext.ToastError("Re-encoding appeared to succeed but output file was not found.");
+                return;
+            }
+
+            // Create backup filename for the original
+            var originalFileName = SelectedFile.Name;
+            var backupFileName =
+                $"{Path.GetFileNameWithoutExtension(originalFileName)}_reencoding_backup{Path.GetExtension(originalFileName)}";
+            var backupFile = new FileInfo(Path.Combine(SelectedFile.Directory!.FullName, backupFileName));
+
+            // Ensure backup filename is unique
+            backupFile = UniqueFileTools.UniqueFile(backupFile.Directory!, backupFile.Name)!;
+
+            // Rename original file to back up
+            File.Move(SelectedFile.FullName, backupFile.FullName);
+
+            Log.ForContext("OriginalFile", SelectedFile.FullName)
+                .ForContext("BackupFile", backupFile.FullName)
+                .Information("Renamed original video file to backup");
+
+            // Rename the re-encoded file to the original filename
+            var finalFile = new FileInfo(Path.Combine(SelectedFile.Directory!.FullName, originalFileName));
+            File.Move(outputFile.FullName, finalFile.FullName);
+
+            Log.ForContext("TempFile", outputFile.FullName)
+                .ForContext("FinalFile", finalFile.FullName)
+                .Information("Renamed re-encoded video to original filename");
+
+            await StatusContext.ToastSuccess($"Video re-encoded successfully. Original saved as {backupFile.Name}");
+
+            // Update the selected file to point to the newly encoded file with original name
+            SelectedFile = finalFile;
+        }
+        catch (Exception ex)
+        {
+            Log.ForContext("SelectedFile", SelectedFile.FullName)
+                .ForContext("OutputFile", outputFile.FullName)
+                .Error(ex, "Exception while re-encoding video with ffmpeg");
+
+            await StatusContext.ShowMessageWithOkButton("Re-encoding Error",
+                $"An error occurred while re-encoding: {ex.Message}");
+        }
+    }
+
+    [BlockingCommand]
     public async Task RenameSelectedFile()
     {
         await FileHelpers.RenameSelectedFile(SelectedFile, StatusContext, x => SelectedFile = x);
@@ -706,6 +860,83 @@ Notes:
         VideoContext!.VideoSource = SelectedFile is { Exists: true }
             ? VideoContext.VideoSource = SelectedFile.FullName
             : VideoContext.VideoSource = string.Empty;
+
+        var settings = UserSettingsSingleton.CurrentSettings();
+
+
+        var ffprobe = settings.FfprobeExe();
+        if (SelectedFile is { Exists: true } && settings.FfmpegAndFfprobeExist())
+        {
+            try
+            {
+                var ffprobeExe = settings.FfprobeExe();
+
+                var processStartInfo = new ProcessStartInfo
+                {
+                    FileName = ffprobeExe,
+                    Arguments =
+                        $"-v error -select_streams v:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 \"{SelectedFile.FullName}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using var process = new Process { StartInfo = processStartInfo };
+                process.Start();
+
+                var codecOutput = await process.StandardOutput.ReadToEndAsync();
+                var errorOutput = await process.StandardError.ReadToEndAsync();
+
+                await process.WaitForExitAsync();
+
+                if (process.ExitCode == 0 && !string.IsNullOrWhiteSpace(codecOutput))
+                {
+                    var codecName = codecOutput.Trim().ToLowerInvariant();
+
+                    // HTML5 video tag friendly codecs
+                    var htmlFriendlyCodecs = new[] { "h264", "vp8", "vp9", "av1" };
+
+                    // Codecs that ffmpeg can convert
+                    var convertibleCodecs = new[]
+                    {
+                        "hevc", "h265", "mpeg4", "mpeg2video", "mpeg1video", "wmv", "wmv3", "vc1",
+                        "vp6", "theora", "mjpeg", "msmpeg4v3", "msmpeg4v2", "msmpeg4", "h263",
+                        "flv1", "cinepak", "indeo3", "svq3", "rv40", "rv30"
+                    };
+
+                    VideoIsNotHtmlVideoEmbedFriendly = !htmlFriendlyCodecs.Contains(codecName);
+                    VideoCanBeReEncodedWithFfmpeg =
+                        convertibleCodecs.Contains(codecName) || htmlFriendlyCodecs.Contains(codecName);
+                }
+                else
+                {
+                    // If ffprobe fails, assume compatible and don't show warnings
+                    VideoIsNotHtmlVideoEmbedFriendly = false;
+                    VideoCanBeReEncodedWithFfmpeg = false;
+
+                    Log.ForContext("SelectedFile", SelectedFile.FullName)
+                        .ForContext("ExitCode", process.ExitCode)
+                        .ForContext("StdError", errorOutput)
+                        .Debug("ffprobe check failed for video file");
+                }
+            }
+            catch (Exception ex)
+            {
+                // On any error, assume compatible
+                VideoIsNotHtmlVideoEmbedFriendly = false;
+                VideoCanBeReEncodedWithFfmpeg = false;
+
+                Log.ForContext("SelectedFile", SelectedFile.FullName)
+                    .Error(ex, "Exception while checking video codec compatibility with ffprobe");
+            }
+        }
+        else
+        {
+            // No ffprobe available or no file selected
+            VideoIsNotHtmlVideoEmbedFriendly = false;
+            VideoCanBeReEncodedWithFfmpeg = false;
+        }
 
         TitleSummarySlugFolder?.CheckForChangesToTitleToFunctionStates();
     }
@@ -837,6 +1068,6 @@ Notes:
     [BlockingCommand]
     public async Task ViewVideoMetadata()
     {
-        await FileMetadataReport.AllFileMetadataToHtmlDocumentAndOpen(SelectedFile, StatusContext);
+        await FileMetadataReport.AllFileMetadataToHtmlDocumentAndOpen(SelectedFile, UserSettingsSingleton.CurrentSettings().FfprobeExe(), StatusContext);
     }
 }

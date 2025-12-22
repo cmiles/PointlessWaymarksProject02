@@ -424,7 +424,7 @@ public partial class PhotoListWithActionsContext
         if (!File.Exists(selectedFile)) return;
         var file = new FileInfo(selectedFile);
 
-        var metadataWindow = await FileMetadataDisplayWindow.CreateInstance(file.FullName);
+        var metadataWindow = await FileMetadataDisplayWindow.CreateInstance(file.FullName, UserSettingsSingleton.CurrentSettings().FfprobeExe());
         await metadataWindow.PositionWindowAndShowOnUiThread();
     }
 
@@ -706,7 +706,7 @@ public partial class PhotoListWithActionsContext
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        var metadataWindow = await FileMetadataDisplayWindow.CreateInstance(archiveFile.FullName);
+        var metadataWindow = await FileMetadataDisplayWindow.CreateInstance(archiveFile.FullName, UserSettingsSingleton.CurrentSettings().FfprobeExe());
         await metadataWindow.PositionWindowAndShowOnUiThread();
     }
 

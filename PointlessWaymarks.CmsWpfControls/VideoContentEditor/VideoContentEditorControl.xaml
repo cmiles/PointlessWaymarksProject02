@@ -114,6 +114,7 @@
                         Visibility="{Binding SelectedFileNameHasInvalidCharacters, Converter={StaticResource BooleanToVisibility}}">
                         Auto-Fix File Name
                     </Button>
+                    <TextBox Foreground="Red" FontWeight="Bold" Style="{StaticResource ReadOnlyTextBoxStyle}" Visibility="{Binding VideoIsNotHtmlVideoEmbedFriendly, Converter={StaticResource BooleanToVisibility}}" ToolTip="The video may be valid and play on your computer, but it is likely that it will not display/open/play correctly in a web page or site preview.">Problems with Format! Re-Encode?</TextBox>
                 </StackPanel>
                 <WrapPanel
                     Grid.Row="4"
@@ -131,6 +132,12 @@
                     </Button>
                     <Button Command="{Binding OpenSelectedFileCommand}">View Video</Button>
                     <Button Command="{Binding OpenSelectedFileDirectoryCommand}">View Directory</Button>
+                    <Button
+                        Command="{Binding SaveAndExtractImageFromMp4Command}"
+                        ToolTip="This will use ffmpeg to re-encode the file - the target is lossless encoding with some light web optimizations."
+                        Visibility="{Binding VideoCanBeReEncodedWithFfmpeg, Converter={StaticResource BooleanToVisibility}}">
+                        Re-Encode
+                    </Button>
                     <Button Command="{Binding AutoRenameSelectedFileBasedOnTitleCommand}" IsEnabled="{Binding TitleSummarySlugFolder.CustomTitleFunctionEnabled}">
                         Title-&gt;Name
                     </Button>

@@ -1120,7 +1120,7 @@ public partial class CmsCommonCommands
     {
         var newWindow =
             await VideoListWindow.CreateInstance(
-                await VideoListWithActionsContext.CreateInstance(null, WindowStatus));
+                await VideoListWithActionsContext.CreateInstance(null, WindowStatus, null));
         await newWindow.PositionWindowAndShowOnUiThread();
     }
 

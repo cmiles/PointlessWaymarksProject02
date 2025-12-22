@@ -16,6 +16,7 @@ public partial class UserSettings
     public string DefaultCreatedBy { get; set; } = string.Empty;
     public bool FeatureIntersectionTagOnImport { get; set; }
     public string FeatureIntersectionTagSettingsFile { get; set; } = string.Empty;
+    public string FfmpegDirectory { get; set; } = string.Empty;
     public bool FilesHavePublicDownloadLinkByDefault { get; set; }
     public string FooterSnippet { get; set; } = string.Empty;
     public bool GeoJsonHasPublicDownloadLinkByDefault { get; set; }
@@ -36,9 +37,7 @@ public partial class UserSettings
     ///     represent the full path.
     /// </summary>
     public string LocalSiteRootDirectory { get; set; } = string.Empty;
-
     public double LongitudeDefault { get; set; }
-
     public bool MainFeedFilesDefault { get; set; }
     public bool MainFeedGeoJsonDefault { get; set; }
     public bool MainFeedImageDefault { get; set; }

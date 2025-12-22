@@ -550,7 +550,7 @@ public partial class MainWindow
         if (SelectedTab.Header.ToString() == "Images" && TabImageListContext == null)
             TabImageListContext = await ImageListWithActionsContext.CreateInstance(null, WindowStatus);
         if (SelectedTab.Header.ToString() == "Videos" && TabVideoListContext == null)
-            TabVideoListContext = await VideoListWithActionsContext.CreateInstance(null, WindowStatus);
+            TabVideoListContext = await VideoListWithActionsContext.CreateInstance(null, WindowStatus, null);
         if (SelectedTab.Header.ToString() == "Files" && TabFileListContext == null)
             TabFileListContext = await FileListWithActionsContext.CreateInstance(null, WindowStatus);
         if (SelectedTab.Header.ToString() == "Points" && TabPointListContext == null)

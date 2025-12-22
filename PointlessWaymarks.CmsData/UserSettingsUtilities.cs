@@ -282,6 +282,43 @@ public static class UserSettingsUtilities
         return $"{settings.SiteUrl()}/favicon.ico";
     }
 
+    public static bool FfmpegAndFfprobeExist(this UserSettings settings)
+    {
+        return !string.IsNullOrWhiteSpace(settings.FfmpegExe()) && !string.IsNullOrWhiteSpace(settings.FfprobeExe());
+    }
+
+    public static string? FfmpegExe(this UserSettings settings)
+    {
+        if (string.IsNullOrWhiteSpace(settings.FfmpegDirectory)) return null;
+
+        try
+        {
+            var possibleFfmpeg = new FileInfo(
+                Path.Combine(settings.FfmpegDirectory, "ffmpeg.exe"));
+            return possibleFfmpeg.Exists ? possibleFfmpeg.FullName : null;
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
+    }
+
+    public static string? FfprobeExe(this UserSettings settings)
+    {
+        if (string.IsNullOrWhiteSpace(settings.FfmpegDirectory)) return null;
+
+        try
+        {
+            var possibleFfprobe = new FileInfo(
+                Path.Combine(settings.FfmpegDirectory, "ffprobe.exe"));
+            return possibleFfprobe.Exists ? possibleFfprobe.FullName : null;
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
+    }
+
     public static string FileDownloadUrl(this UserSettings settings, FileContent content)
     {
         return $"{settings.SiteUrl()}/Files/{content.Folder}/{content.Slug}/{content.OriginalFileName}";
@@ -357,11 +394,6 @@ public static class UserSettingsUtilities
         return $"{settings.SiteUrl()}/Lines/GpxData/{content.ContentId}.gpx";
     }
 
-    public static string MapGpxDownloadUrl(this UserSettings settings, MapComponent content)
-    {
-        return $"{settings.SiteUrl()}/Maps/GpxData/{content.ContentId}.gpx";
-    }
-
     public static string LineMonthlyActivitySummaryUrl(this UserSettings settings)
     {
         return $"{settings.SiteUrl()}/Lines/LineMonthlyActivitySummary.html";
@@ -385,6 +417,26 @@ public static class UserSettingsUtilities
     public static string LinksListUrl(this UserSettings settings)
     {
         return $"{settings.SiteUrl()}/Links/LinkList.html";
+    }
+
+    public static List<FileInfo> LinkSnapshotImages(this UserSettings settings, Guid linkContentId)
+    {
+        var images =
+            new DirectoryInfo(UserSettingsSingleton.CurrentSettings().LocalMediaArchiveLinkDirectory().FullName)
+                .GetFiles($"{linkContentId}--*.jpg");
+
+        var fileList = new List<FileInfo>();
+
+        if (!images.Any()) return fileList;
+
+        foreach (var loopImageFile in images)
+        {
+            var parts = Path.GetFileNameWithoutExtension(loopImageFile.Name).Split("--");
+            if (parts.Length < 2) continue;
+            fileList.Add(loopImageFile);
+        }
+
+        return fileList;
     }
 
     public static string LinksRssUrl(this UserSettings settings)
@@ -865,26 +917,6 @@ public static class UserSettingsUtilities
     {
         var directory = settings.LocalSiteLineDirectory();
         return new FileInfo($"{Path.Combine(directory.FullName, "AnonymousActivityData")}.json");
-    }
-
-    public static List<FileInfo> LinkSnapshotImages(this UserSettings settings, Guid linkContentId)
-    {
-        var images =
-            new DirectoryInfo(UserSettingsSingleton.CurrentSettings().LocalMediaArchiveLinkDirectory().FullName)
-                .GetFiles($"{linkContentId}--*.jpg");
-
-        var fileList = new List<FileInfo>();
-
-        if (!images.Any()) return fileList;
-
-        foreach (var loopImageFile in images)
-        {
-            var parts = Path.GetFileNameWithoutExtension(loopImageFile.Name).Split("--");
-            if (parts.Length < 2) continue;
-            fileList.Add(loopImageFile);
-        }
-
-        return fileList;
     }
 
     public static FileInfo LocalSiteLineRssFile(this UserSettings settings)
@@ -1418,6 +1450,11 @@ public static class UserSettingsUtilities
     {
         var directory = settings.LocalSiteVideoDirectory();
         return new FileInfo($"{Path.Combine(directory.FullName, "VideoRss")}.xml");
+    }
+
+    public static string MapGpxDownloadUrl(this UserSettings settings, MapComponent content)
+    {
+        return $"{settings.SiteUrl()}/Maps/GpxData/{content.ContentId}.gpx";
     }
 
     public static string MapIconDataUrl(this UserSettings settings)

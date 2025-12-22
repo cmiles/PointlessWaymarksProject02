@@ -357,13 +357,19 @@
                     <StackPanel Orientation="Vertical">
                         <Label Style="{StaticResource DataEntryLabelStyle}"
                                Target="{Binding ElementName=DefaultImageShowSizesCheckBox}">
-                            Images 'Show Sizes' Default Value
+                            Photos and Images 'Show Sizes' Default Value
                         </Label>
                         <CheckBox
                             Name="DefaultImageShowSizesCheckBox"
                             Margin="6,0,0,0"
                             IsChecked="{Binding EditorSettings.ImagePagesHaveLinksToImageSizesByDefault, UpdateSourceTrigger=PropertyChanged}">
-                            Show Sizes
+                            Images Show Sizes
+                        </CheckBox>
+                        <CheckBox
+                            Name="DefaultPhotoShowSizesCheckBox"
+                            Margin="6,0,0,0"
+                            IsChecked="{Binding EditorSettings.PhotoPagesHaveLinksToPhotoSizesByDefault, UpdateSourceTrigger=PropertyChanged}">
+                            Photos Show Sizes
                         </CheckBox>
                         <wpf:MarkdownViewer Markdown="{Binding HelpMarkdownShowImageSizesByDefault}">
                             <b:Interaction.Behaviors>
@@ -372,6 +378,23 @@
                         </wpf:MarkdownViewer>
                     </StackPanel>
                     <Button Command="{Binding ShowSitePictureSizesEditorWindowCommand}">Edit List of Pre-Generated Image Sizes</Button>
+                    <StackPanel Orientation="Vertical">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=SiteDirTextBox}">
+                            Ffmpeg Directory
+                        </Label>
+                        <TextBox
+                            Name="FfmpegDirTextBox"
+                            Style="{StaticResource DataEntryTextBoxSingleLineStyle}"
+                            Text="{Binding EditorSettings.FfmpegDirectory, UpdateSourceTrigger=PropertyChanged}" />
+                        <wpf:MarkdownViewer Markdown="{Binding HelpMarkdownFfmpegDir}">
+                            <b:Interaction.Behaviors>
+                                <behaviors:IgnoreMouseWheelBehavior />
+                            </b:Interaction.Behaviors>
+                        </wpf:MarkdownViewer>
+                    </StackPanel>
+                    <Button Command="{Binding DownloadAndSetupFfmpegCommand}">Download FFmpeg</Button>
+                    <Button Command="{Binding ChooseFfmpegDirectoryCommand}">Choose FFmpeg directory</Button>
                     <StackPanel Orientation="Vertical">
                         <Label Style="{StaticResource DataEntryLabelStyle}"
                                Target="{Binding ElementName=DefaultFilePublicDownloadDefaultCheckBox}">
