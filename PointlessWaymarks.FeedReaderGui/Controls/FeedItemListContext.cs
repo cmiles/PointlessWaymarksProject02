@@ -26,6 +26,7 @@ namespace PointlessWaymarks.FeedReaderGui.Controls;
 [GenerateStatusCommands]
 public partial class FeedItemListContext : IStandardListWithContext<FeedItemListListItem>
 {
+    private Schedule? _refreshScheduler;
     public bool AutoMarkRead { get; set; } = true;
     public required FeedQueries ContextDb { get; init; }
     public DataNotificationsWorkQueue? DataNotificationsProcessor { get; set; }
@@ -109,7 +110,7 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
 
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        var feedQueries = new FeedQueries() { DbFileFullName = dbFile };
+        var feedQueries = new FeedQueries { DbFileFullName = dbFile };
 
         var newContext = new FeedItemListContext
         {
@@ -244,6 +245,25 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
         };
     }
 
+    [BlockingCommand]
+    private async Task ItemRssViewScreenshot()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (ItemRssViewScreenshotFunction == null)
+        {
+            await StatusContext.ToastError("Screenshot function not available...");
+            return;
+        }
+
+        var screenshotResult = await ItemRssViewScreenshotFunction();
+
+        if (screenshotResult.IsT0)
+            await WebViewToJpg.SaveByteArrayAsJpg(screenshotResult.AsT0.Value, string.Empty, StatusContext);
+        else
+            await StatusContext.ToastError(screenshotResult.AsT1.Value);
+    }
+
 
     [BlockingCommand]
     private async Task ItemWebViewScreenshot()
@@ -257,25 +277,6 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
         }
 
         var screenshotResult = await ItemWebViewScreenshotFunction();
-
-        if (screenshotResult.IsT0)
-            await WebViewToJpg.SaveByteArrayAsJpg(screenshotResult.AsT0.Value, string.Empty, StatusContext);
-        else
-            await StatusContext.ToastError(screenshotResult.AsT1.Value);
-    }
-
-    [BlockingCommand]
-    private async Task ItemRssViewScreenshot()
-    {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (ItemRssViewScreenshotFunction == null)
-        {
-            await StatusContext.ToastError("Screenshot function not available...");
-            return;
-        }
-
-        var screenshotResult = await ItemRssViewScreenshotFunction();
 
         if (screenshotResult.IsT0)
             await WebViewToJpg.SaveByteArrayAsJpg(screenshotResult.AsT0.Value, string.Empty, StatusContext);
@@ -523,9 +524,7 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
 
         StatusContext.RunNonBlockingTask(async () => { await RefreshFeedItems(); });
 
-        JobManager.Initialize();
-
-        JobManager.AddJob(
+        _refreshScheduler = new Schedule(
             async () =>
             {
                 try
@@ -538,8 +537,10 @@ public partial class FeedItemListContext : IStandardListWithContext<FeedItemList
                         .Verbose("Error in Feed Item List Background Refresh (Ignored)");
                 }
             },
-            s => s.ToRunEvery(2).Hours()
+            s => s.Every(2).Hours()
         );
+
+        _refreshScheduler.Start();
     }
 
     [NonBlockingCommand]
