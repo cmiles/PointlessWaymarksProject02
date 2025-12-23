@@ -31,6 +31,7 @@
                 <MenuItem Command="{Binding LineStatsToExcelForSelectedCommand}" Header="Selected To Excel as Line Stats" />
                 <MenuItem Command="{Binding ListContext.ImportFromExcelFileCommand}" Header="Import From Excel File" />
                 <MenuItem Command="{Binding ListContext.ImportFromOpenExcelInstanceCommand}" Header="Import From Open Excel Application" />
+                <MenuItem Command="{Binding ListContext.SlugifyExcelSelectionInOpenExcelInstanceCommand}" Header="Slugify Selection From Open Excel Application" />
             </MenuItem>
             <MenuItem Header="On the Web">
                 <MenuItem Command="{Binding ListContext.ViewOnSiteCommand}" Header="Open Selected on Public Site In Browser" />

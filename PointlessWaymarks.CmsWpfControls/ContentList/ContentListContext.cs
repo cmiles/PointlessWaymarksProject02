@@ -926,6 +926,12 @@ public partial class ContentListContext : IDragSource, IDropTarget
         await ExcelHelpers.ImportFromOpenExcelInstance(StatusContext);
     }
 
+    [BlockingCommand]
+    public async Task SlugifyExcelSelectionInOpenExcelInstance()
+    {
+        await ExcelHelpers.SlugifyExcelSelection(StatusContext);
+    }
+
     public ICollectionView ItemsView()
     {
         return CollectionViewSource.GetDefaultView(Items);

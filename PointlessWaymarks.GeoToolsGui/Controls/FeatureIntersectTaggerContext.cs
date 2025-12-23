@@ -465,7 +465,7 @@ public partial class FeatureIntersectTaggerContext
 
         foreach (var loopFile in frozenSelected)
         {
-            var metadataWindow = await FileMetadataDisplayWindow.CreateInstance(loopFile.FullName);
+            var metadataWindow = await FileMetadataDisplayWindow.CreateInstance(loopFile.FullName, null);
             await metadataWindow.PositionWindowAndShowOnUiThread();
         }
     }
