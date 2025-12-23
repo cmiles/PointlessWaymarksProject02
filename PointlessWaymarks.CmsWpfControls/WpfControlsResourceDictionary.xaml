@@ -1427,6 +1427,7 @@
                   Header="Generate Site and Show Preview" />
         <MenuItem Command="{Binding CommonCommands.GenerateChangedHtmlCommand}" Header="Generate Site" />
         <MenuItem Command="{Binding CommonCommands.ShowSitePreviewWindowCommand}" Header="Preview Site from Disk" />
+        <MenuItem Command="{Binding CommonCommands.ShowS3SitePreviewWindowCommand}" Header="Preview Site from S3" />
     </collections:ArrayList>
     <MenuItem
         x:Key="SiteMenu"

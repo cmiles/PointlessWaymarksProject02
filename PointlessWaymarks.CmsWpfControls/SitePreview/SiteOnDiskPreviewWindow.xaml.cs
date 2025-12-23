@@ -1,5 +1,6 @@
 using Microsoft.Web.WebView2.Core;
 using PointlessWaymarks.CmsData;
+using PointlessWaymarks.CmsData.S3;
 using PointlessWaymarks.CmsData.Server;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
@@ -15,7 +16,8 @@ namespace PointlessWaymarks.CmsWpfControls.SitePreview;
 [StaThreadConstructorGuard]
 public partial class SiteOnDiskPreviewWindow
 {
-    private static PreviewServer? _previewServer;
+    private static PreviewServer? _localPreviewServer;
+    private static S3PreviewServer? _remotePreviewServer;
 
     private SiteOnDiskPreviewWindow()
     {
@@ -46,23 +48,68 @@ public partial class SiteOnDiskPreviewWindow
 
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (_previewServer == null)
+        if (_localPreviewServer == null)
         {
-            _previewServer = new PreviewServer();
+            _localPreviewServer = new PreviewServer();
 
             window.StatusContext.RunFireAndForgetWithToastOnError(async () =>
             {
                 await ThreadSwitcher.ResumeBackgroundAsync();
-                await _previewServer.StartServer(UserSettingsSingleton.CurrentSettings().SiteDomainName,
+                await _localPreviewServer.StartServer(UserSettingsSingleton.CurrentSettings().SiteDomainName,
                     UserSettingsSingleton.CurrentSettings().LocalSiteRootFullDirectory().FullName);
             });
         }
 
-        window.PreviewServerHost = $"localhost:{_previewServer.ServerPort}";
+        window.PreviewServerHost = $"localhost:{_localPreviewServer.ServerPort}";
 
         window.PreviewContext = new SitePreviewContext(UserSettingsSingleton.CurrentSettings().SiteDomainName,
             UserSettingsSingleton.CurrentSettings().LocalSiteRootFullDirectory().FullName,
-            UserSettingsSingleton.CurrentSettings().SiteName, $"localhost:{_previewServer.ServerPort}",
+            UserSettingsSingleton.CurrentSettings().SiteName, $"localhost:{_localPreviewServer.ServerPort}",
+            window.StatusContext,
+            initialUrl);
+
+        window.PreviewContext.NewWindowRequestedAction += window.NewWindowRequestedAction;
+
+        return window;
+    }
+
+    /// <summary>
+    ///     Creates a new instance - this method can be called from any thread and will
+    ///     switch to the UI thread as needed. Does not show the window - consider using
+    ///     PositionWindowAndShowOnUiThread() from the WindowInitialPositionHelpers.
+    /// </summary>
+    /// <returns></returns>
+    public static async Task<SiteOnDiskPreviewWindow> CreateInstanceS3(string initialUrl = "")
+    {
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        var window = new SiteOnDiskPreviewWindow
+        {
+            StatusContext = await StatusControlContext.CreateInstance(),
+            SiteUrl = UserSettingsSingleton.CurrentSettings().SiteDomainName
+        };
+
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (_remotePreviewServer == null)
+        {
+            // Create with S3 account information
+            var s3Info = S3CmsTools.S3AccountInformationFromSettings();
+            _remotePreviewServer = new S3PreviewServer(s3Info);
+
+
+            window.StatusContext.RunFireAndForgetWithToastOnError(async () =>
+            {
+                await ThreadSwitcher.ResumeBackgroundAsync();
+                await _remotePreviewServer.StartServer(UserSettingsSingleton.CurrentSettings().SiteDomainName, "");
+            });
+        }
+
+        window.PreviewServerHost = $"localhost:{_remotePreviewServer.ServerPort}";
+
+        window.PreviewContext = new SitePreviewContext(UserSettingsSingleton.CurrentSettings().SiteDomainName,
+            UserSettingsSingleton.CurrentSettings().LocalSiteRootFullDirectory().FullName,
+            UserSettingsSingleton.CurrentSettings().SiteName, $"localhost:{_remotePreviewServer.ServerPort}",
             window.StatusContext,
             initialUrl);
 

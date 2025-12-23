@@ -1140,4 +1140,14 @@ public partial class CmsCommonCommands
 
         await sitePreviewWindow.PositionWindowAndShowOnUiThread();
     }
+
+    [NonBlockingCommand]
+    public async Task ShowS3SitePreviewWindow()
+    {
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        var sitePreviewWindow = await SiteOnDiskPreviewWindow.CreateInstanceS3();
+
+        await sitePreviewWindow.PositionWindowAndShowOnUiThread();
+    }
 }
