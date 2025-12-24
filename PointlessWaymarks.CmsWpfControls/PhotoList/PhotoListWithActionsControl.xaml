@@ -49,6 +49,7 @@
             </MenuItem>
             <MenuItem Header="Processing">
                 <MenuItem Command="{Binding AddIntersectionTagsToSelectedCommand}" Header="Add Intersection Tags" />
+                <MenuItem Command="{Binding PhotoTitleToFilenameCommand}" Header="Rename File to Title" />
                 <MenuItem Command="{Binding ListContext.GenerateHtmlSelectedCommand}" Header="Generate Html" />
                 <MenuItem Command="{Binding ForcedResizeCommand}" Header="Reprocess Photo" />
                 <MenuItem Command="{Binding RegenerateHtmlAndReprocessPhotoForSelectedCommand}" Header="Reprocess Photo and Generate Html" />

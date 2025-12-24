@@ -424,8 +424,105 @@ public partial class PhotoListWithActionsContext
         if (!File.Exists(selectedFile)) return;
         var file = new FileInfo(selectedFile);
 
-        var metadataWindow = await FileMetadataDisplayWindow.CreateInstance(file.FullName, UserSettingsSingleton.CurrentSettings().FfprobeExe());
+        var metadataWindow =
+            await FileMetadataDisplayWindow.CreateInstance(file.FullName,
+                UserSettingsSingleton.CurrentSettings().FfprobeExe());
         await metadataWindow.PositionWindowAndShowOnUiThread();
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task PhotoTitleToFilename()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var frozenSelected = SelectedListItems();
+
+        var settings = UserSettingsSingleton.CurrentSettings();
+
+        var errors = new List<string>();
+        var successCounter = 0;
+
+        foreach (var loopPhoto in frozenSelected)
+        {
+            if (string.IsNullOrWhiteSpace(loopPhoto.DbEntry.Title)) continue;
+
+            try
+            {
+                var selectedFile = settings.LocalMediaArchivePhotoContentFile(loopPhoto.DbEntry);
+
+                if (selectedFile is null)
+                {
+                    errors.Add($"{loopPhoto.DbEntry.Title} - No file found?");
+                    continue;
+                }
+
+                if (selectedFile is not { Exists: true })
+                {
+                    errors.Add($"{loopPhoto.DbEntry.Title} - file {selectedFile.FullName} does not exist?");
+                    continue;
+                }
+
+                var cleanedName = SlugTools.CreateSlug(false, loopPhoto.DbEntry.Title.TrimNullToEmpty());
+
+                if (string.IsNullOrWhiteSpace(cleanedName))
+                {
+                    errors.Add($"{loopPhoto.DbEntry.Title} - Can't rename the file to an empty string...");
+                    continue;
+                }
+
+                if (!FileAndFolderTools.IsNoUrlEncodingNeeded(cleanedName))
+                {
+                    errors.Add(
+                        $"{loopPhoto.DbEntry.Title} - {cleanedName} - File Names must be limited to A - Z a - z 0 - 9 - . _");
+                    continue;
+                }
+
+                var moveToName = Path.Combine(selectedFile.Directory?.FullName ?? string.Empty,
+                    $"{cleanedName}{Path.GetExtension(selectedFile.Name)}");
+
+                if (File.Exists(moveToName))
+                {
+                    errors.Add($"{loopPhoto.DbEntry.Title} - {moveToName} - Suggested new Filename Already Exists");
+                    continue;
+                }
+
+                try
+                {
+                    File.Copy(selectedFile.FullName, moveToName);
+                }
+                catch (Exception e)
+                {
+                    errors.Add($"{loopPhoto.DbEntry.Title} - {moveToName} - {e.Message}");
+                    continue;
+                }
+
+                var finalFile = new FileInfo(moveToName);
+                loopPhoto.DbEntry.OriginalFileName = finalFile.Name;
+
+                var saveResult = await PhotoGenerator.SaveAndGenerateHtml(loopPhoto.DbEntry, finalFile, false, null,
+                    StatusContext.ProgressTracker());
+
+                if (saveResult.generationReturn.HasError)
+                {
+                    errors.Add(
+                        $"{loopPhoto.DbEntry.Title} - {moveToName} - {saveResult.generationReturn.ToErrorString()}");
+                    continue;
+                }
+
+                successCounter++;
+            }
+            catch (Exception e)
+            {
+                errors.Add($"{loopPhoto.DbEntry.Title} - {e.Message}");
+            }
+        }
+
+        if (errors.Any())
+            await StatusContext.ShowMessageWithOkButton("Errors Renaming",
+                $"{successCounter} Succeeded, {errors.Count} Failed: {Environment.NewLine}{Environment.NewLine}{string.Join($"{Environment.NewLine}{Environment.NewLine}", errors)}");
+        else
+            await StatusContext.ToastSuccess($"Renamed {successCounter} files.");
     }
 
     [BlockingCommand]
@@ -706,7 +803,8 @@ public partial class PhotoListWithActionsContext
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        var metadataWindow = await FileMetadataDisplayWindow.CreateInstance(archiveFile.FullName, UserSettingsSingleton.CurrentSettings().FfprobeExe());
+        var metadataWindow = await FileMetadataDisplayWindow.CreateInstance(archiveFile.FullName,
+            UserSettingsSingleton.CurrentSettings().FfprobeExe());
         await metadataWindow.PositionWindowAndShowOnUiThread();
     }
 
