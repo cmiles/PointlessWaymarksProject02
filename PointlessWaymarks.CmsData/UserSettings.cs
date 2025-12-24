@@ -13,6 +13,7 @@ public partial class UserSettings
     ///     UserSettingsUtilities for general purpose use.
     /// </summary>
     public string DatabaseFile { get; set; } = string.Empty;
+
     public string DefaultCreatedBy { get; set; } = string.Empty;
     public bool FeatureIntersectionTagOnImport { get; set; }
     public string FeatureIntersectionTagSettingsFile { get; set; } = string.Empty;
@@ -21,6 +22,7 @@ public partial class UserSettings
     public string FooterSnippet { get; set; } = string.Empty;
     public bool GeoJsonHasPublicDownloadLinkByDefault { get; set; }
     public bool ImagePagesHaveLinksToImageSizesByDefault { get; set; }
+    public string IniType { get; set; } = "PointlessWaymarksCms";
     public double LatitudeDefault { get; set; }
     public bool LinesHavePublicDownloadLinkByDefault { get; set; }
     public bool LinesShowContentReferencesOnMapByDefault { get; set; }
@@ -37,6 +39,7 @@ public partial class UserSettings
     ///     represent the full path.
     /// </summary>
     public string LocalSiteRootDirectory { get; set; } = string.Empty;
+
     public double LongitudeDefault { get; set; }
     public bool MainFeedFilesDefault { get; set; }
     public bool MainFeedGeoJsonDefault { get; set; }

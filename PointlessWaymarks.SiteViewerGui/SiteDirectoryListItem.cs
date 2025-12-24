@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using PointlessWaymarks.LlamaAspects;
 
 namespace PointlessWaymarks.SiteViewerGui;
@@ -6,5 +6,5 @@ namespace PointlessWaymarks.SiteViewerGui;
 [NotifyPropertyChanged]
 public partial class SiteDirectoryListItem
 {
-    public DirectoryInfo SiteDirectory { get; set; }
+    public required DirectoryInfo SiteDirectory { get; set; }
 }

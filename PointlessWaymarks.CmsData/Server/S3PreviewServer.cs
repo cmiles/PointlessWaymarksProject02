@@ -20,14 +20,14 @@ public class S3PreviewServer : IDisposable
     private readonly SemaphoreSlim _cacheLock = new(1, 1);
     private readonly byte[] _encryptionIv;
     private readonly byte[] _encryptionKey;
-    private readonly IS3AccountInformation? _s3AccountInfo;
-    private readonly AmazonS3Client? _s3Client;
+    private readonly IS3AccountInformation _s3AccountInfo;
+    private readonly AmazonS3Client _s3Client;
     private bool _disposed;
 
-    public S3PreviewServer(IS3AccountInformation? s3AccountInfo = null)
+    public S3PreviewServer(IS3AccountInformation s3AccountInfo)
     {
         _s3AccountInfo = s3AccountInfo;
-        _s3Client = s3AccountInfo?.S3Client();
+        _s3Client = s3AccountInfo.S3Client();
 
         // Create encrypted cache directory in temp storage
         _cacheDirectory = Path.Combine(

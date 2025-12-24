@@ -210,7 +210,7 @@ public partial class UserSettingsEditorContext
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        CloudCredentials.RemoveS3SiteCredentials();
+        CloudStorageCredentialsFromUserSettings.RemoveS3SiteCredentials();
     }
 
     [BlockingCommand]
@@ -226,7 +226,7 @@ public partial class UserSettingsEditorContext
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        CloudCredentials.RemoveS3ServiceUrls();
+        CloudStorageCredentialsFromUserSettings.RemoveS3ServiceUrls();
     }
 
     [BlockingCommand]
@@ -495,7 +495,7 @@ public partial class UserSettingsEditorContext
             return;
         }
 
-        CloudCredentials.SaveS3SiteCredential(cleanedKey, cleanedSecret);
+        CloudStorageCredentialsFromUserSettings.SaveS3SiteCredential(cleanedKey, cleanedSecret);
 
         if (EditorSettings.SiteS3CloudProvider != nameof(S3Providers.Amazon))
         {
@@ -513,7 +513,7 @@ public partial class UserSettingsEditorContext
                 return;
             }
 
-            CloudCredentials.SaveS3ServiceUrl(cleanedServiceUrl);
+            CloudStorageCredentialsFromUserSettings.SaveS3ServiceUrl(cleanedServiceUrl);
         }
     }
 

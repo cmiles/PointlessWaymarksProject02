@@ -10,6 +10,7 @@ using PointlessWaymarks.CmsData.Server;
 using PointlessWaymarks.CmsWpfControls.SitePreview;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
+using PointlessWaymarks.SiteViewerGui.Controls;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.ProgramUpdateMessage;
 using PointlessWaymarks.WpfCommon.Status;
@@ -70,7 +71,7 @@ public partial class MainWindow
                 SettingsFileChooser =
                     await SiteChooserContext.CreateInstance(StatusContext, RecentSettingsFilesNames);
 
-                SettingsFileChooser.SiteSettingsFileChosen += SiteChooserOnSiteSettingsFileChosenEvent;
+                SettingsFileChooser.SiteSettingsFileChosen += SiteChooserOnCmsSettingsFileChosenEvent;
                 SettingsFileChooser.SiteDirectoryChosen += SettingsFileChooserOnSiteDirectoryChosenEvent;
             });
         }
@@ -85,6 +86,8 @@ public partial class MainWindow
         }
     }
 
+    public bool CloudViewerMode { get; set; }
+
     public string InfoTitle { get; set; }
     public string InitialPage { get; set; }
     public string LocalFolder { get; set; }
@@ -92,6 +95,8 @@ public partial class MainWindow
     public SitePreviewContext? PreviewContext { get; set; }
     public string PreviewServerHost { get; set; } = string.Empty;
     public string RecentSettingsFilesNames { get; set; } = string.Empty;
+
+    public string SettingsFile { get; set; } = string.Empty;
     public SiteChooserContext? SettingsFileChooser { get; set; }
     public bool ShowSettingsFileChooser { get; set; }
     public string SiteName { get; set; }
@@ -125,6 +130,42 @@ public partial class MainWindow
 
         ShowSettingsFileChooser = false;
 
+        if (CloudViewerMode)
+            await LoadDataCloud();
+        else
+            await LoadDataLocal();
+    }
+
+    private async Task LoadDataCloud()
+    {
+        var settings =
+            await CloudViewerSettings.ReadFromSettingsFile(new FileInfo(SettingsFile), StatusContext.ProgressTracker());
+
+        LocalFolder = string.Empty;
+        SiteUrl = settings.CloudViewerSiteDomain;
+        SiteName = settings.CloudViewerSettingsName;
+
+        var server = new S3PreviewServer(settings.S3AccountInformation());
+
+        StatusContext.RunFireAndForgetWithToastOnError(async () =>
+        {
+            await ThreadSwitcher.ResumeBackgroundAsync();
+            await server.StartServer(SiteUrl, string.Empty);
+        });
+
+        PreviewServerHost = $"localhost:{server.ServerPort}";
+
+        PreviewContext = new SitePreviewContext(SiteUrl,
+            LocalFolder,
+            SiteName, PreviewServerHost, StatusContext);
+
+        InfoTitle += $" - {PreviewContext.SiteMappingNote}";
+
+        PreviewContext.NewWindowRequestedAction = NewWindowRequestedAction;
+    }
+
+    private async Task LoadDataLocal()
+    {
         if (string.IsNullOrWhiteSpace(LocalFolder)) LocalFolder = Environment.CurrentDirectory;
 
         if (string.IsNullOrWhiteSpace(SiteUrl) || string.IsNullOrWhiteSpace(SiteName))
@@ -267,9 +308,70 @@ public partial class MainWindow
         }
         catch (Exception e)
         {
-            Log.Error(e, "SiteViewerGui MainWindow exception in private async void NewWindowRequestedAction(CoreWebView2NewWindowRequestedEventArgs navigationArgs)");
+            Log.Error(e,
+                "SiteViewerGui MainWindow exception in private async void NewWindowRequestedAction(CoreWebView2NewWindowRequestedEventArgs navigationArgs)");
             _ = StatusContext.ShowMessageWithOkButton("Error With New Window Request", e.ToString());
         }
+    }
+
+    private async Task SettingsFileChooserSettingsFileUpdated(
+        (string userInput, List<string> fileList) settingReturn)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (string.IsNullOrWhiteSpace(settingReturn.userInput))
+        {
+            await StatusContext.ToastError("Error - Nothing Selected?");
+            return;
+        }
+
+        var settingsFile = new FileInfo(settingReturn.userInput);
+
+        if (!settingsFile.Exists)
+        {
+            await StatusContext.ToastError($"Error - File {settingsFile.FullName} Does Not Exist");
+            return;
+        }
+
+        var fileList = settingReturn.fileList;
+
+        if (fileList.Contains(UserSettingsUtilities.SettingsFileFullName))
+            fileList.Remove(UserSettingsUtilities.SettingsFileFullName);
+
+        fileList = new List<string> { UserSettingsUtilities.SettingsFileFullName }.Concat(fileList).ToList();
+
+        if (fileList.Count > 10)
+            fileList = fileList.Take(10).ToList();
+
+        RecentSettingsFilesNames = string.Join("|", fileList);
+
+        var fileType = IniTypeHelper.GetIniType(settingsFile);
+
+        if (fileType == IniTypeHelper.IniTypes.Unknown)
+        {
+            await StatusContext.ToastError($"Error - File {settingsFile.FullName} Not Recognized");
+            return;
+        }
+
+        SettingsFile = settingReturn.userInput;
+
+        if (fileType == IniTypeHelper.IniTypes.PointlessWaymarksCms)
+        {
+            UserSettingsUtilities.SettingsFileFullName = settingReturn.userInput;
+
+            StatusContext.Progress($"Using CMS Settings {UserSettingsUtilities.SettingsFileFullName}");
+
+            LocalFolder = UserSettingsSingleton.CurrentSettings().LocalSiteRootFullDirectory().FullName;
+            SiteUrl = new Uri(UserSettingsSingleton.CurrentSettings().SiteUrl()).Host;
+            SiteName = UserSettingsSingleton.CurrentSettings().SiteName;
+        }
+
+        if (fileType == IniTypeHelper.IniTypes.CloudViewer)
+        {
+            CloudViewerMode = true;
+        }
+
+        StatusContext.RunFireAndForgetBlockingTask(LoadData);
     }
 
     private async Task SettingsFileChooserOnDirectoryUpdated(
@@ -310,40 +412,6 @@ public partial class MainWindow
         StatusContext.RunFireAndForgetBlockingTask(LoadData);
     }
 
-    private async Task SettingsFileChooserOnSettingsFileUpdated(
-        (string userInput, List<string> fileList) settingReturn)
-    {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (string.IsNullOrWhiteSpace(settingReturn.userInput))
-        {
-            await StatusContext.ToastError("Error - Nothing Selected?");
-            return;
-        }
-
-        UserSettingsUtilities.SettingsFileFullName = settingReturn.userInput;
-
-        StatusContext.Progress($"Using {UserSettingsUtilities.SettingsFileFullName}");
-
-        var fileList = settingReturn.fileList;
-
-        if (fileList.Contains(UserSettingsUtilities.SettingsFileFullName))
-            fileList.Remove(UserSettingsUtilities.SettingsFileFullName);
-
-        fileList = new List<string> { UserSettingsUtilities.SettingsFileFullName }.Concat(fileList).ToList();
-
-        if (fileList.Count > 10)
-            fileList = fileList.Take(10).ToList();
-
-        RecentSettingsFilesNames = string.Join("|", fileList);
-
-        LocalFolder = UserSettingsSingleton.CurrentSettings().LocalSiteRootFullDirectory().FullName;
-        SiteUrl = new Uri(UserSettingsSingleton.CurrentSettings().SiteUrl()).Host;
-        SiteName = UserSettingsSingleton.CurrentSettings().SiteName;
-
-        StatusContext.RunFireAndForgetBlockingTask(LoadData);
-    }
-
 
     private void SettingsFileChooserOnSiteDirectoryChosenEvent(object? sender,
         (string userString, List<string> recentFiles) e)
@@ -351,9 +419,10 @@ public partial class MainWindow
         StatusContext.RunFireAndForgetBlockingTask(async () => await SettingsFileChooserOnDirectoryUpdated(e));
     }
 
-    private void SiteChooserOnSiteSettingsFileChosenEvent(object? sender,
+
+    private void SiteChooserOnCmsSettingsFileChosenEvent(object? sender,
         (string userString, List<string> recentFiles) e)
     {
-        StatusContext.RunFireAndForgetBlockingTask(async () => await SettingsFileChooserOnSettingsFileUpdated(e));
+        StatusContext.RunFireAndForgetBlockingTask(async () => await SettingsFileChooserSettingsFileUpdated(e));
     }
 }

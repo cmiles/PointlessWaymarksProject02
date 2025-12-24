@@ -1778,7 +1778,7 @@ public static class UserSettingsUtilities
     /// <param name="progress"></param>
     /// <returns></returns>
     /// <exception cref="InvalidDataException"></exception>
-    private static async Task<IniData?> ReadRawSettingsFromFile(FileInfo fileToRead, IProgress<string>? progress = null)
+    public static async Task<IniData?> ReadRawSettingsFromFile(FileInfo fileToRead, IProgress<string>? progress = null)
     {
         if (!fileToRead.Exists)
             throw new InvalidDataException($"Settings file {fileToRead.FullName} doesn't exist?");

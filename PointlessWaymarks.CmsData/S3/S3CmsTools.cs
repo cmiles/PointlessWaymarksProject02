@@ -143,9 +143,9 @@ public static class S3CmsTools
 
         return new S3AccountInformation
         {
-            ServiceUrl = cloudProvider == S3Providers.Amazon ? () => S3Tools.AmazonServiceUrlFromBucketRegion(UserSettingsSingleton.CurrentSettings().SiteS3BucketRegion) : CloudCredentials.GetS3ServiceUrl,
-            AccessKey = () => CloudCredentials.GetS3SiteCredentials().accessKey,
-            Secret = () => CloudCredentials.GetS3SiteCredentials().secret,
+            ServiceUrl = cloudProvider == S3Providers.Amazon ? () => S3Tools.AmazonServiceUrlFromBucketRegion(UserSettingsSingleton.CurrentSettings().SiteS3BucketRegion) : CloudStorageCredentialsFromUserSettings.GetS3ServiceUrl,
+            AccessKey = () => CloudStorageCredentialsFromUserSettings.GetS3SiteCredentials().accessKey,
+            Secret = () => CloudStorageCredentialsFromUserSettings.GetS3SiteCredentials().secret,
             BucketName = () => UserSettingsSingleton.CurrentSettings().SiteS3Bucket,
             FullFileNameForJsonUploadInformation = () =>
                 Path.Combine(UserSettingsSingleton.CurrentSettings().LocalScriptsDirectory().FullName,

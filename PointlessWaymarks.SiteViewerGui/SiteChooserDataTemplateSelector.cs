@@ -1,10 +1,11 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace PointlessWaymarks.SiteViewerGui;
 
 public class SiteChooserDataTemplateSelector : DataTemplateSelector
 {
+    public DataTemplate? CloudViewerSettingsFileTemplate { get; set; }
     public DataTemplate? SiteDirectoryTemplate { get; set; }
     public DataTemplate? SiteSettingsFileTemplate { get; set; }
 
@@ -14,6 +15,7 @@ public class SiteChooserDataTemplateSelector : DataTemplateSelector
         {
             SiteSettingsFileListItem => SiteSettingsFileTemplate,
             SiteDirectoryListItem => SiteDirectoryTemplate,
+            CloudViewerSettingsFileListItem => CloudViewerSettingsFileTemplate,
             _ => null
         };
     }
