@@ -1,22 +1,20 @@
 using System.ComponentModel;
 using System.Windows;
-using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.Status;
 
 namespace PointlessWaymarks.SiteViewerGui.Controls;
 
 /// <summary>
-///     Interaction logic for CloudViewerSettingsEditorWindow.xaml
+///     Interaction logic for OpenCloudViewerSettingsEditorWindow.xaml
 /// </summary>
-[NotifyPropertyChanged]
-public partial class CloudViewerSettingsEditorWindow : Window
+public partial class OpenCloudViewerSettingsEditorWindow : Window
 {
     private bool _saveSuccessful;
 
-    public EventHandler<CloudViewerSettingsEditorContext>? CloudSettingsSaved;
+    public EventHandler<OpenCloudViewerSettingsEditorContext>? CloudSettingsSaved;
 
-    public CloudViewerSettingsEditorWindow(CloudViewerSettingsEditorContext context,
+    public OpenCloudViewerSettingsEditorWindow(OpenCloudViewerSettingsEditorContext context,
         StatusControlContext statusContext)
     {
         InitializeComponent();
@@ -34,7 +32,7 @@ public partial class CloudViewerSettingsEditorWindow : Window
         };
     }
 
-    public CloudViewerSettingsEditorContext Context { get; set; }
+    public OpenCloudViewerSettingsEditorContext Context { get; set; }
 
     public StatusControlContext StatusContext { get; set; }
 
@@ -60,7 +58,7 @@ public partial class CloudViewerSettingsEditorWindow : Window
         }
     }
 
-    public static async Task<CloudViewerSettingsEditorWindow> CreateInstance(CloudViewerSettings settings,
+    public static async Task<OpenCloudViewerSettingsEditorWindow> CreateInstance(OpenCloudViewerSettings settings,
         string settingsFilename)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -68,11 +66,11 @@ public partial class CloudViewerSettingsEditorWindow : Window
         var factoryStatus = await StatusControlContext.CreateInstance();
 
         var factoryContext =
-            await CloudViewerSettingsEditorContext.CreateInstance(factoryStatus, settings, settingsFilename);
+            await OpenCloudViewerSettingsEditorContext.CreateInstance(factoryStatus, settings, settingsFilename);
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        var window = new CloudViewerSettingsEditorWindow(factoryContext, factoryStatus);
+        var window = new OpenCloudViewerSettingsEditorWindow(factoryContext, factoryStatus);
 
         return window;
     }
@@ -81,7 +79,7 @@ public partial class CloudViewerSettingsEditorWindow : Window
     ///     Shows the window as a dialog and returns both the dialog result and the context
     /// </summary>
     /// <returns>Tuple of (DialogResult, Context) where DialogResult is true if saved, false/null if cancelled</returns>
-    public (bool? dialogResult, CloudViewerSettingsEditorContext context) ShowDialogAndGetContext()
+    public (bool? dialogResult, OpenCloudViewerSettingsEditorContext context) ShowDialogAndGetContext()
     {
         var result = ShowDialog();
         return (result, Context);
@@ -91,7 +89,7 @@ public partial class CloudViewerSettingsEditorWindow : Window
     ///     Shows the window as a dialog asynchronously and returns both the dialog result and the context
     /// </summary>
     /// <returns>Tuple of (DialogResult, Context) where DialogResult is true if saved, false/null if cancelled</returns>
-    public async Task<(bool? dialogResult, CloudViewerSettingsEditorContext context)> ShowDialogAndGetContextAsync()
+    public async Task<(bool? dialogResult, OpenCloudViewerSettingsEditorContext context)> ShowDialogAndGetContextAsync()
     {
         await ThreadSwitcher.ResumeForegroundAsync();
         var result = ShowDialog();

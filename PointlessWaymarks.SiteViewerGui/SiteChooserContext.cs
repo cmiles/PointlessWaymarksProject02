@@ -79,34 +79,6 @@ public partial class SiteChooserContext
             (possibleFile.FullName, StringsFromItems()));
     }
 
-
-    [NonBlockingCommand]
-    private async Task CreateCloudViewSettings()
-    {
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        var window = await CloudViewerSettingsEditorWindow.CreateInstance(new CloudViewerSettings(), string.Empty);
-        window.Owner = Application.Current.Windows.OfType<Window>().FirstOrDefault(x => x.IsActive) ??
-                       Application.Current.Windows.OfType<Window>().FirstOrDefault();
-        window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-
-        window.CloudSettingsSaved += async void (x, args) =>
-        {
-            try
-            {
-                await ThreadSwitcher.ResumeBackgroundAsync();
-                SiteSettingsFileChosen?.Invoke(this,
-                    (args.SettingsFullFileName, StringsFromItems()));
-            }
-            catch (Exception e)
-            {
-                _ = StatusContext.ToastError(e.Message);
-            }
-        };
-
-        window.ShowDialog();
-    }
-
     public static async Task<SiteChooserContext> CreateInstance(StatusControlContext? statusContext,
         string recentSettingFiles)
     {
@@ -130,7 +102,64 @@ public partial class SiteChooserContext
     }
 
     [NonBlockingCommand]
-    private async Task LaunchRecentCloudViewerSettingsFile(CloudViewerSettingsFileListItem? settingsListItem)
+    private async Task CreateOpenCloudViewSettings()
+    {
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        var window =
+            await OpenCloudViewerSettingsEditorWindow.CreateInstance(new OpenCloudViewerSettings(), string.Empty);
+        window.Owner = Application.Current.Windows.OfType<Window>().FirstOrDefault(x => x.IsActive) ??
+                       Application.Current.Windows.OfType<Window>().FirstOrDefault();
+        window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+
+        window.CloudSettingsSaved += async void (x, args) =>
+        {
+            try
+            {
+                await ThreadSwitcher.ResumeBackgroundAsync();
+                SiteSettingsFileChosen?.Invoke(this,
+                    (args.SettingsFullFileName, StringsFromItems()));
+            }
+            catch (Exception e)
+            {
+                _ = StatusContext.ToastError(e.Message);
+            }
+        };
+
+        window.ShowDialog();
+    }
+
+
+    [NonBlockingCommand]
+    private async Task CreateSecureCloudViewSettings()
+    {
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        var window =
+            await SecureCloudViewerSettingsEditorWindow.CreateInstance(new SecureCloudViewerSettings(), string.Empty);
+        window.Owner = Application.Current.Windows.OfType<Window>().FirstOrDefault(x => x.IsActive) ??
+                       Application.Current.Windows.OfType<Window>().FirstOrDefault();
+        window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+
+        window.CloudSettingsSaved += async void (x, args) =>
+        {
+            try
+            {
+                await ThreadSwitcher.ResumeBackgroundAsync();
+                SiteSettingsFileChosen?.Invoke(this,
+                    (args.SettingsFullFileName, StringsFromItems()));
+            }
+            catch (Exception e)
+            {
+                _ = StatusContext.ToastError(e.Message);
+            }
+        };
+
+        window.ShowDialog();
+    }
+
+    [NonBlockingCommand]
+    private async Task LaunchRecentCloudViewerSettingsFile(SecureCloudViewerSettingsFileListItem? settingsListItem)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -239,14 +268,25 @@ public partial class SiteChooserContext
                             { ParsedSettings = readResult, SettingsFile = loopFileInfo });
                         await ThreadSwitcher.ResumeBackgroundAsync();
                     }
-                    else if (fileType == IniTypeHelper.IniTypes.CloudViewer)
+                    else if (fileType == IniTypeHelper.IniTypes.SecureCloudViewer)
                     {
                         var newSettings =
-                            await CloudViewerSettings.ReadFromSettingsFile(loopFileInfo,
+                            await SecureCloudViewerSettings.ReadFromSettingsFile(loopFileInfo,
                                 StatusContext.ProgressTracker());
 
                         await ThreadSwitcher.ResumeForegroundAsync();
-                        Items.Add(new CloudViewerSettingsFileListItem
+                        Items.Add(new SecureCloudViewerSettingsFileListItem
+                            { ParsedSettings = newSettings, SettingsFile = loopFileInfo });
+                        await ThreadSwitcher.ResumeBackgroundAsync();
+                    }
+                    else if (fileType == IniTypeHelper.IniTypes.OpenCloudViewer)
+                    {
+                        var newSettings =
+                            await OpenCloudViewerSettings.ReadFromSettingsFile(loopFileInfo,
+                                StatusContext.ProgressTracker());
+
+                        await ThreadSwitcher.ResumeForegroundAsync();
+                        Items.Add(new OpenCloudViewerSettingsFileListItem
                             { ParsedSettings = newSettings, SettingsFile = loopFileInfo });
                         await ThreadSwitcher.ResumeBackgroundAsync();
                     }

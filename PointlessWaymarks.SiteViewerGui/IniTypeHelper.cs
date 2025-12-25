@@ -8,8 +8,9 @@ public static class IniTypeHelper
     public enum IniTypes
     {
         Unknown = 0,
-        CloudViewer = 1,
-        PointlessWaymarksCms = 2
+        PointlessWaymarksCms = 1,
+        SecureCloudViewer = 2,
+        OpenCloudViewer = 3
     }
 
     public static IniTypes GetIniType(FileInfo fileToCheck)
@@ -20,8 +21,9 @@ public static class IniTypeHelper
         if (!iniTypeExists) return IniTypes.Unknown;
         return iniTypeValue switch
         {
-            "CloudViewer" => IniTypes.CloudViewer,
             "PointlessWaymarksCms" => IniTypes.PointlessWaymarksCms,
+            "SecureCloudViewer" => IniTypes.SecureCloudViewer,
+            "OpenCloudViewer" => IniTypes.OpenCloudViewer,
             _ => IniTypes.Unknown
         };
     }

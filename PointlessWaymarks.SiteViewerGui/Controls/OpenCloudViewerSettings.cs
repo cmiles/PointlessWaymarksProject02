@@ -1,7 +1,6 @@
 using System.IO;
 using IniParser;
 using PointlessWaymarks.CmsData;
-using PointlessWaymarks.CmsData.S3;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.CommonTools.S3;
 using PointlessWaymarks.LlamaAspects;
@@ -9,8 +8,10 @@ using PointlessWaymarks.LlamaAspects;
 namespace PointlessWaymarks.SiteViewerGui.Controls;
 
 [NotifyPropertyChanged]
-public partial class CloudViewerSettings
+public partial class OpenCloudViewerSettings
 {
+    public string CloudServiceUrl { get; set; } = string.Empty;
+    public string CloudViewerAccessKey { get; set; } = string.Empty;
     public string CloudViewerBucket { get; set; } = string.Empty;
 
     //2025/12/23 - The verbose names are a small hedge against collisions if an unexpected or incorrect .ini
@@ -18,12 +19,13 @@ public partial class CloudViewerSettings
     //for now.
     public string CloudViewerProvider { get; set; } = string.Empty;
     public string CloudViewerRegion { get; set; } = string.Empty;
+    public string CloudViewerSecret { get; set; } = string.Empty;
     public Guid CloudViewerSettingsId { get; set; } = Guid.NewGuid();
     public string CloudViewerSettingsName { get; set; } = string.Empty;
     public string CloudViewerSiteDomain { get; set; } = string.Empty;
-    public string IniType { get; set; } = "CloudViewer";
+    public string IniType { get; set; } = "OpenCloudViewer";
 
-    public static async Task<CloudViewerSettings> ReadFromSettingsFile(FileInfo fileToRead,
+    public static async Task<OpenCloudViewerSettings> ReadFromSettingsFile(FileInfo fileToRead,
         IProgress<string>? progress = null)
     {
         var iniResult = await UserSettingsUtilities.ReadRawSettingsFromFile(fileToRead, progress);
@@ -31,9 +33,9 @@ public partial class CloudViewerSettings
         if (iniResult is null)
             throw new NullReferenceException($"Trying to read Settings from {fileToRead.FullName} returned null");
 
-        var currentProperties = typeof(CloudViewerSettings).GetProperties().ToList();
+        var currentProperties = typeof(OpenCloudViewerSettings).GetProperties().ToList();
 
-        var readResult = new CloudViewerSettings();
+        var readResult = new OpenCloudViewerSettings();
 
         foreach (var loopProperties in currentProperties)
         {
@@ -102,9 +104,9 @@ public partial class CloudViewerSettings
         {
             ServiceUrl = cloudProvider == S3Providers.Amazon
                 ? () => S3Tools.AmazonServiceUrlFromBucketRegion(CloudViewerRegion)
-                : () => CloudStorageCredentials.GetS3ServiceUrl(CloudViewerSettingsId),
-            AccessKey = () => CloudStorageCredentials.GetS3SiteCredentials(CloudViewerSettingsId).accessKey,
-            Secret = () => CloudStorageCredentials.GetS3SiteCredentials(CloudViewerSettingsId).secret,
+                : () => CloudServiceUrl,
+            AccessKey = () => CloudViewerAccessKey,
+            Secret = () => CloudViewerSecret,
             BucketName = () => CloudViewerBucket,
             FullFileNameForJsonUploadInformation = () =>
                 Path.Combine(FileLocationTools.TempStorageDirectory().FullName,
@@ -115,7 +117,7 @@ public partial class CloudViewerSettings
         };
     }
 
-    public static async Task WriteSettings(CloudViewerSettings toWrite, string saveAsFullFilename)
+    public static async Task WriteSettings(OpenCloudViewerSettings toWrite, string saveAsFullFilename)
     {
         var currentFile = new FileInfo(saveAsFullFilename);
 
@@ -127,7 +129,7 @@ public partial class CloudViewerSettings
 
         var iniResult = (await UserSettingsUtilities.ReadRawSettingsFromFile(currentFile))!;
 
-        var currentProperties = typeof(CloudViewerSettings).GetProperties().ToList();
+        var currentProperties = typeof(OpenCloudViewerSettings).GetProperties().ToList();
 
         foreach (var loopProperties in currentProperties)
         {

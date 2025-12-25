@@ -5,7 +5,8 @@ namespace PointlessWaymarks.SiteViewerGui;
 
 public class SiteChooserDataTemplateSelector : DataTemplateSelector
 {
-    public DataTemplate? CloudViewerSettingsFileTemplate { get; set; }
+    public DataTemplate? OpenCloudViewerSettingsFileTemplate { get; set; }
+    public DataTemplate? SecureCloudViewerSettingsFileTemplate { get; set; }
     public DataTemplate? SiteDirectoryTemplate { get; set; }
     public DataTemplate? SiteSettingsFileTemplate { get; set; }
 
@@ -15,7 +16,8 @@ public class SiteChooserDataTemplateSelector : DataTemplateSelector
         {
             SiteSettingsFileListItem => SiteSettingsFileTemplate,
             SiteDirectoryListItem => SiteDirectoryTemplate,
-            CloudViewerSettingsFileListItem => CloudViewerSettingsFileTemplate,
+            SecureCloudViewerSettingsFileListItem => SecureCloudViewerSettingsFileTemplate,
+            OpenCloudViewerSettingsFileListItem => OpenCloudViewerSettingsFileTemplate,
             _ => null
         };
     }

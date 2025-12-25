@@ -12,11 +12,11 @@ namespace PointlessWaymarks.SiteViewerGui.Controls;
 
 [NotifyPropertyChanged]
 [GenerateStatusCommands]
-public partial class CloudViewerSettingsEditorContext
+public partial class SecureCloudViewerSettingsEditorContext
 {
     public EventHandler<bool>? EditFinished;
 
-    public CloudViewerSettingsEditorContext(StatusControlContext statusContext, CloudViewerSettings toLoad,
+    public SecureCloudViewerSettingsEditorContext(StatusControlContext statusContext, SecureCloudViewerSettings toLoad,
         string settingsFullFileName)
     {
         StatusContext = statusContext;
@@ -30,7 +30,7 @@ public partial class CloudViewerSettingsEditorContext
 
     public List<string> CloudProviderChoices { get; set; }
 
-    public CloudViewerSettings EditorSettings { get; set; }
+    public SecureCloudViewerSettings EditorSettings { get; set; }
 
     public static string HelpMarkdownDomain =>
         "This is the subdomain + domain and optionally port - for example 'PointlessWaymarks.com' or 'software.pointlesswaymarks.com' - without the protocol (no 'https' for example).";
@@ -53,14 +53,14 @@ public partial class CloudViewerSettingsEditorContext
         EditFinished?.Invoke(this, false);
     }
 
-    public static async Task<CloudViewerSettingsEditorContext> CreateInstance(StatusControlContext? statusContext,
-        CloudViewerSettings toLoad, string settingsFullFileName)
+    public static async Task<SecureCloudViewerSettingsEditorContext> CreateInstance(StatusControlContext? statusContext,
+        SecureCloudViewerSettings toLoad, string settingsFullFileName)
     {
         var factoryStatusContext = await StatusControlContext.CreateInstance(statusContext);
 
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        return new CloudViewerSettingsEditorContext(factoryStatusContext, toLoad, settingsFullFileName);
+        return new SecureCloudViewerSettingsEditorContext(factoryStatusContext, toLoad, settingsFullFileName);
     }
 
     [BlockingCommand]
@@ -110,7 +110,7 @@ public partial class CloudViewerSettingsEditorContext
         try
         {
             // Write settings to the existing file
-            await CloudViewerSettings.WriteSettings(EditorSettings, SettingsFullFileName);
+            await SecureCloudViewerSettings.WriteSettings(EditorSettings, SettingsFullFileName);
 
             await StatusContext.ToastSuccess($"Settings saved to {SettingsFullFileName}");
 
@@ -166,7 +166,7 @@ public partial class CloudViewerSettingsEditorContext
         try
         {
             // Write settings to the selected file
-            await CloudViewerSettings.WriteSettings(EditorSettings, selectedFileName);
+            await SecureCloudViewerSettings.WriteSettings(EditorSettings, selectedFileName);
 
             // Update the settings file name
             SettingsFullFileName = selectedFileName;

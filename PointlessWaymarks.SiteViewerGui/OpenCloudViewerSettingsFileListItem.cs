@@ -1,12 +1,12 @@
 using System.IO;
-using PointlessWaymarks.CmsData;
 using PointlessWaymarks.LlamaAspects;
+using PointlessWaymarks.SiteViewerGui.Controls;
 
 namespace PointlessWaymarks.SiteViewerGui;
 
 [NotifyPropertyChanged]
-public partial class SiteSettingsFileListItem
+public partial class OpenCloudViewerSettingsFileListItem
 {
-    public required UserSettings ParsedSettings { get; set; }
+    public required OpenCloudViewerSettings ParsedSettings { get; set; }
     public required FileInfo SettingsFile { get; set; }
 }

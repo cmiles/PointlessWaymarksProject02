@@ -1,12 +1,12 @@
-﻿using System.IO;
+using System.IO;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.SiteViewerGui.Controls;
 
 namespace PointlessWaymarks.SiteViewerGui;
 
 [NotifyPropertyChanged]
-public partial class CloudViewerSettingsFileListItem
+public partial class SecureCloudViewerSettingsFileListItem
 {
-    public required CloudViewerSettings ParsedSettings { get; set; }
+    public required SecureCloudViewerSettings ParsedSettings { get; set; }
     public required FileInfo SettingsFile { get; set; }
 }

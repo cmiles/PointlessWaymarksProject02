@@ -87,7 +87,6 @@ public partial class MainWindow
     }
 
     public bool CloudViewerMode { get; set; }
-
     public string InfoTitle { get; set; }
     public string InitialPage { get; set; }
     public string LocalFolder { get; set; }
@@ -95,7 +94,6 @@ public partial class MainWindow
     public SitePreviewContext? PreviewContext { get; set; }
     public string PreviewServerHost { get; set; } = string.Empty;
     public string RecentSettingsFilesNames { get; set; } = string.Empty;
-
     public string SettingsFile { get; set; } = string.Empty;
     public SiteChooserContext? SettingsFileChooser { get; set; }
     public bool ShowSettingsFileChooser { get; set; }
@@ -131,37 +129,22 @@ public partial class MainWindow
         ShowSettingsFileChooser = false;
 
         if (CloudViewerMode)
-            await LoadDataCloud();
-        else
-            await LoadDataLocal();
-    }
-
-    private async Task LoadDataCloud()
-    {
-        var settings =
-            await CloudViewerSettings.ReadFromSettingsFile(new FileInfo(SettingsFile), StatusContext.ProgressTracker());
-
-        LocalFolder = string.Empty;
-        SiteUrl = settings.CloudViewerSiteDomain;
-        SiteName = settings.CloudViewerSettingsName;
-
-        var server = new S3PreviewServer(settings.S3AccountInformation());
-
-        StatusContext.RunFireAndForgetWithToastOnError(async () =>
         {
-            await ThreadSwitcher.ResumeBackgroundAsync();
-            await server.StartServer(SiteUrl, string.Empty);
-        });
-
-        PreviewServerHost = $"localhost:{server.ServerPort}";
-
-        PreviewContext = new SitePreviewContext(SiteUrl,
-            LocalFolder,
-            SiteName, PreviewServerHost, StatusContext);
-
-        InfoTitle += $" - {PreviewContext.SiteMappingNote}";
-
-        PreviewContext.NewWindowRequestedAction = NewWindowRequestedAction;
+            var type = IniTypeHelper.GetIniType(new FileInfo(SettingsFile));
+            switch (type)
+            {
+                case IniTypeHelper.IniTypes.SecureCloudViewer:
+                    await LoadSecureCloud();
+                    break;
+                case IniTypeHelper.IniTypes.OpenCloudViewer:
+                    await LoadOpenCloud();
+                    break;
+            }
+        }
+        else
+        {
+            await LoadDataLocal();
+        }
     }
 
     private async Task LoadDataLocal()
@@ -218,6 +201,64 @@ public partial class MainWindow
         {
             await ThreadSwitcher.ResumeBackgroundAsync();
             await server.StartServer(SiteUrl, LocalFolder);
+        });
+
+        PreviewServerHost = $"localhost:{server.ServerPort}";
+
+        PreviewContext = new SitePreviewContext(SiteUrl,
+            LocalFolder,
+            SiteName, PreviewServerHost, StatusContext);
+
+        InfoTitle += $" - {PreviewContext.SiteMappingNote}";
+
+        PreviewContext.NewWindowRequestedAction = NewWindowRequestedAction;
+    }
+
+    private async Task LoadOpenCloud()
+    {
+        var settings =
+            await OpenCloudViewerSettings.ReadFromSettingsFile(new FileInfo(SettingsFile),
+                StatusContext.ProgressTracker());
+
+        LocalFolder = string.Empty;
+        SiteUrl = settings.CloudViewerSiteDomain;
+        SiteName = settings.CloudViewerSettingsName;
+
+        var server = new S3PreviewServer(settings.S3AccountInformation());
+
+        StatusContext.RunFireAndForgetWithToastOnError(async () =>
+        {
+            await ThreadSwitcher.ResumeBackgroundAsync();
+            await server.StartServer(SiteUrl, string.Empty);
+        });
+
+        PreviewServerHost = $"localhost:{server.ServerPort}";
+
+        PreviewContext = new SitePreviewContext(SiteUrl,
+            LocalFolder,
+            SiteName, PreviewServerHost, StatusContext);
+
+        InfoTitle += $" - {PreviewContext.SiteMappingNote}";
+
+        PreviewContext.NewWindowRequestedAction = NewWindowRequestedAction;
+    }
+
+    private async Task LoadSecureCloud()
+    {
+        var settings =
+            await SecureCloudViewerSettings.ReadFromSettingsFile(new FileInfo(SettingsFile),
+                StatusContext.ProgressTracker());
+
+        LocalFolder = string.Empty;
+        SiteUrl = settings.CloudViewerSiteDomain;
+        SiteName = settings.CloudViewerSettingsName;
+
+        var server = new S3PreviewServer(settings.S3AccountInformation());
+
+        StatusContext.RunFireAndForgetWithToastOnError(async () =>
+        {
+            await ThreadSwitcher.ResumeBackgroundAsync();
+            await server.StartServer(SiteUrl, string.Empty);
         });
 
         PreviewServerHost = $"localhost:{server.ServerPort}";
@@ -314,6 +355,51 @@ public partial class MainWindow
         }
     }
 
+    private async Task SettingsFileChooserOnDirectoryUpdated(
+        (string userInput, List<string> fileList) settingReturn)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (string.IsNullOrWhiteSpace(settingReturn.userInput))
+        {
+            await StatusContext.ToastError("Error with Directory? No name?");
+            return;
+        }
+
+        var directoryInfo = new DirectoryInfo(settingReturn.userInput);
+
+        if (!directoryInfo.Exists)
+        {
+            await StatusContext.ToastError("Error with Directory? Does not exist?");
+            return;
+        }
+
+        StatusContext.Progress($"Using {directoryInfo.FullName}");
+
+        var fileList = settingReturn.fileList;
+
+        if (fileList.Contains(directoryInfo.FullName))
+            fileList.Remove(directoryInfo.FullName);
+
+        fileList = new List<string> { directoryInfo.FullName }.Concat(fileList).ToList();
+
+        if (fileList.Count > 10)
+            fileList = fileList.Take(10).ToList();
+
+        RecentSettingsFilesNames = string.Join("|", fileList);
+
+        LocalFolder = settingReturn.userInput;
+
+        StatusContext.RunFireAndForgetBlockingTask(LoadData);
+    }
+
+
+    private void SettingsFileChooserOnSiteDirectoryChosenEvent(object? sender,
+        (string userString, List<string> recentFiles) e)
+    {
+        StatusContext.RunFireAndForgetBlockingTask(async () => await SettingsFileChooserOnDirectoryUpdated(e));
+    }
+
     private async Task SettingsFileChooserSettingsFileUpdated(
         (string userInput, List<string> fileList) settingReturn)
     {
@@ -366,57 +452,10 @@ public partial class MainWindow
             SiteName = UserSettingsSingleton.CurrentSettings().SiteName;
         }
 
-        if (fileType == IniTypeHelper.IniTypes.CloudViewer)
-        {
+        if (fileType == IniTypeHelper.IniTypes.SecureCloudViewer || fileType == IniTypeHelper.IniTypes.OpenCloudViewer)
             CloudViewerMode = true;
-        }
 
         StatusContext.RunFireAndForgetBlockingTask(LoadData);
-    }
-
-    private async Task SettingsFileChooserOnDirectoryUpdated(
-        (string userInput, List<string> fileList) settingReturn)
-    {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (string.IsNullOrWhiteSpace(settingReturn.userInput))
-        {
-            await StatusContext.ToastError("Error with Directory? No name?");
-            return;
-        }
-
-        var directoryInfo = new DirectoryInfo(settingReturn.userInput);
-
-        if (!directoryInfo.Exists)
-        {
-            await StatusContext.ToastError("Error with Directory? Does not exist?");
-            return;
-        }
-
-        StatusContext.Progress($"Using {directoryInfo.FullName}");
-
-        var fileList = settingReturn.fileList;
-
-        if (fileList.Contains(directoryInfo.FullName))
-            fileList.Remove(directoryInfo.FullName);
-
-        fileList = new List<string> { directoryInfo.FullName }.Concat(fileList).ToList();
-
-        if (fileList.Count > 10)
-            fileList = fileList.Take(10).ToList();
-
-        RecentSettingsFilesNames = string.Join("|", fileList);
-
-        LocalFolder = settingReturn.userInput;
-
-        StatusContext.RunFireAndForgetBlockingTask(LoadData);
-    }
-
-
-    private void SettingsFileChooserOnSiteDirectoryChosenEvent(object? sender,
-        (string userString, List<string> recentFiles) e)
-    {
-        StatusContext.RunFireAndForgetBlockingTask(async () => await SettingsFileChooserOnDirectoryUpdated(e));
     }
 
 
