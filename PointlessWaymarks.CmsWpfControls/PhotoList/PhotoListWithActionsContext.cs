@@ -442,6 +442,7 @@ public partial class PhotoListWithActionsContext
 
         var errors = new List<string>();
         var successCounter = 0;
+        var skipCounter = 0;
 
         foreach (var loopPhoto in frozenSelected)
         {
@@ -475,6 +476,13 @@ public partial class PhotoListWithActionsContext
                 {
                     errors.Add(
                         $"{loopPhoto.DbEntry.Title} - {cleanedName} - File Names must be limited to A - Z a - z 0 - 9 - . _");
+                    continue;
+                }
+
+                if (string.Equals(loopPhoto.DbEntry.OriginalFileName,
+                        $"{cleanedName}{Path.GetExtension(selectedFile.Name)}"))
+                {
+                    skipCounter++;
                     continue;
                 }
 
@@ -520,9 +528,11 @@ public partial class PhotoListWithActionsContext
 
         if (errors.Any())
             await StatusContext.ShowMessageWithOkButton("Errors Renaming",
-                $"{successCounter} Succeeded, {errors.Count} Failed: {Environment.NewLine}{Environment.NewLine}{string.Join($"{Environment.NewLine}{Environment.NewLine}", errors)}");
+                $"{successCounter} Succeeded, {skipCounter} Already Equal, {errors.Count} Failed: {Environment.NewLine}{Environment.NewLine}{string.Join($"{Environment.NewLine}{Environment.NewLine}", errors)}");
         else
-            await StatusContext.ToastSuccess($"Renamed {successCounter} files.");
+        {
+            await StatusContext.ToastSuccess($"Renamed {successCounter} files, {skipCounter} Names already match.");
+        }
     }
 
     [BlockingCommand]
