@@ -94,7 +94,7 @@
                 <simpleMediaPlayer:SimpleMediaPlayerControl Grid.Row="2" DataContext="{Binding VideoContext}" />
                 <StackPanel
                     Grid.Row="3"
-                    Margin="4,12,4,12"
+                    Margin="4,12,4,4"
                     Orientation="Vertical">
                     <TextBox
                         HorizontalAlignment="Center"
@@ -107,6 +107,7 @@
                         </b:Interaction.Behaviors>
                     </TextBox>
                     <Button
+                        Margin="4,6,4,2"
                         HorizontalAlignment="Center"
                         Background="Yellow"
                         Command="{Binding AutoCleanRenameSelectedFileCommand}"
@@ -114,7 +115,7 @@
                         Visibility="{Binding SelectedFileNameHasInvalidCharacters, Converter={StaticResource BooleanToVisibility}}">
                         Auto-Fix File Name
                     </Button>
-                    <TextBox Foreground="Red" FontWeight="Bold" Style="{StaticResource ReadOnlyTextBoxStyle}" Visibility="{Binding VideoIsNotHtmlVideoEmbedFriendly, Converter={StaticResource BooleanToVisibility}}" ToolTip="The video may be valid and play on your computer, but it is likely that it will not display/open/play correctly in a web page or site preview.">Problems with Format! Re-Encode?</TextBox>
+                    <TextBox Margin="4,2,4,0" Foreground="Red" FontWeight="Bold" HorizontalAlignment="Center" Style="{StaticResource ReadOnlyTextBoxStyle}" Visibility="{Binding VideoIsNotHtmlVideoEmbedFriendly, Converter={StaticResource BooleanToVisibility}}" ToolTip="The video may be valid and play on your computer, but it is likely that it will not display/open/play correctly in a web page or site preview.">Problems with Format! Re-Encode?</TextBox>
                 </StackPanel>
                 <WrapPanel
                     Grid.Row="4"
@@ -133,7 +134,7 @@
                     <Button Command="{Binding OpenSelectedFileCommand}">View Video</Button>
                     <Button Command="{Binding OpenSelectedFileDirectoryCommand}">View Directory</Button>
                     <Button
-                        Command="{Binding SaveAndExtractImageFromMp4Command}"
+                        Command="{Binding ReEncodeWithFfmpegCommand}"
                         ToolTip="This will use ffmpeg to re-encode the file - the target is lossless encoding with some light web optimizations."
                         Visibility="{Binding VideoCanBeReEncodedWithFfmpeg, Converter={StaticResource BooleanToVisibility}}">
                         Re-Encode
