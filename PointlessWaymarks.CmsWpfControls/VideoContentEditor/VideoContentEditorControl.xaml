@@ -108,6 +108,7 @@
                     </TextBox>
                     <Button
                         Margin="4,6,4,2"
+                        Padding="12,2,12,2"
                         HorizontalAlignment="Center"
                         Background="Yellow"
                         Command="{Binding AutoCleanRenameSelectedFileCommand}"
