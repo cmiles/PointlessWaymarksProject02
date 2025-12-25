@@ -261,7 +261,8 @@ public partial class ContentListContext : IDragSource, IDropTarget
                             System.Text.Json.JsonSerializer.Deserialize<List<ContentClipboardRepresentation>>(
                                 collectionData);
 
-                        if (contentRefs != null && contentRefs.Any() && contentRefs.Any(c => c.SiteId != Guid.Empty && c.SiteId != currentSiteId))
+                        if (contentRefs != null && contentRefs.Any() &&
+                            contentRefs.Any(c => c.SiteId != Guid.Empty && c.SiteId != currentSiteId))
                         {
                             dropInfo.Effects = DragDropEffects.Copy;
                             return;
@@ -341,12 +342,14 @@ public partial class ContentListContext : IDragSource, IDropTarget
                 if (contentRefs.Any())
                 {
                     var currentSiteId = UserSettingsSingleton.CurrentSettings().SettingsId;
-                    var contentRefsFromOtherSites = contentRefs.Where(c => c.SiteId != Guid.Empty && c.SiteId != currentSiteId).ToList();
-                    
+                    var contentRefsFromOtherSites =
+                        contentRefs.Where(c => c.SiteId != Guid.Empty && c.SiteId != currentSiteId).ToList();
+
                     if (contentRefsFromOtherSites.Any())
                     {
                         StatusContext.RunBlockingTask(async () =>
-                            await ContentClipboardRepresentationHandlers.HandleReferencesFromOtherSites(contentRefsFromOtherSites, StatusContext));
+                            await ContentClipboardRepresentationHandlers.HandleReferencesFromOtherSites(
+                                contentRefsFromOtherSites, StatusContext));
                     }
                 }
             }
@@ -1322,12 +1325,16 @@ public partial class ContentListContext : IDragSource, IDropTarget
             }
 
             if (videoContentExtensions.Contains(Path.GetExtension(loopFile).ToUpperInvariant()))
+            {
                 StatusContext.RunNonBlockingTask(async () =>
                 {
                     await VideoContentEditorWindow.CreateInstance(new FileInfo(loopFile), true);
 
                     await StatusContext.ToastSuccess($"{Path.GetFileName(loopFile)} sent to Video Editor");
                 });
+
+                continue;
+            }
 
             StatusContext.RunNonBlockingTask(async () =>
             {
