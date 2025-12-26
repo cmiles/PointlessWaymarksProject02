@@ -36,11 +36,13 @@
                 <MenuItem Command="{Binding ReportVideoMetadataCommand}" Header="Selected - Metadata to Html" />
                 <MenuItem Command="{Binding VideoMetadataFromPickedFileCommand}" Header="Metadata to Html - Pick File" />
                 <MenuItem Command="{Binding ReportVideoEncodingIssueCommand}" Header="Selected - Check Encoding" />
+                <MenuItem Command="{Binding ReportTitleAndFileNameDoNotMatchCommand}" Header="Title and Filename Don't Match" />
             </MenuItem>
             <MenuItem Header="History">
                 <MenuItem Command="{Binding ListContext.ViewHistorySelectedCommand}" Header="View History" />
             </MenuItem>
             <MenuItem Header="Processing">
+                <MenuItem Command="{Binding VideoTitleToFilenameCommand}" Header="Rename File to Title" />
                 <MenuItem Command="{Binding ListContext.GenerateHtmlSelectedCommand}" Header="Generate Html" />
                 <MenuItem Command="{Binding ListContext.ExtractNewLinksSelectedCommand}" Header="Extract Links" />
             </MenuItem>

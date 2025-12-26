@@ -32,10 +32,14 @@
                 <MenuItem Command="{Binding ListContext.ImportFromOpenExcelInstanceCommand}" Header="Import From Open Excel Application" />
                 <MenuItem Command="{Binding ListContext.SlugifyExcelSelectionInOpenExcelInstanceCommand}" Header="Slugify Selection From Open Excel Application" />
             </MenuItem>
+            <MenuItem Header="Reports">
+                <MenuItem Command="{Binding ReportTitleAndFileNameDoNotMatchCommand}" Header="Title and Filename Don't Match" />
+            </MenuItem>
             <MenuItem Header="History">
                 <MenuItem Command="{Binding ListContext.ViewHistorySelectedCommand}" Header="View History" />
             </MenuItem>
             <MenuItem Header="Processing">
+                <MenuItem Command="{Binding ImageTitleToFilenameCommand}" Header="Rename File to Title" />
                 <MenuItem Command="{Binding ListContext.GenerateHtmlSelectedCommand}" Header="Generate Html" />
                 <MenuItem Command="{Binding ForcedResizeCommand}" Header="Reprocess Image" />
                 <MenuItem Command="{Binding RegenerateHtmlAndReprocessImageForSelectedCommand}" Header="Reprocess Image and Generate Html" />

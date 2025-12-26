@@ -1,10 +1,13 @@
 using System.IO;
 using System.Windows;
+using Microsoft.EntityFrameworkCore;
 using Ookii.Dialogs.Wpf;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.BracketCodes;
+using PointlessWaymarks.CmsData.ContentGeneration;
 using PointlessWaymarks.CmsData.ContentHtml.FileHtml;
 using PointlessWaymarks.CmsData.Database;
+using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.CmsWpfControls.Utility;
 using PointlessWaymarks.CommonTools;
@@ -215,6 +218,22 @@ public partial class FileListWithActionsContext : IListSelectionWithContext<File
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
+    public async Task FileImageLinkCodesToClipboardForSelected()
+    {
+        var finalString = string.Empty;
+
+        foreach (var loopSelected in SelectedListItems())
+            finalString += $"{BracketCodeFileImageLink.Create(loopSelected.DbEntry)}{Environment.NewLine}";
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        Clipboard.SetText(finalString);
+
+        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
     public async Task FilePageLinkCodesToClipboardForSelected()
     {
         var finalString = string.Empty;
@@ -231,18 +250,130 @@ public partial class FileListWithActionsContext : IListSelectionWithContext<File
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    public async Task FileImageLinkCodesToClipboardForSelected()
+    public async Task FileTitleToFilename()
     {
-        var finalString = string.Empty;
+        await ThreadSwitcher.ResumeBackgroundAsync();
 
-        foreach (var loopSelected in SelectedListItems())
-            finalString += $"{BracketCodeFileImageLink.Create(loopSelected.DbEntry)}{Environment.NewLine}";
+        var frozenSelected = SelectedListItems();
 
-        await ThreadSwitcher.ResumeForegroundAsync();
+        var settings = UserSettingsSingleton.CurrentSettings();
 
-        Clipboard.SetText(finalString);
+        var errors = new List<string>();
+        var successCounter = 0;
+        var skipCounter = 0;
 
-        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+        foreach (var loopFile in frozenSelected)
+        {
+            if (string.IsNullOrWhiteSpace(loopFile.DbEntry.Title))
+            {
+                skipCounter++;
+                continue;
+            }
+
+            try
+            {
+                var selectedFile = settings.LocalMediaArchiveFileContentFile(loopFile.DbEntry);
+
+                if (selectedFile is null)
+                {
+                    errors.Add($"{loopFile.DbEntry.Title} - No file found?");
+                    continue;
+                }
+
+                if (selectedFile is not { Exists: true })
+                {
+                    errors.Add($"{loopFile.DbEntry.Title} - file {selectedFile.FullName} does not exist?");
+                    continue;
+                }
+
+                var cleanedName = SlugTools.CreateSlug(false, loopFile.DbEntry.Title.TrimNullToEmpty());
+
+                if (string.IsNullOrWhiteSpace(cleanedName))
+                {
+                    errors.Add($"{loopFile.DbEntry.Title} - Can't rename the file to an empty string...");
+                    continue;
+                }
+
+                if (!FileAndFolderTools.IsNoUrlEncodingNeeded(cleanedName))
+                {
+                    errors.Add(
+                        $"{loopFile.DbEntry.Title} - {cleanedName} - File Names must be limited to A - Z a - z 0 - 9 - . _");
+                    continue;
+                }
+
+                if (string.Equals(loopFile.DbEntry.OriginalFileName,
+                        $"{cleanedName}{Path.GetExtension(selectedFile.Name)}"))
+                {
+                    skipCounter++;
+                    continue;
+                }
+
+                var moveToName = Path.Combine(selectedFile.Directory?.FullName ?? string.Empty,
+                    $"{cleanedName}{Path.GetExtension(selectedFile.Name)}");
+
+                // Check if a different file (not just case difference) already exists
+                if (File.Exists(moveToName) &&
+                    !string.Equals(selectedFile.FullName, moveToName, StringComparison.OrdinalIgnoreCase))
+                {
+                    errors.Add($"{loopFile.DbEntry.Title} - {moveToName} - Suggested new Filename Already Exists");
+                    continue;
+                }
+
+                try
+                {
+                    // For case-only renames, we need to do a two-step rename on case-insensitive filesystems
+                    if (string.Equals(selectedFile.FullName, moveToName, StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(selectedFile.FullName, moveToName, StringComparison.Ordinal))
+                    {
+                        // Case-only rename: use temporary file
+                        var tempName = Path.Combine(selectedFile.Directory?.FullName ?? string.Empty,
+                            $"{Guid.NewGuid()}{Path.GetExtension(selectedFile.Name)}");
+                        File.Move(selectedFile.FullName, tempName);
+                        File.Move(tempName, moveToName);
+                    }
+                    else
+                    {
+                        // Normal copy
+                        File.Copy(selectedFile.FullName, moveToName);
+                    }
+                }
+                catch (Exception e)
+                {
+                    errors.Add($"{loopFile.DbEntry.Title} - {moveToName} - {e.Message}");
+                    continue;
+                }
+
+                var finalFile = new FileInfo(moveToName);
+                loopFile.DbEntry.OriginalFileName = finalFile.Name;
+
+                if (string.IsNullOrWhiteSpace(loopFile.DbEntry.LastUpdatedBy))
+                    loopFile.DbEntry.LastUpdatedBy = loopFile.DbEntry.CreatedBy;
+                if (loopFile.DbEntry.LastUpdatedOn is null || loopFile.DbEntry.LastUpdatedOn == DateTime.MinValue)
+                    loopFile.DbEntry.LastUpdatedOn = DateTime.Now;
+
+                var saveResult = await FileGenerator.SaveAndGenerateHtml(loopFile.DbEntry, finalFile, null,
+                    StatusContext.ProgressTracker());
+
+                if (saveResult.generationReturn.HasError)
+                {
+                    errors.Add(
+                        $"{loopFile.DbEntry.Title} - {moveToName} - {saveResult.generationReturn.ToErrorString()}");
+                    continue;
+                }
+
+                successCounter++;
+            }
+            catch (Exception e)
+            {
+                errors.Add($"{loopFile.DbEntry.Title} - {e.Message}");
+            }
+        }
+
+        if (errors.Any())
+            await StatusContext.ShowMessageWithOkButton("Errors Renaming",
+                $"{successCounter} Succeeded, {skipCounter} Already Equal, {errors.Count} Failed: {Environment.NewLine}{Environment.NewLine}{string.Join($"{Environment.NewLine}{Environment.NewLine}", errors)}");
+        else
+            await StatusContext.ToastSuccess($"Renamed {successCounter} files, {skipCounter} Names already match.");
     }
 
     [BlockingCommand]
@@ -276,6 +407,47 @@ public partial class FileListWithActionsContext : IListSelectionWithContext<File
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         await ListContext.LoadData();
+    }
+
+    [NonBlockingCommand]
+    public async Task ReportTitleAndFileNameDoNotMatch()
+    {
+        await RunReport(ReportTitleAndFileNameDoNotMatchGenerator, "Title and Filename Don't Match");
+    }
+
+    private async Task<List<object>> ReportTitleAndFileNameDoNotMatchGenerator()
+    {
+        var db = await Db.Context();
+
+        var allContents = await db.FileContents.OrderByDescending(x => x.CreatedOn).ToListAsync();
+
+        var returnList = new List<FileContent>();
+
+        foreach (var loopContents in allContents)
+        {
+            var titleFilename = SlugTools.CreateSlug(false, loopContents.Title.TrimNullToEmpty());
+
+            if (string.IsNullOrWhiteSpace(titleFilename)) returnList.Add(loopContents);
+
+            if (string.Equals(titleFilename, Path.GetFileNameWithoutExtension(loopContents.OriginalFileName))) continue;
+
+            returnList.Add(loopContents);
+        }
+
+        return returnList.Cast<object>().ToList();
+    }
+
+    private static async Task RunReport(Func<Task<List<object>>> toRun, string title)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var reportLoader = new ContentListLoaderReport(toRun);
+
+        var newWindow =
+            await FileListWindow.CreateInstance(
+                await CreateInstance(null, null));
+        newWindow.WindowTitle = title;
+        await newWindow.PositionWindowAndShowOnUiThread();
     }
 
     [BlockingCommand]

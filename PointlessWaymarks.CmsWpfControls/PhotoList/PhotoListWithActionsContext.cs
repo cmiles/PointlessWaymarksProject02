@@ -494,7 +494,9 @@ public partial class PhotoListWithActionsContext
                 var moveToName = Path.Combine(selectedFile.Directory?.FullName ?? string.Empty,
                     $"{cleanedName}{Path.GetExtension(selectedFile.Name)}");
 
-                if (File.Exists(moveToName))
+                // Check if a different file (not just case difference) already exists
+                if (File.Exists(moveToName) &&
+                    !string.Equals(selectedFile.FullName, moveToName, StringComparison.OrdinalIgnoreCase))
                 {
                     errors.Add($"{loopPhoto.DbEntry.Title} - {moveToName} - Suggested new Filename Already Exists");
                     continue;
@@ -502,7 +504,21 @@ public partial class PhotoListWithActionsContext
 
                 try
                 {
-                    File.Copy(selectedFile.FullName, moveToName);
+                    // For case-only renames, we need to do a two-step rename on case-insensitive filesystems
+                    if (string.Equals(selectedFile.FullName, moveToName, StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(selectedFile.FullName, moveToName, StringComparison.Ordinal))
+                    {
+                        // Case-only rename: use temporary file
+                        var tempName = Path.Combine(selectedFile.Directory?.FullName ?? string.Empty,
+                            $"{Guid.NewGuid()}{Path.GetExtension(selectedFile.Name)}");
+                        File.Move(selectedFile.FullName, tempName);
+                        File.Move(tempName, moveToName);
+                    }
+                    else
+                    {
+                        // Normal copy
+                        File.Copy(selectedFile.FullName, moveToName);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -512,6 +528,11 @@ public partial class PhotoListWithActionsContext
 
                 var finalFile = new FileInfo(moveToName);
                 loopPhoto.DbEntry.OriginalFileName = finalFile.Name;
+
+                if (string.IsNullOrWhiteSpace(loopPhoto.DbEntry.LastUpdatedBy))
+                    loopPhoto.DbEntry.LastUpdatedBy = loopPhoto.DbEntry.CreatedBy;
+                if (loopPhoto.DbEntry.LastUpdatedOn is null || loopPhoto.DbEntry.LastUpdatedOn == DateTime.MinValue)
+                    loopPhoto.DbEntry.LastUpdatedOn = DateTime.Now;
 
                 var saveResult = await PhotoGenerator.SaveAndGenerateHtml(loopPhoto.DbEntry, finalFile, false, null,
                     StatusContext.ProgressTracker());
@@ -824,7 +845,7 @@ public partial class PhotoListWithActionsContext
     [NonBlockingCommand]
     public async Task ReportTitleAndFileNameDoNotMatch()
     {
-        await RunReport(ReportTitleAndTakenDoNotMatchGenerator, "Title and Filename Don't Match");
+        await RunReport(ReportTitleAndFileNameDoNotMatchGenerator, "Title and Filename Don't Match");
     }
 
     private async Task<List<object>> ReportTitleAndFileNameDoNotMatchGenerator()

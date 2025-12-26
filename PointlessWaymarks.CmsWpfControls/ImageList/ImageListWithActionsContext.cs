@@ -1,11 +1,13 @@
 using System.IO;
 using System.Windows;
+using Microsoft.EntityFrameworkCore;
 using Ookii.Dialogs.Wpf;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentGeneration;
 using PointlessWaymarks.CmsData.ContentHtml.ImageHtml;
 using PointlessWaymarks.CmsData.Database;
+using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsData.ImageHelpers;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.CommonTools;
@@ -214,6 +216,134 @@ public partial class ImageListWithActionsContext
     }
 
     [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task ImageTitleToFilename()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var frozenSelected = SelectedListItems();
+
+        var settings = UserSettingsSingleton.CurrentSettings();
+
+        var errors = new List<string>();
+        var successCounter = 0;
+        var skipCounter = 0;
+
+        foreach (var loopImage in frozenSelected)
+        {
+            if (string.IsNullOrWhiteSpace(loopImage.DbEntry.Title))
+            {
+                skipCounter++;
+                continue;
+            }
+
+            try
+            {
+                var selectedFile = settings.LocalMediaArchiveImageContentFile(loopImage.DbEntry);
+
+                if (selectedFile is null)
+                {
+                    errors.Add($"{loopImage.DbEntry.Title} - No file found?");
+                    continue;
+                }
+
+                if (selectedFile is not { Exists: true })
+                {
+                    errors.Add($"{loopImage.DbEntry.Title} - file {selectedFile.FullName} does not exist?");
+                    continue;
+                }
+
+                var cleanedName = SlugTools.CreateSlug(false, loopImage.DbEntry.Title.TrimNullToEmpty());
+
+                if (string.IsNullOrWhiteSpace(cleanedName))
+                {
+                    errors.Add($"{loopImage.DbEntry.Title} - Can't rename the file to an empty string...");
+                    continue;
+                }
+
+                if (!FileAndFolderTools.IsNoUrlEncodingNeeded(cleanedName))
+                {
+                    errors.Add(
+                        $"{loopImage.DbEntry.Title} - {cleanedName} - File Names must be limited to A - Z a - z 0 - 9 - . _");
+                    continue;
+                }
+
+                if (string.Equals(loopImage.DbEntry.OriginalFileName,
+                        $"{cleanedName}{Path.GetExtension(selectedFile.Name)}"))
+                {
+                    skipCounter++;
+                    continue;
+                }
+
+                var moveToName = Path.Combine(selectedFile.Directory?.FullName ?? string.Empty,
+                    $"{cleanedName}{Path.GetExtension(selectedFile.Name)}");
+
+                // Check if a different file (not just case difference) already exists
+                if (File.Exists(moveToName) &&
+                    !string.Equals(selectedFile.FullName, moveToName, StringComparison.OrdinalIgnoreCase))
+                {
+                    errors.Add($"{loopImage.DbEntry.Title} - {moveToName} - Suggested new Filename Already Exists");
+                    continue;
+                }
+
+                try
+                {
+                    // For case-only renames, we need to do a two-step rename on case-insensitive filesystems
+                    if (string.Equals(selectedFile.FullName, moveToName, StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(selectedFile.FullName, moveToName, StringComparison.Ordinal))
+                    {
+                        // Case-only rename: use temporary file
+                        var tempName = Path.Combine(selectedFile.Directory?.FullName ?? string.Empty,
+                            $"{Guid.NewGuid()}{Path.GetExtension(selectedFile.Name)}");
+                        File.Move(selectedFile.FullName, tempName);
+                        File.Move(tempName, moveToName);
+                    }
+                    else
+                    {
+                        // Normal copy
+                        File.Copy(selectedFile.FullName, moveToName);
+                    }
+                }
+                catch (Exception e)
+                {
+                    errors.Add($"{loopImage.DbEntry.Title} - {moveToName} - {e.Message}");
+                    continue;
+                }
+
+                var finalFile = new FileInfo(moveToName);
+                loopImage.DbEntry.OriginalFileName = finalFile.Name;
+
+                if (string.IsNullOrWhiteSpace(loopImage.DbEntry.LastUpdatedBy))
+                    loopImage.DbEntry.LastUpdatedBy = loopImage.DbEntry.CreatedBy;
+                if (loopImage.DbEntry.LastUpdatedOn is null || loopImage.DbEntry.LastUpdatedOn == DateTime.MinValue)
+                    loopImage.DbEntry.LastUpdatedOn = DateTime.Now;
+
+                var saveResult = await ImageGenerator.SaveAndGenerateHtml(loopImage.DbEntry, finalFile, false, null,
+                    StatusContext.ProgressTracker());
+
+                if (saveResult.generationReturn.HasError)
+                {
+                    errors.Add(
+                        $"{loopImage.DbEntry.Title} - {moveToName} - {saveResult.generationReturn.ToErrorString()}");
+                    continue;
+                }
+
+                successCounter++;
+            }
+            catch (Exception e)
+            {
+                errors.Add($"{loopImage.DbEntry.Title} - {e.Message}");
+            }
+        }
+
+        if (errors.Any())
+            await StatusContext.ShowMessageWithOkButton("Errors Renaming",
+                $"{successCounter} Succeeded, {skipCounter} Already Equal, {errors.Count} Failed: {Environment.NewLine}{Environment.NewLine}{string.Join($"{Environment.NewLine}{Environment.NewLine}", errors)}");
+        else
+            await StatusContext.ToastSuccess($"Renamed {successCounter} files, {skipCounter} Names already match.");
+    }
+
+    [BlockingCommand]
     private async Task RefreshData()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -295,6 +425,47 @@ public partial class ImageListWithActionsContext
             await StatusContext.ShowMessageWithOkButton("Errors Resizing and Regenerating HTML",
                 string.Join($"{Environment.NewLine}{Environment.NewLine}", errorList));
         }
+    }
+
+    [NonBlockingCommand]
+    public async Task ReportTitleAndFileNameDoNotMatch()
+    {
+        await RunReport(ReportTitleAndFileNameDoNotMatchGenerator, "Title and Filename Don't Match");
+    }
+
+    private async Task<List<object>> ReportTitleAndFileNameDoNotMatchGenerator()
+    {
+        var db = await Db.Context();
+
+        var allContents = await db.ImageContents.OrderByDescending(x => x.CreatedOn).ToListAsync();
+
+        var returnList = new List<ImageContent>();
+
+        foreach (var loopContents in allContents)
+        {
+            var titleFilename = SlugTools.CreateSlug(false, loopContents.Title.TrimNullToEmpty());
+
+            if (string.IsNullOrWhiteSpace(titleFilename)) returnList.Add(loopContents);
+
+            if (string.Equals(titleFilename, Path.GetFileNameWithoutExtension(loopContents.OriginalFileName))) continue;
+
+            returnList.Add(loopContents);
+        }
+
+        return returnList.Cast<object>().ToList();
+    }
+
+    private static async Task RunReport(Func<Task<List<object>>> toRun, string title)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var reportLoader = new ContentListLoaderReport(toRun);
+
+        var newWindow =
+            await ImageListWindow.CreateInstance(
+                await CreateInstance(null, null));
+        newWindow.WindowTitle = title;
+        await newWindow.PositionWindowAndShowOnUiThread();
     }
 
     public List<ImageListListItem> SelectedListItems()

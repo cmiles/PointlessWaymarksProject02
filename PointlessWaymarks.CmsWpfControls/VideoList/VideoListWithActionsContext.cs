@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Ookii.Dialogs.Wpf;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.BracketCodes;
+using PointlessWaymarks.CmsData.ContentGeneration;
 using PointlessWaymarks.CmsData.ContentHtml.VideoHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
@@ -178,6 +179,34 @@ public partial class VideoListWithActionsContext
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         await ListContext.LoadData();
+    }
+
+    [NonBlockingCommand]
+    public async Task ReportTitleAndFileNameDoNotMatch()
+    {
+        await RunReport(ReportTitleAndFileNameDoNotMatchGenerator, "Title and Filename Don't Match");
+    }
+
+    private async Task<List<object>> ReportTitleAndFileNameDoNotMatchGenerator()
+    {
+        var db = await Db.Context();
+
+        var allContents = await db.VideoContents.OrderByDescending(x => x.VideoCreatedOn).ToListAsync();
+
+        var returnList = new List<VideoContent>();
+
+        foreach (var loopContents in allContents)
+        {
+            var titleFilename = SlugTools.CreateSlug(false, loopContents.Title.TrimNullToEmpty());
+
+            if (string.IsNullOrWhiteSpace(titleFilename)) returnList.Add(loopContents);
+
+            if (string.Equals(titleFilename, Path.GetFileNameWithoutExtension(loopContents.OriginalFileName))) continue;
+
+            returnList.Add(loopContents);
+        }
+
+        return returnList.Cast<object>().ToList();
     }
 
     [NonBlockingCommand]
@@ -439,6 +468,134 @@ public partial class VideoListWithActionsContext
         Clipboard.SetText(finalString);
 
         await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task VideoTitleToFilename()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var frozenSelected = SelectedListItems();
+
+        var settings = UserSettingsSingleton.CurrentSettings();
+
+        var errors = new List<string>();
+        var successCounter = 0;
+        var skipCounter = 0;
+
+        foreach (var loopVideo in frozenSelected)
+        {
+            if (string.IsNullOrWhiteSpace(loopVideo.DbEntry.Title))
+            {
+                skipCounter++;
+                continue;
+            }
+
+            try
+            {
+                var selectedFile = settings.LocalMediaArchiveVideoContentFile(loopVideo.DbEntry);
+
+                if (selectedFile is null)
+                {
+                    errors.Add($"{loopVideo.DbEntry.Title} - No file found?");
+                    continue;
+                }
+
+                if (selectedFile is not { Exists: true })
+                {
+                    errors.Add($"{loopVideo.DbEntry.Title} - file {selectedFile.FullName} does not exist?");
+                    continue;
+                }
+
+                var cleanedName = SlugTools.CreateSlug(false, loopVideo.DbEntry.Title.TrimNullToEmpty());
+
+                if (string.IsNullOrWhiteSpace(cleanedName))
+                {
+                    errors.Add($"{loopVideo.DbEntry.Title} - Can't rename the file to an empty string...");
+                    continue;
+                }
+
+                if (!FileAndFolderTools.IsNoUrlEncodingNeeded(cleanedName))
+                {
+                    errors.Add(
+                        $"{loopVideo.DbEntry.Title} - {cleanedName} - File Names must be limited to A - Z a - z 0 - 9 - . _");
+                    continue;
+                }
+
+                if (string.Equals(loopVideo.DbEntry.OriginalFileName,
+                        $"{cleanedName}{Path.GetExtension(selectedFile.Name)}"))
+                {
+                    skipCounter++;
+                    continue;
+                }
+
+                var moveToName = Path.Combine(selectedFile.Directory?.FullName ?? string.Empty,
+                    $"{cleanedName}{Path.GetExtension(selectedFile.Name)}");
+
+                // Check if a different file (not just case difference) already exists
+                if (File.Exists(moveToName) &&
+                    !string.Equals(selectedFile.FullName, moveToName, StringComparison.OrdinalIgnoreCase))
+                {
+                    errors.Add($"{loopVideo.DbEntry.Title} - {moveToName} - Suggested new Filename Already Exists");
+                    continue;
+                }
+
+                try
+                {
+                    // For case-only renames, we need to do a two-step rename on case-insensitive filesystems
+                    if (string.Equals(selectedFile.FullName, moveToName, StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(selectedFile.FullName, moveToName, StringComparison.Ordinal))
+                    {
+                        // Case-only rename: use temporary file
+                        var tempName = Path.Combine(selectedFile.Directory?.FullName ?? string.Empty,
+                            $"{Guid.NewGuid()}{Path.GetExtension(selectedFile.Name)}");
+                        File.Move(selectedFile.FullName, tempName);
+                        File.Move(tempName, moveToName);
+                    }
+                    else
+                    {
+                        // Normal copy
+                        File.Copy(selectedFile.FullName, moveToName);
+                    }
+                }
+                catch (Exception e)
+                {
+                    errors.Add($"{loopVideo.DbEntry.Title} - {moveToName} - {e.Message}");
+                    continue;
+                }
+
+                var finalFile = new FileInfo(moveToName);
+                loopVideo.DbEntry.OriginalFileName = finalFile.Name;
+
+                if (string.IsNullOrWhiteSpace(loopVideo.DbEntry.LastUpdatedBy))
+                    loopVideo.DbEntry.LastUpdatedBy = loopVideo.DbEntry.CreatedBy;
+                if (loopVideo.DbEntry.LastUpdatedOn is null || loopVideo.DbEntry.LastUpdatedOn == DateTime.MinValue)
+                    loopVideo.DbEntry.LastUpdatedOn = DateTime.Now;
+
+                var saveResult = await VideoGenerator.SaveAndGenerateHtml(loopVideo.DbEntry, finalFile, null,
+                    StatusContext.ProgressTracker());
+
+                if (saveResult.generationReturn.HasError)
+                {
+                    errors.Add(
+                        $"{loopVideo.DbEntry.Title} - {moveToName} - {saveResult.generationReturn.ToErrorString()}");
+                    continue;
+                }
+
+                successCounter++;
+            }
+            catch (Exception e)
+            {
+                errors.Add($"{loopVideo.DbEntry.Title} - {e.Message}");
+            }
+        }
+
+        if (errors.Any())
+            await StatusContext.ShowMessageWithOkButton("Errors Renaming",
+                $"{successCounter} Succeeded, {skipCounter} Already Equal, {errors.Count} Failed: {Environment.NewLine}{Environment.NewLine}{string.Join($"{Environment.NewLine}{Environment.NewLine}", errors)}");
+        else
+            await StatusContext.ToastSuccess($"Renamed {successCounter} files, {skipCounter} Names already match.");
     }
 
     [BlockingCommand]
