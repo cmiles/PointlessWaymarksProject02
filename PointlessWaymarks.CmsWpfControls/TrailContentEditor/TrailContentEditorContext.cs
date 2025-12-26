@@ -260,8 +260,8 @@ Trail Content can bring together a Map, Line, Start and End Points and structure
         LocationAreaEntry.Title = "Location Area";
         LocationAreaEntry.HelpText =
             "A 'general location' - the intent is for this to be short and helpful to a human.";
-        LocationAreaEntry.ReferenceValue = DbEntry.OtherDetails ?? string.Empty;
-        LocationAreaEntry.UserValue = DbEntry.OtherDetails ?? string.Empty;
+        LocationAreaEntry.ReferenceValue = DbEntry.LocationArea ?? string.Empty;
+        LocationAreaEntry.UserValue = DbEntry.LocationArea ?? string.Empty;
 
         TrailShapeEntry = StringDataEntryContext.CreateInstance();
         TrailShapeEntry.Title = "Trail Shape";
