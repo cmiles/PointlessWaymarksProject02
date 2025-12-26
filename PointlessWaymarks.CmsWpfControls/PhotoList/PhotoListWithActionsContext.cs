@@ -430,6 +430,7 @@ public partial class PhotoListWithActionsContext
         await metadataWindow.PositionWindowAndShowOnUiThread();
     }
 
+
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
     public async Task PhotoTitleToFilename()
@@ -446,7 +447,11 @@ public partial class PhotoListWithActionsContext
 
         foreach (var loopPhoto in frozenSelected)
         {
-            if (string.IsNullOrWhiteSpace(loopPhoto.DbEntry.Title)) continue;
+            if (string.IsNullOrWhiteSpace(loopPhoto.DbEntry.Title))
+            {
+                skipCounter++;
+                continue;
+            }
 
             try
             {
@@ -530,9 +535,7 @@ public partial class PhotoListWithActionsContext
             await StatusContext.ShowMessageWithOkButton("Errors Renaming",
                 $"{successCounter} Succeeded, {skipCounter} Already Equal, {errors.Count} Failed: {Environment.NewLine}{Environment.NewLine}{string.Join($"{Environment.NewLine}{Environment.NewLine}", errors)}");
         else
-        {
             await StatusContext.ToastSuccess($"Renamed {successCounter} files, {skipCounter} Names already match.");
-        }
     }
 
     [BlockingCommand]
@@ -816,6 +819,35 @@ public partial class PhotoListWithActionsContext
         var metadataWindow = await FileMetadataDisplayWindow.CreateInstance(archiveFile.FullName,
             UserSettingsSingleton.CurrentSettings().FfprobeExe());
         await metadataWindow.PositionWindowAndShowOnUiThread();
+    }
+
+    [NonBlockingCommand]
+    public async Task ReportTitleAndFileNameDoNotMatch()
+    {
+        await RunReport(ReportTitleAndTakenDoNotMatchGenerator, "Title and Filename Don't Match");
+    }
+
+    private async Task<List<object>> ReportTitleAndFileNameDoNotMatchGenerator()
+    {
+        var db = await Db.Context();
+
+        var allContents = await db.PhotoContents.OrderByDescending(x => x.PhotoCreatedOn).ToListAsync();
+
+        var returnList = new List<PhotoContent>();
+
+        foreach (var loopContents in allContents)
+        {
+            var titleFilename = SlugTools.CreateSlug(false, loopContents.Title.TrimNullToEmpty());
+            ;
+
+            if (string.IsNullOrWhiteSpace(titleFilename)) returnList.Add(loopContents);
+
+            if (string.Equals(titleFilename, Path.GetFileNameWithoutExtension(loopContents.OriginalFileName))) continue;
+
+            returnList.Add(loopContents);
+        }
+
+        return returnList.Cast<object>().ToList();
     }
 
     [NonBlockingCommand]

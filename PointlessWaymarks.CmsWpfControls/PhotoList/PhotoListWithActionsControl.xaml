@@ -40,6 +40,7 @@
                 <MenuItem Command="{Binding ReportFileNameAndTakenOnDoNotMatchCommand}" Header="File Name and Taken Don't Match" />
                 <MenuItem Command="{Binding ReportLicenseAndTakenYearDoNotMatchCommand}" Header="License Year and Taken Year Don't Match" />
                 <MenuItem Command="{Binding ReportMultiSpacesInTitleCommand}" Header="Titles with Multiple Spaces" />
+                <MenuItem Command="{Binding ReportTitleAndFileNameDoNotMatchCommand}" Header="Title and Filename Don't Match" />
                 <MenuItem Command="{Binding ReportAllPhotosCommand}" Header="All Photos" />
                 <MenuItem Command="{Binding ReportPhotoMetadataCommand}" Header="Selected - Metadata to Html" />
                 <MenuItem Command="{Binding PhotoMetadataFromPickedFileCommand}" Header="Metadata to Html - Pick File" />
