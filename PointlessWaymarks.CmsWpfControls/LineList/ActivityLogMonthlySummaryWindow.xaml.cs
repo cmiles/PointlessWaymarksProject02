@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Windows.Controls;
 using Microsoft.EntityFrameworkCore;
 using PointlessWaymarks.CmsData.Database;
@@ -21,12 +22,23 @@ public partial class ActivityLogMonthlySummaryWindow
         InitializeComponent();
 
         DataContext = this;
+        
+        PropertyChanged += OnPropertyChanged;
     }
 
     public required ObservableCollection<ActivityLogMonthlyStatRow> Items { get; set; }
     public ActivityLogMonthlyStatRow? SelectedItem { get; set; }
     public List<ActivityLogMonthlyStatRow> SelectedItems { get; set; } = [];
     public required StatusControlContext StatusContext { get; set; }
+    
+    public int SelectedRowCount { get; set; }
+    public int TotalActivities { get; set; }
+    public int TotalMiles { get; set; }
+    public int TotalHours { get; set; }
+    public int TotalClimb { get; set; }
+    public int TotalDescent { get; set; }
+    public int MinimumElevation { get; set; }
+    public int MaximumElevation { get; set; }
 
     [BlockingCommand]
     public async Task ContentMap(ActivityLogMonthlyStatRow? row)
@@ -113,6 +125,14 @@ public partial class ActivityLogMonthlySummaryWindow
         return await CreateInstance(reportRows);
     }
 
+    private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SelectedItems))
+        {
+            UpdateTotals();
+        }
+    }
+
     public ActivityLogMonthlyStatRow? SelectedListItem()
     {
         return SelectedItem;
@@ -129,5 +149,30 @@ public partial class ActivityLogMonthlySummaryWindow
         SelectedItems =
             LineStatsDataGrid?.SelectedItems.Cast<ActivityLogMonthlyStatRow>().ToList() ??
             [];
+    }
+
+    private void UpdateTotals()
+    {
+        if (!SelectedItems.Any())
+        {
+            SelectedRowCount = 0;
+            TotalActivities = 0;
+            TotalMiles = 0;
+            TotalHours = 0;
+            TotalClimb = 0;
+            TotalDescent = 0;
+            MinimumElevation = 0;
+            MaximumElevation = 0;
+            return;
+        }
+
+        SelectedRowCount = SelectedItems.Count;
+        TotalActivities = SelectedItems.Sum(x => x.Activities);
+        TotalMiles = SelectedItems.Sum(x => x.Miles);
+        TotalHours = SelectedItems.Sum(x => x.Hours);
+        TotalClimb = SelectedItems.Sum(x => x.Climb);
+        TotalDescent = SelectedItems.Sum(x => x.Descent);
+        MinimumElevation = SelectedItems.Any() ? SelectedItems.Min(x => x.MinElevation) : 0;
+        MaximumElevation = SelectedItems.Any() ? SelectedItems.Max(x => x.MaxElevation) : 0;
     }
 }
