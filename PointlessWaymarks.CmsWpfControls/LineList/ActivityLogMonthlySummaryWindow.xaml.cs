@@ -33,10 +33,10 @@ public partial class ActivityLogMonthlySummaryWindow
     
     public int SelectedRowCount { get; set; }
     public int TotalActivities { get; set; }
-    public int TotalMiles { get; set; }
-    public int TotalHours { get; set; }
-    public int TotalClimb { get; set; }
-    public int TotalDescent { get; set; }
+    public double TotalMiles { get; set; }
+    public double TotalHours { get; set; }
+    public double TotalClimb { get; set; }
+    public double TotalDescent { get; set; }
     public int MinimumElevation { get; set; }
     public int MaximumElevation { get; set; }
 
@@ -109,16 +109,14 @@ public partial class ActivityLogMonthlySummaryWindow
             Month = x.Key.Month,
             ActivityType = x.Key.ActivityType ?? string.Empty,
             Activities = x.Count(),
-            Miles = (int)Math.Floor(x.Sum(y => y.LineDistance)),
-            Hours = (int)Math.Floor(new TimeSpan(0, (int)x
-                    .Where(y => y is { RecordingStartedOn: not null, RecordingEndedOn: not null } &&
+            Miles = x.Sum(y => y.LineDistance),
+            Hours = x.Where(y => y is { RecordingStartedOn: not null, RecordingEndedOn: not null } &&
                                 y.RecordingStartedOn < y.RecordingEndedOn)
-                    .Select(y => y.RecordingEndedOn!.Value - y.RecordingStartedOn!.Value).Sum(y => y.TotalMinutes), 0)
-                .TotalHours),
+                    .Select(y => y.RecordingEndedOn!.Value - y.RecordingStartedOn!.Value).Sum(y => y.TotalMinutes) / 60D,
             MinElevation = (int)Math.Floor(x.Min(y => y.MinimumElevation)),
             MaxElevation = (int)Math.Floor(x.Max(y => y.MaximumElevation)),
-            Climb = (int)Math.Floor(x.Sum(y => y.ClimbElevation)),
-            Descent = (int)Math.Floor(x.Sum(y => y.DescentElevation)),
+            Climb = x.Sum(y => y.ClimbElevation),
+            Descent = x.Sum(y => y.DescentElevation),
             LineContentIds = x.Select(y => y.ContentId).ToList()
         }).ToList();
 
