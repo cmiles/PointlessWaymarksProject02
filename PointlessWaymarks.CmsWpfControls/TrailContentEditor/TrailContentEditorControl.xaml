@@ -81,7 +81,7 @@
                         <stringDataEntry:StringDataEntryMultiLineControl DataContext="{Binding BikesNoteEntry}" />
                         <stringDataEntry:StringDataEntryMultiLineControl Margin="0,12,0,0"
                                                                          DataContext="{Binding OtherDetailsEntry}" />
-                        <stringDataEntry:StringDataEntryMultiLineControl DataContext="{Binding LocationAreaEntry}" />
+                        <stringDataEntry:StringDataEntryControl DataContext="{Binding LocationAreaEntry}" />
                         <stringDataEntry:StringDataEntryControl DataContext="{Binding TrailShapeEntry}" />
                         <contentDropdownDataEntry:ContentDropdownDataEntryControl
                             Margin="0,12,0,0"
