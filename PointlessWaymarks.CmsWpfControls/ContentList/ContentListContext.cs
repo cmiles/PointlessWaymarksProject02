@@ -51,28 +51,6 @@ namespace PointlessWaymarks.CmsWpfControls.ContentList;
 [GenerateStatusCommands]
 public partial class ContentListContext : IDragSource, IDropTarget
 {
-    private readonly List<string> _validDragAndDropFileExtensions =
-    [
-        ".PDF",
-        ".MPG",
-        ".MPEG",
-        ".FLAC",
-        ".MP3",
-        ".WAV",
-        ".JPG",
-        ".JPEG",
-        ".WEBP",
-        ".BMP",
-        ".PNG",
-        ".TIF",
-        ".GPX",
-        ".TCX",
-        ".FIT",
-        ".MP4",
-        ".OGG",
-        ".WEBM"
-    ];
-
     private ContentListContext(StatusControlContext statusContext,
         ObservableCollection<IContentListItem> factoryContentListItems,
         ContentListSelected<IContentListItem> factoryListSelection, ListFilterBuilderContext factoryListFilterBuilder,
@@ -785,6 +763,8 @@ public partial class ContentListContext : IDragSource, IDropTarget
                 searchFilterFunction = ContentListSearch.SearchTags;
             else if (searchString.StartsWith("SLUG:", StringComparison.InvariantCultureIgnoreCase))
                 searchFilterFunction = ContentListSearch.SearchSlug;
+            else if (searchString.StartsWith("BODY:", StringComparison.InvariantCultureIgnoreCase))
+                searchFilterFunction = ContentListSearch.SearchBody;
             else if (searchString.StartsWith("UPDATE NOTES:", StringComparison.InvariantCultureIgnoreCase))
                 searchFilterFunction = ContentListSearch.SearchUpdateNotes;
             else if (searchString.StartsWith("ORIGINAL FILE NAME:", StringComparison.InvariantCultureIgnoreCase))

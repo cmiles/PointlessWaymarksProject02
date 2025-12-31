@@ -45,6 +45,19 @@ public static class ContentListSearch
             ContentListSearchFunctions.FilterAperture(photoItem.DbEntry.Aperture, searchString), searchResultModifier);
     }
 
+    public static ContentListSearchReturn SearchBody(IContentListItem toFilter, string searchString,
+        Func<bool, bool> searchResultModifier)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return new ContentListSearchReturn(
+                new ContentListSearchFunctionReturn(true, "Body Search with no Search String - Including"),
+                searchResultModifier);
+
+        return new ContentListSearchReturn(
+            ContentListSearchFunctions.FilterStringContains(toFilter.Content().BodyContent ?? string.Empty,
+                searchString.Trim(), "Body"), searchResultModifier);
+    }
+
     public static ContentListSearchReturn SearchBounds(IContentListItem toFilter, string searchString,
         Func<bool, bool> searchResultModifier)
     {
@@ -462,20 +475,6 @@ public static class ContentListSearch
             searchResultModifier);
     }
 
-    public static ContentListSearchReturn SearchLineShowContentReferencesOnMap(IContentListItem toFilter,
-        string searchString,
-        Func<bool, bool> searchResultModifier)
-    {
-        if (toFilter is not LineListListItem lineItem)
-            return new ContentListSearchReturn(
-                new ContentListSearchFunctionReturn(false,
-                    "Show Content References on Item that is not a Line - Excluding"), searchResultModifier);
-
-        return new ContentListSearchReturn(
-            ContentListSearchFunctions.FilterBoolean(lineItem.DbEntry.ShowContentReferencesOnMap, searchString,
-                "Show Content References On Map"), searchResultModifier);
-    }
-
 
     public static ContentListSearchReturn SearchLineRecordingEndedOn(IContentListItem toFilter, string searchString,
         Func<bool, bool> searchResultModifier)
@@ -501,6 +500,20 @@ public static class ContentListSearch
         return new ContentListSearchReturn(
             ContentListSearchFunctions.FilterDateTime(lineItem.DbEntry.RecordingStartedOn, searchString,
                 "Line Recording Started On"), searchResultModifier);
+    }
+
+    public static ContentListSearchReturn SearchLineShowContentReferencesOnMap(IContentListItem toFilter,
+        string searchString,
+        Func<bool, bool> searchResultModifier)
+    {
+        if (toFilter is not LineListListItem lineItem)
+            return new ContentListSearchReturn(
+                new ContentListSearchFunctionReturn(false,
+                    "Show Content References on Item that is not a Line - Excluding"), searchResultModifier);
+
+        return new ContentListSearchReturn(
+            ContentListSearchFunctions.FilterBoolean(lineItem.DbEntry.ShowContentReferencesOnMap, searchString,
+                "Show Content References On Map"), searchResultModifier);
     }
 
     public static ContentListSearchReturn SearchMapIcon(IContentListItem toFilter, string searchString,
