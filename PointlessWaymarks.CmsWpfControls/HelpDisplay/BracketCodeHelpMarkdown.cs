@@ -66,7 +66,7 @@ Link Types:
  - photogallerypage, Photos
  - searchpage, Search
  - tagspage, Tags
- - linklistpage, Links
+ - linksearchpage, Links
  - indexrss, Main Page RSS Feed
  - filerss, Files RSS Feed
  - imagerss, Images RSS Feed

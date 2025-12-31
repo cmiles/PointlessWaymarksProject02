@@ -1,4 +1,4 @@
-﻿namespace PointlessWaymarks.CmsWpfControls.HelpDisplay;
+namespace PointlessWaymarks.CmsWpfControls.HelpDisplay;
 
 public static class MenuLinksHelpMarkdown
 {
@@ -15,6 +15,6 @@ A simple but useful menu could consist of the following entries:
     {{searchpage; text Search;}}
     {{photogallerypage; text Photos;}}
     {{tagspage; text Tags;}}
-    {{linklistpage; text Links;}}
+    {{linksearchpage; text Links;}}
 ";
 }
