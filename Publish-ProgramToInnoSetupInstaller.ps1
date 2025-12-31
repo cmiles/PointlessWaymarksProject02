@@ -3,8 +3,6 @@ $baseName = "PointlessWaymarks.$program"
 
 $ErrorActionPreference = "Stop"
 
-dotnet script .\Tools-ReadmeBuilder.csx
-
 $fossilCheckout = fossil info | Select-String -Pattern "checkout:" | ForEach-Object { $_.Line.Substring(9, $_.Line.Length - 9).Trim().Split(' ')[0] } | Select-Object -First 1
 
 $fossilStatusBrief = fossil status -b
