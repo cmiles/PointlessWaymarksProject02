@@ -13,19 +13,6 @@ internal class PowerShellRunnerCloseOrphanRuns
     internal required string DatabaseFile { get; set; }
     internal required Guid DatabaseId { get; set; }
 
-    private void OnDataNotificationReceived(object? sender, TinyMessageReceivedEventArgs e)
-    {
-        var translatedMessage = DataNotifications.TranslateDataNotification(e.Message.ToString());
-
-        if (!translatedMessage.IsT7) return;
-
-        var message = translatedMessage.AsT7;
-
-        if (message.DatabaseId != DatabaseId) return;
-
-        _repliedScriptJobRuns.Add(message.RunPersistentId);
-    }
-
     internal async Task CloseOrphans()
     {
         var db = await PowerShellRunnerDbContext.CreateInstance(DatabaseFile);
@@ -52,7 +39,8 @@ internal class PowerShellRunnerCloseOrphanRuns
                 currentEntry.Errors = true;
                 var key = await ObfuscationKeyHelpers.GetObfuscationKey(DatabaseFile);
 
-                var currentOutput = string.IsNullOrWhiteSpace(currentEntry.Output) ? string.Empty
+                var currentOutput = string.IsNullOrWhiteSpace(currentEntry.Output)
+                    ? string.Empty
                     : currentEntry.Output.Decrypt(key);
 
                 var newOutput = currentOutput + Environment.NewLine +
@@ -65,5 +53,20 @@ internal class PowerShellRunnerCloseOrphanRuns
                     DataNotifications.DataNotificationUpdateType.Update, DatabaseId, currentEntry.ScriptJobPersistentId,
                     currentEntry.PersistentId);
             }
+
+        await FileLocationHelpers.RunCodeTempDirectoryCleanUp(DatabaseFile);
+    }
+
+    private void OnDataNotificationReceived(object? sender, TinyMessageReceivedEventArgs e)
+    {
+        var translatedMessage = DataNotifications.TranslateDataNotification(e.Message.ToString());
+
+        if (!translatedMessage.IsT7) return;
+
+        var message = translatedMessage.AsT7;
+
+        if (message.DatabaseId != DatabaseId) return;
+
+        _repliedScriptJobRuns.Add(message.RunPersistentId);
     }
 }

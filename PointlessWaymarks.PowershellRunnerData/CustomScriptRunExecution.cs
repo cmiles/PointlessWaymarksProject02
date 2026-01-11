@@ -40,6 +40,10 @@ internal class CustomScriptRunExecution
 
         // create a pipeline and feed it the script text
         _pipeline = runSpace.CreatePipeline();
+        DirectoryInfo? tempRunDirectory = null;
+
+        var returnLog = new ConcurrentBag<(DateTime, string)>();
+        var errorData = false;
 
         if (ScriptStyle == ScriptKind.CsScript)
         {
@@ -51,14 +55,24 @@ internal class CustomScriptRunExecution
             _pipeline.Commands.AddScript(
                 $"& '{b64RunnerExecutable}' {base64EncodedString}");
         }
+        else if (ScriptStyle == ScriptKind.DotNetSingleFile)
+        {
+            tempRunDirectory = FileLocationHelpers.RunCodeTempDirectory(RunId);
+
+            returnLog.Add((DateTime.UtcNow, $"Program directory: {tempRunDirectory.FullName}"));
+
+            var tempCsFile = Path.Combine(tempRunDirectory.FullName,
+                $"pw-dnr--{JobId.ToString().Replace("-", string.Empty)}.cs");
+            await File.WriteAllTextAsync(tempCsFile, ScriptToRun);
+            _pipeline.Commands.AddScript(
+                $"& dotnet run {tempCsFile} --artifacts-path {tempRunDirectory.FullName}");
+        }
         else
+        {
             _pipeline.Commands.AddScript(ScriptToRun);
+        }
 
         _pipeline.Input.Close();
-
-
-        var returnLog = new ConcurrentBag<(DateTime, string)>();
-        var errorData = false;
 
         _pipeline.Output.DataReady += (_, _) =>
         {
@@ -102,6 +116,8 @@ internal class CustomScriptRunExecution
         await Task.Delay(200);
 
         while (_pipeline.PipelineStateInfo.State == PipelineState.Running) await Task.Delay(250);
+
+        if (tempRunDirectory is not null && tempRunDirectory.Exists) tempRunDirectory.Delete(true);
 
         return (errorData || _pipeline.HadErrors, returnLog.OrderBy(x => x.Item1).Select(x => x.Item2).ToList());
     }
