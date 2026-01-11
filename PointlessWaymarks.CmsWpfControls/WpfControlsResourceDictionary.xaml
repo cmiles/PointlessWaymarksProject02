@@ -719,6 +719,51 @@
                         VerticalAlignment="Bottom"
                         Content="{StaticResource ContentListContentIdAndDateDisplay}" />
                 </Grid>
+                <Grid Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <ToggleButton Grid.Row="0"
+                        x:Name="LineContentMenuButton"
+                        Grid.Column="1"
+                        Opacity=".6"
+                        Margin="8,0,0,0"
+                        Padding="2,0"
+                        MinWidth="20"
+                        VerticalAlignment="Top"
+                        Content="⋮"
+                        ToolTip="Line content actions"
+                        Visibility="{Binding ShowType, Converter={StaticResource BooleanToVisibility}}"
+                        Focusable="False" />
+
+                    <Border Grid.Column="0"
+                        Grid.Row="1"
+                        Grid.ColumnSpan="2"
+                        Margin="0,4,0,0"
+                        Width="200"
+                        HorizontalAlignment="Right"
+                        BorderThickness="1"
+                        CornerRadius="4"
+                        Visibility="{Binding IsChecked, ElementName=LineContentMenuButton, Converter={StaticResource BooleanToVisibility}}">
+                        <Border.Resources>
+                            <Style TargetType="Button">
+                                <Setter Property="Margin" Value="0,2,0,0" />
+                                <Setter Property="Padding" Value="6,1" />
+                                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                            </Style>
+                        </Border.Resources>
+                        <StackPanel>
+                            <Button Content="Text Code" Command="{Binding ItemActions.LinkBracketCodesToClipboardCommand}" CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Text Stats Code" Command="{Binding ItemActions.TextStatsBracketCodesToClipboardCommand}" CommandParameter="{Binding DbEntry}"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </Grid>
         </Border>
     </DataTemplate>

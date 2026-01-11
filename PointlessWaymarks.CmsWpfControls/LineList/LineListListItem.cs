@@ -24,6 +24,11 @@ public partial class LineListListItem : IContentListItem, IContentListImage
     public string? DisplayImageUrl { get; set; }
     public string? SmallImageUrl { get; set; }
 
+    public ContentClipboardRepresentation ClipboardObject()
+    {
+        return ItemActions.ClipboardObject(DbEntry);
+    }
+
     public IContentCommon Content()
     {
         return DbEntry;
@@ -37,11 +42,6 @@ public partial class LineListListItem : IContentListItem, IContentListImage
     public string DefaultBracketCode()
     {
         return ItemActions.DefaultBracketCode(DbEntry);
-    }
-
-    public ContentClipboardRepresentation ClipboardObject()
-    {
-        return ItemActions.ClipboardObject(DbEntry);
     }
 
     public async Task DefaultBracketCodeToClipboard()

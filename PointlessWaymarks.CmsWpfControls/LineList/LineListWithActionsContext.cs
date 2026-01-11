@@ -1,34 +1,20 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
-using System.Text.Json;
-using System.Windows;
-using System.Xml;
 using ClosedXML.Excel;
 using MathNet.Numerics;
 using Microsoft.EntityFrameworkCore;
-using NetTopologySuite.Features;
-using NetTopologySuite.IO;
-using Omu.ValueInjecter;
-using Ookii.Dialogs.Wpf;
 using PointlessWaymarks.CmsData;
-using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentGeneration;
 using PointlessWaymarks.CmsData.ContentHtml.LineMonthlyActivitySummaryHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsWpfControls.ContentList;
-using PointlessWaymarks.CmsWpfControls.FeatureIntersectResultBrowser;
 using PointlessWaymarks.CommonTools;
-using PointlessWaymarks.FeatureIntersectionTags;
-using PointlessWaymarks.FeatureIntersectionTags.Models;
 using PointlessWaymarks.LlamaAspects;
-using PointlessWaymarks.SpatialTools;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
-using Serilog;
 
 namespace PointlessWaymarks.CmsWpfControls.LineList;
 
@@ -167,154 +153,18 @@ public partial class LineListWithActionsContext
         await window.PositionWindowAndShowOnUiThread();
     }
 
-    public async Task AddIntersectionTagsToSelected(bool includeOsm, CancellationToken cancellationToken)
-    {
-        var frozenSelect = SelectedListItems();
-
-        if (string.IsNullOrWhiteSpace(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile))
-        {
-            await StatusContext.ToastError("The Settings File for the Feature Intersection is blank?");
-            return;
-        }
-
-        var settingsFileInfo = new FileInfo(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile);
-        if (!settingsFileInfo.Exists)
-        {
-            await StatusContext.ToastError(
-                $"The Settings File for the Feature Intersection {settingsFileInfo.FullName} doesn't exist?");
-            return;
-        }
-
-        var errorList = new List<string>();
-        var successList = new List<string>();
-        var noTagsList = new List<string>();
-
-        var processedCount = 0;
-
-        cancellationToken.ThrowIfCancellationRequested();
-
-        List<LineContent> dbEntriesToProcess = [];
-        List<IntersectResult> intersectResults = [];
-
-        var settings =
-            JsonSerializer.Deserialize<IntersectSettings>(await File.ReadAllTextAsync(settingsFileInfo.FullName,
-                cancellationToken));
-        if (settings == null)
-        {
-            StatusContext.Progress(
-                $"The settings file {settingsFileInfo.FullName} did not deserialized to valid settings...");
-            return;
-        }
-
-        settings.UseOsmOverpass = includeOsm;
-        settings.OsmInTagging = includeOsm;
-
-        foreach (var loopSelected in frozenSelect)
-        {
-            var feature = loopSelected.DbEntry.FeatureFromGeoJsonLineAsPolygon(settings.BufferPointsAndLinesByFeet);
-
-            if (feature == null) continue;
-
-            dbEntriesToProcess.Add((LineContent)LineContent.CreateInstance().InjectFrom(loopSelected.DbEntry));
-            var intersectResult = new IntersectResult(feature)
-                { ContentId = loopSelected.DbEntry.ContentId, Description = $"Line Content - {loopSelected.DbEntry.Title ?? "No Title"}" };
-
-            var lineFeature = loopSelected.DbEntry.FeatureFromGeoJsonLine();
-            if (lineFeature is not null)
-                intersectResult.OsmIsInPoints.AddRange(LineTools.GetRepresentativePointsFromLine(lineFeature.Geometry));
-            intersectResults.Add(intersectResult);
-        }
-
-        await intersectResults.IntersectionTags(settings,
-            cancellationToken, StatusContext.ProgressTracker());
-
-        var updateTime = DateTime.Now;
-
-        foreach (var loopSelected in dbEntriesToProcess)
-        {
-            processedCount++;
-
-            try
-            {
-                var taggerResult = intersectResults.Single(x => x.ContentId == loopSelected.ContentId);
-
-                if (!taggerResult.Tags.Any())
-                {
-                    noTagsList.Add($"{loopSelected.Title} - no tags found");
-                    StatusContext.Progress(
-                        $"Processed - {loopSelected.Title} - no tags found - Line {processedCount} of {frozenSelect.Count}");
-                    continue;
-                }
-
-                var tagListForIntersection = Db.TagListParse(loopSelected.Tags);
-                tagListForIntersection.AddRange(taggerResult.Tags);
-                loopSelected.Tags = Db.TagListJoin(tagListForIntersection);
-                loopSelected.LastUpdatedBy = "Feature Intersection Tagger";
-                loopSelected.LastUpdatedOn = updateTime;
-
-                var (saveGenerationReturn, _) =
-                    await LineGenerator.SaveAndGenerateHtml(loopSelected, DateTime.Now,
-                        StatusContext.ProgressTracker());
-
-                if (saveGenerationReturn.HasError)
-                    //TODO: Need alerting on this that would actually be seen...
-                {
-                    Log.ForContext("generationError", saveGenerationReturn.GenerationNote)
-                        .ForContext("generationException", saveGenerationReturn.Exception?.ToString() ?? string.Empty)
-                        .Error(
-                            "Line Save Error during Selected Line Feature Intersection Tagging");
-                    errorList.Add(
-                        $"Save Failed! Line: {loopSelected.Title}, {saveGenerationReturn.GenerationNote}");
-                    continue;
-                }
-
-                successList.Add(
-                    $"{loopSelected.Title} - found Tags {string.Join(", ", taggerResult.Tags)}");
-                StatusContext.Progress(
-                    $"Processed - {loopSelected.Title} - found Tags {string.Join(", ", taggerResult.Tags)} - Line {processedCount} of {frozenSelect.Count}");
-            }
-            catch (Exception e)
-            {
-                Log.Error(e,
-                    $"Line Save Error during Selected Line Feature Intersection Tagging {loopSelected.Title}, {loopSelected.ContentId}");
-                errorList.Add(
-                    $"Save Failed! Line: {loopSelected.Title}, {e.Message}");
-            }
-
-            if (cancellationToken.IsCancellationRequested) break;
-        }
-
-        if (errorList.Any())
-        {
-            var bodyBuilder = new StringBuilder();
-            bodyBuilder.AppendLine(
-                $"There were errors getting Feature Intersection Tags and saving items - Errors: {errorList.Count}, Success: {successList.Count}, No Tags: {noTagsList.Count}.");
-            bodyBuilder.AppendLine();
-            bodyBuilder.AppendFormat("Errors:");
-            bodyBuilder.AppendLine(string.Join(Environment.NewLine, errorList));
-            bodyBuilder.AppendLine();
-            bodyBuilder.AppendFormat("Successes:");
-            bodyBuilder.AppendLine(string.Join(Environment.NewLine, successList));
-            bodyBuilder.AppendLine();
-            bodyBuilder.AppendFormat("No Tags Found:");
-            bodyBuilder.AppendLine(string.Join(Environment.NewLine, noTagsList));
-
-            await StatusContext.ShowMessageWithOkButton("Feature Intersection Errors", bodyBuilder.ToString());
-        }
-    }
-
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
     public async Task AddIntersectionTagsWithOsmToSelected(CancellationToken cancellationToken)
     {
-        await AddIntersectionTagsToSelected(true, cancellationToken);
+        await LineActions.AddIntersectionTags(SelectedListItemsContent(), StatusContext, true, cancellationToken);
     }
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
     public async Task AddIntersectionTagsWithoutOsmToSelected(CancellationToken cancellationToken)
     {
-        await AddIntersectionTagsToSelected(false, cancellationToken);
+        await LineActions.AddIntersectionTags(SelectedListItemsContent(), StatusContext, false, cancellationToken);
     }
 
     public static async Task<LineListWithActionsContext> CreateInstance(StatusControlContext? statusContext,
@@ -334,53 +184,14 @@ public partial class LineListWithActionsContext
     [StopAndWarnIfNoSelectedListItems]
     public async Task ElevationChartBracketCodesToClipboardForSelected()
     {
-        var finalString = SelectedListItems().Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeLineElevationCharts.Create(loopSelected.DbEntry)}{Environment.NewLine}");
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+        await LineActions.ElevationChartBracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
     }
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItemsAskIfOverMax(MaxSelectedItems = 3, ActionVerb = "copy to clipboard")]
     public async Task GeoJsonToClipboardForSelected()
     {
-        var frozenSelected = SelectedListItems();
-
-        var featureList = new List<IFeature>();
-        var warningList = new List<string>();
-        var successCounter = 0;
-
-        foreach (var loopSelected in frozenSelected)
-        {
-            var lineFeature = loopSelected.DbEntry.FeatureFromGeoJsonLine();
-
-            if (lineFeature is null)
-            {
-                warningList.Add(loopSelected.DbEntry.Title ?? "Unknown");
-                continue;
-            }
-
-            featureList.Add(lineFeature);
-            successCounter++;
-        }
-
-        var finalString = await GeoJsonTools.SerializeListOfFeaturesCollectionToGeoJson(featureList);
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        if (successCounter > 0)
-            await StatusContext.ToastSuccess($"GeoJson To Clipboard for {successCounter} Lines");
-
-        if (warningList.Any())
-            await StatusContext.ShowMessageWithOkButton("GeoJson Conversion Failures?",
-                $"GeoJson Conversion failed for {warningList.Count} items.{Environment.NewLine}{Environment.NewLine}{string.Join(Environment.NewLine, warningList)}");
+        await LineActions.GeoJsonToClipboard(SelectedListItemsContent(), StatusContext);
     }
 
     [BlockingCommand]
@@ -388,7 +199,7 @@ public partial class LineListWithActionsContext
     public async Task LineStatsToExcelForSelected()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
-        
+
         var selectedItems = SelectedListItems();
         StatusContext.Progress($"Starting transfer of {selectedItems.Count} to Excel");
 
@@ -466,15 +277,7 @@ public partial class LineListWithActionsContext
     [StopAndWarnIfNoSelectedListItems]
     public async Task LinkBracketCodesToClipboardForSelected()
     {
-        var finalString = SelectedListItems().Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeLineLinks.Create(loopSelected.DbEntry)}{Environment.NewLine}");
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+        await LineActions.LinkBracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
     }
 
     [BlockingCommand]
@@ -534,173 +337,44 @@ public partial class LineListWithActionsContext
             .ToList();
     }
 
+    public List<LineContent> SelectedListItemsContent()
+    {
+        return ListContext.ListSelection.SelectedItems.Where(x => x is LineListListItem).Cast<LineListListItem>()
+            .Select(x => x.DbEntry).ToList();
+    }
+
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
     public async Task SelectedToGpxFile()
     {
-        var frozenSelected = SelectedListItems();
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        var fileDialog = new VistaSaveFileDialog
-        {
-            Filter = "gpx file (*.gpx)|*.gpx;",
-            AddExtension = true,
-            OverwritePrompt = true,
-            DefaultExt = ".gpx"
-        };
-        var fileDialogResult = fileDialog.ShowDialog();
-
-        if (!(fileDialogResult ?? false)) return;
-
-        var fileName = fileDialog.FileName;
-
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        var trackList = frozenSelected.Select(x => GpxTools.GpxTrackFromLineFeature(x.DbEntry.FeatureFromGeoJsonLine()!,
-            x.DbEntry.RecordingStartedOnUtc, x.DbEntry.Title ?? "New Track", string.Empty,
-            x.DbEntry.Title!.Replace(".", string.Empty)
-                .Contains(x.DbEntry.Summary.TrimNullToEmpty().Replace(".", string.Empty),
-                    StringComparison.OrdinalIgnoreCase)
-                ? string.Empty
-                : x.DbEntry.Summary ?? string.Empty)).ToList();
-
-        var fileStream = new FileStream(fileName, FileMode.OpenOrCreate);
-
-        var writerSettings = new XmlWriterSettings { Encoding = Encoding.UTF8, Indent = true, CloseOutput = true };
-        await using var xmlWriter = XmlWriter.Create(fileStream, writerSettings);
-        GpxWriter.Write(xmlWriter, null, new GpxMetadata("Pointless Waymarks CMS"), null, null, trackList, null);
-        xmlWriter.Close();
+        await LineActions.ToGpxFile(SelectedListItemsContent(), StatusContext);
     }
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
     public async Task SelectedToGpxFiles()
     {
-        var frozenSelected = SelectedListItems();
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        var fileDialog = new VistaFolderBrowserDialog { Multiselect = false };
-        var fileDialogResult = fileDialog.ShowDialog();
-
-        if (!(fileDialogResult ?? false)) return;
-
-        var directory = new DirectoryInfo(fileDialog.SelectedPath);
-
-        if (!directory.Exists)
-        {
-            await StatusContext.ToastError("Directory doesn't exist?");
-            return;
-        }
-
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        foreach (var loopSelected in frozenSelected)
-        {
-            var trackList = GpxTools.GpxTrackFromLineFeature(loopSelected.DbEntry.FeatureFromGeoJsonLine()!,
-                loopSelected.DbEntry.RecordingStartedOnUtc, loopSelected.DbEntry.Title ?? "New Track", string.Empty,
-                loopSelected.DbEntry.Summary ?? string.Empty).AsList();
-
-            var fileName = UniqueFileTools.UniqueFile(directory, $"{loopSelected.DbEntry.Title!}.gpx");
-
-            if (fileName is null)
-            {
-                await StatusContext.ToastError($"Couldn't create a unique file name for {loopSelected.DbEntry.Title}?");
-                continue;
-            }
-
-            var fileStream = new FileStream(fileName.FullName, FileMode.OpenOrCreate);
-
-            var writerSettings = new XmlWriterSettings { Encoding = Encoding.UTF8, Indent = true, CloseOutput = true };
-            await using var xmlWriter = XmlWriter.Create(fileStream, writerSettings);
-            GpxWriter.Write(xmlWriter, null, new GpxMetadata("Pointless Waymarks CMS"), null, null, trackList, null);
-            xmlWriter.Close();
-        }
+        await LineActions.ToGpxFiles(SelectedListItemsContent(), StatusContext);
     }
 
     [BlockingCommand]
     [StopAndWarnIfNoOrMoreThanSelectedListItems(MaxSelectedItems = 5)]
     public async Task ShowIntersectionTagsForSelected(CancellationToken cancellationToken)
     {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        var frozenSelected = SelectedListItems();
-
-        if (string.IsNullOrWhiteSpace(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile))
-        {
-            await StatusContext.ToastError("The Settings File for the Feature Intersection is blank?");
-            return;
-        }
-
-        var settingsFileInfo = new FileInfo(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile);
-        if (!settingsFileInfo.Exists)
-        {
-            await StatusContext.ToastError(
-                $"The Settings File for the Feature Intersection {settingsFileInfo.FullName} doesn't exist?");
-            return;
-        }
-
-        var settings =
-            JsonSerializer.Deserialize<IntersectSettings>(await File.ReadAllTextAsync(settingsFileInfo.FullName,
-                cancellationToken));
-        if (settings == null)
-        {
-            StatusContext.Progress(
-                $"The settings file {settingsFileInfo.FullName} did not deserialized to valid settings...");
-            return;
-        }
-
-        foreach (var loopSelected in frozenSelected)
-        {
-            var feature = loopSelected.DbEntry.FeatureFromGeoJsonLineAsPolygon(settings.BufferPointsAndLinesByFeet);
-
-            if (feature == null) continue;
-
-            var intersectResult = new IntersectResult(feature)
-                { ContentId = loopSelected.DbEntry.ContentId, Description = $"Line Content - {loopSelected.DbEntry.Title ?? "No Title"}" };
-
-            var lineFeature = loopSelected.DbEntry.FeatureFromGeoJsonLine();
-            if (lineFeature is not null)
-            {
-                intersectResult.OsmIsInPoints.AddRange(LineTools.GetRepresentativePointsFromLine(lineFeature.Geometry));
-
-                var tagResult = await intersectResult.IntersectionTags(settingsFileInfo.FullName,
-                    cancellationToken, StatusContext.ProgressTracker());
-
-                await FeatureIntersectResultBrowserWindow.CreateInstanceAndShow(tagResult,
-                    loopSelected.DbEntry.Title ?? "Content has No Title...");
-            }
-        }
+        await LineActions.ShowIntersectionTagsForSelected(SelectedListItemsContent(), StatusContext, cancellationToken);
     }
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
     public async Task StatsBracketCodesToClipboardForSelected()
     {
-        var finalString = SelectedListItems().Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeLineStats.Create(loopSelected.DbEntry)}{Environment.NewLine}");
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+        await LineActions.StatsBracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
     }
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
     public async Task TextStatsBracketCodesToClipboardForSelected()
     {
-        var finalString = SelectedListItems().Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeLineTextStats.Create(loopSelected.DbEntry)}");
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+        await LineActions.TextStatsBracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
     }
 }

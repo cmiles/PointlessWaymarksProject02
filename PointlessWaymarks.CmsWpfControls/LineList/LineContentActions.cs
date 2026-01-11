@@ -1,6 +1,10 @@
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using PointlessWaymarks.CmsData;
@@ -265,6 +269,126 @@ public partial class LineContentActions : IContentActions<LineContent>
         var sitePreviewWindow = await SiteOnDiskPreviewWindow.CreateInstance(url);
 
         await sitePreviewWindow.PositionWindowAndShowOnUiThread();
+    }
+
+    [BlockingCommand]
+    public async Task LinkBracketCodesToClipboard(LineContent? content)
+    {
+        if (content == null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await LineActions.LinkBracketCodesToClipboard(content.AsList(), StatusContext);
+    }
+
+    [BlockingCommand]
+    public async Task TextStatsBracketCodesToClipboard(LineContent? content)
+    {
+        if (content == null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await LineActions.TextStatsBracketCodesToClipboard(content.AsList(), StatusContext);
+    }
+
+    [BlockingCommand]
+    public async Task StatsBracketCodesToClipboard(LineContent? content)
+    {
+        if (content == null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await LineActions.StatsBracketCodesToClipboard(content.AsList(), StatusContext);
+    }
+
+    [BlockingCommand]
+    public async Task ElevationChartBracketCodesToClipboard(LineContent? content)
+    {
+        if (content == null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await LineActions.ElevationChartBracketCodesToClipboard(content.AsList(), StatusContext);
+    }
+
+    [BlockingCommand]
+    public async Task GeoJsonToClipboard(LineContent? content)
+    {
+        if (content == null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await LineActions.GeoJsonToClipboard(content.AsList(), StatusContext);
+    }
+
+    [BlockingCommand]
+    public async Task SelectedToGpxFile(LineContent? content)
+    {
+        if (content == null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await LineActions.ToGpxFile(content.AsList(), StatusContext);
+    }
+
+    [BlockingCommand]
+    public async Task SelectedToGpxFiles(LineContent? content)
+    {
+        if (content == null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await LineActions.ToGpxFiles(content.AsList(), StatusContext);
+    }
+
+    [BlockingCommand]
+    public async Task ShowIntersectionTags(LineContent? content, CancellationToken cancellationToken)
+    {
+        if (content == null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await LineActions.ShowIntersectionTagsForSelected(content.AsList(), StatusContext, cancellationToken);
+    }
+
+    [BlockingCommand]
+    public async Task AddIntersectionTagsWithOsm(LineContent? content, CancellationToken cancellationToken)
+    {
+        if (content == null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await LineActions.AddIntersectionTags(content.AsList(), StatusContext, true, cancellationToken);
+    }
+
+    [BlockingCommand]
+    public async Task AddIntersectionTagsWithoutOsm(LineContent? content, CancellationToken cancellationToken)
+    {
+        if (content == null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await LineActions.AddIntersectionTags(content.AsList(), StatusContext, false, cancellationToken);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
