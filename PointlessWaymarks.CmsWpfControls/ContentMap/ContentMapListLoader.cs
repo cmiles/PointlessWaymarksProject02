@@ -7,6 +7,7 @@ public class ContentMapListLoader : ContentListLoaderBase
 {
     public ContentMapListLoader(string headerName, List<Guid> contentIdsToLoad) : base(headerName, null)
     {
+        ShowType = true;
         ContentIdsToLoad = contentIdsToLoad;
         AddNewItemsFromDataNotifications = false;
     }
