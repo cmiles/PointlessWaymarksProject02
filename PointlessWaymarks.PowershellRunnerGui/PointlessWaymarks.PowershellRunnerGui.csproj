@@ -38,7 +38,7 @@
         <PackageReference Include="FilterDataGrid" Version="1.2.9" />
         <PackageReference Include="Jot" Version="2.1.17" />
         <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.0-rc4.5" />
-        <PackageReference Include="Metalama.Framework" Version="2025.1.17" />
+        <PackageReference Include="Metalama.Framework" Version="2026.0.12" />
         <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3650.58" />
         <PackageReference Include="RoslynPad.Editor.Windows" Version="4.12.1" />
         <PackageReference Include="ValueInjecter" Version="3.2.0" />
