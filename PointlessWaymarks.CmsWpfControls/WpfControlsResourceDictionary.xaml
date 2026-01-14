@@ -719,49 +719,101 @@
                         VerticalAlignment="Bottom"
                         Content="{StaticResource ContentListContentIdAndDateDisplay}" />
                 </Grid>
-                <Grid Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
+                <Grid Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Bottom">
                     <Grid.RowDefinitions>
                         <RowDefinition />
-                        <RowDefinition Height="Auto" />
+                        <RowDefinition />
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-
-                    <ToggleButton Grid.Row="0"
-                        x:Name="LineContentMenuButton"
-                        Grid.Column="1"
-                        Opacity=".6"
-                        Margin="8,0,0,0"
-                        Padding="2,0"
-                        MinWidth="20"
-                        VerticalAlignment="Top"
-                        Content="⋮"
-                        ToolTip="Line content actions"
-                        Visibility="{Binding ShowType, Converter={StaticResource BooleanToVisibility}}"
-                        Focusable="False" />
-
+                    <ToggleButton Grid.Row="1"
+                                  x:Name="LineContentMenuButton"
+                                  Grid.Column="0"
+                                  Margin="25,0,0,0"
+                                  Padding="1,0"
+                                  MinWidth="20"
+                                  Opacity=".6"
+                                  VerticalAlignment="Bottom"
+                                  HorizontalAlignment="Left"
+                                  Content="⋮"
+                                  ToolTip="Line content actions"
+                                  Focusable="False" />
                     <Border Grid.Column="0"
-                        Grid.Row="1"
-                        Grid.ColumnSpan="2"
-                        Margin="0,4,0,0"
-                        Width="200"
-                        HorizontalAlignment="Right"
-                        BorderThickness="1"
-                        CornerRadius="4"
-                        Visibility="{Binding IsChecked, ElementName=LineContentMenuButton, Converter={StaticResource BooleanToVisibility}}">
+                            Grid.Row="0"
+                            Grid.ColumnSpan="2"
+                            Margin="24,4,0,4"
+                            HorizontalAlignment="Right"
+                            Background="White"
+                            BorderThickness="1"
+                            BorderBrush="LightBlue"
+                            MaxHeight="140"
+                            CornerRadius="4"
+                            Visibility="{Binding IsChecked, ElementName=LineContentMenuButton, Converter={StaticResource BooleanToVisibility}}">
                         <Border.Resources>
                             <Style TargetType="Button">
-                                <Setter Property="Margin" Value="0,2,0,0" />
+                                <Setter Property="Margin" Value="2" />
                                 <Setter Property="Padding" Value="6,1" />
-                                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                                <Setter Property="Width" Value="160" />
                             </Style>
                         </Border.Resources>
-                        <StackPanel>
-                            <Button Content="Text Code" Command="{Binding ItemActions.LinkBracketCodesToClipboardCommand}" CommandParameter="{Binding DbEntry}" />
-                            <Button Content="Text Stats Code" Command="{Binding ItemActions.TextStatsBracketCodesToClipboardCommand}" CommandParameter="{Binding DbEntry}"/>
-                        </StackPanel>
+                        <WrapPanel Orientation="Vertical" Margin="6,4,6,4">
+                            <Button Content="Map Bracket Code"
+                                    Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Link Bracket Code"
+                                    Command="{Binding ItemActions.LinkBracketCodesToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Stats Code"
+                                    Command="{Binding ItemActions.StatsBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Text Stats Code"
+                                    Command="{Binding ItemActions.TextStatsBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Elevation Chart Code"
+                                    Command="{Binding ItemActions.ElevationChartBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="GeoJson to Clipboard"
+                                    Command="{Binding ItemActions.GeoJsonToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="To GPX File"
+                                    Command="{Binding ItemActions.ToGpxFileCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Show Intersection Tags"
+                                    Command="{Binding ItemActions.ShowIntersectionTagsCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Intersection Tags (OSM)"
+                                    Command="{Binding ItemActions.AddIntersectionTagsWithOsmCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Intersection Tags (No OSM)"
+                                    Command="{Binding ItemActions.AddIntersectionTagsWithoutOsmCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Delete"
+                                    Command="{Binding ItemActions.DeleteCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Edit"
+                                    Command="{Binding ItemActions.EditCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Extract Links"
+                                    Command="{Binding ItemActions.ExtractNewLinksCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Generate HTML"
+                                    Command="{Binding ItemActions.GenerateHtmlCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="View History"
+                                    Command="{Binding ItemActions.ViewHistoryCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="View on Site"
+                                    Command="{Binding ItemActions.ViewOnSiteCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="View Site Preview"
+                                    Command="{Binding ItemActions.ViewSitePreviewCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Show on Map"
+                                    Command="{Binding ItemActions.ShowOnMapCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                        </WrapPanel>
                     </Border>
                 </Grid>
             </Grid>
