@@ -757,8 +757,17 @@
                                 <Setter Property="Padding" Value="6,1" />
                                 <Setter Property="Width" Value="160" />
                             </Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Margin" Value="2,0,2,4" />
+                                <Setter Property="HorizontalAlignment" Value="Center" />
+                                <Setter Property="TextAlignment" Value="Center" />
+                                <Setter Property="FontWeight" Value="Bold" />
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                                <Setter Property="Width" Value="160" />
+                            </Style>
                         </Border.Resources>
                         <WrapPanel Orientation="Vertical" Margin="6,4,6,4">
+                            <TextBlock>Bracket Codes</TextBlock>
                             <Button Content="Map Bracket Code"
                                     Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
@@ -774,6 +783,7 @@
                             <Button Content="Elevation Chart Code"
                                     Command="{Binding ItemActions.ElevationChartBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
+                            <TextBlock>Geo Data</TextBlock>
                             <Button Content="GeoJson to Clipboard"
                                     Command="{Binding ItemActions.GeoJsonToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
@@ -789,6 +799,7 @@
                             <Button Content="Intersection Tags (No OSM)"
                                     Command="{Binding ItemActions.AddIntersectionTagsWithoutOsmCommand}"
                                     CommandParameter="{Binding DbEntry}" />
+                            <TextBlock>Program Actions</TextBlock>
                             <Button Content="Delete"
                                     Command="{Binding ItemActions.DeleteCommand}"
                                     CommandParameter="{Binding DbEntry}" />
@@ -804,6 +815,7 @@
                             <Button Content="View History"
                                     Command="{Binding ItemActions.ViewHistoryCommand}"
                                     CommandParameter="{Binding DbEntry}" />
+                            <TextBlock>View</TextBlock>
                             <Button Content="View on Site"
                                     Command="{Binding ItemActions.ViewOnSiteCommand}"
                                     CommandParameter="{Binding DbEntry}" />
