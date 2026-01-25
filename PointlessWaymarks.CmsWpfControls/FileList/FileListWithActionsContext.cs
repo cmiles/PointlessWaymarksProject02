@@ -107,14 +107,14 @@ public partial class FileListWithActionsContext : IListSelectionWithContext<File
     public StatusControlContext StatusContext { get; set; }
 
     public static async Task<FileListWithActionsContext> CreateInstance(StatusControlContext? statusContext,
-        WindowIconStatus? windowStatus, bool loadInBackground = true)
+        WindowIconStatus? windowStatus, IContentListLoader? listLoader = null, bool loadInBackground = true)
     {
         var factoryStatusContext = await StatusControlContext.CreateInstance(statusContext);
 
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         var factoryListContext =
-            await ContentListContext.CreateInstance(factoryStatusContext, new FileListLoader(100),
+            await ContentListContext.CreateInstance(factoryStatusContext, listLoader ?? new FileListLoader(100),
                 [Db.ContentTypeDisplayStringForFile], windowStatus);
 
         return new FileListWithActionsContext(factoryStatusContext, windowStatus, factoryListContext, loadInBackground);
@@ -445,9 +445,15 @@ public partial class FileListWithActionsContext : IListSelectionWithContext<File
 
         var newWindow =
             await FileListWindow.CreateInstance(
-                await CreateInstance(null, null));
+                await CreateInstance(null, null, reportLoader));
         newWindow.WindowTitle = title;
         await newWindow.PositionWindowAndShowOnUiThread();
+    }
+
+    public List<FileContent> SelectedListItemsContent()
+    {
+        return ListContext.ListSelection.SelectedItems.Where(x => x is FileListListItem).Cast<FileListListItem>()
+            .Select(x => x.DbEntry).ToList();
     }
 
     [BlockingCommand]

@@ -1,7 +1,5 @@
-using System.Windows;
-using PointlessWaymarks.CmsData.BracketCodes;
-using PointlessWaymarks.CmsData.ContentHtml.TrailHtml;
 using PointlessWaymarks.CmsData.Database;
+using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
@@ -46,7 +44,8 @@ public partial class TrailListWithActionsContext
 
             new ContextMenuItemData
             {
-                ItemName = "Extended Stats Code to Clipboard", ItemCommand = TextStatsExtendedBracketCodesToClipboardForSelectedCommand
+                ItemName = "Extended Stats Code to Clipboard",
+                ItemCommand = TextStatsExtendedBracketCodesToClipboardForSelectedCommand
             },
 
             new ContextMenuItemData
@@ -55,7 +54,6 @@ public partial class TrailListWithActionsContext
                 ItemCommand = ListContext.PictureGalleryBracketCodeToClipboardSelectedCommand
             },
 
-            new ContextMenuItemData { ItemName = "Email Html to Clipboard", ItemCommand = EmailHtmlToClipboardCommand },
             new ContextMenuItemData
                 { ItemName = "Extract New Links", ItemCommand = ListContext.ExtractNewLinksSelectedCommand },
             new ContextMenuItemData { ItemName = "Open URL", ItemCommand = ListContext.ViewOnSiteCommand },
@@ -67,7 +65,8 @@ public partial class TrailListWithActionsContext
             },
             new ContextMenuItemData
             {
-                ItemName = "View Selected Pictures", ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
+                ItemName = "View Selected Pictures",
+                ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
             },
             new ContextMenuItemData { ItemName = "Refresh Data", ItemCommand = RefreshDataCommand }
         ];
@@ -84,62 +83,7 @@ public partial class TrailListWithActionsContext
     [StopAndWarnIfNoSelectedListItems]
     public async Task BracketCodesToClipboardForSelected()
     {
-        var finalString = SelectedListItems().Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeTrails.Create(loopSelected.DbEntry)}{Environment.NewLine}");
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
-    }
-
-    [BlockingCommand]
-    [StopAndWarnIfNoSelectedListItems]
-    public async Task ImageBracketCodesToClipboardForSelected()
-    {
-        var finalString = SelectedListItems().Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeTrailImageLink.Create(loopSelected.DbEntry)}{Environment.NewLine}");
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
-    }
-
-
-    [BlockingCommand]
-    [StopAndWarnIfNoSelectedListItems]
-    public async Task TextStatsBracketCodesToClipboardForSelected()
-    {
-        var finalString = SelectedListItems().Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeTrailTextStats.Create(loopSelected.DbEntry)}{Environment.NewLine}");
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
-    }
-
-
-    [BlockingCommand]
-    [StopAndWarnIfNoSelectedListItems]
-    public async Task TextStatsExtendedBracketCodesToClipboardForSelected()
-    {
-        var finalString = SelectedListItems().Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeTrailTextStats.CreateExtended(loopSelected.DbEntry)}{Environment.NewLine}");
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+        await TrailActions.BracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
     }
 
     public static async Task<TrailListWithActionsContext> CreateInstance(StatusControlContext? statusContext,
@@ -153,22 +97,15 @@ public partial class TrailListWithActionsContext
             await ContentListContext.CreateInstance(factoryStatusContext, new TrailListLoader(100),
                 [Db.ContentTypeDisplayStringForTrail], windowStatus);
 
-        return new TrailListWithActionsContext(factoryStatusContext, windowStatus, factoryListContext, loadInBackground);
+        return new TrailListWithActionsContext(factoryStatusContext, windowStatus, factoryListContext,
+            loadInBackground);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfNotOneSelectedListItems]
-    public async Task EmailHtmlToClipboard()
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task ImageBracketCodesToClipboardForSelected()
     {
-        var frozenSelected = SelectedListItems().First();
-
-        var emailHtml = await Email.ToHtmlEmail(frozenSelected.DbEntry, StatusContext.ProgressTracker());
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        HtmlClipboardHelpers.CopyToClipboard(emailHtml, emailHtml);
-
-        await StatusContext.ToastSuccess("Email Html on Clipboard");
+        await TrailActions.ImageBracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
     }
 
     [BlockingCommand]
@@ -183,5 +120,27 @@ public partial class TrailListWithActionsContext
     {
         return ListContext.ListSelection.SelectedItems.Where(x => x is TrailListListItem).Cast<TrailListListItem>()
             .ToList();
+    }
+
+    public List<TrailContent> SelectedListItemsContent()
+    {
+        return ListContext.ListSelection.SelectedItems.Where(x => x is TrailListListItem).Cast<TrailListListItem>()
+            .Select(x => x.DbEntry).ToList();
+    }
+
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task TextStatsBracketCodesToClipboardForSelected()
+    {
+        await TrailActions.TextStatsBracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
+    }
+
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task TextStatsExtendedBracketCodesToClipboardForSelected()
+    {
+        await TrailActions.TextStatsExtendedBracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
     }
 }

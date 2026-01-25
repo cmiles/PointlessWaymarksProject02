@@ -2,6 +2,7 @@ using System.Windows;
 using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentHtml.PostHtml;
 using PointlessWaymarks.CmsData.Database;
+using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
@@ -74,15 +75,14 @@ public partial class PostListWithActionsContext
     [StopAndWarnIfNoSelectedListItems]
     public async Task BracketCodesToClipboardForSelected()
     {
-        var finalString = SelectedListItems().Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodePosts.Create(loopSelected.DbEntry)}{Environment.NewLine}");
+        await PostActions.BracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
 
-        await ThreadSwitcher.ResumeForegroundAsync();
+    }
 
-        Clipboard.SetText(finalString);
-
-        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+    public List<PostContent> SelectedListItemsContent()
+    {
+        return ListContext.ListSelection.SelectedItems.Where(x => x is PostListListItem).Cast<PostListListItem>()
+            .Select(x => x.DbEntry).ToList();
     }
 
     [BlockingCommand]

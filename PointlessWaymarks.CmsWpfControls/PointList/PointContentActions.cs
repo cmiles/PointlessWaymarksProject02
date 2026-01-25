@@ -329,4 +329,28 @@ public partial class PointContentActions : IContentActions<PointContentDto>
 
         await mapWindow.PositionWindowAndShowOnUiThread();
     }
+
+    [BlockingCommand]
+    public async Task ShowOnGoogleMaps(PointContentDto? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PointActions.ShowInGoogleMapsWeb(content, StatusContext);
+    }
+
+    [BlockingCommand]
+    public async Task ShowOnOsmCycleMaps(PointContentDto? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PointActions.ShowInOsmCycleMap(content, StatusContext);
+    }
 }

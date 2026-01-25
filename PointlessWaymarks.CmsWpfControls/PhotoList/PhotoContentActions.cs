@@ -1,13 +1,10 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using PointlessWaymarks.CmsData;
-using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentHtml.PhotoHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
-using PointlessWaymarks.CmsData.Server;
 using PointlessWaymarks.CmsWpfControls.ContentHistoryView;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.CmsWpfControls.ContentMap;
@@ -32,72 +29,26 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
         BuildCommands();
     }
 
-    public string DefaultBracketCode(PhotoContent? content)
-    {
-        return content?.ContentId == null ? string.Empty : $"{BracketCodePhotos.Create(content)}";
-    }
-
     public ContentClipboardRepresentation ClipboardObject(PhotoContent? content)
     {
-        if (content == null)
-            return new ContentClipboardRepresentation();
+        return ContentClipboardRepresentation.ClipboardObject(content);
+    }
 
-        var settings = UserSettingsSingleton.CurrentSettings();
-
-        return new ContentClipboardRepresentation
-        {
-            FormatIdentifier = ContentClipboardRepresentation.ContentClipboardFormat,
-            SiteId = settings.SettingsId,
-            ContentId = content.ContentId,
-            ContentType = Db.ContentTypeDisplayString(content),
-            SiteLocalApiUrl = PartialContentPreviewServer.PreviewServerLocalApiUrl
-        };
+    public string DefaultBracketCode(PhotoContent? content)
+    {
+        return PhotoActions.DefaultBracketCode(content);
     }
 
     [BlockingCommand]
     public async Task DefaultBracketCodeToClipboard(PhotoContent? content)
     {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (content == null)
+        if (content is null)
         {
             await StatusContext.ToastError("Nothing Selected?");
             return;
         }
 
-        // Create the standard bracket code string for compatibility
-        var finalString = $"{BracketCodePhotos.Create(content)}{Environment.NewLine}";
-
-        try
-        {
-            // Get the ContentClipboardRepresentation from ClipboardObject
-            var clipboardRepresentation = ClipboardObject(content);
-
-            // Create a DataObject for multiple clipboard formats
-            var dataObject = new DataObject();
-
-            // Add the plain text format for compatibility
-            dataObject.SetText(finalString);
-
-            // Add the ContentClipboardRepresentation as an alternate format
-            // Using the ContentClipboardFormat constant as the format name
-            var clipboardJson = System.Text.Json.JsonSerializer.Serialize(clipboardRepresentation);
-            dataObject.SetData(ContentClipboardRepresentation.ContentClipboardFormat, clipboardJson);
-
-            await ThreadSwitcher.ResumeForegroundAsync();
-
-            // Set the clipboard with multiple formats
-            Clipboard.SetDataObject(dataObject, true);
-
-            await StatusContext.ToastSuccess($"To Clipboard {finalString}");
-        }
-        catch (Exception ex)
-        {
-            // Fallback to simple text if the rich format fails
-            await ThreadSwitcher.ResumeForegroundAsync();
-            Clipboard.SetText(finalString);
-            await StatusContext.ToastWarning($"Simple text copied - rich format failed: {ex.Message}");
-        }
+        await PhotoActions.DefaultBracketCodesToClipboard(content.AsList(), StatusContext);
     }
 
     [NonBlockingCommand]
@@ -324,6 +275,18 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
         await RunReport(async () => await CameraModelFilter(content), $"Camera Model - {content?.CameraModel}");
     }
 
+    [BlockingCommand]
+    public async Task DailyPhotoPageBracketCodesToClipboard(PhotoContent? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PhotoActions.DailyPhotoPageBracketCodesToClipboard(content.AsList(), StatusContext);
+    }
+
     public static async Task<List<object>> FocalLengthFilter(PhotoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -341,6 +304,18 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     public async Task FocalLengthSearch(PhotoContent? content)
     {
         await RunReport(async () => await FocalLengthFilter(content), $"Focal Length - {content?.FocalLength}");
+    }
+
+    [BlockingCommand]
+    public async Task ImageWithDetailsBracketCodesToClipboard(PhotoContent? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PhotoActions.ImageWithDetailsBracketCodesToClipboard(content.AsList(), StatusContext);
     }
 
     public static async Task<List<object>> IsoFilter(PhotoContent? content)
@@ -415,6 +390,18 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
             $"Photo Created On - {content?.PhotoCreatedOn.Date:D}");
     }
 
+    [BlockingCommand]
+    public async Task ReportPhotoMetadata(PhotoContent? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PhotoActions.ReportPhotoMetadata(content.AsList(), StatusContext);
+    }
+
     public static async Task RunReport(Func<Task<List<object>>> toRun, string title)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -426,6 +413,42 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
                 await PhotoListWithActionsContext.CreateInstance(null, null, reportLoader));
         await newWindow.PositionWindowAndShowOnUiThread();
         newWindow.WindowTitle = title;
+    }
+
+    [BlockingCommand]
+    public async Task ShowInPeakFinderWeb(PhotoContent? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PhotoActions.ShowInPeakFinderWeb(content, StatusContext);
+    }
+
+    [BlockingCommand]
+    public async Task ShowOnGoogleMaps(PhotoContent? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PhotoActions.ShowInGoogleMapsWeb(content, StatusContext);
+    }
+
+    [BlockingCommand]
+    public async Task ShowOnOsmCycleMaps(PhotoContent? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PhotoActions.ShowInOsmCycleMap(content, StatusContext);
     }
 
     [NonBlockingCommand]
@@ -476,6 +499,18 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     public async Task ShutterSpeedSearchSearch(PhotoContent? content)
     {
         await RunReport(async () => await ShutterSpeedSearch(content), $"Shutter Speed - {content?.ShutterSpeed}");
+    }
+
+    [BlockingCommand]
+    public async Task TextBracketCodesToClipboard(PhotoContent? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PhotoActions.TextBracketCodesToClipboard(content.AsList(), StatusContext);
     }
 
     [NonBlockingCommand]

@@ -187,7 +187,8 @@ public static partial class BracketCodeCommon
         return null;
     }
 
-    public static async Task<string> ProcessCodesForEmail(string? input, IProgress<string>? progress = null)
+    public static async Task<string> 
+        ProcessCodesForEmail(string? input, IProgress<string>? progress = null)
     {
         if (string.IsNullOrWhiteSpace(input)) return string.Empty;
 

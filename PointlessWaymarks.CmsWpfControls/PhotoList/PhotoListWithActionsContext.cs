@@ -2,7 +2,6 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Windows;
 using KellermanSoftware.CompareNetObjects;
 using KellermanSoftware.CompareNetObjects.Reports;
 using Microsoft.EntityFrameworkCore;
@@ -55,11 +54,11 @@ public partial class PhotoListWithActionsContext
             new ContextMenuItemData
             {
                 ItemName = "Image Code with Photo Details to Clipboard",
-                ItemCommand = PhotoWithDetailsCodesToClipboardForSelectedCommand
+                ItemCommand = ImageWithDetailsBracketCodesToClipboardForSelectedCommand
             },
             new ContextMenuItemData
             {
-                ItemName = "Text Code to Clipboard", ItemCommand = PhotoLinkCodesToClipboardForSelectedCommand
+                ItemName = "Text Code to Clipboard", ItemCommand = TextBracketCodesToClipboardForSelectedCommand
             },
             new ContextMenuItemData
             {
@@ -69,7 +68,7 @@ public partial class PhotoListWithActionsContext
             new ContextMenuItemData
             {
                 ItemName = "Daily Photo Page Code to Clipboard",
-                ItemCommand = DailyPhotoLinkCodesToClipboardForSelectedCommand
+                ItemCommand = DailyPhotoPageBracketCodesToClipboardForSelectedCommand
             },
             new ContextMenuItemData { ItemName = "View Photos - Individual", ItemCommand = ViewSelectedFilesCommand },
             new ContextMenuItemData
@@ -270,17 +269,9 @@ public partial class PhotoListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    public async Task DailyPhotoLinkCodesToClipboardForSelected()
+    public async Task DailyPhotoPageBracketCodesToClipboardForSelected()
     {
-        var finalString = SelectedListItems().Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + BracketCodeDailyPhotoPage.Create(loopSelected.DbEntry) + Environment.NewLine);
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+        await PhotoActions.DailyPhotoPageBracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
     }
 
     [BlockingCommand]
@@ -396,17 +387,9 @@ public partial class PhotoListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    public async Task PhotoLinkCodesToClipboardForSelected()
+    public async Task ImageWithDetailsBracketCodesToClipboardForSelected()
     {
-        var finalString = SelectedListItems().Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + BracketCodePhotoLinks.Create(loopSelected.DbEntry) + Environment.NewLine);
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+        await PhotoActions.ImageWithDetailsBracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
     }
 
     [BlockingCommand]
@@ -591,21 +574,6 @@ public partial class PhotoListWithActionsContext
 
             await pointWindow.PositionWindowAndShowOnUiThread();
         }
-    }
-
-    [BlockingCommand]
-    [StopAndWarnIfNoSelectedListItems]
-    public async Task PhotoWithDetailsCodesToClipboardForSelected()
-    {
-        var finalString = SelectedListItems().Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + BracketCodePhotosWithDetails.Create(loopSelected.DbEntry) + Environment.NewLine);
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
     }
 
     [BlockingCommand]
@@ -823,23 +791,11 @@ public partial class PhotoListWithActionsContext
     [StopAndWarnIfNotOneSelectedListItems]
     public async Task ReportPhotoMetadata()
     {
-        var singleSelected = SelectedListItems().First();
+        await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (string.IsNullOrWhiteSpace(singleSelected.DbEntry.OriginalFileName))
-        {
-            await StatusContext.ToastError("Original File Name is Blank? This is unusual...");
-            return;
-        }
+        var singleSelected = SelectedListItemsContent().First();
 
-        var archiveFile = new FileInfo(Path.Combine(
-            UserSettingsSingleton.CurrentSettings().LocalMediaArchivePhotoDirectory().ToString(),
-            singleSelected.DbEntry.OriginalFileName));
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        var metadataWindow = await FileMetadataDisplayWindow.CreateInstance(archiveFile.FullName,
-            UserSettingsSingleton.CurrentSettings().FfprobeExe());
-        await metadataWindow.PositionWindowAndShowOnUiThread();
+        await PhotoActions.ReportPhotoMetadata(singleSelected.AsList(), StatusContext);
     }
 
     [NonBlockingCommand]
@@ -859,7 +815,6 @@ public partial class PhotoListWithActionsContext
         foreach (var loopContents in allContents)
         {
             var titleFilename = SlugTools.CreateSlug(false, loopContents.Title.TrimNullToEmpty());
-            ;
 
             if (string.IsNullOrWhiteSpace(titleFilename)) returnList.Add(loopContents);
 
@@ -1091,6 +1046,20 @@ public partial class PhotoListWithActionsContext
     {
         return ListContext.ListSelection.SelectedItems.Where(x => x is PhotoListListItem).Cast<PhotoListListItem>()
             .ToList();
+    }
+
+
+    public List<PhotoContent> SelectedListItemsContent()
+    {
+        return ListContext.ListSelection.SelectedItems.Where(x => x is PhotoListListItem).Cast<PhotoListListItem>()
+            .Select(x => x.DbEntry).ToList();
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task TextBracketCodesToClipboardForSelected()
+    {
+        await PhotoActions.TextBracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
     }
 
     [BlockingCommand]

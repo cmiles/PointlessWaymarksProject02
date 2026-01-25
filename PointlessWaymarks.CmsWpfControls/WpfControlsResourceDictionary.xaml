@@ -41,6 +41,8 @@
     <wpfConverter:MetersToFeetValueConverter x:Key="MetersToFeet" />
     <optionalLocationEntry:HasValidLatLongVisibilityConverter x:Key="HasLatLong" />
     <wpfConverter:IntegerGreaterThanZeroToVisibilityConverter x:Key="IntegerGreaterThanZeroToVisibility" />
+    <utility:OptionalLocationContentHasLocationVisibilityConverter
+        x:Key="OptionalLocationContentHasLocationVisibility" />
     <wpfBehavior:MultiValueObjectConverter x:Key="MultiValueObject" />
 
     <Style x:Key="DataEntryComboBoxStyle" TargetType="ComboBox">
@@ -481,6 +483,35 @@
                 Gesture="Shift+LeftDoubleClick" />
         </Image.InputBindings>
     </Image>
+    <TextBox
+        x:Key="PointLocationDisplay"
+        Margin="0,2,0,0"
+        x:Shared="False"
+        Style="{StaticResource ReadOnlyTextBoxStyle}"
+        TextWrapping="Wrap">
+        <TextBox.Text>
+            <MultiBinding StringFormat="{}{0:F5}, {1:F5}   Elevation: {2}'  ">
+                <Binding Path="DbEntry.Latitude" TargetNullValue="" />
+                <Binding Path="DbEntry.Longitude" TargetNullValue="" />
+                <Binding Path="DbEntry.Elevation" TargetNullValue="" />
+            </MultiBinding>
+        </TextBox.Text>
+        <TextBox.InputBindings>
+            <MouseBinding
+                Command="{Binding DataContext.ItemActions.EditCommand, RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}}}"
+                CommandParameter="{Binding DataContext.DbEntry, RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}}}"
+                Gesture="Shift+LeftDoubleClick" />
+        </TextBox.InputBindings>
+        <b:Interaction.Behaviors>
+            <wpfBehavior:ReadOnlyTextBoxClickKeyboardAndDragPass />
+        </b:Interaction.Behaviors>
+        <b:Interaction.Triggers>
+            <b:EventTrigger EventName="SelectionChanged">
+                <wpfBehavior:EventToCommand Command="{Binding SelectedTextTracker.SelectedTextChangedCommand}"
+                                            PassEventArgsToCommand="True" />
+            </b:EventTrigger>
+        </b:Interaction.Triggers>
+    </TextBox>
     <DataTemplate x:Key="PointListItemTemplate" DataType="pointList:PointListListItem">
         <Border Style="{StaticResource ContentListOuterBorderStyle}">
             <Border.InputBindings>
@@ -553,13 +584,36 @@
                         Orientation="Vertical">
                         <ContentPresenter Content="{StaticResource ContentListContentTitleAndAttributionDisplay}" />
                         <ContentPresenter Content="{StaticResource ContentListSummaryDisplay}" />
-                        <WrapPanel Orientation="Horizontal">
-                            <ContentPresenter Content="{StaticResource ContentListTagsDisplay}" />
-                            <TextBlock
-                                Margin="12,2,0,0"
-                                VerticalAlignment="Center"
-                                Text="{Binding DbEntry.Elevation, StringFormat='Elevation {0:N0}\''}"
-                                Visibility="{Binding DbEntry.Elevation, Converter={StaticResource NullToCollapsedVisibility}}" />
+                        <ContentPresenter Content="{StaticResource ContentListTagsDisplay}" />
+                        <WrapPanel Margin="0,4,0,0" Orientation="Horizontal">
+                            <WrapPanel.Resources>
+                                <Style TargetType="Button">
+                                    <Setter Property="Padding" Value="6,0,6,0" />
+                                    <Setter Property="Margin" Value="2,3,2,0" />
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                    <Setter Property="VerticalContentAlignment" Value="Center" />
+                                    <Setter Property="Height" Value="Auto" />
+                                </Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Margin" Value="6,0,6,0" />
+                                </Style>
+                            </WrapPanel.Resources>
+                            <ContentPresenter VerticalAlignment="Center" Content="{StaticResource PointLocationDisplay}"></ContentPresenter>
+                            <Button
+                                Command="{Binding ItemActions.ShowOnMapCommand}"
+                                CommandParameter="{Binding DbEntry}">
+                                Show on PW Map
+                            </Button>
+                            <Button
+                                Command="{Binding ItemActions.ShowOnOsmCycleMapsCommand}"
+                                CommandParameter="{Binding DbEntry}">
+                                OSM Map
+                            </Button>
+                            <Button
+                                Command="{Binding ItemActions.ShowOnGoogleMapsCommand}"
+                                CommandParameter="{Binding DbEntry}">
+                                Google Maps
+                            </Button>
                         </WrapPanel>
                         <ContentPresenter Content="{StaticResource ContentListFolderAndCreatedAndUpdatedDisplay}" />
                     </StackPanel>
@@ -621,6 +675,41 @@
             </Grid>
         </Border>
     </DataTemplate>
+    <TextBox
+        x:Key="LineStatsDisplay"
+        Margin="0,2,0,0"
+        x:Shared="False"
+        Style="{StaticResource ReadOnlyTextBoxStyle}"
+        TextWrapping="Wrap">
+        <TextBox.Text>
+            <MultiBinding StringFormat="Stats: Miles: {0}  Climb: {1}'  Descent: {2}'  Max Elevation: {3}'  Min Elevation: {4}'  {5}  Time: {6}  Started On: {7:g}  Ended On: {8:g}">
+                <Binding Path="DbEntry.LineDistance" TargetNullValue="" />
+                <Binding Path="DbEntry.ClimbElevation" TargetNullValue="" />
+                <Binding Path="DbEntry.DescentElevation" TargetNullValue="" />
+                <Binding Path="DbEntry.MaximumElevation" TargetNullValue="" />
+                <Binding Path="DbEntry.MinimumElevation" TargetNullValue="" />
+                <Binding Path="DbEntry.ActivityType" TargetNullValue="" />
+                <Binding Path="DbEntry" Converter="{StaticResource LineRecordedOnToString}" TargetNullValue="" />
+                <Binding Path="DbEntry.RecordingStartedOn" TargetNullValue="" />
+                <Binding Path="DbEntry.RecordingEndedOn" TargetNullValue="" />
+            </MultiBinding>
+        </TextBox.Text>
+        <TextBox.InputBindings>
+            <MouseBinding
+                Command="{Binding DataContext.ItemActions.EditCommand, RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}}}"
+                CommandParameter="{Binding DataContext.DbEntry, RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}}}"
+                Gesture="Shift+LeftDoubleClick" />
+        </TextBox.InputBindings>
+        <b:Interaction.Behaviors>
+            <wpfBehavior:ReadOnlyTextBoxClickKeyboardAndDragPass />
+        </b:Interaction.Behaviors>
+        <b:Interaction.Triggers>
+            <b:EventTrigger EventName="SelectionChanged">
+                <wpfBehavior:EventToCommand Command="{Binding SelectedTextTracker.SelectedTextChangedCommand}"
+                                            PassEventArgsToCommand="True" />
+            </b:EventTrigger>
+        </b:Interaction.Triggers>
+    </TextBox>
     <DataTemplate x:Key="LineListItemTemplate" DataType="lineList:LineListListItem">
         <Border Style="{StaticResource ContentListOuterBorderStyle}">
             <Border.InputBindings>
@@ -659,28 +748,7 @@
                         <ContentPresenter Content="{StaticResource ContentListContentTitleAndAttributionDisplay}" />
                         <ContentPresenter Content="{StaticResource ContentListSummaryDisplay}" />
                         <ContentPresenter Content="{StaticResource ContentListTagsDisplay}" />
-                        <WrapPanel Margin="4,4,0,0" Orientation="Horizontal">
-                            <WrapPanel.Resources>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Margin" Value="14,0,0,0" />
-                                </Style>
-                            </WrapPanel.Resources>
-                            <TextBlock>Stats:</TextBlock>
-                            <TextBlock Text="{Binding DbEntry.LineDistance, StringFormat='Miles: {0}'}" />
-                            <TextBlock Text="{Binding DbEntry.ClimbElevation, StringFormat='Climb: {0}\''}" />
-                            <TextBlock Text="{Binding DbEntry.DescentElevation, StringFormat='Descent: {0}\''}" />
-                            <TextBlock Text="{Binding DbEntry.MaximumElevation, StringFormat='Max Elevation: {0}\''}" />
-                            <TextBlock Text="{Binding DbEntry.MinimumElevation, StringFormat='Min Elevation: {0}\''}" />
-                            <TextBlock Text="{Binding DbEntry.ActivityType}"
-                                       Visibility="{Binding DbEntry.ActivityType, Converter={StaticResource NullOrWhiteSpaceStringToCollapsed}}" />
-                            <TextBlock
-                                Text="{Binding DbEntry, Converter={StaticResource LineRecordedOnToString}, StringFormat='Time: {0}'}"
-                                Visibility="{Binding DbEntry, Converter={StaticResource LineListHasRecordedOnVisibility}}" />
-                            <TextBlock Text="{Binding DbEntry.RecordingStartedOn, StringFormat='Started On: {0:g}'}"
-                                       Visibility="{Binding DbEntry.RecordingStartedOn, Converter={StaticResource NullToCollapsedVisibility}}" />
-                            <TextBlock Text="{Binding DbEntry.RecordingEndedOn, StringFormat='Ended On: {0:g}'}"
-                                       Visibility="{Binding DbEntry.RecordingEndedOn, Converter={StaticResource NullToCollapsedVisibility}}" />
-                        </WrapPanel>
+                        <ContentPresenter Margin="4,4,0,4" Content="{StaticResource LineStatsDisplay}"></ContentPresenter>
                         <ContentPresenter Content="{StaticResource ContentListFolderAndCreatedAndUpdatedDisplay}" />
                         <WrapPanel
                             Margin="0,4,0,0"
@@ -772,7 +840,7 @@
                                     Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <Button Content="Link Bracket Code"
-                                    Command="{Binding ItemActions.LinkBracketCodesToClipboardCommand}"
+                                    Command="{Binding ItemActions.LinkBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <Button Content="Stats Code"
                                     Command="{Binding ItemActions.StatsBracketCodeToClipboardCommand}"
@@ -879,6 +947,96 @@
                         Grid.Row="1"
                         VerticalAlignment="Bottom"
                         Content="{StaticResource ContentListContentIdAndDateDisplay}" />
+                </Grid>
+                <Grid Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ToggleButton Grid.Row="1"
+                                  x:Name="LineContentMenuButton"
+                                  Grid.Column="0"
+                                  Margin="25,0,0,0"
+                                  Padding="1,0"
+                                  MinWidth="20"
+                                  Opacity=".6"
+                                  VerticalAlignment="Bottom"
+                                  HorizontalAlignment="Left"
+                                  Content="⋮"
+                                  ToolTip="Line content actions"
+                                  Focusable="False" />
+                    <Border Grid.Column="0"
+                            Grid.Row="0"
+                            Grid.ColumnSpan="2"
+                            Margin="24,4,0,4"
+                            HorizontalAlignment="Right"
+                            Background="White"
+                            BorderThickness="1"
+                            BorderBrush="LightBlue"
+                            MaxHeight="140"
+                            CornerRadius="4"
+                            Visibility="{Binding IsChecked, ElementName=LineContentMenuButton, Converter={StaticResource BooleanToVisibility}}">
+                        <Border.Resources>
+                            <Style TargetType="Button">
+                                <Setter Property="Margin" Value="2" />
+                                <Setter Property="Padding" Value="6,1" />
+                                <Setter Property="Width" Value="160" />
+                            </Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Margin" Value="2,0,2,4" />
+                                <Setter Property="HorizontalAlignment" Value="Center" />
+                                <Setter Property="TextAlignment" Value="Center" />
+                                <Setter Property="FontWeight" Value="Bold" />
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                                <Setter Property="Width" Value="160" />
+                            </Style>
+                        </Border.Resources>
+                        <WrapPanel Orientation="Vertical" Margin="6,4,6,4">
+                            <TextBlock>Bracket Codes</TextBlock>
+                            <Button Content="Map Bracket Code"
+                                    Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Image Bracket Code"
+                                    Command="{Binding ItemActions.ImageBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Embed Code"
+                                    Command="{Binding ItemActions.EmbedBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Download Code"
+                                    Command="{Binding ItemActions.DownloadBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="File Url Code"
+                                    Command="{Binding ItemActions.FileUrlBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <TextBlock>Program Actions</TextBlock>
+                            <Button Content="Delete"
+                                    Command="{Binding ItemActions.DeleteCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Edit"
+                                    Command="{Binding ItemActions.EditCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Extract Links"
+                                    Command="{Binding ItemActions.ExtractNewLinksCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Generate HTML"
+                                    Command="{Binding ItemActions.GenerateHtmlCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="View History"
+                                    Command="{Binding ItemActions.ViewHistoryCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <TextBlock>View</TextBlock>
+                            <Button Content="View on Site"
+                                    Command="{Binding ItemActions.ViewOnSiteCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="View Site Preview"
+                                    Command="{Binding ItemActions.ViewSitePreviewCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                        </WrapPanel>
+                    </Border>
                 </Grid>
             </Grid>
         </Border>
@@ -1171,6 +1329,135 @@
                         VerticalAlignment="Bottom"
                         Content="{StaticResource ContentListContentIdAndDateDisplay}" />
                 </Grid>
+                <Grid Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ToggleButton Grid.Row="1"
+                                  x:Name="LineContentMenuButton"
+                                  Grid.Column="0"
+                                  Margin="25,0,0,0"
+                                  Padding="1,0"
+                                  MinWidth="20"
+                                  Opacity=".6"
+                                  VerticalAlignment="Bottom"
+                                  HorizontalAlignment="Left"
+                                  Content="⋮"
+                                  ToolTip="Line content actions"
+                                  Focusable="False" />
+                    <Border Grid.Column="0"
+                            Grid.Row="0"
+                            Grid.ColumnSpan="2"
+                            Margin="24,4,0,4"
+                            HorizontalAlignment="Right"
+                            Background="White"
+                            BorderThickness="1"
+                            BorderBrush="LightBlue"
+                            MaxHeight="140"
+                            CornerRadius="4"
+                            Visibility="{Binding IsChecked, ElementName=LineContentMenuButton, Converter={StaticResource BooleanToVisibility}}">
+                        <Border.Resources>
+                            <Style TargetType="Button">
+                                <Setter Property="Margin" Value="2" />
+                                <Setter Property="Padding" Value="6,1" />
+                                <Setter Property="Width" Value="160" />
+                                <Setter Property="Height" Value="20" />
+                            </Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Margin" Value="2,4,2,0" />
+                                <Setter Property="HorizontalAlignment" Value="Center" />
+                                <Setter Property="TextAlignment" Value="Center" />
+                                <Setter Property="FontWeight" Value="Bold" />
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                                <Setter Property="Width" Value="160" />
+                                <Setter Property="Height" Value="20" />
+                            </Style>
+                            <Style TargetType="TextBox">
+                                <Setter Property="Margin" Value="4,4,4,0" />
+                                <Setter Property="HorizontalAlignment" Value="Left" />
+                                <Setter Property="TextAlignment" Value="Left" />
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                                <Setter Property="Width" Value="160" />
+                                <Setter Property="IsReadOnly" Value="True"></Setter>
+                                <Setter Property="BorderThickness" Value="0"></Setter>
+                                <Setter Property="Height" Value="20" />
+                            </Style>
+                        </Border.Resources>
+                        <WrapPanel Orientation="Vertical" Margin="6,4,6,4">
+                            <TextBlock>Bracket Codes</TextBlock>
+                            <Button Content="Map Bracket Code"
+                                    Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Image w/Details Bracket Code"
+                                    Command="{Binding ItemActions.ImageWithDetailsBracketCodesToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Text Code"
+                                    Command="{Binding ItemActions.TextBracketCodesToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Daily Page Code"
+                                    Command="{Binding ItemActions.DailyPhotoPageBracketCodesToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <TextBlock>Program Actions</TextBlock>
+                            <Button Content="Delete"
+                                    Command="{Binding ItemActions.DeleteCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Edit"
+                                    Command="{Binding ItemActions.EditCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Extract Links"
+                                    Command="{Binding ItemActions.ExtractNewLinksCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Generate HTML"
+                                    Command="{Binding ItemActions.GenerateHtmlCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="View History"
+                                    Command="{Binding ItemActions.ViewHistoryCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <TextBlock>View</TextBlock>
+                            <Button Content="View on Site"
+                                    Command="{Binding ItemActions.ViewOnSiteCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="View Site Preview"
+                                    Command="{Binding ItemActions.ViewSitePreviewCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <WrapPanel Orientation="Vertical"
+                                       Visibility="{Binding DbEntry, Converter={StaticResource OptionalLocationContentHasLocationVisibility}}">
+                                <TextBlock>Geo</TextBlock>
+                                <TextBox>
+                                    <TextBox.Text>
+                                        <MultiBinding StringFormat="{}{0:F5}, {1:F5}">
+                                            <Binding Path="DbEntry.Latitude" />
+                                            <Binding Path="DbEntry.Longitude" />
+                                        </MultiBinding>
+                                    </TextBox.Text>
+                                </TextBox>
+                                <TextBox>
+                                    <TextBox.Text>
+                                        <Binding Path="DbEntry.Elevation" StringFormat="Elv: {0:N0}'"></Binding>
+                                    </TextBox.Text>
+                                </TextBox>
+                                <TextBox Text="{Binding DbEntry.PhotoDirection, StringFormat='Dir: {0}&#176;'}"></TextBox>
+                                <Button Content="PW Map"
+                                        Command="{Binding ItemActions.ShowOnMapCommand}"
+                                        CommandParameter="{Binding DbEntry}" />
+                                <Button Content="OSM Cycle Map"
+                                        Command="{Binding ItemActions.ShowOnOsmCycleMapsCommand}"
+                                        CommandParameter="{Binding DbEntry}" />
+                                <Button Content="Google Maps"
+                                        Command="{Binding ItemActions.ShowOnGoogleMapsCommand}"
+                                        CommandParameter="{Binding DbEntry}" />
+                                <Button Content="Peak Finder"
+                                        Command="{Binding ItemActions.ShowInPeakFinderWebCommand}"
+                                        CommandParameter="{Binding DbEntry}" />
+                            </WrapPanel>
+                        </WrapPanel>
+                    </Border>
+                </Grid>
             </Grid>
         </Border>
     </DataTemplate>
@@ -1270,6 +1557,93 @@
                         Margin="2"
                         VerticalAlignment="Bottom"
                         Content="{StaticResource ContentListContentIdAndDateDisplay}" />
+                </Grid>
+                <Grid Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ToggleButton Grid.Row="1"
+                                  x:Name="LineContentMenuButton"
+                                  Grid.Column="0"
+                                  Margin="25,0,0,0"
+                                  Padding="1,0"
+                                  MinWidth="20"
+                                  Opacity=".6"
+                                  VerticalAlignment="Bottom"
+                                  HorizontalAlignment="Left"
+                                  Content="⋮"
+                                  ToolTip="Line content actions"
+                                  Focusable="False" />
+                    <Border Grid.Column="0"
+                            Grid.Row="0"
+                            Grid.ColumnSpan="2"
+                            Margin="24,4,0,4"
+                            HorizontalAlignment="Right"
+                            Background="White"
+                            BorderThickness="1"
+                            BorderBrush="LightBlue"
+                            MaxHeight="140"
+                            CornerRadius="4"
+                            Visibility="{Binding IsChecked, ElementName=LineContentMenuButton, Converter={StaticResource BooleanToVisibility}}">
+                        <Border.Resources>
+                            <Style TargetType="Button">
+                                <Setter Property="Margin" Value="2" />
+                                <Setter Property="Padding" Value="6,1" />
+                                <Setter Property="Width" Value="160" />
+                            </Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Margin" Value="2,0,2,4" />
+                                <Setter Property="HorizontalAlignment" Value="Center" />
+                                <Setter Property="TextAlignment" Value="Center" />
+                                <Setter Property="FontWeight" Value="Bold" />
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                                <Setter Property="Width" Value="160" />
+                            </Style>
+                        </Border.Resources>
+                        <WrapPanel Orientation="Vertical" Margin="6,4,6,4">
+                            <TextBlock>Bracket Codes</TextBlock>
+                            <Button Content="Map Bracket Code"
+                                    Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Image Bracket Code"
+                                    Command="{Binding ItemActions.ImageBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Text Stats Code"
+                                    Command="{Binding ItemActions.TextStatsBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Extended Text Stats Code"
+                                    Command="{Binding ItemActions.TextStatsExtendedBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <TextBlock>Program Actions</TextBlock>
+                            <Button Content="Delete"
+                                    Command="{Binding ItemActions.DeleteCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Edit"
+                                    Command="{Binding ItemActions.EditCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Extract Links"
+                                    Command="{Binding ItemActions.ExtractNewLinksCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Generate HTML"
+                                    Command="{Binding ItemActions.GenerateHtmlCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="View History"
+                                    Command="{Binding ItemActions.ViewHistoryCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <TextBlock>View</TextBlock>
+                            <Button Content="View on Site"
+                                    Command="{Binding ItemActions.ViewOnSiteCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="View Site Preview"
+                                    Command="{Binding ItemActions.ViewSitePreviewCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                        </WrapPanel>
+                    </Border>
                 </Grid>
             </Grid>
         </Border>

@@ -12,6 +12,8 @@ using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentGeneration;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
+using PointlessWaymarks.CmsData.Server;
+using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.CmsWpfControls.FeatureIntersectResultBrowser;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.FeatureIntersectionTags;
@@ -25,7 +27,7 @@ namespace PointlessWaymarks.CmsWpfControls.LineList;
 
 public static class LineActions
 {
-    public static async Task AddIntersectionTags(List<LineContent> lineContents,
+    public static async Task AddIntersectionTags(List<LineContent> contents,
         StatusControlContext statusContext, bool includeOsm, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile))
@@ -66,7 +68,7 @@ public static class LineActions
         settings.UseOsmOverpass = includeOsm;
         settings.OsmInTagging = includeOsm;
 
-        foreach (var loopSelected in lineContents)
+        foreach (var loopSelected in contents)
         {
             var feature = loopSelected.FeatureFromGeoJsonLineAsPolygon(settings.BufferPointsAndLinesByFeet);
 
@@ -102,7 +104,7 @@ public static class LineActions
                 {
                     noTagsList.Add($"{loopSelected.Title} - no tags found");
                     statusContext.Progress(
-                        $"Processed - {loopSelected.Title} - no tags found - Line {processedCount} of {lineContents.Count}");
+                        $"Processed - {loopSelected.Title} - no tags found - Line {processedCount} of {contents.Count}");
                     continue;
                 }
 
@@ -131,7 +133,7 @@ public static class LineActions
                 successList.Add(
                     $"{loopSelected.Title} - found Tags {string.Join(", ", taggerResult.Tags)}");
                 statusContext.Progress(
-                    $"Processed - {loopSelected.Title} - found Tags {string.Join(", ", taggerResult.Tags)} - Line {processedCount} of {lineContents.Count}");
+                    $"Processed - {loopSelected.Title} - found Tags {string.Join(", ", taggerResult.Tags)} - Line {processedCount} of {contents.Count}");
             }
             catch (Exception e)
             {
@@ -163,28 +165,39 @@ public static class LineActions
         }
     }
 
-    public static async Task ElevationChartBracketCodesToClipboard(List<LineContent> lineContents,
+    public static string DefaultBracketCode(LineContent? content)
+    {
+        return content is null ? string.Empty : $"{BracketCodeLines.Create(content)}";
+    }
+
+    public static async Task DefaultBracketCodesToClipboard(List<LineContent> contents,
         StatusControlContext statusContext)
     {
-        var finalString = lineContents.Aggregate(string.Empty,
+        var finalString = contents.Aggregate(string.Empty,
+            (current, loopSelected) =>
+                current + $"{BracketCodeLines.Create(loopSelected)}{Environment.NewLine}");
+
+        await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
+    }
+
+    public static async Task ElevationChartBracketCodesToClipboard(List<LineContent> contents,
+        StatusControlContext statusContext)
+    {
+        var finalString = contents.Aggregate(string.Empty,
             (current, loopSelected) =>
                 current + $"{BracketCodeLineElevationCharts.Create(loopSelected)}{Environment.NewLine}");
 
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await statusContext.ToastSuccess($"To Clipboard {finalString}");
+        await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
 
-    public static async Task GeoJsonToClipboard(List<LineContent> frozenSelected,
+    public static async Task GeoJsonToClipboard(List<LineContent> contents,
         StatusControlContext statusContext)
     {
         var featureList = new List<IFeature>();
         var warningList = new List<string>();
         var successCounter = 0;
 
-        foreach (var loopSelected in frozenSelected)
+        foreach (var loopSelected in contents)
         {
             var lineFeature = loopSelected.FeatureFromGeoJsonLine();
 
@@ -212,21 +225,17 @@ public static class LineActions
                 $"GeoJson Conversion failed for {warningList.Count} items.{Environment.NewLine}{Environment.NewLine}{string.Join(Environment.NewLine, warningList)}");
     }
 
-    public static async Task LinkBracketCodesToClipboard(List<LineContent> lineContents,
+    public static async Task LinkBracketCodesToClipboard(List<LineContent> contents,
         StatusControlContext statusContext)
     {
-        var finalString = lineContents.Aggregate(string.Empty,
+        var finalString = contents.Aggregate(string.Empty,
             (current, loopSelected) =>
                 current + $"{BracketCodeLineLinks.Create(loopSelected)}{Environment.NewLine}");
 
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await statusContext.ToastSuccess($"To Clipboard {finalString}");
+        await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
 
-    public static async Task ShowIntersectionTagsForSelected(List<LineContent> lineContents,
+    public static async Task ShowIntersectionTagsForSelected(List<LineContent> contents,
         StatusControlContext statusContext, CancellationToken cancellationToken)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -255,7 +264,7 @@ public static class LineActions
             return;
         }
 
-        foreach (var loopSelected in lineContents)
+        foreach (var loopSelected in contents)
         {
             var feature = loopSelected.FeatureFromGeoJsonLineAsPolygon(settings.BufferPointsAndLinesByFeet);
 
@@ -281,35 +290,70 @@ public static class LineActions
         }
     }
 
-    public static async Task StatsBracketCodesToClipboard(List<LineContent> lineContents,
+    public static async Task StatsBracketCodesToClipboard(List<LineContent> contents,
         StatusControlContext statusContext)
     {
-        var finalString = lineContents.Aggregate(string.Empty,
+        var finalString = contents.Aggregate(string.Empty,
             (current, loopSelected) =>
                 current + $"{BracketCodeLineStats.Create(loopSelected)}{Environment.NewLine}");
 
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await statusContext.ToastSuccess($"To Clipboard {finalString}");
+        await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
 
-    public static async Task TextStatsBracketCodesToClipboard(List<LineContent> lineContents,
+    public static async Task TextAndContentRepresentationToClipboard(List<LineContent> contents, string clipboardString,
         StatusControlContext statusContext)
     {
-        var finalString = lineContents.Aggregate(string.Empty,
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (contents.Count < 1)
+        {
+            await statusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        try
+        {
+            // Get the ContentClipboardRepresentation from ClipboardObject
+            var clipboardRepresentation = ContentClipboardRepresentation.ClipboardObject(contents.Cast<IContentCommon>().ToList());
+
+            // Create a DataObject for multiple clipboard formats
+            var dataObject = new DataObject();
+
+            // Add the plain text format for compatibility
+            dataObject.SetText(clipboardString);
+
+            // Add the ContentClipboardRepresentation as an alternate format
+            // Using the ContentClipboardFormat constant as the format name
+            var clipboardJson = JsonSerializer.Serialize(clipboardRepresentation);
+            dataObject.SetData(ContentClipboardRepresentation.ContentClipboardFormat, clipboardJson);
+
+            await ThreadSwitcher.ResumeForegroundAsync();
+
+            // Set the clipboard with multiple formats
+            Clipboard.SetDataObject(dataObject, true);
+
+            await statusContext.ToastSuccess($"To Clipboard {clipboardString.TruncateWithEllipses(100)}");
+        }
+        catch (Exception ex)
+        {
+            // Fallback to simple text if the rich format fails
+            await ThreadSwitcher.ResumeForegroundAsync();
+            Clipboard.SetText(clipboardString);
+            await statusContext.ToastWarning($"Simple text copied - rich format failed: {ex.Message}");
+        }
+    }
+
+    public static async Task TextStatsBracketCodesToClipboard(List<LineContent> contents,
+        StatusControlContext statusContext)
+    {
+        var finalString = contents.Aggregate(string.Empty,
             (current, loopSelected) =>
                 current + $"{BracketCodeLineTextStats.Create(loopSelected)}");
 
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await statusContext.ToastSuccess($"To Clipboard {finalString}");
+        await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
 
-    public static async Task ToGpxFile(List<LineContent> lineContents, StatusControlContext statusContext)
+    public static async Task ToGpxFile(List<LineContent> contents, StatusControlContext statusContext)
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -334,7 +378,7 @@ public static class LineActions
 
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        var trackList = lineContents.Select(x => GpxTools.GpxTrackFromLineFeature(x.FeatureFromGeoJsonLine()!,
+        var trackList = contents.Select(x => GpxTools.GpxTrackFromLineFeature(x.FeatureFromGeoJsonLine()!,
             x.RecordingStartedOnUtc, x.Title ?? "New Track", string.Empty,
             x.Title!.Replace(".", string.Empty)
                 .Contains(x.Summary.TrimNullToEmpty().Replace(".", string.Empty),
@@ -350,7 +394,7 @@ public static class LineActions
         xmlWriter.Close();
     }
 
-    public static async Task ToGpxFiles(List<LineContent> lineContents,
+    public static async Task ToGpxFiles(List<LineContent> contents,
         StatusControlContext statusContext)
     {
         await ThreadSwitcher.ResumeForegroundAsync();
@@ -370,7 +414,7 @@ public static class LineActions
 
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        foreach (var loopSelected in lineContents)
+        foreach (var loopSelected in contents)
         {
             var trackList = GpxTools.GpxTrackFromLineFeature(loopSelected.FeatureFromGeoJsonLine()!,
                 loopSelected.RecordingStartedOnUtc, loopSelected.Title ?? "New Track", string.Empty,

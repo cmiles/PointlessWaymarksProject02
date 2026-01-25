@@ -1,14 +1,10 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Text.Json;
-using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using PointlessWaymarks.CmsData;
-using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentHtml.FileHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
-using PointlessWaymarks.CmsData.Server;
 using PointlessWaymarks.CmsWpfControls.ContentHistoryView;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.CmsWpfControls.FileContentEditor;
@@ -34,74 +30,25 @@ public partial class FileContentActions : IContentActions<FileContent>
 
     public ContentClipboardRepresentation ClipboardObject(FileContent? content)
     {
-        if (content == null)
-            return new ContentClipboardRepresentation();
-
-        var settings = UserSettingsSingleton.CurrentSettings();
-
-        return new ContentClipboardRepresentation
-        {
-            FormatIdentifier = ContentClipboardRepresentation.ContentClipboardFormat,
-            SiteId = settings.SettingsId,
-            ContentId = content.ContentId,
-            ContentType = Db.ContentTypeDisplayString(content),
-            SiteLocalApiUrl = PartialContentPreviewServer.PreviewServerLocalApiUrl
-        };
+        return ContentClipboardRepresentation.ClipboardObject(content);
     }
 
     public string DefaultBracketCode(FileContent? content)
     {
-        if (content?.ContentId == null) return string.Empty;
-        return content.MainPicture != null
-            ? $"{BracketCodeFileImageLink.Create(content)}"
-            : $"{BracketCodeFiles.Create(content)}";
+        return FileActions.DefaultBracketCode(content);
     }
 
     [BlockingCommand]
     public async Task DefaultBracketCodeToClipboard(FileContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (content == null)
+        if (content is null)
         {
             await StatusContext.ToastError("Nothing Selected?");
             return;
         }
 
-        var finalString = content.MainPicture != null
-            ? $"{BracketCodeFileImageLink.Create(content)}{Environment.NewLine}"
-            : $"{BracketCodeFiles.Create(content)}{Environment.NewLine}";
-
-        try
-        {
-            // Get the ContentClipboardRepresentation from ClipboardObject
-            var clipboardRepresentation = ClipboardObject(content);
-
-            // Create a DataObject for multiple clipboard formats
-            var dataObject = new DataObject();
-
-            // Add the plain text format for compatibility
-            dataObject.SetText(finalString);
-
-            // Add the ContentClipboardRepresentation as an alternate format
-            // Using the ContentClipboardFormat constant as the format name
-            var clipboardJson = JsonSerializer.Serialize(clipboardRepresentation);
-            dataObject.SetData(ContentClipboardRepresentation.ContentClipboardFormat, clipboardJson);
-
-            await ThreadSwitcher.ResumeForegroundAsync();
-
-            // Set the clipboard with multiple formats
-            Clipboard.SetDataObject(dataObject, true);
-
-            await StatusContext.ToastSuccess($"To Clipboard {finalString}");
-        }
-        catch (Exception ex)
-        {
-            // Fallback to simple text if the rich format fails
-            await ThreadSwitcher.ResumeForegroundAsync();
-            Clipboard.SetText(finalString);
-            await StatusContext.ToastWarning($"Simple text copied - rich format failed: {ex.Message}");
-        }
+        await FileActions.DefaultBracketCodesToClipboard(content.AsList(), StatusContext);
     }
 
     [BlockingCommand]
@@ -273,6 +220,54 @@ public partial class FileContentActions : IContentActions<FileContent>
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    [BlockingCommand]
+    public async Task DownloadBracketCodeToClipboard(FileContent? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await FileActions.DownloadBracketCodesToClipboard(content.AsList(), StatusContext);
+    }
+
+    [BlockingCommand]
+    public async Task EmbedBracketCodeToClipboard(FileContent? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await FileActions.EmbedBracketCodesToClipboard(content.AsList(), StatusContext);
+    }
+
+    [BlockingCommand]
+    public async Task FileUrlBracketCodeToClipboard(FileContent? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await FileActions.FileUrlBracketCodesToClipboard(content.AsList(), StatusContext);
+    }
+
+    [BlockingCommand]
+    public async Task ImageBracketCodeToClipboard(FileContent? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await FileActions.ImageBracketCodesToClipboard(content.AsList(), StatusContext);
+    }
 
     public static async Task<FileListListItem> ListItemFromDbItem(FileContent content, FileContentActions itemActions,
         bool showType)
