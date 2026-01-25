@@ -4,7 +4,7 @@
     <Product>PressSharper.UnitTests</Product>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Metalama.Framework" Version="2026.0.12" />
+    <PackageReference Include="Metalama.Framework" Version="2026.0.16" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
     <PackageReference Include="NUnit" Version="4.4.0" />
     <PackageReference Include="NUnit.Analyzers" Version="4.11.2">
