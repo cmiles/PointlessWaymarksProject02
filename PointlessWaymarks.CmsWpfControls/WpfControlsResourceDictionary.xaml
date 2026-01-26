@@ -97,6 +97,56 @@
     <Style x:Key="ContentListTextGridStyle" TargetType="Grid">
         <Setter Property="Margin" Value="2" />
     </Style>
+    <Style x:Key="InTemplateContentMenuToggleButtonStyle" TargetType="ToggleButton">
+        <Setter Property="Margin" Value="25,0,0,0" />
+        <Setter Property="Padding" Value="1,0" />
+        <Setter Property="MinWidth" Value="20" />
+        <Setter Property="Opacity" Value=".6" />
+        <Setter Property="VerticalAlignment" Value="Bottom" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="Content" Value="⋮" />
+        <Setter Property="Focusable" Value="False" />
+    </Style>
+    <Style x:Key="InTemplateContentMenuBorderStyle" TargetType="Border">
+        <Setter Property="Margin" Value="24,4,0,4" />
+        <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="Background" Value="White" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="LightBlue" />
+        <Setter Property="MaxHeight" Value="140" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Visibility"
+                Value="{Binding IsChecked, ElementName=InTemplateContentMenuButton, Converter={StaticResource BooleanToVisibility}}" />
+    </Style>
+    <Style TargetType="Button" x:Key="InTemplateContentMenuButton">
+        <Setter Property="Margin" Value="2" />
+        <Setter Property="Padding" Value="6,1" />
+        <Setter Property="Width" Value="160" />
+        <Setter Property="Height" Value="20" />
+    </Style>
+    <Style TargetType="TextBlock" x:Key="InTemplateContentMenuTextBlock">
+        <Setter Property="Margin" Value="2,4,2,0" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="TextAlignment" Value="Center" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Width" Value="160" />
+        <Setter Property="Height" Value="20" />
+    </Style>
+    <Style TargetType="TextBox" x:Key="InTemplateContentMenuTextBox">
+        <Setter Property="Margin" Value="4,4,4,0" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="TextAlignment" Value="Left" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Width" Value="160" />
+        <Setter Property="IsReadOnly" Value="True"></Setter>
+        <Setter Property="BorderThickness" Value="0"></Setter>
+        <Setter Property="Height" Value="20" />
+    </Style>
+    <Style x:Key="InTemplateContentMenuWrapPanelStyle" TargetType="WrapPanel">
+        <Setter Property="Orientation" Value="Vertical" />
+        <Setter Property="Margin" Value="6,4,6,4" />
+    </Style>
     <wpfConverter:ImageCacheConverter x:Key="ImageCache" />
     <TextBox
         x:Key="ContentListTitleDisplay"
@@ -598,7 +648,9 @@
                                     <Setter Property="Margin" Value="6,0,6,0" />
                                 </Style>
                             </WrapPanel.Resources>
-                            <ContentPresenter VerticalAlignment="Center" Content="{StaticResource PointLocationDisplay}"></ContentPresenter>
+                            <ContentPresenter VerticalAlignment="Center"
+                                              Content="{StaticResource PointLocationDisplay}">
+                            </ContentPresenter>
                             <Button
                                 Command="{Binding ItemActions.ShowOnMapCommand}"
                                 CommandParameter="{Binding DbEntry}">
@@ -682,7 +734,8 @@
         Style="{StaticResource ReadOnlyTextBoxStyle}"
         TextWrapping="Wrap">
         <TextBox.Text>
-            <MultiBinding StringFormat="Stats: Miles: {0}  Climb: {1}'  Descent: {2}'  Max Elevation: {3}'  Min Elevation: {4}'  {5}  Time: {6}  Started On: {7:g}  Ended On: {8:g}">
+            <MultiBinding
+                StringFormat="Stats: Miles: {0}  Climb: {1}'  Descent: {2}'  Max Elevation: {3}'  Min Elevation: {4}'  {5}  Time: {6}  Started On: {7:g}  Ended On: {8:g}">
                 <Binding Path="DbEntry.LineDistance" TargetNullValue="" />
                 <Binding Path="DbEntry.ClimbElevation" TargetNullValue="" />
                 <Binding Path="DbEntry.DescentElevation" TargetNullValue="" />
@@ -797,44 +850,19 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <ToggleButton Grid.Row="1"
-                                  x:Name="LineContentMenuButton"
+                                  x:Name="InTemplateContentMenuButton"
                                   Grid.Column="0"
-                                  Margin="25,0,0,0"
-                                  Padding="1,0"
-                                  MinWidth="20"
-                                  Opacity=".6"
-                                  VerticalAlignment="Bottom"
-                                  HorizontalAlignment="Left"
-                                  Content="⋮"
                                   ToolTip="Line content actions"
-                                  Focusable="False" />
+                                  Style="{StaticResource InTemplateContentMenuToggleButtonStyle}" />
                     <Border Grid.Column="0"
                             Grid.Row="0"
-                            Grid.ColumnSpan="2"
-                            Margin="24,4,0,4"
-                            HorizontalAlignment="Right"
-                            Background="White"
-                            BorderThickness="1"
-                            BorderBrush="LightBlue"
-                            MaxHeight="140"
-                            CornerRadius="4"
-                            Visibility="{Binding IsChecked, ElementName=LineContentMenuButton, Converter={StaticResource BooleanToVisibility}}">
+                            Grid.ColumnSpan="2" Style="{StaticResource InTemplateContentMenuBorderStyle}">
                         <Border.Resources>
-                            <Style TargetType="Button">
-                                <Setter Property="Margin" Value="2" />
-                                <Setter Property="Padding" Value="6,1" />
-                                <Setter Property="Width" Value="160" />
-                            </Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Margin" Value="2,0,2,4" />
-                                <Setter Property="HorizontalAlignment" Value="Center" />
-                                <Setter Property="TextAlignment" Value="Center" />
-                                <Setter Property="FontWeight" Value="Bold" />
-                                <Setter Property="VerticalAlignment" Value="Center" />
-                                <Setter Property="Width" Value="160" />
-                            </Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource InTemplateContentMenuButton}" />
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource InTemplateContentMenuTextBlock}" />
+                            <Style TargetType="TextBox" BasedOn="{StaticResource InTemplateContentMenuTextBox}" />
                         </Border.Resources>
-                        <WrapPanel Orientation="Vertical" Margin="6,4,6,4">
+                        <WrapPanel Style="{StaticResource InTemplateContentMenuWrapPanelStyle}">
                             <TextBlock>Bracket Codes</TextBlock>
                             <Button Content="Map Bracket Code"
                                     Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
@@ -958,44 +986,19 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <ToggleButton Grid.Row="1"
-                                  x:Name="LineContentMenuButton"
+                                  x:Name="InTemplateContentMenuButton"
                                   Grid.Column="0"
-                                  Margin="25,0,0,0"
-                                  Padding="1,0"
-                                  MinWidth="20"
-                                  Opacity=".6"
-                                  VerticalAlignment="Bottom"
-                                  HorizontalAlignment="Left"
-                                  Content="⋮"
                                   ToolTip="Line content actions"
-                                  Focusable="False" />
+                                  Style="{StaticResource InTemplateContentMenuToggleButtonStyle}" />
                     <Border Grid.Column="0"
                             Grid.Row="0"
-                            Grid.ColumnSpan="2"
-                            Margin="24,4,0,4"
-                            HorizontalAlignment="Right"
-                            Background="White"
-                            BorderThickness="1"
-                            BorderBrush="LightBlue"
-                            MaxHeight="140"
-                            CornerRadius="4"
-                            Visibility="{Binding IsChecked, ElementName=LineContentMenuButton, Converter={StaticResource BooleanToVisibility}}">
+                            Grid.ColumnSpan="2" Style="{StaticResource InTemplateContentMenuBorderStyle}">
                         <Border.Resources>
-                            <Style TargetType="Button">
-                                <Setter Property="Margin" Value="2" />
-                                <Setter Property="Padding" Value="6,1" />
-                                <Setter Property="Width" Value="160" />
-                            </Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Margin" Value="2,0,2,4" />
-                                <Setter Property="HorizontalAlignment" Value="Center" />
-                                <Setter Property="TextAlignment" Value="Center" />
-                                <Setter Property="FontWeight" Value="Bold" />
-                                <Setter Property="VerticalAlignment" Value="Center" />
-                                <Setter Property="Width" Value="160" />
-                            </Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource InTemplateContentMenuButton}" />
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource InTemplateContentMenuTextBlock}" />
+                            <Style TargetType="TextBox" BasedOn="{StaticResource InTemplateContentMenuTextBox}" />
                         </Border.Resources>
-                        <WrapPanel Orientation="Vertical" Margin="6,4,6,4">
+                        <WrapPanel Style="{StaticResource InTemplateContentMenuWrapPanelStyle}">
                             <TextBlock>Bracket Codes</TextBlock>
                             <Button Content="Map Bracket Code"
                                     Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
@@ -1339,56 +1342,19 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <ToggleButton Grid.Row="1"
-                                  x:Name="LineContentMenuButton"
+                                  x:Name="InTemplateContentMenuButton"
                                   Grid.Column="0"
-                                  Margin="25,0,0,0"
-                                  Padding="1,0"
-                                  MinWidth="20"
-                                  Opacity=".6"
-                                  VerticalAlignment="Bottom"
-                                  HorizontalAlignment="Left"
-                                  Content="⋮"
                                   ToolTip="Line content actions"
-                                  Focusable="False" />
+                                  Style="{StaticResource InTemplateContentMenuToggleButtonStyle}" />
                     <Border Grid.Column="0"
                             Grid.Row="0"
-                            Grid.ColumnSpan="2"
-                            Margin="24,4,0,4"
-                            HorizontalAlignment="Right"
-                            Background="White"
-                            BorderThickness="1"
-                            BorderBrush="LightBlue"
-                            MaxHeight="140"
-                            CornerRadius="4"
-                            Visibility="{Binding IsChecked, ElementName=LineContentMenuButton, Converter={StaticResource BooleanToVisibility}}">
+                            Grid.ColumnSpan="2" Style="{StaticResource InTemplateContentMenuBorderStyle}">
                         <Border.Resources>
-                            <Style TargetType="Button">
-                                <Setter Property="Margin" Value="2" />
-                                <Setter Property="Padding" Value="6,1" />
-                                <Setter Property="Width" Value="160" />
-                                <Setter Property="Height" Value="20" />
-                            </Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Margin" Value="2,4,2,0" />
-                                <Setter Property="HorizontalAlignment" Value="Center" />
-                                <Setter Property="TextAlignment" Value="Center" />
-                                <Setter Property="FontWeight" Value="Bold" />
-                                <Setter Property="VerticalAlignment" Value="Center" />
-                                <Setter Property="Width" Value="160" />
-                                <Setter Property="Height" Value="20" />
-                            </Style>
-                            <Style TargetType="TextBox">
-                                <Setter Property="Margin" Value="4,4,4,0" />
-                                <Setter Property="HorizontalAlignment" Value="Left" />
-                                <Setter Property="TextAlignment" Value="Left" />
-                                <Setter Property="VerticalAlignment" Value="Center" />
-                                <Setter Property="Width" Value="160" />
-                                <Setter Property="IsReadOnly" Value="True"></Setter>
-                                <Setter Property="BorderThickness" Value="0"></Setter>
-                                <Setter Property="Height" Value="20" />
-                            </Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource InTemplateContentMenuButton}" />
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource InTemplateContentMenuTextBlock}" />
+                            <Style TargetType="TextBox" BasedOn="{StaticResource InTemplateContentMenuTextBox}" />
                         </Border.Resources>
-                        <WrapPanel Orientation="Vertical" Margin="6,4,6,4">
+                        <WrapPanel Style="{StaticResource InTemplateContentMenuWrapPanelStyle}">
                             <TextBlock>Bracket Codes</TextBlock>
                             <Button Content="Map Bracket Code"
                                     Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
@@ -1424,6 +1390,9 @@
                                     CommandParameter="{Binding DbEntry}" />
                             <Button Content="View Site Preview"
                                     Command="{Binding ItemActions.ViewSitePreviewCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Metadata Report"
+                                    Command="{Binding ItemActions.ReportPhotoMetadataCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <WrapPanel Orientation="Vertical"
                                        Visibility="{Binding DbEntry, Converter={StaticResource OptionalLocationContentHasLocationVisibility}}">
@@ -1508,6 +1477,59 @@
                         VerticalAlignment="Bottom"
                         Content="{StaticResource ContentListContentIdAndDateDisplay}" />
                 </Grid>
+                <Grid Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ToggleButton Grid.Row="1"
+                                  x:Name="InTemplateContentMenuButton"
+                                  Grid.Column="0"
+                                  ToolTip="Line content actions"
+                                  Style="{StaticResource InTemplateContentMenuToggleButtonStyle}" />
+                    <Border Grid.Column="0"
+                            Grid.Row="0"
+                            Grid.ColumnSpan="2" Style="{StaticResource InTemplateContentMenuBorderStyle}">
+                        <Border.Resources>
+                            <Style TargetType="Button" BasedOn="{StaticResource InTemplateContentMenuButton}" />
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource InTemplateContentMenuTextBlock}" />
+                            <Style TargetType="TextBox" BasedOn="{StaticResource InTemplateContentMenuTextBox}" />
+                        </Border.Resources>
+                        <WrapPanel Style="{StaticResource InTemplateContentMenuWrapPanelStyle}">
+                            <TextBlock>Bracket Codes</TextBlock>
+                            <Button Content="Map Bracket Code"
+                                    Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <TextBlock>Program Actions</TextBlock>
+                            <Button Content="Delete"
+                                    Command="{Binding ItemActions.DeleteCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Edit"
+                                    Command="{Binding ItemActions.EditCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Extract Links"
+                                    Command="{Binding ItemActions.ExtractNewLinksCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Generate HTML"
+                                    Command="{Binding ItemActions.GenerateHtmlCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="View History"
+                                    Command="{Binding ItemActions.ViewHistoryCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <TextBlock>View</TextBlock>
+                            <Button Content="View on Site"
+                                    Command="{Binding ItemActions.ViewOnSiteCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="View Site Preview"
+                                    Command="{Binding ItemActions.ViewSitePreviewCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                        </WrapPanel>
+                    </Border>
+                </Grid>
             </Grid>
         </Border>
     </DataTemplate>
@@ -1568,44 +1590,19 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <ToggleButton Grid.Row="1"
-                                  x:Name="LineContentMenuButton"
+                                  x:Name="InTemplateContentMenuButton"
                                   Grid.Column="0"
-                                  Margin="25,0,0,0"
-                                  Padding="1,0"
-                                  MinWidth="20"
-                                  Opacity=".6"
-                                  VerticalAlignment="Bottom"
-                                  HorizontalAlignment="Left"
-                                  Content="⋮"
                                   ToolTip="Line content actions"
-                                  Focusable="False" />
+                                  Style="{StaticResource InTemplateContentMenuToggleButtonStyle}" />
                     <Border Grid.Column="0"
                             Grid.Row="0"
-                            Grid.ColumnSpan="2"
-                            Margin="24,4,0,4"
-                            HorizontalAlignment="Right"
-                            Background="White"
-                            BorderThickness="1"
-                            BorderBrush="LightBlue"
-                            MaxHeight="140"
-                            CornerRadius="4"
-                            Visibility="{Binding IsChecked, ElementName=LineContentMenuButton, Converter={StaticResource BooleanToVisibility}}">
+                            Grid.ColumnSpan="2" Style="{StaticResource InTemplateContentMenuBorderStyle}">
                         <Border.Resources>
-                            <Style TargetType="Button">
-                                <Setter Property="Margin" Value="2" />
-                                <Setter Property="Padding" Value="6,1" />
-                                <Setter Property="Width" Value="160" />
-                            </Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Margin" Value="2,0,2,4" />
-                                <Setter Property="HorizontalAlignment" Value="Center" />
-                                <Setter Property="TextAlignment" Value="Center" />
-                                <Setter Property="FontWeight" Value="Bold" />
-                                <Setter Property="VerticalAlignment" Value="Center" />
-                                <Setter Property="Width" Value="160" />
-                            </Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource InTemplateContentMenuButton}" />
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource InTemplateContentMenuTextBlock}" />
+                            <Style TargetType="TextBox" BasedOn="{StaticResource InTemplateContentMenuTextBox}" />
                         </Border.Resources>
-                        <WrapPanel Orientation="Vertical" Margin="6,4,6,4">
+                        <WrapPanel Style="{StaticResource InTemplateContentMenuWrapPanelStyle}">
                             <TextBlock>Bracket Codes</TextBlock>
                             <Button Content="Map Bracket Code"
                                     Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
