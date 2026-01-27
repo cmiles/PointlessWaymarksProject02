@@ -415,6 +415,36 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
         newWindow.WindowTitle = title;
     }
 
+    [NonBlockingCommand]
+    public async Task ShowFileInExplorer(PhotoContent? listItem)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (listItem == null)
+        {
+            await StatusContext.ToastError("Nothing Items to Open?");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(listItem.OriginalFileName))
+        {
+            await StatusContext.ToastError("No File?");
+            return;
+        }
+
+        var toOpen = UserSettingsSingleton.CurrentSettings().LocalMediaArchivePhotoContentFile(listItem);
+
+        if (toOpen is not { Exists: true })
+        {
+            await StatusContext.ToastError("File doesn't exist?");
+            return;
+        }
+
+        var url = toOpen.FullName;
+
+        await ProcessHelpers.OpenExplorerWindowForFile(url);
+    }
+
     [BlockingCommand]
     public async Task ShowInPeakFinderWeb(PhotoContent? content)
     {
@@ -437,18 +467,6 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
         }
 
         await PhotoActions.ShowInGoogleMapsWeb(content, StatusContext);
-    }
-
-    [BlockingCommand]
-    public async Task ShowOnOsmCycleMaps(PhotoContent? content)
-    {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PhotoActions.ShowInOsmCycleMap(content, StatusContext);
     }
 
     [NonBlockingCommand]
@@ -481,6 +499,18 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
                 [content.ContentId]));
 
         await mapWindow.PositionWindowAndShowOnUiThread();
+    }
+
+    [BlockingCommand]
+    public async Task ShowOnOsmCycleMaps(PhotoContent? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PhotoActions.ShowInOsmCycleMap(content, StatusContext);
     }
 
     public static async Task<List<object>> ShutterSpeedSearch(PhotoContent? content)

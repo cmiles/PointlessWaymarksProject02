@@ -284,6 +284,36 @@ public partial class ImageContentActions : IContentActions<ImageContent>
     }
 
     [NonBlockingCommand]
+    public async Task ShowFileInExplorer(ImageContent? listItem)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (listItem == null)
+        {
+            await StatusContext.ToastError("Nothing Items to Open?");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(listItem.OriginalFileName))
+        {
+            await StatusContext.ToastError("No File?");
+            return;
+        }
+
+        var toOpen = UserSettingsSingleton.CurrentSettings().LocalMediaArchiveImageContentFile(listItem);
+
+        if (toOpen is not { Exists: true })
+        {
+            await StatusContext.ToastError("File doesn't exist?");
+            return;
+        }
+
+        var url = toOpen.FullName;
+
+        await ProcessHelpers.OpenExplorerWindowForFile(url);
+    }
+
+    [NonBlockingCommand]
     public async Task ViewFile(ImageContent? listItem)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
