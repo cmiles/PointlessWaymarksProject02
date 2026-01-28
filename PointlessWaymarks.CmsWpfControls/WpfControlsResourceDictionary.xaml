@@ -685,13 +685,13 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <ToggleButton Grid.Row="1"
-                  x:Name="InTemplateContentMenuButton"
-                  Grid.Column="0"
-                  ToolTip="Line content actions"
-                  Style="{StaticResource InTemplateContentMenuToggleButtonStyle}" />
+                                  x:Name="InTemplateContentMenuButton"
+                                  Grid.Column="0"
+                                  ToolTip="Line content actions"
+                                  Style="{StaticResource InTemplateContentMenuToggleButtonStyle}" />
                     <Border Grid.Column="0"
-            Grid.Row="0"
-            Grid.ColumnSpan="2" Style="{StaticResource InTemplateContentMenuBorderStyle}">
+                            Grid.Row="0"
+                            Grid.ColumnSpan="2" Style="{StaticResource InTemplateContentMenuBorderStyle}">
                         <Border.Resources>
                             <Style TargetType="Button" BasedOn="{StaticResource InTemplateContentMenuButton}" />
                             <Style TargetType="TextBlock" BasedOn="{StaticResource InTemplateContentMenuTextBlock}" />
@@ -700,31 +700,31 @@
                         <WrapPanel Style="{StaticResource InTemplateContentMenuWrapPanelStyle}">
                             <TextBlock>Bracket Codes</TextBlock>
                             <Button Content="Map Bracket Code"
-                    Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <TextBlock>Program Actions</TextBlock>
                             <Button Content="Delete"
-                    Command="{Binding ItemActions.DeleteCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.DeleteCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="Edit"
-                    Command="{Binding ItemActions.EditCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.EditCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="Extract Links"
-                    Command="{Binding ItemActions.ExtractNewLinksCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.ExtractNewLinksCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="Generate HTML"
-                    Command="{Binding ItemActions.GenerateHtmlCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.GenerateHtmlCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="View History"
-                    Command="{Binding ItemActions.ViewHistoryCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.ViewHistoryCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <TextBlock>View</TextBlock>
                             <Button Content="View on Site"
-                    Command="{Binding ItemActions.ViewOnSiteCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.ViewOnSiteCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="View Site Preview"
-                    Command="{Binding ItemActions.ViewSitePreviewCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.ViewSitePreviewCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                         </WrapPanel>
                     </Border>
                 </Grid>
@@ -787,13 +787,13 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <ToggleButton Grid.Row="1"
-                  x:Name="InTemplateContentMenuButton"
-                  Grid.Column="0"
-                  ToolTip="Line content actions"
-                  Style="{StaticResource InTemplateContentMenuToggleButtonStyle}" />
+                                  x:Name="InTemplateContentMenuButton"
+                                  Grid.Column="0"
+                                  ToolTip="Line content actions"
+                                  Style="{StaticResource InTemplateContentMenuToggleButtonStyle}" />
                     <Border Grid.Column="0"
-            Grid.Row="0"
-            Grid.ColumnSpan="2" Style="{StaticResource InTemplateContentMenuBorderStyle}">
+                            Grid.Row="0"
+                            Grid.ColumnSpan="2" Style="{StaticResource InTemplateContentMenuBorderStyle}">
                         <Border.Resources>
                             <Style TargetType="Button" BasedOn="{StaticResource InTemplateContentMenuButton}" />
                             <Style TargetType="TextBlock" BasedOn="{StaticResource InTemplateContentMenuTextBlock}" />
@@ -802,31 +802,31 @@
                         <WrapPanel Style="{StaticResource InTemplateContentMenuWrapPanelStyle}">
                             <TextBlock>Bracket Codes</TextBlock>
                             <Button Content="Map Bracket Code"
-                    Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <TextBlock>Program Actions</TextBlock>
                             <Button Content="Delete"
-                    Command="{Binding ItemActions.DeleteCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.DeleteCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="Edit"
-                    Command="{Binding ItemActions.EditCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.EditCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="Extract Links"
-                    Command="{Binding ItemActions.ExtractNewLinksCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.ExtractNewLinksCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="Generate HTML"
-                    Command="{Binding ItemActions.GenerateHtmlCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.GenerateHtmlCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="View History"
-                    Command="{Binding ItemActions.ViewHistoryCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.ViewHistoryCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <TextBlock>View</TextBlock>
                             <Button Content="View on Site"
-                    Command="{Binding ItemActions.ViewOnSiteCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.ViewOnSiteCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="View Site Preview"
-                    Command="{Binding ItemActions.ViewSitePreviewCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.ViewSitePreviewCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                         </WrapPanel>
                     </Border>
                 </Grid>
@@ -1212,13 +1212,13 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <ToggleButton Grid.Row="1"
-                  x:Name="InTemplateContentMenuButton"
-                  Grid.Column="0"
-                  ToolTip="Line content actions"
-                  Style="{StaticResource InTemplateContentMenuToggleButtonStyle}" />
+                                  x:Name="InTemplateContentMenuButton"
+                                  Grid.Column="0"
+                                  ToolTip="Line content actions"
+                                  Style="{StaticResource InTemplateContentMenuToggleButtonStyle}" />
                     <Border Grid.Column="0"
-            Grid.Row="0"
-            Grid.ColumnSpan="2" Style="{StaticResource InTemplateContentMenuBorderStyle}">
+                            Grid.Row="0"
+                            Grid.ColumnSpan="2" Style="{StaticResource InTemplateContentMenuBorderStyle}">
                         <Border.Resources>
                             <Style TargetType="Button" BasedOn="{StaticResource InTemplateContentMenuButton}" />
                             <Style TargetType="TextBlock" BasedOn="{StaticResource InTemplateContentMenuTextBlock}" />
@@ -1227,31 +1227,34 @@
                         <WrapPanel Style="{StaticResource InTemplateContentMenuWrapPanelStyle}">
                             <TextBlock>Bracket Codes</TextBlock>
                             <Button Content="Map Bracket Code"
-                    Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <TextBlock>Program Actions</TextBlock>
                             <Button Content="Delete"
-                    Command="{Binding ItemActions.DeleteCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.DeleteCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="Edit"
-                    Command="{Binding ItemActions.EditCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.EditCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="Extract Links"
-                    Command="{Binding ItemActions.ExtractNewLinksCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.ExtractNewLinksCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="Generate HTML"
-                    Command="{Binding ItemActions.GenerateHtmlCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.GenerateHtmlCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="View History"
-                    Command="{Binding ItemActions.ViewHistoryCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.ViewHistoryCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <TextBlock>View</TextBlock>
+                            <Button Content="Metadata"
+                                    Command="{Binding ItemActions.MetaDataReportCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="View on Site"
-                    Command="{Binding ItemActions.ViewOnSiteCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.ViewOnSiteCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="View Site Preview"
-                    Command="{Binding ItemActions.ViewSitePreviewCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.ViewSitePreviewCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                         </WrapPanel>
                     </Border>
                 </Grid>
@@ -1304,13 +1307,13 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <ToggleButton Grid.Row="1"
-                  x:Name="InTemplateContentMenuButton"
-                  Grid.Column="0"
-                  ToolTip="Line content actions"
-                  Style="{StaticResource InTemplateContentMenuToggleButtonStyle}" />
+                                  x:Name="InTemplateContentMenuButton"
+                                  Grid.Column="0"
+                                  ToolTip="Line content actions"
+                                  Style="{StaticResource InTemplateContentMenuToggleButtonStyle}" />
                     <Border Grid.Column="0"
-            Grid.Row="0"
-            Grid.ColumnSpan="2" Style="{StaticResource InTemplateContentMenuBorderStyle}">
+                            Grid.Row="0"
+                            Grid.ColumnSpan="2" Style="{StaticResource InTemplateContentMenuBorderStyle}">
                         <Border.Resources>
                             <Style TargetType="Button" BasedOn="{StaticResource InTemplateContentMenuButton}" />
                             <Style TargetType="TextBlock" BasedOn="{StaticResource InTemplateContentMenuTextBlock}" />
@@ -1319,31 +1322,31 @@
                         <WrapPanel Style="{StaticResource InTemplateContentMenuWrapPanelStyle}">
                             <TextBlock>Bracket Codes</TextBlock>
                             <Button Content="Map Bracket Code"
-                    Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <TextBlock>Program Actions</TextBlock>
                             <Button Content="Delete"
-                    Command="{Binding ItemActions.DeleteCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.DeleteCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="Edit"
-                    Command="{Binding ItemActions.EditCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.EditCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="Extract Links"
-                    Command="{Binding ItemActions.ExtractNewLinksCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.ExtractNewLinksCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="Generate HTML"
-                    Command="{Binding ItemActions.GenerateHtmlCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.GenerateHtmlCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="View History"
-                    Command="{Binding ItemActions.ViewHistoryCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.ViewHistoryCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <TextBlock>View</TextBlock>
                             <Button Content="View on Site"
-                    Command="{Binding ItemActions.ViewOnSiteCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.ViewOnSiteCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="View Site Preview"
-                    Command="{Binding ItemActions.ViewSitePreviewCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.ViewSitePreviewCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                         </WrapPanel>
                     </Border>
                 </Grid>
@@ -1925,13 +1928,13 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <ToggleButton Grid.Row="1"
-                  x:Name="InTemplateContentMenuButton"
-                  Grid.Column="0"
-                  ToolTip="Line content actions"
-                  Style="{StaticResource InTemplateContentMenuToggleButtonStyle}" />
+                                  x:Name="InTemplateContentMenuButton"
+                                  Grid.Column="0"
+                                  ToolTip="Line content actions"
+                                  Style="{StaticResource InTemplateContentMenuToggleButtonStyle}" />
                     <Border Grid.Column="0"
-            Grid.Row="0"
-            Grid.ColumnSpan="2" Style="{StaticResource InTemplateContentMenuBorderStyle}">
+                            Grid.Row="0"
+                            Grid.ColumnSpan="2" Style="{StaticResource InTemplateContentMenuBorderStyle}">
                         <Border.Resources>
                             <Style TargetType="Button" BasedOn="{StaticResource InTemplateContentMenuButton}" />
                             <Style TargetType="TextBlock" BasedOn="{StaticResource InTemplateContentMenuTextBlock}" />
@@ -1940,31 +1943,34 @@
                         <WrapPanel Style="{StaticResource InTemplateContentMenuWrapPanelStyle}">
                             <TextBlock>Bracket Codes</TextBlock>
                             <Button Content="Map Bracket Code"
-                    Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <TextBlock>Program Actions</TextBlock>
                             <Button Content="Delete"
-                    Command="{Binding ItemActions.DeleteCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.DeleteCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="Edit"
-                    Command="{Binding ItemActions.EditCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.EditCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="Extract Links"
-                    Command="{Binding ItemActions.ExtractNewLinksCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.ExtractNewLinksCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="Generate HTML"
-                    Command="{Binding ItemActions.GenerateHtmlCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.GenerateHtmlCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="View History"
-                    Command="{Binding ItemActions.ViewHistoryCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.ViewHistoryCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <TextBlock>View</TextBlock>
+                            <Button Content="Metadata"
+                                    Command="{Binding ItemActions.MetaDataReportCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="View on Site"
-                    Command="{Binding ItemActions.ViewOnSiteCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.ViewOnSiteCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="View Site Preview"
-                    Command="{Binding ItemActions.ViewSitePreviewCommand}"
-                    CommandParameter="{Binding DbEntry}" />
+                                    Command="{Binding ItemActions.ViewSitePreviewCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                         </WrapPanel>
                     </Border>
                 </Grid>

@@ -284,6 +284,20 @@ public partial class ImageContentActions : IContentActions<ImageContent>
     }
 
     [NonBlockingCommand]
+    public async Task MetaDataReport(ImageContent? listItem)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (listItem == null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await ImageActions.ReportVideoMetadata(listItem.AsList(), StatusContext);
+    }
+
+    [NonBlockingCommand]
     public async Task ShowFileInExplorer(ImageContent? listItem)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
