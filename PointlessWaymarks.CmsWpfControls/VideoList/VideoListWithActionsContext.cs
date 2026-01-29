@@ -2,11 +2,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Web;
-using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using Ookii.Dialogs.Wpf;
 using PointlessWaymarks.CmsData;
-using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentGeneration;
 using PointlessWaymarks.CmsData.ContentHtml.VideoHtml;
 using PointlessWaymarks.CmsData.Database;
@@ -49,13 +47,13 @@ public partial class VideoListWithActionsContext
             new ContextMenuItemData
             {
                 ItemName = "Image Code to Clipboard",
-                ItemCommand = VideoCoverImageLinkCodesToClipboardForSelectedCommand
+                ItemCommand = ImageBracketCodesToClipboardForSelectedCommand
             },
 
             new ContextMenuItemData
             {
                 ItemName = "Text Code to Clipboard",
-                ItemCommand = VideoPageLinkCodesToClipboardForSelectedCommand
+                ItemCommand = TextBracketCodesToClipboardForSelectedCommand
             },
 
             new ContextMenuItemData
@@ -171,6 +169,13 @@ public partial class VideoListWithActionsContext
             await StatusContext.ToastSuccess($"Exported {exportedCount} files to {exportDirectory.FullName}");
         else
             await StatusContext.ToastWarning("No files to export?");
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task ImageBracketCodesToClipboardForSelected()
+    {
+        await VideoActions.ImageBracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
     }
 
     [BlockingCommand]
@@ -363,26 +368,10 @@ public partial class VideoListWithActionsContext
     }
 
     [BlockingCommand]
-    [StopAndWarnIfNotOneSelectedListItems]
+    [StopAndWarnIfNoOrMoreThanSelectedListItems(MaxSelectedItems = 10)]
     public async Task ReportVideoMetadata()
     {
-        var singleSelected = SelectedListItems().First();
-
-        if (string.IsNullOrWhiteSpace(singleSelected.DbEntry.OriginalFileName))
-        {
-            await StatusContext.ToastError("Original File Name is Blank? This is unusual...");
-            return;
-        }
-
-        var archiveFile = new FileInfo(Path.Combine(
-            UserSettingsSingleton.CurrentSettings().LocalMediaArchiveVideoDirectory().ToString(),
-            singleSelected.DbEntry.OriginalFileName));
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        var metadataWindow = await FileMetadataDisplayWindow.CreateInstance(archiveFile.FullName,
-            UserSettingsSingleton.CurrentSettings().FfprobeExe());
-        await metadataWindow.PositionWindowAndShowOnUiThread();
+        await VideoActions.ReportVideoMetadata(SelectedListItemsContent(), StatusContext);
     }
 
     private static async Task RunReport(Func<Task<List<object>>> toRun, string title)
@@ -404,33 +393,17 @@ public partial class VideoListWithActionsContext
             .ToList();
     }
 
+    public List<VideoContent> SelectedListItemsContent()
+    {
+        return ListContext.ListSelection.SelectedItems.Where(x => x is VideoListListItem).Cast<VideoListListItem>()
+            .Select(x => x.DbEntry).ToList();
+    }
+
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    public async Task VideoCoverImageLinkCodesToClipboardForSelected()
+    public async Task TextBracketCodesToClipboardForSelected()
     {
-        var finalString = string.Empty;
-
-        var showNoImageWarning = false;
-
-        foreach (var loopSelected in SelectedListItems())
-            if (loopSelected.DbEntry.MainPicture == null)
-            {
-                showNoImageWarning = true;
-                finalString += $"{BracketCodeVideoLinks.Create(loopSelected.DbEntry)}{Environment.NewLine}";
-            }
-            else
-            {
-                finalString += $"{BracketCodeVideoImageLink.Create(loopSelected.DbEntry)}{Environment.NewLine}";
-            }
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        if (showNoImageWarning)
-            await StatusContext.ToastWarning("Not all Videos had a main image - some bracket codes are text links...");
-        else
-            await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+        await VideoActions.TextBracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
     }
 
     [BlockingCommand]
@@ -452,22 +425,6 @@ public partial class VideoListWithActionsContext
             await FileMetadataDisplayWindow.CreateInstance(file.FullName,
                 UserSettingsSingleton.CurrentSettings().FfprobeExe());
         await metadataWindow.PositionWindowAndShowOnUiThread();
-    }
-
-    [BlockingCommand]
-    [StopAndWarnIfNoSelectedListItems]
-    public async Task VideoPageLinkCodesToClipboardForSelected()
-    {
-        var finalString = string.Empty;
-
-        foreach (var loopSelected in SelectedListItems())
-            finalString += $"{BracketCodeVideoLinks.Create(loopSelected.DbEntry)}{Environment.NewLine}";
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
     }
 
     [BlockingCommand]

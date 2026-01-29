@@ -1,14 +1,10 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Text.Json;
-using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using PointlessWaymarks.CmsData;
-using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentHtml.VideoHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
-using PointlessWaymarks.CmsData.Server;
 using PointlessWaymarks.CmsWpfControls.ContentHistoryView;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.CmsWpfControls.SitePreview;
@@ -32,74 +28,27 @@ public partial class VideoContentActions : IContentActions<VideoContent>
         BuildCommands();
     }
 
+
     public ContentClipboardRepresentation ClipboardObject(VideoContent? content)
     {
-        if (content == null)
-            return new ContentClipboardRepresentation();
-
-        var settings = UserSettingsSingleton.CurrentSettings();
-
-        return new ContentClipboardRepresentation
-        {
-            FormatIdentifier = ContentClipboardRepresentation.ContentClipboardFormat,
-            SiteId = settings.SettingsId,
-            ContentId = content.ContentId,
-            ContentType = Db.ContentTypeDisplayString(content),
-            SiteLocalApiUrl = PartialContentPreviewServer.PreviewServerLocalApiUrl
-        };
+        return ContentClipboardRepresentation.ClipboardObject(content);
     }
 
     public string DefaultBracketCode(VideoContent? content)
     {
-        if (content?.ContentId == null) return string.Empty;
-        return $"{BracketCodeVideoEmbed.Create(content)}";
+        return VideoActions.DefaultBracketCode(content);
     }
 
     [BlockingCommand]
     public async Task DefaultBracketCodeToClipboard(VideoContent? content)
     {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (content == null)
+        if (content is null)
         {
             await StatusContext.ToastError("Nothing Selected?");
             return;
         }
 
-        var finalString = content.MainPicture != null
-            ? $"{BracketCodeVideoImageLink.Create(content)}{Environment.NewLine}"
-            : $"{BracketCodeVideoEmbed.Create(content)}{Environment.NewLine}";
-
-        try
-        {
-            // Get the ContentClipboardRepresentation from ClipboardObject
-            var clipboardRepresentation = ClipboardObject(content);
-
-            // Create a DataObject for multiple clipboard formats
-            var dataObject = new DataObject();
-
-            // Add the plain text format for compatibility
-            dataObject.SetText(finalString);
-
-            // Add the ContentClipboardRepresentation as an alternate format
-            // Using the ContentClipboardFormat constant as the format name
-            var clipboardJson = JsonSerializer.Serialize(clipboardRepresentation);
-            dataObject.SetData(ContentClipboardRepresentation.ContentClipboardFormat, clipboardJson);
-
-            await ThreadSwitcher.ResumeForegroundAsync();
-
-            // Set the clipboard with multiple formats
-            Clipboard.SetDataObject(dataObject, true);
-
-            await StatusContext.ToastSuccess($"To Clipboard {finalString}");
-        }
-        catch (Exception ex)
-        {
-            // Fallback to simple text if the rich format fails
-            await ThreadSwitcher.ResumeForegroundAsync();
-            Clipboard.SetText(finalString);
-            await StatusContext.ToastWarning($"Simple text copied - rich format failed: {ex.Message}");
-        }
+        await VideoActions.DefaultBracketCodesToClipboard(content.AsList(), StatusContext);
     }
 
     [BlockingCommand]
@@ -269,6 +218,18 @@ public partial class VideoContentActions : IContentActions<VideoContent>
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    [BlockingCommand]
+    public async Task ImageBracketCodeToClipboard(VideoContent? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await VideoActions.ImageBracketCodesToClipboard(content.AsList(), StatusContext);
+    }
+
     public static async Task<VideoListListItem> ListItemFromDbItem(VideoContent content,
         VideoContentActions itemActions,
         bool showType)
@@ -325,6 +286,18 @@ public partial class VideoContentActions : IContentActions<VideoContent>
         var url = toOpen.FullName;
 
         await ProcessHelpers.OpenExplorerWindowForFile(url);
+    }
+
+    [BlockingCommand]
+    public async Task TextBracketCodeToClipboard(VideoContent? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await VideoActions.TextBracketCodesToClipboard(content.AsList(), StatusContext);
     }
 
     [NonBlockingCommand]

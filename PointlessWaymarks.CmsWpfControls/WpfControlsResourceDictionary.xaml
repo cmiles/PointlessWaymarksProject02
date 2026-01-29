@@ -1138,7 +1138,7 @@
                                     Command="{Binding ItemActions.ViewHistoryCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <TextBlock>View</TextBlock>
-                            <Button Content="View File on Disk"
+                            <Button Content="File in Explorer"
                                     Command="{Binding ItemActions.ShowFileInExplorerCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <Button Content="View on Site"
@@ -1248,6 +1248,9 @@
                             <TextBlock>View</TextBlock>
                             <Button Content="Metadata"
                                     Command="{Binding ItemActions.MetaDataReportCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="File in Explorer"
+                                    Command="{Binding ItemActions.ShowFileInExplorerCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <Button Content="View on Site"
                                     Command="{Binding ItemActions.ViewOnSiteCommand}"
@@ -1603,7 +1606,10 @@
                                     Command="{Binding ItemActions.ViewHistoryCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <TextBlock>View</TextBlock>
-                            <Button Content="View File on Disk"
+                            <Button Content="Metadata"
+                                    Command="{Binding ItemActions.ReportPhotoMetadataCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="File in Explorer"
                                     Command="{Binding ItemActions.ShowFileInExplorerCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <Button Content="View on Site"
@@ -1611,9 +1617,6 @@
                                     CommandParameter="{Binding DbEntry}" />
                             <Button Content="View Site Preview"
                                     Command="{Binding ItemActions.ViewSitePreviewCommand}"
-                                    CommandParameter="{Binding DbEntry}" />
-                            <Button Content="Metadata Report"
-                                    Command="{Binding ItemActions.ReportPhotoMetadataCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <WrapPanel Orientation="Vertical"
                                        Visibility="{Binding DbEntry, Converter={StaticResource OptionalLocationContentHasLocationVisibility}}">
@@ -1942,8 +1945,14 @@
                         </Border.Resources>
                         <WrapPanel Style="{StaticResource InTemplateContentMenuWrapPanelStyle}">
                             <TextBlock>Bracket Codes</TextBlock>
-                            <Button Content="Map Bracket Code"
+                            <Button Content="Embed Bracket Code"
                                     Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Text Bracket Code"
+                                    Command="{Binding ItemActions.TextBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Image Bracket Code"
+                                    Command="{Binding ItemActions.ImageBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <TextBlock>Program Actions</TextBlock>
                             <Button Content="Delete"
@@ -1964,6 +1973,9 @@
                             <TextBlock>View</TextBlock>
                             <Button Content="Metadata"
                                     Command="{Binding ItemActions.MetaDataReportCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="File in Explorer"
+                                    Command="{Binding ItemActions.ShowFileInExplorerCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <Button Content="View on Site"
                                     Command="{Binding ItemActions.ViewOnSiteCommand}"
