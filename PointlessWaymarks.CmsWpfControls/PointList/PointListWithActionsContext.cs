@@ -1,22 +1,14 @@
 using System.IO;
 using System.Text;
 using System.Text.Json;
-using System.Windows;
-using System.Xml;
-using NetTopologySuite.Features;
-using NetTopologySuite.IO;
-using Ookii.Dialogs.Wpf;
 using PointlessWaymarks.CmsData;
-using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentGeneration;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsWpfControls.ContentList;
-using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.FeatureIntersectionTags;
 using PointlessWaymarks.FeatureIntersectionTags.Models;
 using PointlessWaymarks.LlamaAspects;
-using PointlessWaymarks.SpatialTools;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
@@ -51,7 +43,7 @@ public partial class PointListWithActionsContext
             new ContextMenuItemData
             {
                 ItemName = "Text Code to Clipboard",
-                ItemCommand = PointLinkBracketCodesToClipboardForSelectedCommand
+                ItemCommand = TextBracketCodesToClipboardForSelectedCommand
             },
 
             new ContextMenuItemData
@@ -62,8 +54,20 @@ public partial class PointListWithActionsContext
 
             new ContextMenuItemData
             {
+                ItemName = "Image Code to Clipboard",
+                ItemCommand = ImageBracketCodesToClipboardForSelectedCommand
+            },
+
+            new ContextMenuItemData
+            {
                 ItemName = "External Directions Code to Clipboard",
-                ItemCommand = PointLinkExternalDirectionsBracketCodesToClipboardForSelectedCommand
+                ItemCommand = ExternalDirectionsBracketCodesToClipboardForSelectedCommand
+            },
+
+            new ContextMenuItemData
+            {
+                ItemName = "Google Maps Point Code to Clipboard",
+                ItemCommand = GoogleMapsBracketCodesToClipboardForSelectedCommand
             },
 
             new ContextMenuItemData
@@ -82,7 +86,10 @@ public partial class PointListWithActionsContext
             },
 
             new ContextMenuItemData
-                { ItemName = "Selected Points to Clipboard - Text", ItemCommand = ToClipboardForSelectedCommand },
+            {
+                ItemName = "Selected Points Coordinates to Clipboard - Text",
+                ItemCommand = CoordinatesToClipboardForSelectedCommand
+            },
             new ContextMenuItemData
                 { ItemName = "Extract New Links", ItemCommand = ListContext.ExtractNewLinksSelectedCommand },
             new ContextMenuItemData { ItemName = "Open URL", ItemCommand = ListContext.ViewOnSiteCommand },
@@ -128,10 +135,13 @@ public partial class PointListWithActionsContext
             return;
         }
 
-        var settings = JsonSerializer.Deserialize<IntersectSettings>(await File.ReadAllTextAsync(settingsFileInfo.FullName, cancellationToken));
+        var settings =
+            JsonSerializer.Deserialize<IntersectSettings>(await File.ReadAllTextAsync(settingsFileInfo.FullName,
+                cancellationToken));
         if (settings == null)
         {
-            StatusContext.Progress($"The settings file {settingsFileInfo.FullName} did not deserialized to valid settings...");
+            StatusContext.Progress(
+                $"The settings file {settingsFileInfo.FullName} did not deserialized to valid settings...");
             return;
         }
 
@@ -151,10 +161,15 @@ public partial class PointListWithActionsContext
 
         foreach (var loopSelected in pointDtos)
         {
-            var feature = settings.BufferPointsAndLinesByFeet > 0 ? loopSelected.FeatureFromPointAsCircle(settings.BufferPointsAndLinesByFeet.Value) : loopSelected.FeatureFromPoint();
+            var feature = settings.BufferPointsAndLinesByFeet > 0
+                ? loopSelected.FeatureFromPointAsCircle(settings.BufferPointsAndLinesByFeet.Value)
+                : loopSelected.FeatureFromPoint();
 
             toProcess.Add(loopSelected);
-            intersectResults.Add(new IntersectResult(feature) { ContentId = loopSelected.ContentId, Description = $"Point Content - {loopSelected.Title ?? "No Title"}" });
+            intersectResults.Add(new IntersectResult(feature)
+            {
+                ContentId = loopSelected.ContentId, Description = $"Point Content - {loopSelected.Title ?? "No Title"}"
+            });
         }
 
         await intersectResults.IntersectionTags(settings,
@@ -236,6 +251,13 @@ public partial class PointListWithActionsContext
         }
     }
 
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task CoordinatesToClipboardForSelected()
+    {
+        await PointActions.CoordinateTextToClipboard(SelectedListItemsContent(), StatusContext);
+    }
+
     public static async Task<PointListWithActionsContext> CreateInstance(StatusControlContext? statusContext,
         WindowIconStatus? windowStatus = null, bool loadInBackground = true)
     {
@@ -251,73 +273,40 @@ public partial class PointListWithActionsContext
             loadInBackground);
     }
 
+    [NonBlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task ExternalDirectionsBracketCodesToClipboardForSelected()
+    {
+        await PointActions.ExternalDirectionsBracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
+    }
+
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItemsAskIfOverMax(MaxSelectedItems = 100, ActionVerb = "copy to clipboard")]
     public async Task GeoJsonToClipboardForSelected()
     {
-        var frozenSelected = SelectedListItems();
+        await PointActions.GeoJsonToClipboard(SelectedListItemsContent(), StatusContext);
+    }
 
-        var featureList = new List<IFeature>();
+    [NonBlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task GoogleMapsBracketCodesToClipboardForSelected()
+    {
+        await PointActions.GoogleMapsBracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
+    }
 
-        foreach (var loopSelected in frozenSelected)
-        {
-            var pointFeature = loopSelected.DbEntry.FeatureFromPoint();
-            featureList.Add(pointFeature);
-        }
 
-        var finalString = await GeoJsonTools.SerializeListOfFeaturesCollectionToGeoJson(featureList);
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await StatusContext.ToastSuccess($"GeoJson Points To Clipboard for {frozenSelected.Count} Points");
+    [NonBlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task ImageBracketCodesToClipboardForSelected()
+    {
+        await PointActions.ImageBracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
     }
 
     [NonBlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
     public async Task PointDetailsBracketCodesToClipboardForSelected()
     {
-        var finalString = SelectedListItems().Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodePointDetails.Create(loopSelected.DbEntry.ToDbObject())}{Environment.NewLine}");
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
-    }
-
-    [NonBlockingCommand]
-    [StopAndWarnIfNoSelectedListItems]
-    public async Task PointLinkBracketCodesToClipboardForSelected()
-    {
-        var finalString = SelectedListItems().Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodePointLinks.Create(loopSelected.DbEntry.ToDbObject())}{Environment.NewLine}");
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
-    }
-
-    [NonBlockingCommand]
-    [StopAndWarnIfNoSelectedListItems]
-    public async Task PointLinkExternalDirectionsBracketCodesToClipboardForSelected()
-    {
-        var finalString = SelectedListItems().Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current +
-                $"{BracketCodePointExternalDirectionLinks.Create(loopSelected.DbEntry.ToDbObject())}{Environment.NewLine}");
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+        await PointActions.PointDetailsBracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
     }
 
     [BlockingCommand]
@@ -334,64 +323,25 @@ public partial class PointListWithActionsContext
             .ToList();
     }
 
+    public List<PointContentDto> SelectedListItemsContent()
+    {
+        return ListContext.ListSelection.SelectedItems.Where(x => x is PointListListItem).Cast<PointListListItem>()
+            .Select(x => x.DbEntry).ToList();
+    }
+
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
     public async Task SelectedToGpxFile()
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        var fileDialog = new VistaSaveFileDialog
-        {
-            Filter = "gpx file (*.gpx)|*.gpx;",
-            AddExtension = true,
-            OverwritePrompt = true,
-            DefaultExt = ".gpx"
-        };
-        var fileDialogResult = fileDialog.ShowDialog();
-
-        if (!(fileDialogResult ?? false)) return;
-
-        var fileName = fileDialog.FileName;
-
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        var waypointList = new List<GpxWaypoint>();
-
-        foreach (var loopItems in SelectedListItems())
-        {
-            var toAdd = new GpxWaypoint(new GpxLongitude(loopItems.DbEntry.Longitude),
-                new GpxLatitude(loopItems.DbEntry.Latitude),
-                loopItems.DbEntry.Elevation?.FeetToMeters(),
-                loopItems.DbEntry.LastUpdatedOn?.ToUniversalTime() ?? loopItems.DbEntry.CreatedOn.ToUniversalTime(),
-                null, null,
-                loopItems.DbEntry.Title, null, loopItems.DbEntry.Summary, null, [], null,
-                null, null, null, null, null, null, null, null, null);
-            waypointList.Add(toAdd);
-        }
-
-        var fileStream = new FileStream(fileName, FileMode.OpenOrCreate);
-
-        var writerSettings = new XmlWriterSettings { Encoding = Encoding.UTF8, Indent = true, CloseOutput = true };
-        await using var xmlWriter = XmlWriter.Create(fileStream, writerSettings);
-        GpxWriter.Write(xmlWriter, null, new GpxMetadata("Pointless Waymarks CMS"), waypointList, null, null, null);
-        xmlWriter.Close();
+        await PointActions.ToGpxFile(SelectedListItemsContent(), StatusContext);
     }
 
-    [BlockingCommand]
+    [NonBlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    public async Task ToClipboardForSelected()
+    public async Task TextBracketCodesToClipboardForSelected()
     {
-        var frozenSelected = SelectedListItems();
-
-        var pointList = new StringBuilder();
-
-        foreach (var loopSelected in frozenSelected)
-            pointList.AppendLine($"{loopSelected.DbEntry.Latitude},{loopSelected.DbEntry.Longitude}");
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(pointList.ToString());
-
-        await StatusContext.ToastSuccess($"Points To Clipboard for {frozenSelected.Count} Points");
+        await PointActions.TextBracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
     }
 }

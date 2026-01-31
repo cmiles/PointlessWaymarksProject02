@@ -702,6 +702,21 @@
                             <Button Content="Map Bracket Code"
                                     Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Text Link"
+                                    Command="{Binding ItemActions.TextBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Point Details"
+                                    Command="{Binding ItemActions.PointDetailsBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Image Link"
+                                    Command="{Binding ItemActions.ImageBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Directions"
+                                    Command="{Binding ItemActions.ExternalDirectionsBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Google Maps Point"
+                                    Command="{Binding ItemActions.GoogleMapsBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <TextBlock>Program Actions</TextBlock>
                             <Button Content="Delete"
                                     Command="{Binding ItemActions.DeleteCommand}"
@@ -717,6 +732,13 @@
                                     CommandParameter="{Binding DbEntry}" />
                             <Button Content="View History"
                                     Command="{Binding ItemActions.ViewHistoryCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <TextBlock>Geo</TextBlock>
+                            <Button Content="Coordinates to Clipboard"
+                                    Command="{Binding ItemActions.CoordinatesToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="To Gpx File"
+                                    Command="{Binding ItemActions.ToGpxFileCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <TextBlock>View</TextBlock>
                             <Button Content="View on Site"

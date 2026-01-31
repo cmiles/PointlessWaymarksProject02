@@ -267,4 +267,10 @@ public partial class GeoJsonListWithActionsContext
         return ListContext.ListSelection.SelectedItems.Where(x => x is GeoJsonListListItem)
             .Cast<GeoJsonListListItem>().ToList();
     }
+
+    public List<GeoJsonContent> SelectedListItemsContent()
+    {
+        return ListContext.ListSelection.SelectedItems.Where(x => x is GeoJsonListListItem).Cast<GeoJsonListListItem>()
+            .Select(x => x.DbEntry).ToList();
+    }
 }

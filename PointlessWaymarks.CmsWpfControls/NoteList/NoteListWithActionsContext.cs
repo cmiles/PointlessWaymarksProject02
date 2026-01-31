@@ -1,5 +1,6 @@
 using PointlessWaymarks.CmsData.ContentHtml.NoteHtml;
 using PointlessWaymarks.CmsData.Database;
+using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
@@ -90,5 +91,11 @@ public partial class NoteListWithActionsContext
     {
         return ListContext.ListSelection.SelectedItems.Where(x => x is NoteListListItem).Cast<NoteListListItem>()
             .ToList();
+    }
+
+    public List<NoteContent> SelectedListItemsContent()
+    {
+        return ListContext.ListSelection.SelectedItems.Where(x => x is NoteListListItem).Cast<NoteListListItem>()
+            .Select(x => x.DbEntry).ToList();
     }
 }

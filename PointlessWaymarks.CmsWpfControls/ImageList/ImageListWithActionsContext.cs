@@ -474,6 +474,12 @@ public partial class ImageListWithActionsContext
             .ToList();
     }
 
+    public List<ImageContent> SelectedListItemsContent()
+    {
+        return ListContext.ListSelection.SelectedItems.Where(x => x is ImageListListItem).Cast<ImageListListItem>()
+            .Select(x => x.DbEntry).ToList();
+    }
+
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItemsAskIfOverMax(MaxSelectedItems = 10)]
     public async Task ViewSelectedFiles(CancellationToken cancelToken)

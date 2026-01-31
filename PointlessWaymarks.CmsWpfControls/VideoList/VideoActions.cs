@@ -54,6 +54,7 @@ public static class VideoActions
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
 
+
     public static async Task ReportVideoMetadata(List<VideoContent> contents, StatusControlContext statusContext)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();

@@ -1,13 +1,10 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using PointlessWaymarks.CmsData;
-using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentHtml.PointHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
-using PointlessWaymarks.CmsData.Server;
 using PointlessWaymarks.CmsWpfControls.ContentHistoryView;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.CmsWpfControls.ContentMap;
@@ -32,72 +29,26 @@ public partial class PointContentActions : IContentActions<PointContentDto>
         BuildCommands();
     }
 
-    public string DefaultBracketCode(PointContentDto? content)
-    {
-        if (content?.ContentId == null) return string.Empty;
-        return $"{BracketCodePoints.Create(content.ToDbObject())}";
-    }
-
     public ContentClipboardRepresentation ClipboardObject(PointContentDto? content)
     {
-        if (content == null)
-            return new ContentClipboardRepresentation();
+        return ContentClipboardRepresentation.ClipboardObject(content);
+    }
 
-        var settings = UserSettingsSingleton.CurrentSettings();
-
-        return new ContentClipboardRepresentation
-        {
-            FormatIdentifier = ContentClipboardRepresentation.ContentClipboardFormat,
-            SiteId = settings.SettingsId,
-            ContentId = content.ContentId,
-            ContentType = Db.ContentTypeDisplayString(content.ToDbObject()),
-            SiteLocalApiUrl = PartialContentPreviewServer.PreviewServerLocalApiUrl
-        };
+    public string DefaultBracketCode(PointContentDto? content)
+    {
+        return PointActions.DefaultBracketCode(content);
     }
 
     [BlockingCommand]
     public async Task DefaultBracketCodeToClipboard(PointContentDto? content)
     {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (content == null)
+        if (content is null)
         {
             await StatusContext.ToastError("Nothing Selected?");
             return;
         }
 
-        var finalString = $"{BracketCodePoints.Create(content.ToDbObject())}{Environment.NewLine}";
-
-        try
-        {
-            // Get the ContentClipboardRepresentation from ClipboardObject
-            var clipboardRepresentation = ClipboardObject(content);
-
-            // Create a DataObject for multiple clipboard formats
-            var dataObject = new DataObject();
-
-            // Add the plain text format for compatibility
-            dataObject.SetText(finalString);
-
-            // Add the ContentClipboardRepresentation as an alternate format
-            // Using the ContentClipboardFormat constant as the format name
-            var clipboardJson = System.Text.Json.JsonSerializer.Serialize(clipboardRepresentation);
-            dataObject.SetData(ContentClipboardRepresentation.ContentClipboardFormat, clipboardJson);
-
-            await ThreadSwitcher.ResumeForegroundAsync();
-
-            // Set the clipboard with multiple formats
-            Clipboard.SetDataObject(dataObject, true);
-
-            await StatusContext.ToastSuccess($"To Clipboard {finalString}");
-        }
-        catch (Exception ex)
-        {
-            // Fallback to simple text if the rich format fails
-            await ThreadSwitcher.ResumeForegroundAsync();
-            Clipboard.SetText(finalString);
-            await StatusContext.ToastWarning($"Simple text copied - rich format failed: {ex.Message}");
-        }
+        await PointActions.DefaultBracketCodesToClipboard(content.AsList(), StatusContext);
     }
 
     [BlockingCommand]
@@ -277,6 +228,42 @@ public partial class PointContentActions : IContentActions<PointContentDto>
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    [BlockingCommand]
+    public async Task ExternalDirectionsBracketCodeToClipboard(PointContentDto? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PointActions.ExternalDirectionsBracketCodesToClipboard(content.AsList(), StatusContext);
+    }
+
+    [BlockingCommand]
+    public async Task GoogleMapsBracketCodeToClipboard(PointContentDto? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PointActions.GoogleMapsBracketCodesToClipboard(content.AsList(), StatusContext);
+    }
+
+    [BlockingCommand]
+    public async Task ImageBracketCodeToClipboard(PointContentDto? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PointActions.ImageBracketCodesToClipboard(content.AsList(), StatusContext);
+    }
+
     public static async Task<PointListListItem> ListItemFromDbItem(PointContent content,
         PointContentActions itemActions,
         bool showType)
@@ -302,6 +289,30 @@ public partial class PointContentActions : IContentActions<PointContentDto>
         item.DisplayImageUrl = displayImageUrl;
         item.ShowType = showType;
         return item;
+    }
+
+    [BlockingCommand]
+    public async Task PointDetailsBracketCodeToClipboard(PointContentDto? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PointActions.PointDetailsBracketCodesToClipboard(content.AsList(), StatusContext);
+    }
+
+    [BlockingCommand]
+    public async Task ShowOnGoogleMaps(PointContentDto? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PointActions.ShowInGoogleMapsWeb(content, StatusContext);
     }
 
     [NonBlockingCommand]
@@ -331,18 +342,6 @@ public partial class PointContentActions : IContentActions<PointContentDto>
     }
 
     [BlockingCommand]
-    public async Task ShowOnGoogleMaps(PointContentDto? content)
-    {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PointActions.ShowInGoogleMapsWeb(content, StatusContext);
-    }
-
-    [BlockingCommand]
     public async Task ShowOnOsmCycleMaps(PointContentDto? content)
     {
         if (content is null)
@@ -352,5 +351,41 @@ public partial class PointContentActions : IContentActions<PointContentDto>
         }
 
         await PointActions.ShowInOsmCycleMap(content, StatusContext);
+    }
+
+    [BlockingCommand]
+    public async Task ToGpxFile(PointContentDto? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PointActions.ToGpxFile(content.AsList(), StatusContext);
+    }
+
+    [BlockingCommand]
+    public async Task CoordinatesToClipboard(PointContentDto? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PointActions.CoordinateTextToClipboard(content.AsList(), StatusContext);
+    }
+
+    [BlockingCommand]
+    public async Task TextBracketCodeToClipboard(PointContentDto? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PointActions.TextBracketCodesToClipboard(content.AsList(), StatusContext);
     }
 }
