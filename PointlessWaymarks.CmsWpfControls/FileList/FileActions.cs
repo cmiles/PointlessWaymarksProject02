@@ -2,6 +2,7 @@ using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.WpfCommon.Status;
+using System.Linq;
 
 namespace PointlessWaymarks.CmsWpfControls.FileList;
 
@@ -10,9 +11,8 @@ public static class FileActions
     public static async Task BracketCodesToClipboard(List<FileContent> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeFiles.Create(loopSelected)}{Environment.NewLine}");
+        var codeList = contents.Select(BracketCodeFiles.Create).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
@@ -29,9 +29,8 @@ public static class FileActions
     public static async Task DefaultBracketCodesToClipboard(List<FileContent> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeFiles.Create(loopSelected)}{Environment.NewLine}");
+        var codeList = contents.Select(BracketCodeFiles.Create).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
@@ -40,9 +39,8 @@ public static class FileActions
     public static async Task DownloadBracketCodesToClipboard(List<FileContent> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeFileDownloads.Create(loopSelected)}{Environment.NewLine}");
+        var codeList = contents.Select(BracketCodeFileDownloads.Create).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
@@ -50,9 +48,8 @@ public static class FileActions
     public static async Task EmbedBracketCodesToClipboard(List<FileContent> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeFileEmbed.Create(loopSelected)}{Environment.NewLine}");
+        var codeList = contents.Select(BracketCodeFileEmbed.Create).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
@@ -60,9 +57,8 @@ public static class FileActions
     public static async Task FileUrlBracketCodesToClipboard(List<FileContent> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeFileUrl.Create(loopSelected)}{Environment.NewLine}");
+        var codeList = contents.Select(BracketCodeFileUrl.Create).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
@@ -70,9 +66,8 @@ public static class FileActions
     public static async Task ImageBracketCodesToClipboard(List<FileContent> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeFileImageLink.Create(loopSelected)}{Environment.NewLine}");
+        var codeList = contents.Select(BracketCodeFileImageLink.Create).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }

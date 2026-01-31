@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Xml;
@@ -18,27 +19,26 @@ namespace PointlessWaymarks.CmsWpfControls.PointList;
 
 public static class PointActions
 {
+    public static async Task CoordinateTextToClipboard(List<PointContentDto> contents,
+        StatusControlContext statusContext)
+    {
+        var codeList = contents.Select(loopSelected => $"{loopSelected.Latitude:F5},{loopSelected.Longitude:F5}")
+            .ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
+
+        await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
+    }
+
     public static string DefaultBracketCode(PointContentDto? content)
     {
         return content is null ? string.Empty : $"{BracketCodePoints.Create(content.ToDbObject())}";
     }
 
-    public static async Task CoordinateTextToClipboard(List<PointContentDto> contents,
-        StatusControlContext statusContext)
-    {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{loopSelected.Latitude:F5},{loopSelected.Longitude:F5}{Environment.NewLine}");
-
-        await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
-    }
-
     public static async Task DefaultBracketCodesToClipboard(List<PointContentDto> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodePoints.Create(loopSelected.ToDbObject())}{Environment.NewLine}");
+        var codeList = contents.Select(loopSelected => BracketCodePoints.Create(loopSelected.ToDbObject())).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
@@ -46,10 +46,9 @@ public static class PointActions
     public static async Task ExternalDirectionsBracketCodesToClipboard(List<PointContentDto> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current +
-                $"{BracketCodePointExternalDirectionLinks.Create(loopSelected.ToDbObject())}{Environment.NewLine}");
+        var codeList = contents
+            .Select(loopSelected => BracketCodePointExternalDirectionLinks.Create(loopSelected.ToDbObject())).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
@@ -76,9 +75,9 @@ public static class PointActions
     public static async Task GoogleMapsBracketCodesToClipboard(List<PointContentDto> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodePointGoogleMapsLinks.Create(loopSelected.ToDbObject())}{Environment.NewLine}");
+        var codeList = contents
+            .Select(loopSelected => BracketCodePointGoogleMapsLinks.Create(loopSelected.ToDbObject())).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
@@ -86,9 +85,9 @@ public static class PointActions
     public static async Task ImageBracketCodesToClipboard(List<PointContentDto> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodePointImageLink.Create(loopSelected.ToDbObject())}{Environment.NewLine}");
+        var codeList = contents.Select(loopSelected => BracketCodePointImageLink.Create(loopSelected.ToDbObject()))
+            .ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
@@ -96,9 +95,9 @@ public static class PointActions
     public static async Task PointDetailsBracketCodesToClipboard(List<PointContentDto> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodePointDetails.Create(loopSelected.ToDbObject())}{Environment.NewLine}");
+        var codeList = contents.Select(loopSelected => BracketCodePointDetails.Create(loopSelected.ToDbObject()))
+            .ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
@@ -137,9 +136,9 @@ public static class PointActions
     public static async Task TextBracketCodesToClipboard(List<PointContentDto> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodePointLinks.Create(loopSelected.ToDbObject())}{Environment.NewLine}");
+        var codeList = contents.Select(loopSelected => BracketCodePointLinks.Create(loopSelected.ToDbObject()))
+            .ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }

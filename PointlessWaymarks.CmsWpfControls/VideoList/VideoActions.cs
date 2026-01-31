@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.Database.Models;
@@ -19,9 +20,8 @@ public static class VideoActions
     public static async Task DefaultBracketCodesToClipboard(List<VideoContent> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeVideoEmbed.Create(loopSelected)}{Environment.NewLine}");
+        var codeList = contents.Select(BracketCodeVideoEmbed.Create).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
@@ -29,20 +29,24 @@ public static class VideoActions
     public static async Task ImageBracketCodesToClipboard(List<VideoContent> contents,
         StatusControlContext statusContext)
     {
-        var finalString = string.Empty;
+        var codeList = new List<string>();
 
         var showNoImageWarning = false;
 
         foreach (var loopSelected in contents)
+        {
             if (loopSelected.MainPicture == null)
             {
                 showNoImageWarning = true;
-                finalString += $"{BracketCodeVideoLinks.Create(loopSelected)}{Environment.NewLine}";
+                codeList.Add(BracketCodeVideoLinks.Create(loopSelected));
             }
             else
             {
-                finalString += $"{BracketCodeVideoImageLink.Create(loopSelected)}{Environment.NewLine}";
+                codeList.Add(BracketCodeVideoImageLink.Create(loopSelected));
             }
+        }
+
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -85,9 +89,8 @@ public static class VideoActions
     public static async Task TextBracketCodesToClipboard(List<VideoContent> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeVideoLinks.Create(loopSelected)}{Environment.NewLine}");
+        var codeList = contents.Select(BracketCodeVideoLinks.Create).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }

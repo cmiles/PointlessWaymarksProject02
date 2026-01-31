@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.Database.Models;
@@ -15,9 +16,8 @@ public static class PhotoActions
     public static async Task BracketCodesToClipboard(List<PhotoContent> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodePhotos.Create(loopSelected)}{Environment.NewLine}");
+        var codeList = contents.Select(BracketCodePhotos.Create).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
@@ -25,9 +25,8 @@ public static class PhotoActions
     public static async Task DailyPhotoPageBracketCodesToClipboard(List<PhotoContent> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeDailyPhotoPage.Create(loopSelected).Distinct()}{Environment.NewLine}");
+        var codeList = contents.Select(loopSelected => $"{BracketCodeDailyPhotoPage.Create(loopSelected).Distinct()}").ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
@@ -40,9 +39,8 @@ public static class PhotoActions
     public static async Task DefaultBracketCodesToClipboard(List<PhotoContent> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodePhotos.Create(loopSelected)}{Environment.NewLine}");
+        var codeList = contents.Select(BracketCodePhotos.Create).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
@@ -50,9 +48,8 @@ public static class PhotoActions
     public static async Task ImageWithDetailsBracketCodesToClipboard(List<PhotoContent> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodePhotosWithDetails.Create(loopSelected)}{Environment.NewLine}");
+        var codeList = contents.Select(BracketCodePhotosWithDetails.Create).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
@@ -147,9 +144,8 @@ public static class PhotoActions
     public static async Task TextBracketCodesToClipboard(List<PhotoContent> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodePhotoLinks.Create(loopSelected)}{Environment.NewLine}");
+        var codeList = contents.Select(BracketCodePhotoLinks.Create).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }

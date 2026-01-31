@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Windows;
@@ -172,9 +173,8 @@ public static class LineActions
     public static async Task DefaultBracketCodesToClipboard(List<LineContent> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeLines.Create(loopSelected)}{Environment.NewLine}");
+        var codeList = contents.Select(BracketCodeLines.Create).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
@@ -182,9 +182,8 @@ public static class LineActions
     public static async Task ElevationChartBracketCodesToClipboard(List<LineContent> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeLineElevationCharts.Create(loopSelected)}{Environment.NewLine}");
+        var codeList = contents.Select(BracketCodeLineElevationCharts.Create).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
@@ -227,9 +226,8 @@ public static class LineActions
     public static async Task LinkBracketCodesToClipboard(List<LineContent> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeLineLinks.Create(loopSelected)}{Environment.NewLine}");
+        var codeList = contents.Select(BracketCodeLineLinks.Create).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
@@ -292,9 +290,8 @@ public static class LineActions
     public static async Task StatsBracketCodesToClipboard(List<LineContent> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeLineStats.Create(loopSelected)}{Environment.NewLine}");
+        var codeList = contents.Select(BracketCodeLineStats.Create).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
@@ -309,9 +306,8 @@ public static class LineActions
     public static async Task TextStatsBracketCodesToClipboard(List<LineContent> contents,
         StatusControlContext statusContext)
     {
-        var finalString = contents.Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeLineTextStats.Create(loopSelected)}");
+        var codeList = contents.Select(BracketCodeLineTextStats.Create).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
