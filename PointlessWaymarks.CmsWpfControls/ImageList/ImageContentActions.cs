@@ -11,6 +11,7 @@ using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsData.Server;
 using PointlessWaymarks.CmsWpfControls.ContentHistoryView;
 using PointlessWaymarks.CmsWpfControls.ContentList;
+using PointlessWaymarks.CmsWpfControls.ContentMap;
 using PointlessWaymarks.CmsWpfControls.ImageContentEditor;
 using PointlessWaymarks.CmsWpfControls.SitePreview;
 using PointlessWaymarks.CmsWpfControls.Utility;
@@ -270,6 +271,30 @@ public partial class ImageContentActions : IContentActions<ImageContent>
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    [BlockingCommand]
+    public async Task AddIntersectionTagsWithOsm(ImageContent? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await ImageActions.AddIntersectionTags(content.AsList(), StatusContext, true, CancellationToken.None);
+    }
+
+    [BlockingCommand]
+    public async Task AddIntersectionTagsWithoutOsm(ImageContent? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await ImageActions.AddIntersectionTags(content.AsList(), StatusContext, false, CancellationToken.None);
+    }
+
     public static async Task<ImageListListItem> ListItemFromDbItem(ImageContent content,
         ImageContentActions itemActions,
         bool showType)
@@ -325,6 +350,86 @@ public partial class ImageContentActions : IContentActions<ImageContent>
         var url = toOpen.FullName;
 
         await ProcessHelpers.OpenExplorerWindowForFile(url);
+    }
+
+    [BlockingCommand]
+    public async Task ShowInPeakFinderWeb(ImageContent? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await ImageActions.ShowInPeakFinderWeb(content, StatusContext);
+    }
+
+    [BlockingCommand]
+    public async Task ShowIntersectionTags(ImageContent? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await ImageActions.ShowIntersectionTagsForSelected(content.AsList(), StatusContext, CancellationToken.None);
+    }
+
+    [BlockingCommand]
+    public async Task ShowOnGoogleMaps(ImageContent? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await ImageActions.ShowInGoogleMapsWeb(content, StatusContext);
+    }
+
+    [NonBlockingCommand]
+    public async Task ShowOnMap(ImageContent? content)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (content == null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        if (content.Id < 1)
+        {
+            await StatusContext.ToastError("Entry is not saved - Skipping?");
+            return;
+        }
+
+        if (content.Latitude == null || content.Longitude == null)
+        {
+            await StatusContext.ToastError("No Location Data?");
+            return;
+        }
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        var mapWindow =
+            await ContentMapWindow.CreateInstance(new ContentMapListLoader("Mapped Content",
+                [content.ContentId]));
+
+        await mapWindow.PositionWindowAndShowOnUiThread();
+    }
+
+    [BlockingCommand]
+    public async Task ShowOnOsmCycleMaps(ImageContent? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await ImageActions.ShowInOsmCycleMap(content, StatusContext);
     }
 
     [NonBlockingCommand]

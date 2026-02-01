@@ -76,6 +76,20 @@ public partial class PhotoListWithActionsContext
                 ItemName = "View Selected Photos - Group",
                 ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
             },
+            new ContextMenuItemData
+            {
+                ItemName = "Add Intersection Tags - With OSM", ItemCommand = AddIntersectionTagsWithOsmToSelectedCommand
+            },
+            new ContextMenuItemData
+            {
+                ItemName = "Add Intersection Tags - Without OSM",
+                ItemCommand = AddIntersectionTagsWithoutOsmToSelectedCommand
+            },
+            new ContextMenuItemData
+            {
+                ItemName = "View Intersection Tags",
+                ItemCommand = ShowIntersectionTagsForSelectedCommand
+            },
             new ContextMenuItemData { ItemName = "Open URL", ItemCommand = ListContext.ViewOnSiteCommand },
             new ContextMenuItemData { ItemName = "Delete", ItemCommand = ListContext.DeleteSelectedCommand },
             new ContextMenuItemData
@@ -249,6 +263,20 @@ public partial class PhotoListWithActionsContext
 
             await StatusContext.ShowMessageWithOkButton("Feature Intersection Errors", bodyBuilder.ToString());
         }
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task AddIntersectionTagsWithOsmToSelected(CancellationToken cancellationToken)
+    {
+        await PhotoActions.AddIntersectionTags(SelectedListItemsContent(), StatusContext, true, cancellationToken);
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task AddIntersectionTagsWithoutOsmToSelected(CancellationToken cancellationToken)
+    {
+        await PhotoActions.AddIntersectionTags(SelectedListItemsContent(), StatusContext, false, cancellationToken);
     }
 
     public static async Task<PhotoListWithActionsContext> CreateInstance(StatusControlContext? statusContext,
@@ -1053,6 +1081,14 @@ public partial class PhotoListWithActionsContext
     {
         return ListContext.ListSelection.SelectedItems.Where(x => x is PhotoListListItem).Cast<PhotoListListItem>()
             .Select(x => x.DbEntry).ToList();
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task ShowIntersectionTagsForSelected(CancellationToken cancellationToken)
+    {
+        await PhotoActions.ShowIntersectionTagsForSelected(SelectedListItemsContent(), StatusContext,
+            cancellationToken);
     }
 
     [BlockingCommand]

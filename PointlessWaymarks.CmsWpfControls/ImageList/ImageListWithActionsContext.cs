@@ -60,6 +60,20 @@ public partial class ImageListWithActionsContext
                 ItemName = "View Images - Group",
                 ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
             },
+            new ContextMenuItemData
+            {
+                ItemName = "Add Intersection Tags - With OSM", ItemCommand = AddIntersectionTagsWithOsmToSelectedCommand
+            },
+            new ContextMenuItemData
+            {
+                ItemName = "Add Intersection Tags - Without OSM",
+                ItemCommand = AddIntersectionTagsWithoutOsmToSelectedCommand
+            },
+            new ContextMenuItemData
+            {
+                ItemName = "View Intersection Tags",
+                ItemCommand = ShowIntersectionTagsForSelectedCommand
+            },
             new ContextMenuItemData { ItemName = "Open URL", ItemCommand = ListContext.ViewOnSiteCommand },
 
             new ContextMenuItemData { ItemName = "Delete", ItemCommand = ListContext.DeleteSelectedCommand },
@@ -78,6 +92,20 @@ public partial class ImageListWithActionsContext
     public ContentListContext ListContext { get; set; }
     public StatusControlContext StatusContext { get; set; }
     public WindowIconStatus? WindowStatus { get; set; }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task AddIntersectionTagsWithOsmToSelected(CancellationToken cancellationToken)
+    {
+        await ImageActions.AddIntersectionTags(SelectedListItemsContent(), StatusContext, true, cancellationToken);
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task AddIntersectionTagsWithoutOsmToSelected(CancellationToken cancellationToken)
+    {
+        await ImageActions.AddIntersectionTags(SelectedListItemsContent(), StatusContext, false, cancellationToken);
+    }
 
     public static async Task<ImageListWithActionsContext> CreateInstance(StatusControlContext? statusContext,
         WindowIconStatus? windowStatus = null, bool loadInBackground = true)
@@ -478,6 +506,14 @@ public partial class ImageListWithActionsContext
     {
         return ListContext.ListSelection.SelectedItems.Where(x => x is ImageListListItem).Cast<ImageListListItem>()
             .Select(x => x.DbEntry).ToList();
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task ShowIntersectionTagsForSelected(CancellationToken cancellationToken)
+    {
+        await ImageActions.ShowIntersectionTagsForSelected(SelectedListItemsContent(), StatusContext,
+            cancellationToken);
     }
 
     [BlockingCommand]

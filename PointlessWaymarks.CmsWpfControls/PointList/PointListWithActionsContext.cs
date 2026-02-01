@@ -1,18 +1,10 @@
-using System.IO;
-using System.Text;
-using System.Text.Json;
-using PointlessWaymarks.CmsData;
-using PointlessWaymarks.CmsData.ContentGeneration;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsWpfControls.ContentList;
-using PointlessWaymarks.FeatureIntersectionTags;
-using PointlessWaymarks.FeatureIntersectionTags.Models;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
-using Serilog;
 
 namespace PointlessWaymarks.CmsWpfControls.PointList;
 
@@ -77,7 +69,19 @@ public partial class PointListWithActionsContext
             },
 
             new ContextMenuItemData
-                { ItemName = "Add Intersection Tags", ItemCommand = AddIntersectionTagsToSelectedCommand },
+            {
+                ItemName = "Add Intersection Tags - With OSM", ItemCommand = AddIntersectionTagsWithOsmToSelectedCommand
+            },
+            new ContextMenuItemData
+            {
+                ItemName = "Add Intersection Tags - Without OSM",
+                ItemCommand = AddIntersectionTagsWithoutOsmToSelectedCommand
+            },
+            new ContextMenuItemData
+            {
+                ItemName = "View Intersection Tags",
+                ItemCommand = ShowIntersectionTagsForSelectedCommand
+            },
             new ContextMenuItemData
                 { ItemName = "Selected Points to GPX File", ItemCommand = SelectedToGpxFileCommand },
             new ContextMenuItemData
@@ -117,138 +121,16 @@ public partial class PointListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    public async Task AddIntersectionTagsToSelected(CancellationToken cancellationToken)
+    public async Task AddIntersectionTagsWithOsmToSelected(CancellationToken cancellationToken)
     {
-        var frozenSelect = SelectedListItems();
+        await PointActions.AddIntersectionTags(SelectedListItemsContent(), StatusContext, true, cancellationToken);
+    }
 
-        if (string.IsNullOrWhiteSpace(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile))
-        {
-            await StatusContext.ToastError("The Settings File for the Feature Intersection is blank?");
-            return;
-        }
-
-        var settingsFileInfo = new FileInfo(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile);
-        if (!settingsFileInfo.Exists)
-        {
-            await StatusContext.ToastError(
-                $"The Settings File for the Feature Intersection {settingsFileInfo.FullName} doesn't exist?");
-            return;
-        }
-
-        var settings =
-            JsonSerializer.Deserialize<IntersectSettings>(await File.ReadAllTextAsync(settingsFileInfo.FullName,
-                cancellationToken));
-        if (settings == null)
-        {
-            StatusContext.Progress(
-                $"The settings file {settingsFileInfo.FullName} did not deserialized to valid settings...");
-            return;
-        }
-
-        var errorList = new List<string>();
-        var successList = new List<string>();
-        var noTagsList = new List<string>();
-
-        var processedCount = 0;
-
-        cancellationToken.ThrowIfCancellationRequested();
-
-        var pointDtos =
-            await Db.PointContentDto(frozenSelect.Select(x => x.DbEntry.ContentId).ToList(), await Db.Context());
-
-        var toProcess = new List<PointContentDto>();
-        var intersectResults = new List<IntersectResult>();
-
-        foreach (var loopSelected in pointDtos)
-        {
-            var feature = settings.BufferPointsAndLinesByFeet > 0
-                ? loopSelected.FeatureFromPointAsCircle(settings.BufferPointsAndLinesByFeet.Value)
-                : loopSelected.FeatureFromPoint();
-
-            toProcess.Add(loopSelected);
-            intersectResults.Add(new IntersectResult(feature)
-            {
-                ContentId = loopSelected.ContentId, Description = $"Point Content - {loopSelected.Title ?? "No Title"}"
-            });
-        }
-
-        await intersectResults.IntersectionTags(settings,
-            cancellationToken,
-            StatusContext.ProgressTracker());
-
-        var updateTime = DateTime.Now;
-
-        foreach (var loopSelected in toProcess)
-        {
-            processedCount++;
-
-            try
-            {
-                var taggerResult = intersectResults.Single(x => x.ContentId == loopSelected.ContentId);
-
-                if (!taggerResult.Tags.Any())
-                {
-                    noTagsList.Add($"{loopSelected.Title} - no tags found");
-                    StatusContext.Progress(
-                        $"Processed - {loopSelected.Title} - no tags found - Point {processedCount} of {frozenSelect.Count}");
-                    continue;
-                }
-
-                var tagListForIntersection = Db.TagListParse(loopSelected.Tags);
-                tagListForIntersection.AddRange(taggerResult.Tags);
-                loopSelected.Tags = Db.TagListJoin(tagListForIntersection);
-                loopSelected.LastUpdatedBy = "Feature Intersection Tagger";
-                loopSelected.LastUpdatedOn = updateTime;
-
-                var (saveGenerationReturn, _) =
-                    await PointGenerator.SaveAndGenerateHtml(loopSelected, DateTime.Now,
-                        StatusContext.ProgressTracker());
-
-                if (saveGenerationReturn.HasError)
-                    //TODO: Need alerting on this that would actually be seen...
-                {
-                    Log.ForContext("generationError", saveGenerationReturn.GenerationNote)
-                        .ForContext("generationException", saveGenerationReturn.Exception?.ToString() ?? string.Empty)
-                        .Error(
-                            "Point Save Error during Selected Point Feature Intersection Tagging");
-                    errorList.Add(
-                        $"Save Failed! Point: {loopSelected.Title}, {saveGenerationReturn.GenerationNote}");
-                    continue;
-                }
-
-                successList.Add(
-                    $"{loopSelected.Title} - found Tags {string.Join(", ", taggerResult.Tags)}");
-                StatusContext.Progress(
-                    $"Processed - {loopSelected.Title} - found Tags {string.Join(", ", taggerResult.Tags)} - Point {processedCount} of {frozenSelect.Count}");
-            }
-            catch (Exception e)
-            {
-                Log.Error(e,
-                    $"Point Save Error during Selected Point Feature Intersection Tagging {loopSelected.Title}, {loopSelected.ContentId}");
-                errorList.Add(
-                    $"Save Failed! Point: {loopSelected.Title}, {e.Message}");
-            }
-
-            if (cancellationToken.IsCancellationRequested) break;
-        }
-
-        if (errorList.Any())
-        {
-            var bodyBuilder = new StringBuilder();
-            bodyBuilder.AppendLine(
-                $"There were errors getting Feature Intersection Tags and saving items - Errors: {errorList.Count}, Success: {successList.Count}, No Tags: {noTagsList.Count}.");
-            bodyBuilder.AppendLine();
-            bodyBuilder.AppendFormat("Errors:");
-            bodyBuilder.AppendLine(string.Join(Environment.NewLine, errorList));
-            bodyBuilder.AppendLine();
-            bodyBuilder.AppendFormat("Successes:");
-            bodyBuilder.AppendLine(string.Join(Environment.NewLine, successList));
-            bodyBuilder.AppendLine();
-            bodyBuilder.AppendFormat("No Tags Found:");
-            bodyBuilder.AppendLine(string.Join(Environment.NewLine, noTagsList));
-
-            await StatusContext.ShowMessageWithOkButton("Feature Intersection Errors", bodyBuilder.ToString());
-        }
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task AddIntersectionTagsWithoutOsmToSelected(CancellationToken cancellationToken)
+    {
+        await PointActions.AddIntersectionTags(SelectedListItemsContent(), StatusContext, false, cancellationToken);
     }
 
     [BlockingCommand]
@@ -336,6 +218,14 @@ public partial class PointListWithActionsContext
         await ThreadSwitcher.ResumeForegroundAsync();
 
         await PointActions.ToGpxFile(SelectedListItemsContent(), StatusContext);
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task ShowIntersectionTagsForSelected(CancellationToken cancellationToken)
+    {
+        await PointActions.ShowIntersectionTagsForSelected(SelectedListItemsContent(), StatusContext,
+            cancellationToken);
     }
 
     [NonBlockingCommand]

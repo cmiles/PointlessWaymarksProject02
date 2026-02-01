@@ -229,6 +229,42 @@ public partial class PointContentActions : IContentActions<PointContentDto>
     public event PropertyChangedEventHandler? PropertyChanged;
 
     [BlockingCommand]
+    public async Task AddIntersectionTagsWithOsm(PointContentDto? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PointActions.AddIntersectionTags(content.AsList(), StatusContext, true, CancellationToken.None);
+    }
+
+    [BlockingCommand]
+    public async Task AddIntersectionTagsWithoutOsm(PointContentDto? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PointActions.AddIntersectionTags(content.AsList(), StatusContext, false, CancellationToken.None);
+    }
+
+    [BlockingCommand]
+    public async Task CoordinatesToClipboard(PointContentDto? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PointActions.CoordinateTextToClipboard(content.AsList(), StatusContext);
+    }
+
+    [BlockingCommand]
     public async Task ExternalDirectionsBracketCodeToClipboard(PointContentDto? content)
     {
         if (content is null)
@@ -304,6 +340,18 @@ public partial class PointContentActions : IContentActions<PointContentDto>
     }
 
     [BlockingCommand]
+    public async Task ShowIntersectionTags(PointContentDto? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PointActions.ShowIntersectionTagsForSelected(content.AsList(), StatusContext, CancellationToken.None);
+    }
+
+    [BlockingCommand]
     public async Task ShowOnGoogleMaps(PointContentDto? content)
     {
         if (content is null)
@@ -354,30 +402,6 @@ public partial class PointContentActions : IContentActions<PointContentDto>
     }
 
     [BlockingCommand]
-    public async Task ToGpxFile(PointContentDto? content)
-    {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PointActions.ToGpxFile(content.AsList(), StatusContext);
-    }
-
-    [BlockingCommand]
-    public async Task CoordinatesToClipboard(PointContentDto? content)
-    {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PointActions.CoordinateTextToClipboard(content.AsList(), StatusContext);
-    }
-
-    [BlockingCommand]
     public async Task TextBracketCodeToClipboard(PointContentDto? content)
     {
         if (content is null)
@@ -387,5 +411,17 @@ public partial class PointContentActions : IContentActions<PointContentDto>
         }
 
         await PointActions.TextBracketCodesToClipboard(content.AsList(), StatusContext);
+    }
+
+    [BlockingCommand]
+    public async Task ToGpxFile(PointContentDto? content)
+    {
+        if (content is null)
+        {
+            await StatusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await PointActions.ToGpxFile(content.AsList(), StatusContext);
     }
 }

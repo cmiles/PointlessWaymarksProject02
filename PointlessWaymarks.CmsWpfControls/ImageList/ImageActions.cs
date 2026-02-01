@@ -1,15 +1,186 @@
 using System.IO;
+using System.Text;
+using System.Text.Json;
 using PointlessWaymarks.CmsData;
+using PointlessWaymarks.CmsData.ContentGeneration;
+using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsWpfControls.ContentList;
+using PointlessWaymarks.CmsWpfControls.FeatureIntersectResultBrowser;
+using PointlessWaymarks.FeatureIntersectionTags;
+using PointlessWaymarks.FeatureIntersectionTags.Models;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.FileMetadataDisplay;
 using PointlessWaymarks.WpfCommon.Status;
+using PointlessWaymarks.WpfCommon.Utility;
+using Serilog;
 
 namespace PointlessWaymarks.CmsWpfControls.ImageList;
 
 public static class ImageActions
 {
+    public static async Task AddIntersectionTags(List<ImageContent> contents,
+        StatusControlContext statusContext, bool includeOsm, CancellationToken cancellationToken)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        List<ImageContent> contentsWithLocation = new();
+
+        foreach (var loopImages in contents)
+            if (await loopImages.HasValidLocation())
+                contentsWithLocation.Add(loopImages);
+
+        if (!contentsWithLocation.Any())
+        {
+            await statusContext.ToastError("No Selected Images have valid location data?");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile))
+        {
+            await statusContext.ToastError("The Settings File for the Feature Intersection is blank?");
+            return;
+        }
+
+        var settingsFileInfo = new FileInfo(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile);
+        if (!settingsFileInfo.Exists)
+        {
+            await statusContext.ToastError(
+                $"The Settings File for the Feature Intersection {settingsFileInfo.FullName} doesn't exist?");
+            return;
+        }
+
+        var errorList = new List<string>();
+        var successList = new List<string>();
+        var noTagsList = new List<string>();
+
+        var processedCount = 0;
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        List<ImageContent> dbEntriesToProcess = new();
+        List<IntersectResult> intersectResults = new();
+
+        var settings =
+            JsonSerializer.Deserialize<IntersectSettings>(await File.ReadAllTextAsync(settingsFileInfo.FullName,
+                cancellationToken));
+        if (settings == null)
+        {
+            statusContext.Progress(
+                $"The settings file {settingsFileInfo.FullName} did not deserialized to valid settings...");
+            return;
+        }
+
+        settings.UseOsmOverpass = includeOsm;
+        settings.OsmInTagging = includeOsm;
+
+        foreach (var loopSelected in contentsWithLocation)
+        {
+            var feature = settings.BufferPointsAndLinesByFeet > 0
+                ? loopSelected.FeatureFromPointAsCircle(settings.BufferPointsAndLinesByFeet.Value)
+                : loopSelected.FeatureFromPoint();
+
+            if (feature == null) continue;
+
+            dbEntriesToProcess.Add(loopSelected);
+
+            var intersectResult = new IntersectResult(feature)
+            {
+                ContentId = loopSelected.ContentId, Description = $"Image Content - {loopSelected.Title ?? "No Title"}"
+            };
+
+            intersectResult.OsmIsInPoints.AddRange(loopSelected.PointFromLatitudeLongitude()!.Coordinate);
+
+            intersectResults.Add(intersectResult);
+        }
+
+        await intersectResults.IntersectionTags(settings,
+            cancellationToken, statusContext.ProgressTracker());
+
+        var updateTime = DateTime.Now;
+
+        foreach (var loopSelected in dbEntriesToProcess)
+        {
+            processedCount++;
+
+            try
+            {
+                var taggerResult = intersectResults.Single(x => x.ContentId == loopSelected.ContentId);
+
+                if (!taggerResult.Tags.Any())
+                {
+                    noTagsList.Add($"{loopSelected.Title} - no tags found");
+                    statusContext.Progress(
+                        $"Processed - {loopSelected.Title} - no tags found - Image {processedCount} of {contentsWithLocation.Count}");
+                    continue;
+                }
+
+                var tagListForIntersection = Db.TagListParse(loopSelected.Tags);
+                tagListForIntersection.AddRange(taggerResult.Tags);
+                loopSelected.Tags = Db.TagListJoin(tagListForIntersection);
+                loopSelected.LastUpdatedBy = "Feature Intersection Tagger";
+                loopSelected.LastUpdatedOn = updateTime;
+
+                var mediaFile = UserSettingsSingleton.CurrentSettings().LocalSiteImageContentFile(loopSelected);
+
+                if (mediaFile == null)
+                {
+                    errorList.Add(
+                        $"No Media File Found for Image: {loopSelected.Title}");
+                    continue;
+                }
+
+                var (saveGenerationReturn, _) =
+                    await ImageGenerator.SaveAndGenerateHtml(loopSelected, mediaFile, false,
+                        DateTime.Now, statusContext.ProgressTracker());
+
+                if (saveGenerationReturn.HasError)
+                    //TODO: Need alerting on this that would actually be seen...
+                {
+                    Log.ForContext("generationError", saveGenerationReturn.GenerationNote)
+                        .ForContext("generationException", saveGenerationReturn.Exception?.ToString() ?? string.Empty)
+                        .Error(
+                            "Image Save Error during Selected Image Feature Intersection Tagging");
+                    errorList.Add(
+                        $"Save Failed! Image: {loopSelected.Title}, {saveGenerationReturn.GenerationNote}");
+                    continue;
+                }
+
+                successList.Add(
+                    $"{loopSelected.Title} - found Tags {string.Join(", ", taggerResult.Tags)}");
+                statusContext.Progress(
+                    $"Processed - {loopSelected.Title} - found Tags {string.Join(", ", taggerResult.Tags)} - Image {processedCount} of {contentsWithLocation.Count}");
+            }
+            catch (Exception e)
+            {
+                Log.Error(e,
+                    $"Image Save Error during Selected Image Feature Intersection Tagging {loopSelected.Title}, {loopSelected.ContentId}");
+                errorList.Add(
+                    $"Save Failed! Image: {loopSelected.Title}, {e.Message}");
+            }
+
+            if (cancellationToken.IsCancellationRequested) break;
+        }
+
+        if (errorList.Any())
+        {
+            var bodyBuilder = new StringBuilder();
+            bodyBuilder.AppendLine(
+                $"There were errors getting Feature Intersection Tags and saving items - Errors: {errorList.Count}, Success: {successList.Count}, No Tags: {noTagsList.Count}.");
+            bodyBuilder.AppendLine();
+            bodyBuilder.AppendFormat("Errors:");
+            bodyBuilder.AppendLine(string.Join(Environment.NewLine, errorList));
+            bodyBuilder.AppendLine();
+            bodyBuilder.AppendFormat("Successes:");
+            bodyBuilder.AppendLine(string.Join(Environment.NewLine, successList));
+            bodyBuilder.AppendLine();
+            bodyBuilder.AppendFormat("No Tags Found:");
+            bodyBuilder.AppendLine(string.Join(Environment.NewLine, noTagsList));
+
+            await statusContext.ShowMessageWithOkButton("Feature Intersection Errors", bodyBuilder.ToString());
+        }
+    }
+
     public static async Task ReportVideoMetadata(List<ImageContent> contents, StatusControlContext statusContext)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -28,6 +199,128 @@ public static class ImageActions
             fileList.Add(settings.LocalMediaArchiveImageContentFile(loopContents));
 
         await FileMetadataDisplayWindow.ImageFileMetadataReports(fileList, settings.FfprobeExe(), statusContext);
+    }
+
+    public static async Task ShowInGoogleMapsWeb(ImageContent contents,
+        StatusControlContext statusContext)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+        var validLocation = await contents.HasValidLocation();
+        if (!validLocation)
+        {
+            await statusContext.ToastError("No Valid Location Data?");
+            return;
+        }
+
+        var mapUrl =
+            $"https://www.google.com/maps/search/?api=1&query={contents.Latitude:F5},{contents.Longitude:F5}";
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+        ProcessHelpers.OpenUrlInExternalBrowser(mapUrl);
+    }
+
+    public static async Task ShowInOsmCycleMap(ImageContent contents,
+        StatusControlContext statusContext)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+        var validLocation = await contents.HasValidLocation();
+        if (!validLocation)
+        {
+            await statusContext.ToastError("No Valid Location Data?");
+            return;
+        }
+
+        var mapUrl =
+            $"http://www.openstreetmap.org/?mlat={contents.Latitude:F5}&mlon={contents.Longitude:F5}&zoom=13&layers=C";
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+        ProcessHelpers.OpenUrlInExternalBrowser(mapUrl);
+    }
+
+    public static async Task ShowInPeakFinderWeb(ImageContent contents,
+        StatusControlContext statusContext)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var validLocation = await contents.HasValidLocation();
+
+        if (!validLocation)
+        {
+            await statusContext.ToastError("No Valid Location Data?");
+            return;
+        }
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        var peakFinderUrl =
+            $"https://www.peakfinder.com/?lat={contents.Latitude:F5}&lng={contents.Longitude:F5}";
+
+        ProcessHelpers.OpenUrlInExternalBrowser(peakFinderUrl);
+    }
+
+    public static async Task ShowIntersectionTagsForSelected(List<ImageContent> contents,
+        StatusControlContext statusContext, CancellationToken cancellationToken)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        List<ImageContent> contentsWithLocation = new();
+
+        foreach (var loopImages in contents)
+            if (await loopImages.HasValidLocation())
+                contentsWithLocation.Add(loopImages);
+
+        if (!contentsWithLocation.Any())
+        {
+            await statusContext.ToastError("No Selected Images have valid location data?");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile))
+        {
+            await statusContext.ToastError("The Settings File for the Feature Intersection is blank?");
+            return;
+        }
+
+        var settingsFileInfo = new FileInfo(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile);
+        if (!settingsFileInfo.Exists)
+        {
+            await statusContext.ToastError(
+                $"The Settings File for the Feature Intersection {settingsFileInfo.FullName} doesn't exist?");
+            return;
+        }
+
+        var settings =
+            JsonSerializer.Deserialize<IntersectSettings>(await File.ReadAllTextAsync(settingsFileInfo.FullName,
+                cancellationToken));
+        if (settings == null)
+        {
+            statusContext.Progress(
+                $"The settings file {settingsFileInfo.FullName} did not deserialized to valid settings...");
+            return;
+        }
+
+        foreach (var loopSelected in contentsWithLocation)
+        {
+            var feature = settings.BufferPointsAndLinesByFeet > 0
+                ? loopSelected.FeatureFromPointAsCircle(settings.BufferPointsAndLinesByFeet.Value)
+                : loopSelected.FeatureFromPoint();
+
+            if (feature is null) continue;
+
+            var intersectResult = new IntersectResult(feature)
+            {
+                ContentId = loopSelected.ContentId,
+                Description = $"Image Content - {loopSelected.Title ?? "No Title"}"
+            };
+
+            intersectResult.OsmIsInPoints.AddRange(loopSelected.PointFromLatitudeLongitude()!.Coordinate);
+
+            var tagResult = await intersectResult.IntersectionTags(settingsFileInfo.FullName,
+                cancellationToken, statusContext.ProgressTracker());
+
+            await FeatureIntersectResultBrowserWindow.CreateInstanceAndShow(tagResult,
+                loopSelected.Title ?? "Content has No Title...");
+        }
     }
 
     private static async Task TextAndContentRepresentationToClipboard(List<ImageContent> contents,

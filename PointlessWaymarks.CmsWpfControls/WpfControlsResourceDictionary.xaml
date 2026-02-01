@@ -740,6 +740,15 @@
                             <Button Content="To Gpx File"
                                     Command="{Binding ItemActions.ToGpxFileCommand}"
                                     CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Show Intersection Tags"
+                                    Command="{Binding ItemActions.ShowIntersectionTagsCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Intersection Tags (OSM)"
+                                    Command="{Binding ItemActions.AddIntersectionTagsWithOsmCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Intersection Tags (No OSM)"
+                                    Command="{Binding ItemActions.AddIntersectionTagsWithoutOsmCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <TextBlock>View</TextBlock>
                             <Button Content="View on Site"
                                     Command="{Binding ItemActions.ViewOnSiteCommand}"
@@ -1007,7 +1016,7 @@
                             <Button Content="Elevation Chart Code"
                                     Command="{Binding ItemActions.ElevationChartBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
-                            <TextBlock>Geo Data</TextBlock>
+                            <TextBlock>Geo</TextBlock>
                             <Button Content="GeoJson to Clipboard"
                                     Command="{Binding ItemActions.GeoJsonToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
@@ -1280,6 +1289,44 @@
                             <Button Content="View Site Preview"
                                     Command="{Binding ItemActions.ViewSitePreviewCommand}"
                                     CommandParameter="{Binding DbEntry}" />
+                            <WrapPanel Orientation="Vertical"
+                                       Visibility="{Binding DbEntry, Converter={StaticResource OptionalLocationContentHasLocationVisibility}}">
+                                <TextBlock>Geo</TextBlock>
+                                <TextBox>
+                                    <TextBox.Text>
+                                        <MultiBinding StringFormat="{}{0:F5}, {1:F5}">
+                                            <Binding Path="DbEntry.Latitude" />
+                                            <Binding Path="DbEntry.Longitude" />
+                                        </MultiBinding>
+                                    </TextBox.Text>
+                                </TextBox>
+                                <TextBox>
+                                    <TextBox.Text>
+                                        <Binding Path="DbEntry.Elevation" StringFormat="Elv: {0:N0}'"></Binding>
+                                    </TextBox.Text>
+                                </TextBox>
+                                <Button Content="PW Map"
+                                        Command="{Binding ItemActions.ShowOnMapCommand}"
+                                        CommandParameter="{Binding DbEntry}" />
+                                <Button Content="OSM Cycle Map"
+                                        Command="{Binding ItemActions.ShowOnOsmCycleMapsCommand}"
+                                        CommandParameter="{Binding DbEntry}" />
+                                <Button Content="Google Maps"
+                                        Command="{Binding ItemActions.ShowOnGoogleMapsCommand}"
+                                        CommandParameter="{Binding DbEntry}" />
+                                <Button Content="Peak Finder"
+                                        Command="{Binding ItemActions.ShowInPeakFinderWebCommand}"
+                                        CommandParameter="{Binding DbEntry}" />
+                                <Button Content="Show Intersection Tags"
+                                        Command="{Binding ItemActions.ShowIntersectionTagsCommand}"
+                                        CommandParameter="{Binding DbEntry}" />
+                                <Button Content="Intersection Tags (OSM)"
+                                        Command="{Binding ItemActions.AddIntersectionTagsWithOsmCommand}"
+                                        CommandParameter="{Binding DbEntry}" />
+                                <Button Content="Intersection Tags (No OSM)"
+                                        Command="{Binding ItemActions.AddIntersectionTagsWithoutOsmCommand}"
+                                        CommandParameter="{Binding DbEntry}" />
+                            </WrapPanel>
                         </WrapPanel>
                     </Border>
                 </Grid>
@@ -1668,6 +1715,15 @@
                                         CommandParameter="{Binding DbEntry}" />
                                 <Button Content="Peak Finder"
                                         Command="{Binding ItemActions.ShowInPeakFinderWebCommand}"
+                                        CommandParameter="{Binding DbEntry}" />
+                                <Button Content="Show Intersection Tags"
+                                        Command="{Binding ItemActions.ShowIntersectionTagsCommand}"
+                                        CommandParameter="{Binding DbEntry}" />
+                                <Button Content="Intersection Tags (OSM)"
+                                        Command="{Binding ItemActions.AddIntersectionTagsWithOsmCommand}"
+                                        CommandParameter="{Binding DbEntry}" />
+                                <Button Content="Intersection Tags (No OSM)"
+                                        Command="{Binding ItemActions.AddIntersectionTagsWithoutOsmCommand}"
                                         CommandParameter="{Binding DbEntry}" />
                             </WrapPanel>
                         </WrapPanel>

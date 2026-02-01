@@ -1,5 +1,4 @@
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Windows;
@@ -30,6 +29,8 @@ public static class LineActions
     public static async Task AddIntersectionTags(List<LineContent> contents,
         StatusControlContext statusContext, bool includeOsm, CancellationToken cancellationToken)
     {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
         if (string.IsNullOrWhiteSpace(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile))
         {
             await statusContext.ToastError("The Settings File for the Feature Intersection is blank?");
