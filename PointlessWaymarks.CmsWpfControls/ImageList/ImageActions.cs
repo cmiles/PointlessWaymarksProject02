@@ -1,7 +1,5 @@
-using System.IO;
-using System.Text;
-using System.Text.Json;
 using PointlessWaymarks.CmsData;
+using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentGeneration;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
@@ -14,6 +12,9 @@ using PointlessWaymarks.WpfCommon.FileMetadataDisplay;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
 using Serilog;
+using System.IO;
+using System.Text;
+using System.Text.Json;
 
 namespace PointlessWaymarks.CmsWpfControls.ImageList;
 
@@ -181,7 +182,7 @@ public static class ImageActions
         }
     }
 
-    public static async Task ReportVideoMetadata(List<ImageContent> contents, StatusControlContext statusContext)
+    public static async Task ReportImageMetadata(List<ImageContent> contents, StatusControlContext statusContext)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -329,4 +330,28 @@ public static class ImageActions
         await ContentClipboardRepresentation.TextAndContentRepresentationToClipboard(
             contents.Cast<IContentCommon>().ToList(), clipboardString, statusContext);
     }
+
+    public static string DefaultBracketCode(ImageContent? content)
+    {
+        return content is null ? string.Empty : $"{BracketCodeImages.Create(content)}";
+    }
+
+    public static async Task TextBracketCodesToClipboard(List<ImageContent> contents,
+        StatusControlContext statusContext)
+    {
+        var codeList = contents.Select(BracketCodeImageLinks.Create).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
+
+        await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
+    }
+
+    public static async Task DefaultBracketCodesToClipboard(List<ImageContent> contents,
+        StatusControlContext statusContext)
+    {
+        var codeList = contents.Select(BracketCodeImages.Create).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
+
+        await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
+    }
+
 }

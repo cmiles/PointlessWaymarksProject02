@@ -1,9 +1,7 @@
 using System.IO;
-using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using Ookii.Dialogs.Wpf;
 using PointlessWaymarks.CmsData;
-using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentGeneration;
 using PointlessWaymarks.CmsData.ContentHtml.ImageHtml;
 using PointlessWaymarks.CmsData.Database;
@@ -45,7 +43,7 @@ public partial class ImageListWithActionsContext
             new ContextMenuItemData
             {
                 ItemName = "Text Code to Clipboard",
-                ItemCommand = ImageBracketLinkCodesToClipboardForSelectedCommand
+                ItemCommand = TextLinkBracketCodesToClipboardForSelectedCommand
             },
 
             new ContextMenuItemData
@@ -226,21 +224,6 @@ public partial class ImageListWithActionsContext
                     $"There was an error resizing the image {loopSelected.DbEntry.OriginalFileName} in {loopSelected.DbEntry.Title}{Environment.NewLine}{Environment.NewLine}{resizeResult.GenerationNote}");
             }
         }
-    }
-
-    [BlockingCommand]
-    [StopAndWarnIfNoSelectedListItems]
-    public async Task ImageBracketLinkCodesToClipboardForSelected()
-    {
-        var finalString = SelectedListItems().Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeImageLinks.Create(loopSelected.DbEntry)}{Environment.NewLine}");
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await StatusContext.ToastSuccess($"To Clipboard: {finalString}");
     }
 
     [BlockingCommand]
@@ -514,6 +497,13 @@ public partial class ImageListWithActionsContext
     {
         await ImageActions.ShowIntersectionTagsForSelected(SelectedListItemsContent(), StatusContext,
             cancellationToken);
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task TextLinkBracketCodesToClipboardForSelected()
+    {
+        await ImageActions.TextBracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
     }
 
     [BlockingCommand]

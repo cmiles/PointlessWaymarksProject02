@@ -28,7 +28,6 @@ public partial class VideoContentActions : IContentActions<VideoContent>
         BuildCommands();
     }
 
-
     public ContentClipboardRepresentation ClipboardObject(VideoContent? content)
     {
         return ContentClipboardRepresentation.ClipboardObject(content);
