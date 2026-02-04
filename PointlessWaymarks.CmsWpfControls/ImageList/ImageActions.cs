@@ -1,3 +1,7 @@
+using System.IO;
+using System.Text;
+using System.Text.Json;
+using Ookii.Dialogs.Wpf;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentGeneration;
@@ -5,6 +9,7 @@ using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.CmsWpfControls.FeatureIntersectResultBrowser;
+using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.FeatureIntersectionTags;
 using PointlessWaymarks.FeatureIntersectionTags.Models;
 using PointlessWaymarks.WpfCommon;
@@ -12,9 +17,6 @@ using PointlessWaymarks.WpfCommon.FileMetadataDisplay;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
 using Serilog;
-using System.IO;
-using System.Text;
-using System.Text.Json;
 
 namespace PointlessWaymarks.CmsWpfControls.ImageList;
 
@@ -182,6 +184,79 @@ public static class ImageActions
         }
     }
 
+    public static string DefaultBracketCode(ImageContent? content)
+    {
+        return content is null ? string.Empty : $"{BracketCodeImages.Create(content)}";
+    }
+
+    public static async Task DefaultBracketCodesToClipboard(List<ImageContent> contents,
+        StatusControlContext statusContext)
+    {
+        var codeList = contents.Select(BracketCodeImages.Create).ToList();
+        var finalString = string.Join(Environment.NewLine, codeList);
+
+        await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
+    }
+
+    public static async Task ExportFiles(List<ImageContent> contents, StatusControlContext statusContext,
+        CancellationToken cancellationToken)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (!contents.Any())
+        {
+            await statusContext.ToastError("Nothing Selected?");
+            return;
+        }
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        var dialog = new VistaFolderBrowserDialog
+        {
+            Description = "Select folder to export files to",
+            UseDescriptionForTitle = true
+        };
+
+        if (dialog.ShowDialog() != true) return;
+
+        var exportDirectory = new DirectoryInfo(dialog.SelectedPath);
+
+        if (!exportDirectory.Exists)
+        {
+            await statusContext.ToastError("Selected directory does not exist?");
+            return;
+        }
+
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var exportedCount = 0;
+        var lastFile = "";
+
+        foreach (var loopSelected in contents)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var fileToExport = UserSettingsSingleton.CurrentSettings().LocalMediaArchiveImageContentFile(loopSelected);
+
+            if (fileToExport is not { Exists: true }) continue;
+
+            var destinationFileName = UniqueFileTools.UniqueFile(exportDirectory, fileToExport.Name);
+
+            File.Copy(fileToExport.FullName, destinationFileName!.FullName);
+            exportedCount++;
+            
+            lastFile = destinationFileName.FullName;
+        }
+
+        if (exportedCount > 0)
+        {
+            await statusContext.ToastSuccess($"Exported {exportedCount} files to {exportDirectory.FullName}");
+            await ProcessHelpers.OpenExplorerWindowForFile(lastFile);
+        }
+        else
+            await statusContext.ToastWarning("No files to export?");
+    }
+
     public static async Task ReportImageMetadata(List<ImageContent> contents, StatusControlContext statusContext)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -331,11 +406,6 @@ public static class ImageActions
             contents.Cast<IContentCommon>().ToList(), clipboardString, statusContext);
     }
 
-    public static string DefaultBracketCode(ImageContent? content)
-    {
-        return content is null ? string.Empty : $"{BracketCodeImages.Create(content)}";
-    }
-
     public static async Task TextBracketCodesToClipboard(List<ImageContent> contents,
         StatusControlContext statusContext)
     {
@@ -344,14 +414,4 @@ public static class ImageActions
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
-
-    public static async Task DefaultBracketCodesToClipboard(List<ImageContent> contents,
-        StatusControlContext statusContext)
-    {
-        var codeList = contents.Select(BracketCodeImages.Create).ToList();
-        var finalString = string.Join(Environment.NewLine, codeList);
-
-        await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
-    }
-
 }

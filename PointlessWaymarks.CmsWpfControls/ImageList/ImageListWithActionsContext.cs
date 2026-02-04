@@ -1,6 +1,5 @@
 using System.IO;
 using Microsoft.EntityFrameworkCore;
-using Ookii.Dialogs.Wpf;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.ContentGeneration;
 using PointlessWaymarks.CmsData.ContentHtml.ImageHtml;
@@ -72,6 +71,7 @@ public partial class ImageListWithActionsContext
                 ItemName = "View Intersection Tags",
                 ItemCommand = ShowIntersectionTagsForSelectedCommand
             },
+            new ContextMenuItemData { ItemName = "Export Files", ItemCommand = ExportFilesCommand },
             new ContextMenuItemData { ItemName = "Open URL", ItemCommand = ListContext.ViewOnSiteCommand },
 
             new ContextMenuItemData { ItemName = "Delete", ItemCommand = ListContext.DeleteSelectedCommand },
@@ -138,57 +138,7 @@ public partial class ImageListWithActionsContext
     [StopAndWarnIfNoSelectedListItemsAskIfOverMax(MaxSelectedItems = 10)]
     public async Task ExportFiles(CancellationToken cancellationToken)
     {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (!SelectedListItems().Any())
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        var frozenSelect = SelectedListItems().ToList();
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        var dialog = new VistaFolderBrowserDialog
-        {
-            Description = "Select folder to export files to",
-            UseDescriptionForTitle = true
-        };
-
-        if (dialog.ShowDialog() != true) return;
-
-        var exportDirectory = new DirectoryInfo(dialog.SelectedPath);
-
-        if (!exportDirectory.Exists)
-        {
-            await StatusContext.ToastError("Selected directory does not exist?");
-            return;
-        }
-
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        var exportedCount = 0;
-
-        foreach (var loopSelected in frozenSelect)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var fileToExport = UserSettingsSingleton.CurrentSettings()
-                .LocalMediaArchiveImageContentFile(loopSelected.DbEntry);
-
-            if (fileToExport is not { Exists: true }) continue;
-
-            var destinationFileName = UniqueFileTools.UniqueFile(exportDirectory, fileToExport.Name);
-
-            File.Copy(fileToExport.FullName, destinationFileName!.FullName);
-            exportedCount++;
-        }
-
-        if (exportedCount > 0)
-            await StatusContext.ToastSuccess($"Exported {exportedCount} files to {exportDirectory.FullName}");
-        else
-            await StatusContext.ToastWarning("No files to export?");
+        await ImageActions.ExportFiles(SelectedListItemsContent(), StatusContext, cancellationToken);
     }
 
     [BlockingCommand]

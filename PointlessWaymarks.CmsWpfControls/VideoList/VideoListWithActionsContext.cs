@@ -66,6 +66,7 @@ public partial class VideoListWithActionsContext
             {
                 ItemName = "View Videos - Group", ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
             },
+            new ContextMenuItemData { ItemName = "Export Files", ItemCommand = ExportFilesCommand },
             new ContextMenuItemData { ItemName = "Open URL", ItemCommand = ListContext.ViewOnSiteCommand },
             new ContextMenuItemData { ItemName = "Delete", ItemCommand = ListContext.DeleteSelectedCommand },
             new ContextMenuItemData
@@ -118,57 +119,7 @@ public partial class VideoListWithActionsContext
     [StopAndWarnIfNoSelectedListItemsAskIfOverMax(MaxSelectedItems = 10)]
     public async Task ExportFiles(CancellationToken cancellationToken)
     {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (!SelectedListItems().Any())
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        var frozenSelect = SelectedListItems().ToList();
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        var dialog = new VistaFolderBrowserDialog
-        {
-            Description = "Select folder to export files to",
-            UseDescriptionForTitle = true
-        };
-
-        if (dialog.ShowDialog() != true) return;
-
-        var exportDirectory = new DirectoryInfo(dialog.SelectedPath);
-
-        if (!exportDirectory.Exists)
-        {
-            await StatusContext.ToastError("Selected directory does not exist?");
-            return;
-        }
-
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        var exportedCount = 0;
-
-        foreach (var loopSelected in frozenSelect)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var fileToExport = UserSettingsSingleton.CurrentSettings()
-                .LocalMediaArchiveVideoContentFile(loopSelected.DbEntry);
-
-            if (fileToExport is not { Exists: true }) continue;
-
-            var destinationFileName = UniqueFileTools.UniqueFile(exportDirectory, fileToExport.Name);
-
-            File.Copy(fileToExport.FullName, destinationFileName!.FullName);
-            exportedCount++;
-        }
-
-        if (exportedCount > 0)
-            await StatusContext.ToastSuccess($"Exported {exportedCount} files to {exportDirectory.FullName}");
-        else
-            await StatusContext.ToastWarning("No files to export?");
+        await VideoActions.ExportFiles(SelectedListItemsContent(), StatusContext, cancellationToken);
     }
 
     [BlockingCommand]

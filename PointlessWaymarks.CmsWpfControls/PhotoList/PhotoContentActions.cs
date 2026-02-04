@@ -311,6 +311,13 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
         await PhotoActions.DailyPhotoPageBracketCodesToClipboard(content.AsList(), StatusContext);
     }
 
+    [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
+    public async Task ExportFile(PhotoContent? content)
+    {
+        await PhotoActions.ExportFiles(content!.AsList(), StatusContext, CancellationToken.None);
+    }
+
     public static async Task<List<object>> FocalLengthFilter(PhotoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();

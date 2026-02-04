@@ -1,7 +1,6 @@
 using System.IO;
 using System.Windows;
 using Microsoft.EntityFrameworkCore;
-using Ookii.Dialogs.Wpf;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentGeneration;
@@ -71,6 +70,7 @@ public partial class FileListWithActionsContext : IListSelectionWithContext<File
                 ItemCommand = ListContext.PictureGalleryBracketCodeToClipboardSelectedCommand
             },
 
+            new ContextMenuItemData { ItemName = "Export Files", ItemCommand = ExportFilesCommand },
             new ContextMenuItemData { ItemName = "View Files", ItemCommand = ViewSelectedFilesCommand },
             new ContextMenuItemData { ItemName = "Open URL", ItemCommand = ListContext.ViewOnSiteCommand },
             new ContextMenuItemData { ItemName = "Delete", ItemCommand = ListContext.DeleteSelectedCommand },
@@ -139,49 +139,7 @@ public partial class FileListWithActionsContext : IListSelectionWithContext<File
     [StopAndWarnIfNoSelectedListItemsAskIfOverMax(MaxSelectedItems = 10)]
     public async Task ExportFiles(CancellationToken cancellationToken)
     {
-        var frozenSelect = SelectedListItems().ToList();
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        var dialog = new VistaFolderBrowserDialog
-        {
-            Description = "Select folder to export files to",
-            UseDescriptionForTitle = true
-        };
-
-        if (dialog.ShowDialog() != true) return;
-
-        var exportDirectory = new DirectoryInfo(dialog.SelectedPath);
-
-        if (!exportDirectory.Exists)
-        {
-            await StatusContext.ToastError("Selected directory does not exist?");
-            return;
-        }
-
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        var exportedCount = 0;
-
-        foreach (var loopSelected in frozenSelect)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var fileToExport = UserSettingsSingleton.CurrentSettings()
-                .LocalMediaArchiveFileContentFile(loopSelected.DbEntry);
-
-            if (fileToExport is not { Exists: true }) continue;
-
-            var destinationFileName = UniqueFileTools.UniqueFile(exportDirectory, fileToExport.Name);
-
-            File.Copy(fileToExport.FullName, destinationFileName!.FullName);
-            exportedCount++;
-        }
-
-        if (exportedCount > 0)
-            await StatusContext.ToastSuccess($"Exported {exportedCount} files to {exportDirectory.FullName}");
-        else
-            await StatusContext.ToastWarning("No files to export?");
+        await FileActions.ExportFiles(SelectedListItemsContent(), StatusContext, cancellationToken);
     }
 
     [BlockingCommand]

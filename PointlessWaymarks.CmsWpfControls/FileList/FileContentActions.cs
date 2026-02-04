@@ -246,6 +246,13 @@ public partial class FileContentActions : IContentActions<FileContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
+    public async Task ExportFile(FileContent? content)
+    {
+        await FileActions.ExportFiles(content!.AsList(), StatusContext, CancellationToken.None);
+    }
+
+    [BlockingCommand]
     public async Task FileUrlBracketCodeToClipboard(FileContent? content)
     {
         if (content is null)

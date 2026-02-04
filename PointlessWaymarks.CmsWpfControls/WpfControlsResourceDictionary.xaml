@@ -1172,6 +1172,9 @@
                             <Button Content="File in Explorer"
                                     Command="{Binding ItemActions.ShowFileInExplorerCommand}"
                                     CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Export File"
+                                    Command="{Binding ItemActions.ExportFileCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="View on Site"
                                     Command="{Binding ItemActions.ViewOnSiteCommand}"
                                     CommandParameter="{Binding DbEntry}" />
@@ -1257,7 +1260,10 @@
                         </Border.Resources>
                         <WrapPanel Style="{StaticResource InTemplateContentMenuWrapPanelStyle}">
                             <TextBlock>Bracket Codes</TextBlock>
-                            <Button Content="Map Bracket Code"
+                            <Button Content="Image Bracket Code"
+                                    Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Link Bracket Code"
                                     Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <TextBlock>Program Actions</TextBlock>
@@ -1282,6 +1288,9 @@
                                     CommandParameter="{Binding DbEntry}" />
                             <Button Content="File in Explorer"
                                     Command="{Binding ItemActions.ShowFileInExplorerCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Export File"
+                                    Command="{Binding ItemActions.ExportFileCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <Button Content="View on Site"
                                     Command="{Binding ItemActions.ViewOnSiteCommand}"
@@ -1681,6 +1690,9 @@
                             <Button Content="File in Explorer"
                                     Command="{Binding ItemActions.ShowFileInExplorerCommand}"
                                     CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Export File"
+                                    Command="{Binding ItemActions.ExportFileCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="View on Site"
                                     Command="{Binding ItemActions.ViewOnSiteCommand}"
                                     CommandParameter="{Binding DbEntry}" />
@@ -2054,6 +2066,9 @@
                                     CommandParameter="{Binding DbEntry}" />
                             <Button Content="File in Explorer"
                                     Command="{Binding ItemActions.ShowFileInExplorerCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Export File"
+                                    Command="{Binding ItemActions.ExportFileCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <Button Content="View on Site"
                                     Command="{Binding ItemActions.ViewOnSiteCommand}"

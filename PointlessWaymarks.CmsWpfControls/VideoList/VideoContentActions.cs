@@ -218,6 +218,13 @@ public partial class VideoContentActions : IContentActions<VideoContent>
     public event PropertyChangedEventHandler? PropertyChanged;
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
+    public async Task ExportFile(VideoContent? content)
+    {
+        await VideoActions.ExportFiles(content!.AsList(), StatusContext, CancellationToken.None);
+    }
+
+    [BlockingCommand]
     public async Task ImageBracketCodeToClipboard(VideoContent? content)
     {
         if (content is null)
@@ -288,35 +295,25 @@ public partial class VideoContentActions : IContentActions<VideoContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task TextBracketCodeToClipboard(VideoContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await VideoActions.TextBracketCodesToClipboard(content.AsList(), StatusContext);
+        await VideoActions.TextBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [NonBlockingCommand]
-    public async Task ViewFile(VideoContent? listItem)
+    [StopAndWarnIfContentIsNull]
+    public async Task ViewFile(VideoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (listItem == null)
-        {
-            await StatusContext.ToastError("Nothing Items to Open?");
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(listItem.OriginalFileName))
+        if (string.IsNullOrWhiteSpace(content!.OriginalFileName))
         {
             await StatusContext.ToastError("No Video?");
             return;
         }
 
-        var toOpen = UserSettingsSingleton.CurrentSettings().LocalSiteVideoContentFile(listItem);
+        var toOpen = UserSettingsSingleton.CurrentSettings().LocalSiteVideoContentFile(content);
 
         if (toOpen is not { Exists: true })
         {

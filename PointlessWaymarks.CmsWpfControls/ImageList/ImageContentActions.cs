@@ -246,6 +246,13 @@ public partial class ImageContentActions : IContentActions<ImageContent>
         await ImageActions.AddIntersectionTags(content.AsList(), StatusContext, false, CancellationToken.None);
     }
 
+    [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
+    public async Task ExportFile(ImageContent? content)
+    {
+        await ImageActions.ExportFiles(content!.AsList(), StatusContext, CancellationToken.None);
+    }
+
     public static async Task<ImageListListItem> ListItemFromDbItem(ImageContent content,
         ImageContentActions itemActions,
         bool showType)
