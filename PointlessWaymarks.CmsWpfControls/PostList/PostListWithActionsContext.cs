@@ -75,7 +75,7 @@ public partial class PostListWithActionsContext
     [StopAndWarnIfNoSelectedListItems]
     public async Task BracketCodesToClipboardForSelected()
     {
-        await PostActions.BracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
+        await PostActions.DefaultBracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
 
     }
 

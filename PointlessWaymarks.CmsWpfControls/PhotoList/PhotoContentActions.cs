@@ -40,15 +40,10 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task DefaultBracketCodeToClipboard(PhotoContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PhotoActions.DefaultBracketCodesToClipboard(content.AsList(), StatusContext);
+        await PhotoActions.DefaultBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [NonBlockingCommand]

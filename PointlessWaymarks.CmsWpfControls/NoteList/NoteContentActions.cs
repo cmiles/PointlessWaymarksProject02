@@ -1,14 +1,10 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Text.Json;
-using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using PointlessWaymarks.CmsData;
-using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentHtml.NoteHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
-using PointlessWaymarks.CmsData.Server;
 using PointlessWaymarks.CmsWpfControls.ContentHistoryView;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.CmsWpfControls.NoteContentEditor;
@@ -34,69 +30,19 @@ public partial class NoteContentActions : IContentActions<NoteContent>
 
     public ContentClipboardRepresentation ClipboardObject(NoteContent? content)
     {
-        if (content == null)
-            return new ContentClipboardRepresentation();
-
-        var settings = UserSettingsSingleton.CurrentSettings();
-
-        return new ContentClipboardRepresentation
-        {
-            FormatIdentifier = ContentClipboardRepresentation.ContentClipboardFormat,
-            SiteId = settings.SettingsId,
-            ContentId = content.ContentId,
-            ContentType = Db.ContentTypeDisplayString(content),
-            SiteLocalApiUrl = PartialContentPreviewServer.PreviewServerLocalApiUrl
-        };
+        return ContentClipboardRepresentation.ClipboardObject(content);
     }
 
     public string DefaultBracketCode(NoteContent? content)
     {
-        return content?.ContentId == null ? string.Empty : $"{BracketCodeNotes.Create(content)}";
+        return NoteActions.DefaultBracketCode(content);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task DefaultBracketCodeToClipboard(NoteContent? content)
     {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        var finalString = $"{BracketCodeNotes.Create(content)}{Environment.NewLine}";
-
-        try
-        {
-            // Get the ContentClipboardRepresentation from ClipboardObject
-            var clipboardRepresentation = ClipboardObject(content);
-
-            // Create a DataObject for multiple clipboard formats
-            var dataObject = new DataObject();
-
-            // Add the plain text format for compatibility
-            dataObject.SetText(finalString);
-
-            // Add the ContentClipboardRepresentation as an alternate format
-            // Using the ContentClipboardFormat constant as the format name
-            var clipboardJson = JsonSerializer.Serialize(clipboardRepresentation);
-            dataObject.SetData(ContentClipboardRepresentation.ContentClipboardFormat, clipboardJson);
-
-            await ThreadSwitcher.ResumeForegroundAsync();
-
-            // Set the clipboard with multiple formats
-            Clipboard.SetDataObject(dataObject, true);
-
-            await StatusContext.ToastSuccess($"To Clipboard {finalString}");
-        }
-        catch (Exception ex)
-        {
-            // Fallback to simple text if the rich format fails
-            await ThreadSwitcher.ResumeForegroundAsync();
-            Clipboard.SetText(finalString);
-            await StatusContext.ToastWarning($"Simple text copied - rich format failed: {ex.Message}");
-        }
+        await NoteActions.DefaultBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]

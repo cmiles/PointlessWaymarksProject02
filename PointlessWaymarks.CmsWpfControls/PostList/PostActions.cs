@@ -8,15 +8,6 @@ namespace PointlessWaymarks.CmsWpfControls.PostList;
 
 public static class PostActions
 {
-    public static async Task BracketCodesToClipboard(List<PostContent> contents,
-        StatusControlContext statusContext)
-    {
-        var codeList = contents.Select(BracketCodePosts.Create).ToList();
-        var finalString = string.Join(Environment.NewLine, codeList);
-
-        await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
-    }
-
     public static string DefaultBracketCode(PostContent? content)
     {
         return content is null ? string.Empty : $"{BracketCodePosts.Create(content)}";

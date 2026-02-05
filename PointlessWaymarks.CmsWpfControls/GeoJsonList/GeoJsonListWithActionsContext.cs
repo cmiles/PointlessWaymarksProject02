@@ -1,10 +1,8 @@
 using System.IO;
 using System.Text;
 using System.Text.Json;
-using System.Windows;
 using Omu.ValueInjecter;
 using PointlessWaymarks.CmsData;
-using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentGeneration;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
@@ -46,7 +44,12 @@ public partial class GeoJsonListWithActionsContext
 
             new ContextMenuItemData
             {
-                ItemName = "Text Code to Clipboard", ItemCommand = LinkBracketCodesToClipboardForSelectedCommand
+                ItemName = "Text Code to Clipboard", ItemCommand = TextBracketCodesToClipboardForSelectedCommand
+            },
+
+            new ContextMenuItemData
+            {
+                ItemName = "Image Code to Clipboard", ItemCommand = ImageBracketCodesToClipboardForSelectedCommand
             },
 
             new ContextMenuItemData
@@ -241,17 +244,9 @@ public partial class GeoJsonListWithActionsContext
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    public async Task LinkBracketCodesToClipboardForSelected()
+    public async Task ImageBracketCodesToClipboardForSelected()
     {
-        var finalString = SelectedListItems().Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodeGeoJsonLinks.Create(loopSelected.DbEntry)}{Environment.NewLine}");
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+        await GeoJsonActions.ImageBracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
     }
 
     [BlockingCommand]
@@ -272,5 +267,12 @@ public partial class GeoJsonListWithActionsContext
     {
         return ListContext.ListSelection.SelectedItems.Where(x => x is GeoJsonListListItem).Cast<GeoJsonListListItem>()
             .Select(x => x.DbEntry).ToList();
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task TextBracketCodesToClipboardForSelected()
+    {
+        await GeoJsonActions.TextBracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
     }
 }

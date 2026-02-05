@@ -835,6 +835,19 @@
                             <Button Content="Map Bracket Code"
                                     Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Image Bracket Code"
+                                    Command="{Binding ItemActions.ImageBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Text Bracket Code"
+                                    Command="{Binding ItemActions.TextBracketCodeToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <TextBlock>GeoJson</TextBlock>
+                            <Button Content="To Clipboard"
+                                    Command="{Binding ItemActions.GeoJsonTextToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="GeoJson as File"
+                                    Command="{Binding ItemActions.ExportGeoJsonAsFilesCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <TextBlock>Program Actions</TextBlock>
                             <Button Content="Delete"
                                     Command="{Binding ItemActions.DeleteCommand}"
