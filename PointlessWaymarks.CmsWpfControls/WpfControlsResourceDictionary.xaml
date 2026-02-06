@@ -841,13 +841,6 @@
                             <Button Content="Text Bracket Code"
                                     Command="{Binding ItemActions.TextBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
-                            <TextBlock>GeoJson</TextBlock>
-                            <Button Content="To Clipboard"
-                                    Command="{Binding ItemActions.GeoJsonTextToClipboardCommand}"
-                                    CommandParameter="{Binding DbEntry}" />
-                            <Button Content="GeoJson as File"
-                                    Command="{Binding ItemActions.ExportGeoJsonAsFilesCommand}"
-                                    CommandParameter="{Binding DbEntry}" />
                             <TextBlock>Program Actions</TextBlock>
                             <Button Content="Delete"
                                     Command="{Binding ItemActions.DeleteCommand}"
@@ -863,6 +856,22 @@
                                     CommandParameter="{Binding DbEntry}" />
                             <Button Content="View History"
                                     Command="{Binding ItemActions.ViewHistoryCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <TextBlock>Geo</TextBlock>
+                            <Button Content="To Clipboard"
+                                    Command="{Binding ItemActions.GeoJsonTextToClipboardCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="GeoJson as File"
+                                    Command="{Binding ItemActions.ExportGeoJsonAsFilesCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Show Intersection Tags"
+                                    Command="{Binding ItemActions.ShowIntersectionTagsCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Intersection Tags (OSM)"
+                                    Command="{Binding ItemActions.AddIntersectionTagsWithOsmCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Intersection Tags (No OSM)"
+                                    Command="{Binding ItemActions.AddIntersectionTagsWithoutOsmCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <TextBlock>View</TextBlock>
                             <Button Content="View on Site"

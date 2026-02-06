@@ -2,7 +2,6 @@ using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.WpfCommon.Status;
-using System.Linq;
 
 namespace PointlessWaymarks.CmsWpfControls.TrailList;
 

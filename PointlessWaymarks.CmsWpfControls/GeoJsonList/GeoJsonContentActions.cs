@@ -77,19 +77,18 @@ public partial class GeoJsonContentActions : IContentActions<GeoJsonContent>
     }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task Edit(GeoJsonContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null) return;
-
         var context = await Db.Context();
 
-        var refreshedData = context.GeoJsonContents.SingleOrDefault(x => x.ContentId == content.ContentId);
+        var refreshedData = context.GeoJsonContents.SingleOrDefault(x => x.ContentId == content!.ContentId);
 
         if (refreshedData == null)
             await StatusContext.ToastError(
-                $"{content.Title} is no longer active in the database? Can not edit - look for a historic version...");
+                $"{content!.Title} is no longer active in the database? Can not edit - look for a historic version...");
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -101,19 +100,14 @@ public partial class GeoJsonContentActions : IContentActions<GeoJsonContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ExtractNewLinks(GeoJsonContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var context = await Db.Context();
 
-        var refreshedData = context.GeoJsonContents.SingleOrDefault(x => x.ContentId == content.ContentId);
+        var refreshedData = context.GeoJsonContents.SingleOrDefault(x => x.ContentId == content!.ContentId);
 
         if (refreshedData == null) return;
 
@@ -122,17 +116,12 @@ public partial class GeoJsonContentActions : IContentActions<GeoJsonContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task GenerateHtml(GeoJsonContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        StatusContext.Progress($"Generating Html for {content.Title}");
+        StatusContext.Progress($"Generating Html for {content!.Title}");
 
         var htmlContext = new SingleGeoJsonPage(content);
 
@@ -144,19 +133,14 @@ public partial class GeoJsonContentActions : IContentActions<GeoJsonContent>
     public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewHistory(GeoJsonContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var db = await Db.Context();
 
-        StatusContext.Progress($"Looking up Historic Entries for {content.Title}");
+        StatusContext.Progress($"Looking up Historic Entries for {content!.Title}");
 
         var historicItems = await db.HistoricGeoJsonContents.Where(x => x.ContentId == content.ContentId).ToListAsync();
 
@@ -177,38 +161,28 @@ public partial class GeoJsonContentActions : IContentActions<GeoJsonContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewOnSite(GeoJsonContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var settings = UserSettingsSingleton.CurrentSettings();
 
-        var url = settings.GeoJsonPageUrl(content);
+        var url = settings.GeoJsonPageUrl(content!);
 
         var ps = new ProcessStartInfo(url) { UseShellExecute = true, Verb = "open" };
         Process.Start(ps);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewSitePreview(GeoJsonContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var settings = UserSettingsSingleton.CurrentSettings();
 
-        var url = settings.GeoJsonPageUrl(content);
+        var url = settings.GeoJsonPageUrl(content!);
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -218,6 +192,21 @@ public partial class GeoJsonContentActions : IContentActions<GeoJsonContent>
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+
+    [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
+    public async Task AddIntersectionTagsWithOsm(GeoJsonContent? content)
+    {
+        await GeoJsonActions.AddIntersectionTags(content!.AsList(), StatusContext, true, CancellationToken.None);
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
+    public async Task AddIntersectionTagsWithoutOsm(GeoJsonContent? content)
+    {
+        await GeoJsonActions.AddIntersectionTags(content!.AsList(), StatusContext, false, CancellationToken.None);
+    }
 
     [BlockingCommand]
     [StopAndWarnIfContentIsNull]
@@ -253,18 +242,20 @@ public partial class GeoJsonContentActions : IContentActions<GeoJsonContent>
         return item;
     }
 
+    [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
+    public async Task ShowIntersectionTags(GeoJsonContent? content)
+    {
+        await GeoJsonActions.ShowIntersectionTagsForSelected(content!.AsList(), StatusContext, CancellationToken.None);
+    }
+
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ShowOnMap(GeoJsonContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        if (content.Id < 1)
+        if (content!.Id < 1)
         {
             await StatusContext.ToastError("Entry is not saved - Skipping?");
             return;

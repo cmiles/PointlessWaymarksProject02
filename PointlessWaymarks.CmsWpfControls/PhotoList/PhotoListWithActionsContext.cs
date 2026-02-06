@@ -281,7 +281,7 @@ public partial class PhotoListWithActionsContext
     }
 
     public static async Task<PhotoListWithActionsContext> CreateInstance(StatusControlContext? statusContext,
-        WindowIconStatus? windowStatus, IContentListLoader? listLoader, bool loadInBackground = true)
+        WindowIconStatus? windowStatus = null, IContentListLoader? listLoader = null, bool loadInBackground = true)
     {
         var factoryStatusContext = await StatusControlContext.CreateInstance(statusContext);
 

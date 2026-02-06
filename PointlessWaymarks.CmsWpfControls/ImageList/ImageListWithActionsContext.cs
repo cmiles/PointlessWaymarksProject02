@@ -106,13 +106,13 @@ public partial class ImageListWithActionsContext
     }
 
     public static async Task<ImageListWithActionsContext> CreateInstance(StatusControlContext? statusContext,
-        WindowIconStatus? windowStatus = null, bool loadInBackground = true)
+        WindowIconStatus? windowStatus = null, IContentListLoader? listLoader = null,  bool loadInBackground = true)
     {
         var factoryStatusContext = await StatusControlContext.CreateInstance(statusContext);
 
         await ThreadSwitcher.ResumeBackgroundAsync();
         var factoryListContext =
-            await ContentListContext.CreateInstance(factoryStatusContext, new ImageListLoader(100),
+            await ContentListContext.CreateInstance(factoryStatusContext, listLoader ?? new ImageListLoader(100),
                 [Db.ContentTypeDisplayStringForImage], windowStatus);
 
         return new ImageListWithActionsContext(factoryStatusContext, windowStatus, factoryListContext,
@@ -424,7 +424,7 @@ public partial class ImageListWithActionsContext
 
         var newWindow =
             await ImageListWindow.CreateInstance(
-                await CreateInstance(null, null));
+                await CreateInstance(null, null, reportLoader));
         newWindow.WindowTitle = title;
         await newWindow.PositionWindowAndShowOnUiThread();
     }

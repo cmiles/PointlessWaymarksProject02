@@ -215,27 +215,17 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     public event PropertyChangedEventHandler? PropertyChanged;
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task AddIntersectionTagsWithOsm(PhotoContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PhotoActions.AddIntersectionTags(content.AsList(), StatusContext, true, CancellationToken.None);
+        await PhotoActions.AddIntersectionTags(content!.AsList(), StatusContext, true, CancellationToken.None);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task AddIntersectionTagsWithoutOsm(PhotoContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PhotoActions.AddIntersectionTags(content.AsList(), StatusContext, false, CancellationToken.None);
+        await PhotoActions.AddIntersectionTags(content!.AsList(), StatusContext, false, CancellationToken.None);
     }
 
     private static async Task<List<object>> ApertureFilter(PhotoContent? content)
@@ -484,15 +474,10 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ShowIntersectionTags(PhotoContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PhotoActions.ShowIntersectionTagsForSelected(content.AsList(), StatusContext, CancellationToken.None);
+        await PhotoActions.ShowIntersectionTagsForSelected(content!.AsList(), StatusContext, CancellationToken.None);
     }
 
     [BlockingCommand]
