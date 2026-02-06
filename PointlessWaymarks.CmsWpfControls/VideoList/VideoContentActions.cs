@@ -39,29 +39,19 @@ public partial class VideoContentActions : IContentActions<VideoContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task DefaultBracketCodeToClipboard(VideoContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await VideoActions.DefaultBracketCodesToClipboard(content.AsList(), StatusContext);
+        await VideoActions.DefaultBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task Delete(VideoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        if (content.Id < 1)
+        if (content!.Id < 1)
         {
             await StatusContext.ToastError($"Video {content.Title} - Entry is not saved - Skipping?");
             return;
@@ -80,19 +70,18 @@ public partial class VideoContentActions : IContentActions<VideoContent>
     }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task Edit(VideoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null) return;
-
         var context = await Db.Context();
 
-        var refreshedData = context.VideoContents.SingleOrDefault(x => x.ContentId == content.ContentId);
+        var refreshedData = context.VideoContents.SingleOrDefault(x => x.ContentId == content!.ContentId);
 
         if (refreshedData == null)
             await StatusContext.ToastError(
-                $"{content.Title} is no longer active in the database? Can not edit - look for a historic version...");
+                $"{content!.Title} is no longer active in the database? Can not edit - look for a historic version...");
 
         var newContentWindow = await VideoContentEditorWindow.CreateInstance(refreshedData);
 
@@ -100,18 +89,13 @@ public partial class VideoContentActions : IContentActions<VideoContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ExtractNewLinks(VideoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var context = await Db.Context();
-        var refreshedData = context.VideoContents.SingleOrDefault(x => x.ContentId == content.ContentId);
+        var refreshedData = context.VideoContents.SingleOrDefault(x => x.ContentId == content!.ContentId);
 
         if (refreshedData == null) return;
 
@@ -120,17 +104,12 @@ public partial class VideoContentActions : IContentActions<VideoContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task GenerateHtml(VideoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        StatusContext.Progress($"Generating Html for {content.Title}");
+        StatusContext.Progress($"Generating Html for {content!.Title}");
 
         var htmlContext = new SingleVideoPage(content);
 
@@ -142,19 +121,14 @@ public partial class VideoContentActions : IContentActions<VideoContent>
     public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewHistory(VideoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var db = await Db.Context();
 
-        StatusContext.Progress($"Looking up Historic Entries for {content.Title}");
+        StatusContext.Progress($"Looking up Historic Entries for {content!.Title}");
 
         var historicItems = await db.HistoricVideoContents.Where(x => x.ContentId == content.ContentId).ToListAsync();
 
@@ -175,38 +149,28 @@ public partial class VideoContentActions : IContentActions<VideoContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewOnSite(VideoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var settings = UserSettingsSingleton.CurrentSettings();
 
-        var url = $"{settings.VideoPageUrl(content)}";
+        var url = $"{settings.VideoPageUrl(content!)}";
 
         var ps = new ProcessStartInfo(url) { UseShellExecute = true, Verb = "open" };
         Process.Start(ps);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewSitePreview(VideoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var settings = UserSettingsSingleton.CurrentSettings();
 
-        var url = settings.VideoPageUrl(content);
+        var url = settings.VideoPageUrl(content!);
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -225,15 +189,10 @@ public partial class VideoContentActions : IContentActions<VideoContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ImageBracketCodeToClipboard(VideoContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await VideoActions.ImageBracketCodesToClipboard(content.AsList(), StatusContext);
+        await VideoActions.ImageBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     public static async Task<VideoListListItem> ListItemFromDbItem(VideoContent content,
@@ -251,37 +210,27 @@ public partial class VideoContentActions : IContentActions<VideoContent>
     }
 
     [NonBlockingCommand]
-    public async Task MetaDataReport(VideoContent? listItem)
+    [StopAndWarnIfContentIsNull]
+    public async Task MetaDataReport(VideoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (listItem == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await VideoActions.ReportVideoMetadata(listItem.AsList(), StatusContext);
+        await VideoActions.ReportVideoMetadata(content!.AsList(), StatusContext);
     }
 
     [NonBlockingCommand]
-    public async Task ShowFileInExplorer(VideoContent? listItem)
+    [StopAndWarnIfContentIsNull]
+    public async Task ShowFileInExplorer(VideoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (listItem == null)
-        {
-            await StatusContext.ToastError("Nothing Items to Open?");
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(listItem.OriginalFileName))
+        if (string.IsNullOrWhiteSpace(content!.OriginalFileName))
         {
             await StatusContext.ToastError("No File?");
             return;
         }
 
-        var toOpen = UserSettingsSingleton.CurrentSettings().LocalMediaArchiveVideoContentFile(listItem);
+        var toOpen = UserSettingsSingleton.CurrentSettings().LocalMediaArchiveVideoContentFile(content);
 
         if (toOpen is not { Exists: true })
         {

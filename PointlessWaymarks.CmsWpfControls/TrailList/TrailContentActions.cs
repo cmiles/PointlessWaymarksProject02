@@ -39,29 +39,19 @@ public partial class TrailContentActions : IContentActions<TrailContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task DefaultBracketCodeToClipboard(TrailContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await TrailActions.DefaultBracketCodesToClipboard(content.AsList(), StatusContext);
+        await TrailActions.DefaultBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task Delete(TrailContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        if (content.Id < 1)
+        if (content!.Id < 1)
         {
             await StatusContext.ToastError($"Trail {content.Title} - Entry is not saved - Skipping?");
             return;
@@ -80,20 +70,19 @@ public partial class TrailContentActions : IContentActions<TrailContent>
     }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task Edit(TrailContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null) return;
-
         var context = await Db.Context();
 
-        var refreshedData = context.TrailContents.SingleOrDefault(x => x.ContentId == content.ContentId);
+        var refreshedData = context.TrailContents.SingleOrDefault(x => x.ContentId == content!.ContentId);
 
         if (refreshedData == null)
         {
             await StatusContext.ToastError(
-                $"{content.Title} is no longer active in the database? Can not edit - look for a historic version...");
+                $"{content!.Title} is no longer active in the database? Can not edit - look for a historic version...");
             return;
         }
 
@@ -103,19 +92,14 @@ public partial class TrailContentActions : IContentActions<TrailContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ExtractNewLinks(TrailContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var context = await Db.Context();
 
-        var refreshedData = context.TrailContents.SingleOrDefault(x => x.ContentId == content.ContentId);
+        var refreshedData = context.TrailContents.SingleOrDefault(x => x.ContentId == content!.ContentId);
 
         if (refreshedData == null) return;
 
@@ -124,17 +108,12 @@ public partial class TrailContentActions : IContentActions<TrailContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task GenerateHtml(TrailContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        StatusContext.Progress($"Generating Html for {content.Title}");
+        StatusContext.Progress($"Generating Html for {content!.Title}");
 
         var htmlContext = new SingleTrailPage(content);
 
@@ -146,19 +125,14 @@ public partial class TrailContentActions : IContentActions<TrailContent>
     public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewHistory(TrailContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var db = await Db.Context();
 
-        StatusContext.Progress($"Looking up Historic Entries for {content.Title}");
+        StatusContext.Progress($"Looking up Historic Entries for {content!.Title}");
 
         var historicItems = await db.HistoricTrailContents.Where(x => x.ContentId == content.ContentId).ToListAsync();
 
@@ -179,38 +153,28 @@ public partial class TrailContentActions : IContentActions<TrailContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewOnSite(TrailContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var settings = UserSettingsSingleton.CurrentSettings();
 
-        var url = settings.TrailPageUrl(content);
+        var url = settings.TrailPageUrl(content!);
 
         var ps = new ProcessStartInfo(url) { UseShellExecute = true, Verb = "open" };
         Process.Start(ps);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewSitePreview(TrailContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var settings = UserSettingsSingleton.CurrentSettings();
 
-        var url = settings.TrailPageUrl(content);
+        var url = settings.TrailPageUrl(content!);
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -222,15 +186,10 @@ public partial class TrailContentActions : IContentActions<TrailContent>
     public event PropertyChangedEventHandler? PropertyChanged;
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ImageBracketCodeToClipboard(TrailContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await TrailActions.ImageBracketCodesToClipboard(content.AsList(), StatusContext);
+        await TrailActions.ImageBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     public static async Task<TrailListListItem> ListItemFromDbItem(TrailContent content,
@@ -248,27 +207,17 @@ public partial class TrailContentActions : IContentActions<TrailContent>
 
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task TextStatsBracketCodeToClipboard(TrailContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await TrailActions.TextStatsBracketCodesToClipboard(content.AsList(), StatusContext);
+        await TrailActions.TextStatsBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task TextStatsExtendedBracketCodeToClipboard(TrailContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await TrailActions.TextStatsExtendedBracketCodesToClipboard(content.AsList(), StatusContext);
+        await TrailActions.TextStatsExtendedBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 }
