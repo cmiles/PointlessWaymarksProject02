@@ -39,29 +39,19 @@ public partial class PostContentActions : IContentActions<PostContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task DefaultBracketCodeToClipboard(PostContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PostActions.DefaultBracketCodesToClipboard(content.AsList(), StatusContext);
+        await PostActions.DefaultBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task Delete(PostContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        if (content.Id < 1)
+        if (content!.Id < 1)
         {
             await StatusContext.ToastError($"Post {content.Title} - Entry is not saved - Skipping?");
             return;
@@ -80,20 +70,19 @@ public partial class PostContentActions : IContentActions<PostContent>
     }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task Edit(PostContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null) return;
-
         var context = await Db.Context();
 
-        var refreshedData = context.PostContents.SingleOrDefault(x => x.ContentId == content.ContentId);
+        var refreshedData = context.PostContents.SingleOrDefault(x => x.ContentId == content!.ContentId);
 
         if (refreshedData == null)
         {
             await StatusContext.ToastError(
-                $"{content.Title} is no longer active in the database? Can not edit - look for a historic version...");
+                $"{content!.Title} is no longer active in the database? Can not edit - look for a historic version...");
             return;
         }
 
@@ -103,19 +92,14 @@ public partial class PostContentActions : IContentActions<PostContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ExtractNewLinks(PostContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var context = await Db.Context();
 
-        var refreshedData = context.PostContents.SingleOrDefault(x => x.ContentId == content.ContentId);
+        var refreshedData = context.PostContents.SingleOrDefault(x => x.ContentId == content!.ContentId);
 
         if (refreshedData == null) return;
 
@@ -124,17 +108,12 @@ public partial class PostContentActions : IContentActions<PostContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task GenerateHtml(PostContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        StatusContext.Progress($"Generating Html for {content.Title}");
+        StatusContext.Progress($"Generating Html for {content!.Title}");
 
         var htmlContext = new SinglePostPage(content);
 
@@ -146,19 +125,14 @@ public partial class PostContentActions : IContentActions<PostContent>
     public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewHistory(PostContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var db = await Db.Context();
 
-        StatusContext.Progress($"Looking up Historic Entries for {content.Title}");
+        StatusContext.Progress($"Looking up Historic Entries for {content!.Title}");
 
         var historicItems = await db.HistoricPostContents.Where(x => x.ContentId == content.ContentId).ToListAsync();
 
@@ -179,38 +153,28 @@ public partial class PostContentActions : IContentActions<PostContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewOnSite(PostContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var settings = UserSettingsSingleton.CurrentSettings();
 
-        var url = settings.PostPageUrl(content);
+        var url = settings.PostPageUrl(content!);
 
         var ps = new ProcessStartInfo(url) { UseShellExecute = true, Verb = "open" };
         Process.Start(ps);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewSitePreview(PostContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var settings = UserSettingsSingleton.CurrentSettings();
 
-        var url = settings.PostPageUrl(content);
+        var url = settings.PostPageUrl(content!);
 
         await ThreadSwitcher.ResumeForegroundAsync();
 

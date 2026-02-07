@@ -40,29 +40,19 @@ public partial class PointContentActions : IContentActions<PointContentDto>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task DefaultBracketCodeToClipboard(PointContentDto? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PointActions.DefaultBracketCodesToClipboard(content.AsList(), StatusContext);
+        await PointActions.DefaultBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task Delete(PointContentDto? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        if (content.Id < 1)
+        if (content!.Id < 1)
         {
             await StatusContext.ToastError($"Point {content.Title} - Entry is not saved - Skipping?");
             return;
@@ -81,19 +71,19 @@ public partial class PointContentActions : IContentActions<PointContentDto>
     }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
+
     public async Task Edit(PointContentDto? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null) return;
-
         var context = await Db.Context();
 
-        var refreshedData = context.PointContents.SingleOrDefault(x => x.ContentId == content.ContentId);
+        var refreshedData = context.PointContents.SingleOrDefault(x => x.ContentId == content!.ContentId);
 
         if (refreshedData == null)
             await StatusContext.ToastError(
-                $"{content.Title} is no longer active in the database? Can not edit - look for a historic version...");
+                $"{content!.Title} is no longer active in the database? Can not edit - look for a historic version...");
 
         var newContentWindow = await PointContentEditorWindow.CreateInstance(refreshedData);
 
@@ -101,19 +91,14 @@ public partial class PointContentActions : IContentActions<PointContentDto>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ExtractNewLinks(PointContentDto? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var context = await Db.Context();
 
-        var refreshedData = context.PointContents.SingleOrDefault(x => x.ContentId == content.ContentId);
+        var refreshedData = context.PointContents.SingleOrDefault(x => x.ContentId == content!.ContentId);
 
         if (refreshedData == null) return;
 
@@ -122,17 +107,12 @@ public partial class PointContentActions : IContentActions<PointContentDto>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task GenerateHtml(PointContentDto? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        StatusContext.Progress($"Generating Html for {content.Title}");
+        StatusContext.Progress($"Generating Html for {content!.Title}");
 
         var fullItem = await Db.PointContentDto(content.ContentId);
 
@@ -152,19 +132,14 @@ public partial class PointContentActions : IContentActions<PointContentDto>
     public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewHistory(PointContentDto? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var db = await Db.Context();
 
-        StatusContext.Progress($"Looking up Historic Entries for {content.Title}");
+        StatusContext.Progress($"Looking up Historic Entries for {content!.Title}");
 
         var historicItems = await db.HistoricPointContents.Where(x => x.ContentId == content.ContentId).ToListAsync();
 
@@ -185,19 +160,14 @@ public partial class PointContentActions : IContentActions<PointContentDto>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewOnSite(PointContentDto? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var settings = UserSettingsSingleton.CurrentSettings();
 
-        var url = settings.PointPageUrl(content);
+        var url = settings.PointPageUrl(content!);
 
         var ps = new ProcessStartInfo(url) { UseShellExecute = true, Verb = "open" };
         Process.Start(ps);
@@ -205,19 +175,14 @@ public partial class PointContentActions : IContentActions<PointContentDto>
 
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewSitePreview(PointContentDto? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var settings = UserSettingsSingleton.CurrentSettings();
 
-        var url = settings.PointPageUrl(content);
+        var url = settings.PointPageUrl(content!);
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -229,75 +194,45 @@ public partial class PointContentActions : IContentActions<PointContentDto>
     public event PropertyChangedEventHandler? PropertyChanged;
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task AddIntersectionTagsWithOsm(PointContentDto? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PointActions.AddIntersectionTags(content.AsList(), StatusContext, true, CancellationToken.None);
+        await PointActions.AddIntersectionTags(content!.AsList(), StatusContext, true, CancellationToken.None);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task AddIntersectionTagsWithoutOsm(PointContentDto? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PointActions.AddIntersectionTags(content.AsList(), StatusContext, false, CancellationToken.None);
+        await PointActions.AddIntersectionTags(content!.AsList(), StatusContext, false, CancellationToken.None);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task CoordinatesToClipboard(PointContentDto? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PointActions.CoordinateTextToClipboard(content.AsList(), StatusContext);
+        await PointActions.CoordinateTextToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ExternalDirectionsBracketCodeToClipboard(PointContentDto? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PointActions.ExternalDirectionsBracketCodesToClipboard(content.AsList(), StatusContext);
+        await PointActions.ExternalDirectionsBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task GoogleMapsBracketCodeToClipboard(PointContentDto? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PointActions.GoogleMapsBracketCodesToClipboard(content.AsList(), StatusContext);
+        await PointActions.GoogleMapsBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ImageBracketCodeToClipboard(PointContentDto? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PointActions.ImageBracketCodesToClipboard(content.AsList(), StatusContext);
+        await PointActions.ImageBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     public static async Task<PointListListItem> ListItemFromDbItem(PointContent content,
@@ -328,53 +263,33 @@ public partial class PointContentActions : IContentActions<PointContentDto>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task PointDetailsBracketCodeToClipboard(PointContentDto? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PointActions.PointDetailsBracketCodesToClipboard(content.AsList(), StatusContext);
+        await PointActions.PointDetailsBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ShowIntersectionTags(PointContentDto? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PointActions.ShowIntersectionTagsForSelected(content.AsList(), StatusContext, CancellationToken.None);
+        await PointActions.ShowIntersectionTagsForSelected(content!.AsList(), StatusContext, CancellationToken.None);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ShowOnGoogleMaps(PointContentDto? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PointActions.ShowInGoogleMapsWeb(content, StatusContext);
+        await PointActions.ShowInGoogleMapsWeb(content!, StatusContext);
     }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ShowOnMap(PointContentDto? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        if (content.Id < 1)
+        if (content!.Id < 1)
         {
             await StatusContext.ToastError("Entry is not saved - Skipping?");
             return;
@@ -390,38 +305,23 @@ public partial class PointContentActions : IContentActions<PointContentDto>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ShowOnOsmCycleMaps(PointContentDto? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PointActions.ShowInOsmCycleMap(content, StatusContext);
+        await PointActions.ShowInOsmCycleMap(content!, StatusContext);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task TextBracketCodeToClipboard(PointContentDto? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PointActions.TextBracketCodesToClipboard(content.AsList(), StatusContext);
+        await PointActions.TextBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ToGpxFile(PointContentDto? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PointActions.ToGpxFile(content.AsList(), StatusContext);
+        await PointActions.ToGpxFile(content!.AsList(), StatusContext);
     }
 }

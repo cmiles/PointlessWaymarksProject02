@@ -47,17 +47,12 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task Delete(PhotoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        if (content.Id < 1)
+        if (content!.Id < 1)
         {
             await StatusContext.ToastError("Entry is not saved - Skipping?");
             return;
@@ -77,19 +72,18 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task Edit(PhotoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null) return;
-
         var context = await Db.Context();
 
-        var refreshedData = context.PhotoContents.SingleOrDefault(x => x.ContentId == content.ContentId);
+        var refreshedData = context.PhotoContents.SingleOrDefault(x => x.ContentId == content!.ContentId);
 
         if (refreshedData == null)
             await StatusContext.ToastError(
-                $"{content.Title} is no longer active in the database? Can not edit - look for a historic version...");
+                $"{content!.Title} is no longer active in the database? Can not edit - look for a historic version...");
 
         var newContentWindow = await PhotoContentEditorWindow.CreateInstance(refreshedData);
 
@@ -97,18 +91,13 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ExtractNewLinks(PhotoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var context = await Db.Context();
-        var refreshedData = context.PhotoContents.SingleOrDefault(x => x.ContentId == content.ContentId);
+        var refreshedData = context.PhotoContents.SingleOrDefault(x => x.ContentId == content!.ContentId);
 
         if (refreshedData == null) return;
 
@@ -117,17 +106,11 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task GenerateHtml(PhotoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        StatusContext.Progress($"Generating Html for {content.Title}");
+        StatusContext.Progress($"Generating Html for {content!.Title}");
 
         var htmlContext = new SinglePhotoPage(content);
 
@@ -139,19 +122,13 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewHistory(PhotoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var db = await Db.Context();
 
-        StatusContext.Progress($"Looking up Historic Entries for {content.Title}");
+        StatusContext.Progress($"Looking up Historic Entries for {content!.Title}");
 
         var historicItems = await db.HistoricPhotoContents.Where(x => x.ContentId == content.ContentId).ToListAsync();
 
@@ -172,38 +149,26 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewOnSite(PhotoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var settings = UserSettingsSingleton.CurrentSettings();
 
-        var url = settings.PhotoPageUrl(content);
+        var url = settings.PhotoPageUrl(content!);
 
         var ps = new ProcessStartInfo(url) { UseShellExecute = true, Verb = "open" };
         Process.Start(ps);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewSitePreview(PhotoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var settings = UserSettingsSingleton.CurrentSettings();
 
-        var url = settings.PhotoPageUrl(content);
+        var url = settings.PhotoPageUrl(content!);
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -287,13 +252,7 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     [BlockingCommand]
     public async Task DailyPhotoPageBracketCodesToClipboard(PhotoContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PhotoActions.DailyPhotoPageBracketCodesToClipboard(content.AsList(), StatusContext);
+        await PhotoActions.DailyPhotoPageBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
@@ -325,13 +284,7 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     [BlockingCommand]
     public async Task ImageWithDetailsBracketCodesToClipboard(PhotoContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PhotoActions.ImageWithDetailsBracketCodesToClipboard(content.AsList(), StatusContext);
+        await PhotoActions.ImageWithDetailsBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     public static async Task<List<object>> IsoFilter(PhotoContent? content)
@@ -409,13 +362,7 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     [BlockingCommand]
     public async Task ReportPhotoMetadata(PhotoContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PhotoActions.ReportPhotoMetadata(content.AsList(), StatusContext);
+        await PhotoActions.ReportPhotoMetadata(content!.AsList(), StatusContext);
     }
 
     public static async Task RunReport(Func<Task<List<object>>> toRun, string title)
@@ -464,13 +411,7 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     [BlockingCommand]
     public async Task ShowInPeakFinderWeb(PhotoContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PhotoActions.ShowInPeakFinderWeb(content, StatusContext);
+        await PhotoActions.ShowInPeakFinderWeb(content!, StatusContext);
     }
 
     [BlockingCommand]
@@ -483,27 +424,16 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     [BlockingCommand]
     public async Task ShowOnGoogleMaps(PhotoContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PhotoActions.ShowInGoogleMapsWeb(content, StatusContext);
+        await PhotoActions.ShowInGoogleMapsWeb(content!, StatusContext);
     }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ShowOnMap(PhotoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        if (content.Id < 1)
+        if (content!.Id < 1)
         {
             await StatusContext.ToastError("Entry is not saved - Skipping?");
             return;
@@ -525,15 +455,10 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ShowOnOsmCycleMaps(PhotoContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PhotoActions.ShowInOsmCycleMap(content, StatusContext);
+        await PhotoActions.ShowInOsmCycleMap(content!, StatusContext);
     }
 
     public static async Task<List<object>> ShutterSpeedSearch(PhotoContent? content)
@@ -555,29 +480,23 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task TextBracketCodesToClipboard(PhotoContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await PhotoActions.TextBracketCodesToClipboard(content.AsList(), StatusContext);
+        await PhotoActions.TextBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewFile(PhotoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (content == null) return;
 
         try
         {
             var context = await Db.Context();
 
-            var refreshedData = context.PhotoContents.SingleOrDefault(x => x.ContentId == content.ContentId);
+            var refreshedData = context.PhotoContents.SingleOrDefault(x => x.ContentId == content!.ContentId);
 
             var possibleFile = UserSettingsSingleton.CurrentSettings().LocalMediaArchivePhotoContentFile(refreshedData);
 
