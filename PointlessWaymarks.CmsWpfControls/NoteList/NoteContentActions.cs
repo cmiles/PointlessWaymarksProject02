@@ -46,17 +46,12 @@ public partial class NoteContentActions : IContentActions<NoteContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task Delete(NoteContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        if (content.Id < 1)
+        if (content!.Id < 1)
         {
             await StatusContext.ToastError($"Note {content.Title} - Entry is not saved - Skipping?");
             return;
@@ -75,19 +70,18 @@ public partial class NoteContentActions : IContentActions<NoteContent>
     }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task Edit(NoteContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null) return;
-
         var context = await Db.Context();
 
-        var refreshedData = context.NoteContents.SingleOrDefault(x => x.ContentId == content.ContentId);
+        var refreshedData = context.NoteContents.SingleOrDefault(x => x.ContentId == content!.ContentId);
 
         if (refreshedData == null)
             await StatusContext.ToastError(
-                $"{content.Title} is no longer active in the database? Can not edit - look for a historic version...");
+                $"{content!.Title} is no longer active in the database? Can not edit - look for a historic version...");
 
         var newContentWindow = await NoteContentEditorWindow.CreateInstance(refreshedData);
 
@@ -95,19 +89,14 @@ public partial class NoteContentActions : IContentActions<NoteContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ExtractNewLinks(NoteContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var context = await Db.Context();
 
-        var refreshedData = context.NoteContents.SingleOrDefault(x => x.ContentId == content.ContentId);
+        var refreshedData = context.NoteContents.SingleOrDefault(x => x.ContentId == content!.ContentId);
 
         if (refreshedData == null) return;
 
@@ -116,17 +105,12 @@ public partial class NoteContentActions : IContentActions<NoteContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task GenerateHtml(NoteContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        StatusContext.Progress($"Generating Html for {content.Title}");
+        StatusContext.Progress($"Generating Html for {content!.Title}");
 
         var htmlContext = new SingleNotePage(content);
 
@@ -138,19 +122,14 @@ public partial class NoteContentActions : IContentActions<NoteContent>
     public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewHistory(NoteContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var db = await Db.Context();
 
-        StatusContext.Progress($"Looking up Historic Entries for {content.Title}");
+        StatusContext.Progress($"Looking up Historic Entries for {content!.Title}");
 
         var historicItems = await db.HistoricNoteContents.Where(x => x.ContentId == content.ContentId).ToListAsync();
 
@@ -171,38 +150,28 @@ public partial class NoteContentActions : IContentActions<NoteContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewOnSite(NoteContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var settings = UserSettingsSingleton.CurrentSettings();
 
-        var url = settings.NotePageUrl(content);
+        var url = settings.NotePageUrl(content!);
 
         var ps = new ProcessStartInfo(url) { UseShellExecute = true, Verb = "open" };
         Process.Start(ps);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewSitePreview(NoteContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var settings = UserSettingsSingleton.CurrentSettings();
 
-        var url = settings.NotePageUrl(content);
+        var url = settings.NotePageUrl(content!);
 
         await ThreadSwitcher.ResumeForegroundAsync();
 

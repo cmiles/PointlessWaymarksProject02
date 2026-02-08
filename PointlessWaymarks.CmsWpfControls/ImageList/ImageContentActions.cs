@@ -39,30 +39,20 @@ public partial class ImageContentActions : IContentActions<ImageContent>
         return ImageActions.DefaultBracketCode(content);
     }
 
-    [BlockingCommand]
+    [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task DefaultBracketCodeToClipboard(ImageContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await ImageActions.DefaultBracketCodesToClipboard(content.AsList(), StatusContext);
+        await ImageActions.DefaultBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task Delete(ImageContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        if (content.Id < 1)
+        if (content!.Id < 1)
         {
             await StatusContext.ToastError($"Image {content.Title} - Entry is not saved - Skipping?");
             return;
@@ -81,19 +71,18 @@ public partial class ImageContentActions : IContentActions<ImageContent>
     }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task Edit(ImageContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null) return;
-
         var context = await Db.Context();
 
-        var refreshedData = context.ImageContents.SingleOrDefault(x => x.ContentId == content.ContentId);
+        var refreshedData = context.ImageContents.SingleOrDefault(x => x.ContentId == content!.ContentId);
 
         if (refreshedData == null)
             await StatusContext.ToastError(
-                $"{content.Title} is no longer active in the database? Can not edit - look for a historic version...");
+                $"{content!.Title} is no longer active in the database? Can not edit - look for a historic version...");
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -105,18 +94,13 @@ public partial class ImageContentActions : IContentActions<ImageContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ExtractNewLinks(ImageContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var context = await Db.Context();
-        var refreshedData = context.ImageContents.SingleOrDefault(x => x.ContentId == content.ContentId);
+        var refreshedData = context.ImageContents.SingleOrDefault(x => x.ContentId == content!.ContentId);
 
         if (refreshedData == null) return;
 
@@ -125,17 +109,12 @@ public partial class ImageContentActions : IContentActions<ImageContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task GenerateHtml(ImageContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        StatusContext.Progress($"Generating Html for {content.Title}");
+        StatusContext.Progress($"Generating Html for {content!.Title}");
 
         var htmlContext = new SingleImagePage(content);
 
@@ -147,19 +126,14 @@ public partial class ImageContentActions : IContentActions<ImageContent>
     public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewHistory(ImageContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var db = await Db.Context();
 
-        StatusContext.Progress($"Looking up Historic Entries for {content.Title}");
+        StatusContext.Progress($"Looking up Historic Entries for {content!.Title}");
 
         var historicItems = await db.HistoricImageContents.Where(x => x.ContentId == content.ContentId).ToListAsync();
 
@@ -180,38 +154,28 @@ public partial class ImageContentActions : IContentActions<ImageContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewOnSite(ImageContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var settings = UserSettingsSingleton.CurrentSettings();
 
-        var url = settings.ImagePageUrl(content);
+        var url = settings.ImagePageUrl(content!);
 
         var ps = new ProcessStartInfo(url) { UseShellExecute = true, Verb = "open" };
         Process.Start(ps);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewSitePreview(ImageContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var settings = UserSettingsSingleton.CurrentSettings();
 
-        var url = settings.ImagePageUrl(content);
+        var url = settings.ImagePageUrl(content!);
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -223,27 +187,17 @@ public partial class ImageContentActions : IContentActions<ImageContent>
     public event PropertyChangedEventHandler? PropertyChanged;
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task AddIntersectionTagsWithOsm(ImageContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await ImageActions.AddIntersectionTags(content.AsList(), StatusContext, true, CancellationToken.None);
+        await ImageActions.AddIntersectionTags(content!.AsList(), StatusContext, true, CancellationToken.None);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task AddIntersectionTagsWithoutOsm(ImageContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await ImageActions.AddIntersectionTags(content.AsList(), StatusContext, false, CancellationToken.None);
+        await ImageActions.AddIntersectionTags(content!.AsList(), StatusContext, false, CancellationToken.None);
     }
 
     [BlockingCommand]
@@ -266,38 +220,28 @@ public partial class ImageContentActions : IContentActions<ImageContent>
         return item;
     }
 
-    [NonBlockingCommand]
-    public async Task MetaDataReport(ImageContent? listItem)
+    [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
+    public async Task MetaDataReport(ImageContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (listItem == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await ImageActions.ReportImageMetadata(listItem.AsList(), StatusContext);
+        await ImageActions.ReportImageMetadata(content!.AsList(), StatusContext);
     }
 
     [NonBlockingCommand]
-    public async Task ShowFileInExplorer(ImageContent? listItem)
+    [StopAndWarnIfContentIsNull]
+    public async Task ShowFileInExplorer(ImageContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (listItem == null)
-        {
-            await StatusContext.ToastError("Nothing Items to Open?");
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(listItem.OriginalFileName))
+        if (string.IsNullOrWhiteSpace(content!.OriginalFileName))
         {
             await StatusContext.ToastError("No File?");
             return;
         }
 
-        var toOpen = UserSettingsSingleton.CurrentSettings().LocalMediaArchiveImageContentFile(listItem);
+        var toOpen = UserSettingsSingleton.CurrentSettings().LocalMediaArchiveImageContentFile(content);
 
         if (toOpen is not { Exists: true })
         {
@@ -310,54 +254,34 @@ public partial class ImageContentActions : IContentActions<ImageContent>
         await ProcessHelpers.OpenExplorerWindowForFile(url);
     }
 
-    [BlockingCommand]
+    [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ShowInPeakFinderWeb(ImageContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await ImageActions.ShowInPeakFinderWeb(content, StatusContext);
+        await ImageActions.ShowInPeakFinderWeb(content!, StatusContext);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ShowIntersectionTags(ImageContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await ImageActions.ShowIntersectionTagsForSelected(content.AsList(), StatusContext, CancellationToken.None);
-    }
-
-    [BlockingCommand]
-    public async Task ShowOnGoogleMaps(ImageContent? content)
-    {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await ImageActions.ShowInGoogleMapsWeb(content, StatusContext);
+        await ImageActions.ShowIntersectionTagsForSelected(content!.AsList(), StatusContext, CancellationToken.None);
     }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
+    public async Task ShowOnGoogleMaps(ImageContent? content)
+    {
+        await ImageActions.ShowInGoogleMapsWeb(content!, StatusContext);
+    }
+
+    [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ShowOnMap(ImageContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        if (content.Id < 1)
+        if (content!.Id < 1)
         {
             await StatusContext.ToastError("Entry is not saved - Skipping?");
             return;
@@ -378,42 +302,27 @@ public partial class ImageContentActions : IContentActions<ImageContent>
         await mapWindow.PositionWindowAndShowOnUiThread();
     }
 
-    [BlockingCommand]
+    [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ShowOnOsmCycleMaps(ImageContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await ImageActions.ShowInOsmCycleMap(content, StatusContext);
-    }
-
-    [BlockingCommand]
-    public async Task TextBracketCodeToClipboard(ImageContent? content)
-    {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await ImageActions.TextBracketCodesToClipboard(content.AsList(), StatusContext);
+        await ImageActions.ShowInOsmCycleMap(content!, StatusContext);
     }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
+    public async Task TextBracketCodeToClipboard(ImageContent? content)
+    {
+        await ImageActions.TextBracketCodesToClipboard(content!.AsList(), StatusContext);
+    }
+
+    [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewFile(ImageContent? listItem)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (listItem == null)
-        {
-            await StatusContext.ToastError("Nothing Items to Open?");
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(listItem.OriginalFileName))
+        if (string.IsNullOrWhiteSpace(listItem!.OriginalFileName))
         {
             await StatusContext.ToastError("No Image?");
             return;

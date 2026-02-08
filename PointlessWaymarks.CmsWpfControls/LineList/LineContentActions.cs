@@ -41,29 +41,19 @@ public partial class LineContentActions : IContentActions<LineContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task DefaultBracketCodeToClipboard(LineContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await LineActions.DefaultBracketCodesToClipboard(content.AsList(), StatusContext);
+        await LineActions.DefaultBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task Delete(LineContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        if (content.Id < 1)
+        if (content!.Id < 1)
         {
             await StatusContext.ToastError($"Line {content.Title} - Entry is not saved - Skipping?");
             return;
@@ -82,19 +72,18 @@ public partial class LineContentActions : IContentActions<LineContent>
     }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task Edit(LineContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null) return;
-
         var context = await Db.Context();
 
-        var refreshedData = context.LineContents.SingleOrDefault(x => x.ContentId == content.ContentId);
+        var refreshedData = context.LineContents.SingleOrDefault(x => x.ContentId == content!.ContentId);
 
         if (refreshedData == null)
             await StatusContext.ToastError(
-                $"{content.Title} is no longer active in the database? Can not edit - look for a historic version...");
+                $"{content!.Title} is no longer active in the database? Can not edit - look for a historic version...");
 
         var newContentWindow = await LineContentEditorWindow.CreateInstance(refreshedData);
 
@@ -102,6 +91,7 @@ public partial class LineContentActions : IContentActions<LineContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ExtractNewLinks(LineContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -123,17 +113,12 @@ public partial class LineContentActions : IContentActions<LineContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task GenerateHtml(LineContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        StatusContext.Progress($"Generating Html for {content.Title}");
+        StatusContext.Progress($"Generating Html for {content!.Title}");
 
         var htmlContext = new SingleLinePage(content);
 
@@ -145,19 +130,14 @@ public partial class LineContentActions : IContentActions<LineContent>
     public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewHistory(LineContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var db = await Db.Context();
 
-        StatusContext.Progress($"Looking up Historic Entries for {content.Title}");
+        StatusContext.Progress($"Looking up Historic Entries for {content!.Title}");
 
         var historicItems = await db.HistoricLineContents.Where(x => x.ContentId == content.ContentId).ToListAsync();
 
@@ -178,38 +158,28 @@ public partial class LineContentActions : IContentActions<LineContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewOnSite(LineContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var settings = UserSettingsSingleton.CurrentSettings();
 
-        var url = settings.LinePageUrl(content);
+        var url = settings.LinePageUrl(content!);
 
         var ps = new ProcessStartInfo(url) { UseShellExecute = true, Verb = "open" };
         Process.Start(ps);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewSitePreview(LineContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var settings = UserSettingsSingleton.CurrentSettings();
 
-        var url = settings.LinePageUrl(content);
+        var url = settings.LinePageUrl(content!);
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -221,63 +191,38 @@ public partial class LineContentActions : IContentActions<LineContent>
     public event PropertyChangedEventHandler? PropertyChanged;
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task AddIntersectionTagsWithOsm(LineContent? content, CancellationToken cancellationToken)
     {
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await LineActions.AddIntersectionTags(content.AsList(), StatusContext, true, cancellationToken);
+        await LineActions.AddIntersectionTags(content!.AsList(), StatusContext, true, cancellationToken);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task AddIntersectionTagsWithoutOsm(LineContent? content, CancellationToken cancellationToken)
     {
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await LineActions.AddIntersectionTags(content.AsList(), StatusContext, false, cancellationToken);
+        await LineActions.AddIntersectionTags(content!.AsList(), StatusContext, false, cancellationToken);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ElevationChartBracketCodeToClipboard(LineContent? content)
     {
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await LineActions.ElevationChartBracketCodesToClipboard(content.AsList(), StatusContext);
+        await LineActions.ElevationChartBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task GeoJsonToClipboard(LineContent? content)
     {
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await LineActions.GeoJsonToClipboard(content.AsList(), StatusContext);
+        await LineActions.GeoJsonToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task LinkBracketCodeToClipboard(LineContent? content)
     {
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await LineActions.LinkBracketCodesToClipboard(content.AsList(), StatusContext);
+        await LineActions.LinkBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     public static async Task<LineListListItem> ListItemFromDbItem(LineContent content, LineContentActions itemActions,
@@ -309,21 +254,17 @@ public partial class LineContentActions : IContentActions<LineContent>
     }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task SearchRecordedOnDaysForPhotoContent(LineContent? lineContent)
     {
-        if (lineContent == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
+        await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (lineContent.RecordingStartedOnUtc is null || lineContent.RecordingEndedOnUtc is null)
+        if (lineContent!.RecordingStartedOnUtc is null || lineContent.RecordingEndedOnUtc is null)
         {
             await StatusContext.ToastError(
                 "Line doesn't have Recorded On dates to work with? - Can not search for Photo Content");
             return;
         }
-
 
         var dateSearchStart = lineContent.RecordingStartedOnUtc.Value.ToLocalTime().Date.ToUniversalTime();
         var dateSearchEnd = lineContent.RecordingEndedOnUtc.Value.ToLocalTime().Date.AddDays(1).ToUniversalTime();
@@ -364,15 +305,12 @@ public partial class LineContentActions : IContentActions<LineContent>
     }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task SearchRecordedOnForPhotoContent(LineContent? lineContent)
     {
-        if (lineContent == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
+        await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (lineContent.RecordingStartedOnUtc is null || lineContent.RecordingEndedOnUtc is null)
+        if (lineContent!.RecordingStartedOnUtc is null || lineContent.RecordingEndedOnUtc is null)
         {
             await StatusContext.ToastError(
                 "Line doesn't have Recorded On dates to work with? - Can not search for Photo Content");
@@ -415,30 +353,19 @@ public partial class LineContentActions : IContentActions<LineContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ShowIntersectionTags(LineContent? content, CancellationToken cancellationToken)
     {
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await LineActions.ShowIntersectionTagsForSelected(content.AsList(), StatusContext, cancellationToken);
+        await LineActions.ShowIntersectionTagsForSelected(content!.AsList(), StatusContext, cancellationToken);
     }
 
-
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ShowOnMap(LineContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        if (content.Id < 1)
+        if (content!.Id < 1)
         {
             await StatusContext.ToastError("Entry is not saved - Skipping?");
             return;
@@ -454,38 +381,23 @@ public partial class LineContentActions : IContentActions<LineContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task StatsBracketCodeToClipboard(LineContent? content)
     {
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await LineActions.StatsBracketCodesToClipboard(content.AsList(), StatusContext);
+        await LineActions.StatsBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task TextStatsBracketCodeToClipboard(LineContent? content)
     {
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await LineActions.TextStatsBracketCodesToClipboard(content.AsList(), StatusContext);
+        await LineActions.TextStatsBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ToGpxFile(LineContent? content)
     {
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await LineActions.ToGpxFile(content.AsList(), StatusContext);
+        await LineActions.ToGpxFile(content!.AsList(), StatusContext);
     }
 }

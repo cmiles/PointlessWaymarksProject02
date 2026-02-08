@@ -87,14 +87,14 @@ public partial class TrailListWithActionsContext
     }
 
     public static async Task<TrailListWithActionsContext> CreateInstance(StatusControlContext? statusContext,
-        WindowIconStatus? windowStatus = null, bool loadInBackground = true)
+        WindowIconStatus? windowStatus = null, IContentListLoader? listLoader = null, bool loadInBackground = true)
     {
         var factoryStatusContext = await StatusControlContext.CreateInstance(statusContext);
 
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         var factoryListContext =
-            await ContentListContext.CreateInstance(factoryStatusContext, new TrailListLoader(100),
+            await ContentListContext.CreateInstance(factoryStatusContext, listLoader ?? new TrailListLoader(100),
                 [Db.ContentTypeDisplayStringForTrail], windowStatus);
 
         return new TrailListWithActionsContext(factoryStatusContext, windowStatus, factoryListContext,

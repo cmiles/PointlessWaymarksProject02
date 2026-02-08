@@ -38,31 +38,22 @@ public partial class FileContentActions : IContentActions<FileContent>
         return FileActions.DefaultBracketCode(content);
     }
 
-    [BlockingCommand]
+    [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task DefaultBracketCodeToClipboard(FileContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
 
-        await FileActions.DefaultBracketCodesToClipboard(content.AsList(), StatusContext);
+        await FileActions.DefaultBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task Delete(FileContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        if (content.Id < 1)
+        if (content!.Id < 1)
         {
             await StatusContext.ToastError($"File {content.Title} - Entry is not saved - Skipping?");
             return;
@@ -81,20 +72,19 @@ public partial class FileContentActions : IContentActions<FileContent>
     }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task Edit(FileContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null) return;
-
         var context = await Db.Context();
 
-        var refreshedData = context.FileContents.SingleOrDefault(x => x.ContentId == content.ContentId);
+        var refreshedData = context.FileContents.SingleOrDefault(x => x.ContentId == content!.ContentId);
 
         if (refreshedData == null)
         {
             await StatusContext.ToastError(
-                $"{content.Title} is no longer active in the database? Can not edit - look for a historic version...");
+                $"{content!.Title} is no longer active in the database? Can not edit - look for a historic version...");
             return;
         }
 
@@ -104,18 +94,13 @@ public partial class FileContentActions : IContentActions<FileContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ExtractNewLinks(FileContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var context = await Db.Context();
-        var refreshedData = context.FileContents.SingleOrDefault(x => x.ContentId == content.ContentId);
+        var refreshedData = context.FileContents.SingleOrDefault(x => x.ContentId == content!.ContentId);
 
         if (refreshedData == null) return;
 
@@ -124,17 +109,12 @@ public partial class FileContentActions : IContentActions<FileContent>
     }
 
     [BlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task GenerateHtml(FileContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        StatusContext.Progress($"Generating Html for {content.Title}");
+        StatusContext.Progress($"Generating Html for {content!.Title}");
 
         var htmlContext = new SingleFilePage(content);
 
@@ -146,19 +126,14 @@ public partial class FileContentActions : IContentActions<FileContent>
     public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewHistory(FileContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var db = await Db.Context();
 
-        StatusContext.Progress($"Looking up Historic Entries for {content.Title}");
+        StatusContext.Progress($"Looking up Historic Entries for {content!.Title}");
 
         var historicItems = await db.HistoricFileContents.Where(x => x.ContentId == content.ContentId).ToListAsync();
 
@@ -178,39 +153,29 @@ public partial class FileContentActions : IContentActions<FileContent>
         historicView.WriteHtmlToTempFolderAndShow(StatusContext.ProgressTracker());
     }
 
-    [BlockingCommand]
+    [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewOnSite(FileContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var settings = UserSettingsSingleton.CurrentSettings();
 
-        var url = settings.FilePageUrl(content);
+        var url = settings.FilePageUrl(content!);
 
         var ps = new ProcessStartInfo(url) { UseShellExecute = true, Verb = "open" };
         Process.Start(ps);
     }
 
-    [BlockingCommand]
+    [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ViewSitePreview(FileContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (content == null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
         var settings = UserSettingsSingleton.CurrentSettings();
 
-        var url = settings.FilePageUrl(content);
+        var url = settings.FilePageUrl(content!);
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -221,59 +186,39 @@ public partial class FileContentActions : IContentActions<FileContent>
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    [BlockingCommand]
+    [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task DownloadBracketCodeToClipboard(FileContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await FileActions.DownloadBracketCodesToClipboard(content.AsList(), StatusContext);
+        await FileActions.DownloadBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
-    [BlockingCommand]
+    [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task EmbedBracketCodeToClipboard(FileContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await FileActions.EmbedBracketCodesToClipboard(content.AsList(), StatusContext);
+        await FileActions.EmbedBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
-    [BlockingCommand]
+    [NonBlockingCommand]
     [StopAndWarnIfContentIsNull]
     public async Task ExportFile(FileContent? content)
     {
         await FileActions.ExportFiles(content!.AsList(), StatusContext, CancellationToken.None);
     }
 
-    [BlockingCommand]
+    [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task FileUrlBracketCodeToClipboard(FileContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await FileActions.FileUrlBracketCodesToClipboard(content.AsList(), StatusContext);
+        await FileActions.FileUrlBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
-    [BlockingCommand]
+    [NonBlockingCommand]
+    [StopAndWarnIfContentIsNull]
     public async Task ImageBracketCodeToClipboard(FileContent? content)
     {
-        if (content is null)
-        {
-            await StatusContext.ToastError("Nothing Selected?");
-            return;
-        }
-
-        await FileActions.ImageBracketCodesToClipboard(content.AsList(), StatusContext);
+        await FileActions.ImageBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     public static async Task<FileListListItem> ListItemFromDbItem(FileContent content, FileContentActions itemActions,
@@ -289,23 +234,18 @@ public partial class FileContentActions : IContentActions<FileContent>
     }
 
     [NonBlockingCommand]
-    public async Task ShowFileInExplorer(FileContent? listItem)
+    [StopAndWarnIfContentIsNull]
+    public async Task ShowFileInExplorer(FileContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (listItem == null)
-        {
-            await StatusContext.ToastError("Nothing Items to Open?");
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(listItem.OriginalFileName))
+        if (string.IsNullOrWhiteSpace(content!.OriginalFileName))
         {
             await StatusContext.ToastError("No File?");
             return;
         }
 
-        var toOpen = UserSettingsSingleton.CurrentSettings().LocalMediaArchiveFileContentFile(listItem);
+        var toOpen = UserSettingsSingleton.CurrentSettings().LocalMediaArchiveFileContentFile(content);
 
         if (toOpen is not { Exists: true })
         {
@@ -319,23 +259,18 @@ public partial class FileContentActions : IContentActions<FileContent>
     }
 
     [NonBlockingCommand]
-    public async Task ViewFile(FileContent? listItem)
+    [StopAndWarnIfContentIsNull]
+    public async Task ViewFile(FileContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (listItem == null)
-        {
-            await StatusContext.ToastError("Nothing Items to Open?");
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(listItem.OriginalFileName))
+        if (string.IsNullOrWhiteSpace(content!.OriginalFileName))
         {
             await StatusContext.ToastError("No File?");
             return;
         }
 
-        var toOpen = UserSettingsSingleton.CurrentSettings().LocalSiteFileContentFile(listItem);
+        var toOpen = UserSettingsSingleton.CurrentSettings().LocalSiteFileContentFile(content);
 
         if (toOpen is not { Exists: true })
         {

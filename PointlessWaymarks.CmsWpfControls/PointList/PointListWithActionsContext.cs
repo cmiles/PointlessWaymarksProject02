@@ -141,14 +141,14 @@ public partial class PointListWithActionsContext
     }
 
     public static async Task<PointListWithActionsContext> CreateInstance(StatusControlContext? statusContext,
-        WindowIconStatus? windowStatus = null, bool loadInBackground = true)
+        WindowIconStatus? windowStatus = null, IContentListLoader? listLoader = null, bool loadInBackground = true)
     {
         var factoryStatusContext = await StatusControlContext.CreateInstance(statusContext);
 
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         var factoryListContext =
-            await ContentListContext.CreateInstance(factoryStatusContext, new PointListLoader(100),
+            await ContentListContext.CreateInstance(factoryStatusContext, listLoader ?? new PointListLoader(100),
                 [Db.ContentTypeDisplayStringForPoint], windowStatus);
 
         return new PointListWithActionsContext(factoryStatusContext, windowStatus, factoryListContext,
