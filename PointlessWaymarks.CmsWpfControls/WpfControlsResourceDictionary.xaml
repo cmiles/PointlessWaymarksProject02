@@ -1857,9 +1857,6 @@
                                     Command="{Binding ItemActions.ViewHistoryCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <TextBlock>View</TextBlock>
-                            <Button Content="View File on Disk"
-                                    Command="{Binding ItemActions.ShowFileInExplorerCommand}"
-                                    CommandParameter="{Binding DbEntry}" />
                             <Button Content="View on Site"
                                     Command="{Binding ItemActions.ViewOnSiteCommand}"
                                     CommandParameter="{Binding DbEntry}" />

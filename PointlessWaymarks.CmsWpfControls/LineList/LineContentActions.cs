@@ -255,22 +255,22 @@ public partial class LineContentActions : IContentActions<LineContent>
 
     [NonBlockingCommand]
     [StopAndWarnIfContentIsNull]
-    public async Task SearchRecordedOnDaysForPhotoContent(LineContent? lineContent)
+    public async Task SearchRecordedOnDaysForPhotoContent(LineContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (lineContent!.RecordingStartedOnUtc is null || lineContent.RecordingEndedOnUtc is null)
+        if (content!.RecordingStartedOnUtc is null || content.RecordingEndedOnUtc is null)
         {
             await StatusContext.ToastError(
                 "Line doesn't have Recorded On dates to work with? - Can not search for Photo Content");
             return;
         }
 
-        var dateSearchStart = lineContent.RecordingStartedOnUtc.Value.ToLocalTime().Date.ToUniversalTime();
-        var dateSearchEnd = lineContent.RecordingEndedOnUtc.Value.ToLocalTime().Date.AddDays(1).ToUniversalTime();
+        var dateSearchStart = content.RecordingStartedOnUtc.Value.ToLocalTime().Date.ToUniversalTime();
+        var dateSearchEnd = content.RecordingEndedOnUtc.Value.ToLocalTime().Date.AddDays(1).ToUniversalTime();
 
-        await PhotoContentActions.RunReport(async () => await SearchRecordedOnDaysForPhotoContentFilter(lineContent),
-            $"Line {lineContent.Title ?? string.Empty} - {dateSearchStart.ToLocalTime():M/d/yyyy} to {dateSearchEnd.ToLocalTime():M/d/yyyy}");
+        await PhotoContentActions.RunReport(async () => await SearchRecordedOnDaysForPhotoContentFilter(content),
+            $"Line {content.Title ?? string.Empty} - {dateSearchStart.ToLocalTime():M/d/yyyy} to {dateSearchEnd.ToLocalTime():M/d/yyyy}");
     }
 
     public async Task<List<object>> SearchRecordedOnDaysForPhotoContentFilter(LineContent? content)
@@ -306,19 +306,19 @@ public partial class LineContentActions : IContentActions<LineContent>
 
     [NonBlockingCommand]
     [StopAndWarnIfContentIsNull]
-    public async Task SearchRecordedOnForPhotoContent(LineContent? lineContent)
+    public async Task SearchRecordedOnForPhotoContent(LineContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (lineContent!.RecordingStartedOnUtc is null || lineContent.RecordingEndedOnUtc is null)
+        if (content!.RecordingStartedOnUtc is null || content.RecordingEndedOnUtc is null)
         {
             await StatusContext.ToastError(
                 "Line doesn't have Recorded On dates to work with? - Can not search for Photo Content");
             return;
         }
 
-        await PhotoContentActions.RunReport(async () => await SearchRecordedOnForPhotoContentFilter(lineContent),
-            $"Line {lineContent.Title ?? string.Empty} - {lineContent.RecordingStartedOnUtc.Value.AddMinutes(-5):M/d/yyyy hh:mm:ss tt} to {lineContent.RecordingEndedOnUtc.Value.AddMinutes(5):M/d/yyyy hh:mm:ss tt}");
+        await PhotoContentActions.RunReport(async () => await SearchRecordedOnForPhotoContentFilter(content),
+            $"Line {content.Title ?? string.Empty} - {content.RecordingStartedOnUtc.Value.AddMinutes(-5):M/d/yyyy hh:mm:ss tt} to {content.RecordingEndedOnUtc.Value.AddMinutes(5):M/d/yyyy hh:mm:ss tt}");
     }
 
     public async Task<List<object>> SearchRecordedOnForPhotoContentFilter(LineContent? content)

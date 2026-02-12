@@ -318,17 +318,17 @@ public partial class ImageContentActions : IContentActions<ImageContent>
 
     [NonBlockingCommand]
     [StopAndWarnIfContentIsNull]
-    public async Task ViewFile(ImageContent? listItem)
+    public async Task ViewFile(ImageContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (string.IsNullOrWhiteSpace(listItem!.OriginalFileName))
+        if (string.IsNullOrWhiteSpace(content!.OriginalFileName))
         {
             await StatusContext.ToastError("No Image?");
             return;
         }
 
-        var toOpen = UserSettingsSingleton.CurrentSettings().LocalSiteImageContentFile(listItem);
+        var toOpen = UserSettingsSingleton.CurrentSettings().LocalSiteImageContentFile(content);
 
         if (toOpen is not { Exists: true })
         {
