@@ -18,7 +18,7 @@
         <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3719.77" />
         <PackageReference Include="Microsoft.Web.WebView2.DevToolsProtocolExtension" Version="1.0.2901" />
         <PackageReference Include="ModernWpfUI" Version="0.9.6" />
-        <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.2" />
+        <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.3" />
     </ItemGroup>
 
     <ItemGroup>

@@ -25,7 +25,7 @@
 
     <ItemGroup>
         <PackageReference Include="Jot" Version="2.1.17" />
-        <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.0-rc4.5" />
+        <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.0-rc6.1" />
         <PackageReference Include="Metalama.Framework" Version="2026.0.16" />
         <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3719.77" />
     </ItemGroup>
