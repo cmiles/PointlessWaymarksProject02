@@ -225,7 +225,7 @@ public partial class MainWindow
         ArbitraryRunnerContext =
             await CustomScriptRunnerContext.CreateInstance(ScriptKind.PowerShell, null, CurrentDatabase);
         CsArbitraryRunnerContext =
-            await CustomScriptRunnerContext.CreateInstance(ScriptKind.CsScript, null, CurrentDatabase);
+            await CustomScriptRunnerContext.CreateInstance(ScriptKind.DotNetSingleFile, null, CurrentDatabase);
         ProgressContext = await ScriptProgressContext.CreateInstance(null, [], [], CurrentDatabase);
         SettingsContext = await AppSettingsContext.CreateInstance(StatusContext);
     }
@@ -336,7 +336,7 @@ public partial class MainWindow
         ArbitraryRunnerContext =
             await CustomScriptRunnerContext.CreateInstance(ScriptKind.PowerShell, null, CurrentDatabase);
         CsArbitraryRunnerContext =
-            await CustomScriptRunnerContext.CreateInstance(ScriptKind.CsScript, null, CurrentDatabase);
+            await CustomScriptRunnerContext.CreateInstance(ScriptKind.DotNetSingleFile, null, CurrentDatabase);
         ProgressContext = await ScriptProgressContext.CreateInstance(null, [], [], CurrentDatabase);
         SettingsContext = await AppSettingsContext.CreateInstance(StatusContext);
     }
@@ -437,7 +437,7 @@ public partial class MainWindow
         ArbitraryRunnerContext =
             await CustomScriptRunnerContext.CreateInstance(ScriptKind.PowerShell, null, CurrentDatabase);
         CsArbitraryRunnerContext =
-            await CustomScriptRunnerContext.CreateInstance(ScriptKind.CsScript, null, CurrentDatabase);
+            await CustomScriptRunnerContext.CreateInstance(ScriptKind.DotNetSingleFile, null, CurrentDatabase);
         ProgressContext = await ScriptProgressContext.CreateInstance(null, [], [], CurrentDatabase);
         SettingsContext = await AppSettingsContext.CreateInstance(StatusContext);
         HelpContext = new HelpDisplayContext([

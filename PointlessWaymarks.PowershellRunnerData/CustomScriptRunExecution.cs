@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
-using System.Text;
 using TinyIpc.Messaging;
 
 namespace PointlessWaymarks.PowerShellRunnerData;
@@ -45,17 +44,7 @@ internal class CustomScriptRunExecution
         var returnLog = new ConcurrentBag<(DateTime, string)>();
         var errorData = false;
 
-        if (ScriptStyle == ScriptKind.CsScript)
-        {
-            var byteArray = Encoding.UTF8.GetBytes(ScriptToRun);
-            var base64EncodedString = Convert.ToBase64String(byteArray);
-
-            var b64RunnerExecutable = Path.Combine(AppContext.BaseDirectory, "PointlessWaymarks.ScriptB64Runner.exe");
-
-            _pipeline.Commands.AddScript(
-                $"& '{b64RunnerExecutable}' {base64EncodedString}");
-        }
-        else if (ScriptStyle == ScriptKind.DotNetSingleFile)
+        if (ScriptStyle == ScriptKind.DotNetSingleFile)
         {
             tempRunDirectory = FileLocationHelpers.RunCodeTempDirectory(RunId);
 

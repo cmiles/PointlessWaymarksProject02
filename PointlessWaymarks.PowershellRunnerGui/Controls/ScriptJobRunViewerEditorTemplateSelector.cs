@@ -15,7 +15,7 @@ public class ScriptJobRunViewerEditorTemplateSelector : DataTemplateSelector
             return context.RunView.ScriptType switch
             {
                 ScriptKind.PowerShell => PowerShellEditorTemplate,
-                ScriptKind.CsScript => CsEditorTemplate,
+                ScriptKind.DotNetSingleFile => CsEditorTemplate,
                 _ => PowerShellEditorTemplate
             };
 

@@ -22,7 +22,7 @@ public static class ScriptJobEditorLauncher
 
         if (editorScriptType == ScriptKind.PowerShell)
             await ScriptJobEditorWindow.CreateInstance(toLoad, databaseFile);
-        else if (editorScriptType == ScriptKind.CsScript)
+        else if (editorScriptType == ScriptKind.DotNetSingleFile)
             await CsScriptJobEditorWindow.CreateInstance(toLoad, databaseFile);
     }
 }

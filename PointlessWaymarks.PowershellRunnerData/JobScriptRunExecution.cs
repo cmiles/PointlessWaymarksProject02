@@ -99,16 +99,6 @@ internal class JobScriptRunExecution
         {
             var decryptedScript = job.Script.Decrypt(obfuscationKey);
 
-            if (job.ScriptType == ScriptKind.CsScript.ToString())
-            {
-                var byteArray = Encoding.UTF8.GetBytes(decryptedScript);
-                var base64EncodedString = Convert.ToBase64String(byteArray);
-
-                var b64RunnerExecutable = Path.Combine(AppContext.BaseDirectory, "PointlessWaymarks.ScriptB64Runner.exe");
-
-                decryptedScript = $"& '{b64RunnerExecutable}' {base64EncodedString}";
-            }
-
             result = await ExecuteScript(decryptedScript, _dbId, job.PersistentId, run.PersistentId,
                 job.Name);
 

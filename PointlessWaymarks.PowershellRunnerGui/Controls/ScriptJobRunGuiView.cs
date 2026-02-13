@@ -36,7 +36,7 @@ public partial class ScriptJobRunGuiView
     public static ScriptJobRunGuiView CreateInstance(ScriptJobRun run, ScriptJob? job, string key)
     {
         var scriptType = ScriptKind.PowerShell;
-        if(run.RunType == ScriptKind.CsScript.ToString()) scriptType = ScriptKind.CsScript;
+        if(run.RunType == nameof(ScriptKind.DotNetSingleFile)) scriptType = ScriptKind.DotNetSingleFile;
 
         var newView = new ScriptJobRunGuiView
         {

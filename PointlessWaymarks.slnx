@@ -115,10 +115,6 @@
   <Project Path="PointlessWaymarks.PressSharper/PointlessWaymarks.PressSharper.csproj">
     <Platform Project="x64" />
   </Project>
-  <Project Path="PointlessWaymarks.ScriptB64Runner/PointlessWaymarks.ScriptB64Runner.csproj">
-    <BuildType Solution="LamaDebug|*" Project="Debug" />
-    <Platform Project="x64" />
-  </Project>
   <Project Path="PointlessWaymarks.SiteViewerGui/PointlessWaymarks.SiteViewerGui.csproj">
     <Platform Project="x64" />
   </Project>

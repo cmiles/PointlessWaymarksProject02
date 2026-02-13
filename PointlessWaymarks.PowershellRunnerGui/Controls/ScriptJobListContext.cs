@@ -334,7 +334,7 @@ public partial class ScriptJobListContext
         {
             Name = "New Script Job",
             LastEditOn = DateTime.Now,
-            ScriptType = ScriptKind.CsScript.ToString()
+            ScriptType = nameof(ScriptKind.DotNetSingleFile)
         };
 
         await ThreadSwitcher.ResumeForegroundAsync();
@@ -760,7 +760,7 @@ public partial class ScriptJobListContext
             return;
         }
 
-        if (toView.DbEntry.ScriptType == ScriptKind.CsScript.ToString())
+        if (toView.DbEntry.ScriptType == nameof(ScriptKind.DotNetSingleFile))
             await CsScriptViewWindow.CreateInstance(toView.DbEntry.PersistentId, DatabaseFile);
         else
             await ScriptViewWindow.CreateInstance(toView.DbEntry.PersistentId, DatabaseFile);
