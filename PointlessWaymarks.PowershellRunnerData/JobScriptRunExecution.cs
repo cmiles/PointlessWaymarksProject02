@@ -100,7 +100,7 @@ internal class JobScriptRunExecution
             var decryptedScript = job.Script.Decrypt(obfuscationKey);
 
             result = await ExecuteScript(decryptedScript, _dbId, job.PersistentId, run.PersistentId,
-                job.Name);
+                job.Name, job.ScriptType);
 
             run.Output = string.Join(Environment.NewLine, result.Value.runLog).Encrypt(obfuscationKey);
             run.Errors = result.Value.errors;
@@ -134,22 +134,47 @@ internal class JobScriptRunExecution
 
     private async Task<(bool errors, List<string> runLog)> ExecuteScript(string toInvoke, Guid databaseId,
         Guid jobId, Guid runId,
-        string identifier)
+        string identifier, string scriptType)
     {
+        var initialSessionState = InitialSessionState.CreateDefault();
+        // 2024-7-23: Leaving this code commented to consider - this would make this program's
+        // PowerShell execution a lot more like what the user expects at a command prompt which
+        // is good, but it also makes it a lot less portable. I wonder if the Vanilla runspace
+        // is the better compromise?
+        //initialSessionState.ImportPSModule(["*"]); // Attempt to preload all available modules
+        //initialSessionState.ExecutionPolicy = Microsoft.PowerShell.ExecutionPolicy.Unrestricted;
+
         // create Powershell runspace
-        var runSpace = RunspaceFactory.CreateRunspace();
+        var runSpace = RunspaceFactory.CreateRunspace(initialSessionState);
 
         // open it
         runSpace.Open();
 
         // create a pipeline and feed it the script text
         _pipeline = runSpace.CreatePipeline();
-        _pipeline.Commands.AddScript(toInvoke);
-        _pipeline.Input.Close();
-
+        DirectoryInfo? tempRunDirectory = null;
 
         var returnLog = new ConcurrentBag<(DateTime, string)>();
         var errorData = false;
+
+        if (scriptType == nameof(ScriptKind.DotNetSingleFile))
+        {
+            tempRunDirectory = FileLocationHelpers.RunCodeTempDirectory(runId);
+
+            returnLog.Add((DateTime.UtcNow, $"Program directory: {tempRunDirectory.FullName}"));
+
+            var tempCsFile = Path.Combine(tempRunDirectory.FullName,
+                $"pw-dnr--{JobId.ToString().Replace("-", string.Empty)}.cs");
+            await File.WriteAllTextAsync(tempCsFile, toInvoke);
+            _pipeline.Commands.AddScript(
+                $"& dotnet run {tempCsFile} --artifacts-path {tempRunDirectory.FullName}");
+        }
+        else
+        {
+            _pipeline.Commands.AddScript(toInvoke);
+        }
+
+        _pipeline.Input.Close();
 
         _pipeline.Output.DataReady += (_, _) =>
         {
@@ -193,6 +218,8 @@ internal class JobScriptRunExecution
         await Task.Delay(200);
 
         while (_pipeline.PipelineStateInfo.State == PipelineState.Running) await Task.Delay(250);
+
+        if (tempRunDirectory is not null && tempRunDirectory.Exists) tempRunDirectory.Delete(true);
 
         return (errorData || _pipeline.HadErrors, returnLog.OrderBy(x => x.Item1).Select(x => x.Item2).ToList());
     }

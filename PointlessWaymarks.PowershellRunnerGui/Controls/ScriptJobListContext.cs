@@ -73,6 +73,8 @@ public partial class ScriptJobListContext
     public bool FilterForNotScheduled { get; set; }
     public bool FilterForRunning { get; set; }
     public bool FilterForScheduled { get; set; }
+    public bool FilterForCSharp { get; set; }
+    public bool FilterForPowerShell { get; set; }
     public bool FilterForScheduleDisabled { get; set; }
     public required ObservableCollection<ScriptJobListListItem> Items { get; set; }
     public NotificationCatcher? JobDataNotificationsProcessor { get; set; }
@@ -277,11 +279,18 @@ public partial class ScriptJobListContext
                                    FilterForLastRunSuccess;
         var runningFilter = cleanedFilterText.Contains("!running", StringComparison.OrdinalIgnoreCase) ||
                             FilterForRunning;
+        var csharpFilter = cleanedFilterText.Contains("!C#", StringComparison.OrdinalIgnoreCase) || FilterForCSharp;
+        var powerShellFilter = cleanedFilterText.Contains("!powershell", StringComparison.OrdinalIgnoreCase) ||
+                               FilterForPowerShell;
+
 
         ((CollectionView)CollectionViewSource.GetDefaultView(Items)).Filter = o =>
         {
             if (o is not ScriptJobListListItem toFilter) return false;
 
+            if (csharpFilter && toFilter.DbEntry.ScriptType != nameof(ScriptKind.DotNetSingleFile)) return false;
+            if (powerShellFilter && toFilter.DbEntry.ScriptType != nameof(ScriptKind.PowerShell)) return false;
+            
             if (scheduledFilter)
                 if (!toFilter.DbEntry.ScheduleEnabled || string.IsNullOrWhiteSpace(toFilter.DbEntry.CronExpression))
                     return false;
@@ -291,6 +300,7 @@ public partial class ScriptJobListContext
             if (scheduleDisabledFilter)
                 if (toFilter.DbEntry.ScheduleEnabled || string.IsNullOrWhiteSpace(toFilter.DbEntry.CronExpression))
                     return false;
+
             if (lastRunErrorFilter)
             {
                 if (!toFilter.Items.Any()) return false;

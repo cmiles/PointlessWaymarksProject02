@@ -26,6 +26,7 @@
             <local:DateTimeMaxValueToNullConverter x:Key="DateTimeMaxValueToNull" />
             <local:LengthInSecondsToHumanReadableConverter x:Key="LengthInSecondsToHumanReadable" />
             <local:UtcTimeToLocalTimeConverter x:Key="UtcTimeToLocalTime" />
+            <local:ScriptKindToStringConverter x:Key="ScriptKindToString"></local:ScriptKindToStringConverter>
             <DataTemplate x:Key="ProgressMessageDataTemplate" DataType="{x:Type local:ScriptMessageItemProgress}">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -183,6 +184,8 @@
                     <CheckBox IsChecked="{Binding FilterForLastRunError}">Last Run Error</CheckBox>
                     <CheckBox IsChecked="{Binding FilterForLastRunSuccess}">Last Run Success</CheckBox>
                     <CheckBox IsChecked="{Binding FilterForRunning}">Running</CheckBox>
+                    <CheckBox IsChecked="{Binding FilterForPowerShell}">PowerShell</CheckBox>
+                    <CheckBox IsChecked="{Binding FilterForCSharp}">C#</CheckBox>
                 </WrapPanel>
                 <Rectangle
                     Grid.Row="1"
@@ -266,9 +269,10 @@
                                                 TextWrapping="Wrap"
                                                 ToolTip="{Binding TranslatedScript}">
                                                 <TextBox.Text>
-                                                    <MultiBinding StringFormat="{}{0} - Id  {1}">
+                                                    <MultiBinding StringFormat="{}{0} - Id  {1} - {2}">
                                                         <Binding Path="DbEntry.Name" />
                                                         <Binding Path="DbEntry.PersistentId" />
+                                                        <Binding Path="DbEntry.ScriptType" Converter="{StaticResource ScriptKindToString}" />
                                                     </MultiBinding>
                                                 </TextBox.Text>
                                                 <TextBox.InputBindings>

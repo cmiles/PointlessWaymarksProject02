@@ -16,9 +16,7 @@ public partial class CustomScriptRunnerContext
     // ReSharper disable once NotAccessedField.Local
     private string _databaseFile = string.Empty;
     private Guid _dbId = Guid.Empty;
-
     public NotificationCatcher? DataNotificationsProcessor { get; set; }
-
     public ScriptKind EditorScriptType { get; set; }
     public required ObservableCollection<IScriptMessageItem> Items { get; set; }
     public required Guid ScriptJobId { get; set; }
@@ -51,7 +49,7 @@ public partial class CustomScriptRunnerContext
     public static async Task<CustomScriptRunnerContext> CreateInstance(ScriptKind scriptType,
         StatusControlContext? statusContext,
         string databaseFile)
-    {
+    {   
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         var factoryStatusContext = await StatusControlContext.CreateInstance(statusContext);
@@ -63,7 +61,7 @@ public partial class CustomScriptRunnerContext
         var factoryScriptEntry = StringDataEntryNoIndicatorsContext.CreateInstance();
         factoryScriptEntry.Title = "Script";
         factoryScriptEntry.HelpText =
-            "Enter a PowerShell Script to run.";
+            "Enter a script to run.";
 
         var factoryContext = new CustomScriptRunnerContext
         {
