@@ -14,6 +14,7 @@ using PointlessWaymarks.PowerShellRunnerData.Models;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.ColumnSort;
 using PointlessWaymarks.WpfCommon.Status;
+using PointlessWaymarks.WpfCommon.Utility;
 using Serilog;
 using SkiaSharp;
 
@@ -84,8 +85,7 @@ public partial class ScriptJobListContext
     public Axis[] PreviousDaysStatisticsXAxis { get; set; }
     public Axis[] PreviousDaysStatisticsYAxis { get; set; }
     public NotificationCatcher? RunDataNotificationsProcessor { get; set; }
-    public ScriptJobListListItem? SelectedItem { get; set; }
-    public List<ScriptJobListListItem> SelectedItems { get; set; } = [];
+    public required ContentListSelected<ScriptJobListListItem> ListSelection { get; set; }
     public required StatusControlContext StatusContext { get; set; }
     public string? UserFilterText { get; set; }
 
@@ -125,6 +125,7 @@ public partial class ScriptJobListContext
                     }
                 ]
             },
+            ListSelection = await ContentListSelected<ScriptJobListListItem>.CreateInstance(factoryStatusContext),
             _databaseFile = databaseFile,
             _dbId = dbId
         };
@@ -578,7 +579,7 @@ public partial class ScriptJobListContext
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        var currentSelection = SelectedItems;
+        var currentSelection = ListSelection.SelectedItems;
 
         if (!currentSelection.Any())
         {
@@ -749,13 +750,13 @@ public partial class ScriptJobListContext
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (!SelectedItems.Any())
+        if (!ListSelection.SelectedItems.Any())
         {
             await StatusContext.ToastWarning("Nothing Selected?");
             return;
         }
 
-        await ScriptJobRunListWindow.CreateInstance(SelectedItems.Select(x => x.DbEntry.PersistentId).ToList(),
+        await ScriptJobRunListWindow.CreateInstance(ListSelection.SelectedItems.Select(x => x.DbEntry.PersistentId).ToList(),
             DatabaseFile);
     }
 

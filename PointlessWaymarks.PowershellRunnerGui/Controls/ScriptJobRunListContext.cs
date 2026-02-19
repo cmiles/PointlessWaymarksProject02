@@ -8,6 +8,7 @@ using PointlessWaymarks.PowerShellRunnerData.Models;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.StringDataEntry;
+using PointlessWaymarks.WpfCommon.Utility;
 using Serilog;
 
 namespace PointlessWaymarks.PowerShellRunnerGui.Controls;
@@ -34,6 +35,8 @@ public partial class ScriptJobRunListContext
     public required StringDataEntryNoIndicatorsContext ScriptViewerContext { get; set; }
     public ScriptJobRunGuiView? SelectedItem { get; set; }
     public List<ScriptJobRunGuiView> SelectedItems { get; set; } = [];
+
+    public required ContentListSelected<ScriptJobListListItem> Selected { get; set; }
     public required StatusControlContext StatusContext { get; set; }
 
     public static async Task<ScriptJobRunListContext> CreateInstance(StatusControlContext? statusContext,
@@ -82,7 +85,6 @@ public partial class ScriptJobRunListContext
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
-
         var factoryContext = new ScriptJobRunListContext
         {
             StatusContext = factoryStatusContext,
@@ -92,6 +94,7 @@ public partial class ScriptJobRunListContext
             ScriptViewerContext = factoryScriptViewerContext,
             RunFilter = runFilter ?? (_ => true),
             RunFilterDescription = runFilterDescription ?? string.Empty,
+            Selected = await ContentListSelected<ScriptJobListListItem>.CreateInstance(factoryStatusContext),
             _key = key,
             _databaseFile = databaseFile,
             _dbId = dbId

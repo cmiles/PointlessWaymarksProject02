@@ -7,11 +7,12 @@ using PointlessWaymarks.PowerShellRunnerData;
 using PointlessWaymarks.PowerShellRunnerData.Migrations;
 using PointlessWaymarks.PowerShellRunnerData.Models;
 using PointlessWaymarks.WpfCommon;
+using PointlessWaymarks.WpfCommon.Utility;
 
 namespace PointlessWaymarks.PowerShellRunnerGui.Controls;
 
 [NotifyPropertyChanged]
-public partial class ScriptJobListListItem
+public partial class ScriptJobListListItem : ISelectedTextTracker
 {
     private readonly int _numberOfRunsToShow = 5;
     public string DatabaseFile = string.Empty;
@@ -64,7 +65,8 @@ public partial class ScriptJobListListItem
             DbId = dbId,
             Key = key,
             TranslatedScript = dbEntry.Script.Decrypt(key),
-            Owner = owner
+            Owner = owner,
+            SelectedTextTracker = new CurrentSelectedTextTracker()
         };
     }
 
@@ -169,4 +171,6 @@ public partial class ScriptJobListListItem
             State = arg.State
         };
     }
+
+    public CurrentSelectedTextTracker? SelectedTextTracker { get; set; }
 }
