@@ -1,8 +1,6 @@
-using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
-using System.Text;
 using Microsoft.EntityFrameworkCore;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.PowerShellRunnerData.Models;
@@ -93,34 +91,33 @@ internal class JobScriptRunExecution
 
         if (CallbackAfterJobFirstSave != null) await CallbackAfterJobFirstSave(run);
 
-        (bool errors, List<string> runLog)? result = null;
+        await using var runLog = new RunLog(DatabaseFile, obfuscationKey, run.PersistentId);
 
         try
         {
             var decryptedScript = job.Script.Decrypt(obfuscationKey);
 
-            result = await ExecuteScript(decryptedScript, _dbId, job.PersistentId, run.PersistentId,
-                job.Name, job.ScriptType);
-
-            run.Output = string.Join(Environment.NewLine, result.Value.runLog).Encrypt(obfuscationKey);
-            run.Errors = result.Value.errors;
+            await ExecuteScript(decryptedScript, _dbId, job.PersistentId, run.PersistentId,
+                job.Name, job.ScriptType, runLog);
         }
         catch (Exception e)
         {
-            run.Output = string
-                .Join(Environment.NewLine, result?.runLog ?? "Null result - no output available".AsList())
-                .Encrypt(obfuscationKey);
-            run.Errors = true;
+            runLog.SetErrored();
+            runLog.Add($"{DateTime.Now:G}>> Exception: {e.Message}");
 
             Console.WriteLine(e);
             Log.Error(e, "Error Running Script");
         }
         finally
         {
+            await runLog.FlushAsync();
+
             run.CompletedOnUtc = DateTime.UtcNow;
 
             run.LengthInSeconds = (int)(run.CompletedOnUtc!.Value - run.StartedOnUtc).TotalSeconds;
             if (run.LengthInSeconds == 0) run.LengthInSeconds = 1;
+
+            run.Errors = runLog.HasErrors;
 
             await db.SaveChangesAsync();
 
@@ -132,9 +129,9 @@ internal class JobScriptRunExecution
         return run;
     }
 
-    private async Task<(bool errors, List<string> runLog)> ExecuteScript(string toInvoke, Guid databaseId,
+    private async Task ExecuteScript(string toInvoke, Guid databaseId,
         Guid jobId, Guid runId,
-        string identifier, string scriptType)
+        string identifier, string scriptType, RunLog runLog)
     {
         var initialSessionState = InitialSessionState.CreateDefault();
         // 2024-7-23: Leaving this code commented to consider - this would make this program's
@@ -154,14 +151,11 @@ internal class JobScriptRunExecution
         _pipeline = runSpace.CreatePipeline();
         DirectoryInfo? tempRunDirectory = null;
 
-        var returnLog = new ConcurrentBag<(DateTime, string)>();
-        var errorData = false;
-
         if (scriptType == nameof(ScriptKind.DotNetSingleFile))
         {
             tempRunDirectory = FileLocationHelpers.RunCodeTempDirectory(runId);
 
-            returnLog.Add((DateTime.UtcNow, $"Program directory: {tempRunDirectory.FullName}"));
+            runLog.Add($"Program directory: {tempRunDirectory.FullName}");
 
             var tempCsFile = Path.Combine(tempRunDirectory.FullName,
                 $"pw-dnr--{JobId.ToString().Replace("-", string.Empty)}.cs");
@@ -181,7 +175,7 @@ internal class JobScriptRunExecution
             Collection<PSObject> psObjects = _pipeline.Output.NonBlockingRead();
             foreach (var psObject in psObjects)
             {
-                returnLog.Add((DateTime.UtcNow, $"{DateTime.Now:G}>> {psObject.ToString()}"));
+                runLog.Add($"{DateTime.Now:G}>> {psObject.ToString()}");
                 DataNotifications.PublishPowershellProgressNotification(identifier, databaseId, jobId, runId,
                     psObject.ToString());
             }
@@ -189,8 +183,8 @@ internal class JobScriptRunExecution
 
         _pipeline.StateChanged += (_, eventArgs) =>
         {
-            returnLog.Add((DateTime.UtcNow,
-                $"{DateTime.Now:G}>> State: {eventArgs.PipelineStateInfo.State} {eventArgs.PipelineStateInfo.Reason?.ToString() ?? string.Empty}"));
+            runLog.Add(
+                $"{DateTime.Now:G}>> State: {eventArgs.PipelineStateInfo.State} {eventArgs.PipelineStateInfo.Reason?.ToString() ?? string.Empty}");
 
             DataNotifications.PublishPowershellStateNotification(identifier, databaseId, jobId, runId,
                 eventArgs.PipelineStateInfo.State,
@@ -202,11 +196,11 @@ internal class JobScriptRunExecution
             Collection<object> errorObjects = _pipeline.Error.NonBlockingRead();
             if (errorObjects.Count == 0) return;
 
-            errorData = true;
+            runLog.SetErrored();
             foreach (var errorObject in errorObjects)
             {
                 var errorString = errorObject.ToString();
-                returnLog.Add((DateTime.UtcNow, $"{DateTime.Now:G}>> Error: {errorString}"));
+                runLog.Add($"{DateTime.Now:G}>> Error: {errorString}");
                 if (!string.IsNullOrWhiteSpace(errorString))
                     DataNotifications.PublishPowershellProgressNotification(identifier, databaseId, jobId, runId,
                         errorString);
@@ -221,7 +215,7 @@ internal class JobScriptRunExecution
 
         if (tempRunDirectory is not null && tempRunDirectory.Exists) tempRunDirectory.Delete(true);
 
-        return (errorData || _pipeline.HadErrors, returnLog.OrderBy(x => x.Item1).Select(x => x.Item2).ToList());
+        if (_pipeline.HadErrors) runLog.SetErrored();
     }
 
     private void OnDataNotificationReceived(object? sender, TinyMessageReceivedEventArgs e)

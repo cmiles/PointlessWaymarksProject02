@@ -1,6 +1,8 @@
+using System.Data.Common;
 using System.Diagnostics;
 using FluentMigrator.Runner;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using PointlessWaymarks.PowerShellRunnerData.Models;
 using Serilog;
@@ -10,6 +12,8 @@ namespace PointlessWaymarks.PowerShellRunnerData;
 
 public class PowerShellRunnerDbContext(DbContextOptions<PowerShellRunnerDbContext> options) : DbContext(options)
 {
+    private static readonly SqlitePragmaConnectionInterceptor SqlitePragmaInterceptorInstance = new();
+
     public DbSet<PowerShellRunnerSetting> PowerShellRunnerSettings { get; set; } = null!;
     public DbSet<ScriptJobRun> ScriptJobRuns { get; set; } = null!;
     public DbSet<ScriptJob> ScriptJobs { get; set; } = null!;
@@ -22,6 +26,7 @@ public class PowerShellRunnerDbContext(DbContextOptions<PowerShellRunnerDbContex
         var optionsBuilder = new DbContextOptionsBuilder<PowerShellRunnerDbContext>();
 
         optionsBuilder.LogTo(message => Debug.WriteLine(message));
+        optionsBuilder.AddInterceptors(SqlitePragmaInterceptorInstance);
 
         return Task.FromResult(new PowerShellRunnerDbContext(optionsBuilder
             .UseSqlite($"Data Source={fileName}").Options));
@@ -103,6 +108,7 @@ public class PowerShellRunnerDbContext(DbContextOptions<PowerShellRunnerDbContex
         Batteries_V2.Init();
         raw.sqlite3_config(2 /*SQLITE_CONFIG_MULTITHREAD*/);
         var optionsBuilder = new DbContextOptionsBuilder<PowerShellRunnerDbContext>();
+        optionsBuilder.AddInterceptors(SqlitePragmaInterceptorInstance);
 
         PowerShellRunnerDbContext? db;
 
@@ -117,5 +123,30 @@ public class PowerShellRunnerDbContext(DbContextOptions<PowerShellRunnerDbContex
         }
 
         return (true, string.Empty, db);
+    }
+
+    private sealed class SqlitePragmaConnectionInterceptor : DbConnectionInterceptor
+    {
+        public override void ConnectionOpened(DbConnection connection, ConnectionEndEventData eventData)
+        {
+            ExecutePragmas(connection);
+        }
+
+        public override Task ConnectionOpenedAsync(DbConnection connection, ConnectionEndEventData eventData,
+            CancellationToken cancellationToken = default)
+        {
+            ExecutePragmas(connection);
+            return Task.CompletedTask;
+        }
+
+        private static void ExecutePragmas(DbConnection connection)
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = """
+                                  PRAGMA journal_mode=WAL;
+                                  PRAGMA busy_timeout=1000;
+                                  """;
+            command.ExecuteNonQuery();
+        }
     }
 }
