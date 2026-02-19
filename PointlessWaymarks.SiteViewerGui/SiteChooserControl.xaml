@@ -13,7 +13,7 @@
     d:DesignWidth="800"
     mc:Ignorable="d">
     <UserControl.Resources>
-        <DataTemplate x:Key="SecureCloudViewerSettingsFileTemplate" DataType="{x:Type local:SecureCloudViewerSettingsFileListItem}">
+        <DataTemplate x:Key="SecureCloudViewerSettingsFileItemTemplate" DataType="{x:Type local:SecureCloudViewerSettingsFileListItem}">
             <Border
                 Background="White"
                 BorderBrush="DarkGreen"
@@ -25,8 +25,8 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <Button
-                        Command="{Binding DataContext.LaunchRecentCmsSettingsFileCommand, ElementName=SettingsFileChooserControlXaml}"
-                        CommandParameter="{Binding .}"
+                        Command="{Binding DataContext.LaunchRecentSecureCloudViewerSettingsFileCommand, ElementName=SettingsFileChooserControlXaml}"
+                        CommandParameter="{Binding }"
                         FontSize="16">
                         Launch
                     </Button>
@@ -48,7 +48,7 @@
                         Padding="0"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Top"
-                        Command="{Binding ElementName=SettingsFileChooserControlXaml, Path=DataContext.RemoveSelectedFileCommand}"
+                        Command="{Binding ElementName=SettingsFileChooserControlXaml, Path=DataContext.RemoveSelectedSecureCloudSettingsFileCommand}"
                         CommandParameter="{Binding .}"
                         FontSize="10">
                         <Viewbox>
@@ -58,7 +58,7 @@
                 </Grid>
             </Border>
         </DataTemplate>
-        <DataTemplate x:Key="OpenCloudViewerSettingsFileTemplate" DataType="{x:Type local:OpenCloudViewerSettingsFileListItem}">
+        <DataTemplate x:Key="OpenCloudViewerSettingsFileItemTemplate" DataType="{x:Type local:OpenCloudViewerSettingsFileListItem}">
             <Border
                 Background="White"
                 BorderBrush="DarkGreen"
@@ -70,8 +70,8 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <Button
-                        Command="{Binding DataContext.LaunchRecentCmsSettingsFileCommand, ElementName=SettingsFileChooserControlXaml}"
-                        CommandParameter="{Binding .}"
+                        Command="{Binding DataContext.LaunchRecentOpenCloudViewerSettingsFileCommand, ElementName=SettingsFileChooserControlXaml}"
+                        CommandParameter="{Binding }"
                         FontSize="16">
                         Launch
                     </Button>
@@ -93,7 +93,7 @@
                         Padding="0"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Top"
-                        Command="{Binding ElementName=SettingsFileChooserControlXaml, Path=DataContext.RemoveSelectedFileCommand}"
+                        Command="{Binding ElementName=SettingsFileChooserControlXaml, Path=DataContext.RemoveSelectedOpenCloudSettingsFileCommand}"
                         CommandParameter="{Binding .}"
                         FontSize="10">
                         <Viewbox>
@@ -115,8 +115,8 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <Button
-                        Command="{Binding DataContext.LaunchRecentFileCommand, ElementName=SettingsFileChooserControlXaml}"
-                        CommandParameter="{Binding .}"
+                        Command="{Binding DataContext.LaunchRecentSiteSettingsFileCommand, ElementName=SettingsFileChooserControlXaml}"
+                        CommandParameter="{Binding }"
                         FontSize="16">
                         Launch
                     </Button>
@@ -138,7 +138,7 @@
                         Padding="0"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Top"
-                        Command="{Binding ElementName=SettingsFileChooserControlXaml, Path=DataContext.RemoveSelectedFileCommand}"
+                        Command="{Binding ElementName=SettingsFileChooserControlXaml, Path=DataContext.RemoveSelectedSiteSettingsFileCommand}"
                         CommandParameter="{Binding .}"
                         FontSize="10">
                         <Viewbox>
@@ -161,7 +161,7 @@
                     </Grid.ColumnDefinitions>
                     <Button
                         Command="{Binding DataContext.LaunchRecentDirectoryCommand, ElementName=SettingsFileChooserControlXaml}"
-                        CommandParameter="{Binding .}"
+                        CommandParameter="{Binding }"
                         FontSize="16">
                         Launch
                     </Button>
@@ -192,7 +192,9 @@
         <local:SiteChooserDataTemplateSelector
             x:Key="ProjectTemplateSelector"
             SiteDirectoryTemplate="{StaticResource ProjectDirectoryFileItemTemplate}"
-            SiteSettingsFileTemplate="{StaticResource SettingsFileItemTemplate}" />
+            SiteSettingsFileTemplate="{StaticResource SettingsFileItemTemplate}"
+            OpenCloudViewerSettingsFileTemplate="{StaticResource OpenCloudViewerSettingsFileItemTemplate}"
+            SecureCloudViewerSettingsFileTemplate="{StaticResource SecureCloudViewerSettingsFileItemTemplate}"/>
     </UserControl.Resources>
     <StackPanel>
         <TextBlock

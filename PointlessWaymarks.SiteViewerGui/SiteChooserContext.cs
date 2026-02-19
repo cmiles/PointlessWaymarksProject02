@@ -159,7 +159,7 @@ public partial class SiteChooserContext
     }
 
     [NonBlockingCommand]
-    private async Task LaunchRecentCloudViewerSettingsFile(SecureCloudViewerSettingsFileListItem? settingsListItem)
+    private async Task LaunchRecentSecureCloudViewerSettingsFile(SecureCloudViewerSettingsFileListItem? settingsListItem)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -183,7 +183,31 @@ public partial class SiteChooserContext
     }
 
     [NonBlockingCommand]
-    private async Task LaunchRecentCmsSettingsFile(SiteSettingsFileListItem? settingsListItem)
+    private async Task LaunchRecentOpenCloudViewerSettingsFile(OpenCloudViewerSettingsFileListItem? settingsListItem)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (settingsListItem == null)
+        {
+            await StatusContext.ToastWarning("Nothing selected?");
+            return;
+        }
+
+        settingsListItem.SettingsFile.Refresh();
+
+        if (!settingsListItem.SettingsFile.Exists)
+        {
+            await StatusContext.ToastWarning("File doesn't appear to currently exist...");
+            return;
+        }
+
+        SiteSettingsFileChosen?.Invoke(this,
+            (settingsListItem.SettingsFile.FullName,
+                StringsFromItems()));
+    }
+
+    [NonBlockingCommand]
+    private async Task LaunchRecentSiteSettingsFile(SiteSettingsFileListItem? settingsListItem)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -329,13 +353,33 @@ public partial class SiteChooserContext
     }
 
     [NonBlockingCommand]
-    private async Task RemoveSelectedFile(SiteSettingsFileListItem? projectFileListItem)
+    private async Task RemoveSelectedSiteSettingsFile(SiteSettingsFileListItem? fileListItem)
     {
-        if (projectFileListItem == null) return;
+        if (fileListItem == null) return;
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        Items.Remove(projectFileListItem);
+        Items.Remove(fileListItem);
+    }
+
+    [NonBlockingCommand]
+    private async Task RemoveSelectedOpenCloudSettingsFile(OpenCloudViewerSettingsFileListItem? fileListItem)
+    {
+        if (fileListItem == null) return;
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        Items.Remove(fileListItem);
+    }
+
+    [NonBlockingCommand]
+    private async Task RemoveSelectedSecureCloudSettingsFile(SecureCloudViewerSettingsFileListItem? fileListItem)
+    {
+        if (fileListItem == null) return;
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        Items.Remove(fileListItem);
     }
 
     public event EventHandler<(string userString, List<string> recentFiles)>? SiteDirectoryChosen;
