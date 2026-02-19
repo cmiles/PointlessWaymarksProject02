@@ -7,7 +7,7 @@
   <ItemGroup>
     <PackageReference Include="FluentMigrator" Version="8.0.1" />
     <PackageReference Include="FluentMigrator.Runner.SQLite" Version="8.0.1" />
-    <PackageReference Include="Jint" Version="4.5.0" />
+    <PackageReference Include="Jint" Version="4.6.0" />
     <PackageReference Include="Metalama.Framework" Version="2026.0.16" />
     <PackageReference Include="Metalama.Patterns.Observability" Version="2026.0.16" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.3" />
