@@ -1,5 +1,7 @@
+using System.Data.Common;
 using FluentMigrator.Runner;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using PointlessWaymarks.FeedReaderData.Models;
 using Serilog;
@@ -10,34 +12,15 @@ namespace PointlessWaymarks.FeedReaderData;
 public class FeedContext(DbContextOptions<FeedContext> options) : DbContext(options)
 {
     public static readonly string FeedReaderDbIdKeyValueKey = "FeedReaderDbIdBasicAuthKey";
+    private static readonly SqlitePragmaConnectionInterceptor SqlitePragmaInterceptorInstance = new();
 
     public DbSet<ReaderFeedItem> FeedItems { get; set; } = null!;
-
     public DbSet<ReaderFeed> Feeds { get; set; } = null!;
-
     public DbSet<HistoricReaderFeedItem> HistoricFeedItems { get; set; } = null!;
-
     public DbSet<HistoricReaderFeed> HistoricFeeds { get; set; } = null!;
-
     public DbSet<HistoricSavedFeedItem> HistoricSavedFeedItems { get; set; } = null!;
-
     public DbSet<ReaderKeyValue> KeyValues { get; set; } = null!;
-
     public DbSet<SavedFeedItem> SavedFeedItems { get; set; } = null!;
-
-    public static async Task<string> FeedReaderGuid(string fileName)
-    {
-        var db = await CreateInstanceWithEnsureCreated(fileName);
-
-        return (await db.KeyValues.SingleAsync(x => x.Key == FeedReaderDbIdKeyValueKey)).Value;
-    }
-
-    public static async Task<string> FeedReaderGuidIdString(string fileName)
-    {
-        var db = await CreateInstanceWithEnsureCreated(fileName);
-
-        return $"FeedReaderBasicAuth-{(await db.KeyValues.SingleAsync(x => x.Key == FeedReaderDbIdKeyValueKey)).Value}";
-    }
 
     public static Task<FeedContext> CreateInstance(string fileName)
     {
@@ -45,6 +28,7 @@ public class FeedContext(DbContextOptions<FeedContext> options) : DbContext(opti
         Batteries_V2.Init();
         raw.sqlite3_config(2 /*SQLITE_CONFIG_MULTITHREAD*/);
         var optionsBuilder = new DbContextOptionsBuilder<FeedContext>();
+        optionsBuilder.AddInterceptors(SqlitePragmaInterceptorInstance);
 
         return Task.FromResult(new FeedContext(optionsBuilder
             .UseSqlite($"Data Source={fileName}").Options));
@@ -75,6 +59,20 @@ public class FeedContext(DbContextOptions<FeedContext> options) : DbContext(opti
         await FeedReaderGuidInitialValueAsNeeded(context);
 
         return context;
+    }
+
+    public static async Task<string> FeedReaderGuid(string fileName)
+    {
+        var db = await CreateInstanceWithEnsureCreated(fileName);
+
+        return (await db.KeyValues.SingleAsync(x => x.Key == FeedReaderDbIdKeyValueKey)).Value;
+    }
+
+    public static async Task<string> FeedReaderGuidIdString(string fileName)
+    {
+        var db = await CreateInstanceWithEnsureCreated(fileName);
+
+        return $"FeedReaderBasicAuth-{(await db.KeyValues.SingleAsync(x => x.Key == FeedReaderDbIdKeyValueKey)).Value}";
     }
 
     private static async Task FeedReaderGuidInitialValueAsNeeded(FeedContext db)
@@ -131,6 +129,7 @@ public class FeedContext(DbContextOptions<FeedContext> options) : DbContext(opti
         Batteries_V2.Init();
         raw.sqlite3_config(2 /*SQLITE_CONFIG_MULTITHREAD*/);
         var optionsBuilder = new DbContextOptionsBuilder<FeedContext>();
+        optionsBuilder.AddInterceptors(SqlitePragmaInterceptorInstance);
 
         FeedContext? db;
 
@@ -147,5 +146,30 @@ public class FeedContext(DbContextOptions<FeedContext> options) : DbContext(opti
         }
 
         return (true, string.Empty, db);
+    }
+
+    private sealed class SqlitePragmaConnectionInterceptor : DbConnectionInterceptor
+    {
+        public override void ConnectionOpened(DbConnection connection, ConnectionEndEventData eventData)
+        {
+            ExecutePragmas(connection);
+        }
+
+        public override Task ConnectionOpenedAsync(DbConnection connection, ConnectionEndEventData eventData,
+            CancellationToken cancellationToken = default)
+        {
+            ExecutePragmas(connection);
+            return Task.CompletedTask;
+        }
+
+        private static void ExecutePragmas(DbConnection connection)
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = """
+                                  PRAGMA journal_mode=WAL;
+                                  PRAGMA busy_timeout=1000;
+                                  """;
+            command.ExecuteNonQuery();
+        }
     }
 }
