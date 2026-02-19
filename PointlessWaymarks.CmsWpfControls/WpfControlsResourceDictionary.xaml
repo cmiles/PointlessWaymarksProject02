@@ -1330,11 +1330,31 @@
                                             <Binding Path="DbEntry.Longitude" />
                                         </MultiBinding>
                                     </TextBox.Text>
+                                    <b:Interaction.Behaviors>
+                                        <wpfBehavior:ReadOnlyTextBoxClickKeyboardAndDragPass />
+                                    </b:Interaction.Behaviors>
+                                    <b:Interaction.Triggers>
+                                        <b:EventTrigger EventName="SelectionChanged">
+                                            <wpfBehavior:EventToCommand
+                                                Command="{Binding SelectedTextTracker.SelectedTextChangedCommand}"
+                                                PassEventArgsToCommand="True" />
+                                        </b:EventTrigger>
+                                    </b:Interaction.Triggers>
                                 </TextBox>
                                 <TextBox>
                                     <TextBox.Text>
                                         <Binding Path="DbEntry.Elevation" StringFormat="Elv: {0:N0}'"></Binding>
                                     </TextBox.Text>
+                                    <b:Interaction.Behaviors>
+                                        <wpfBehavior:ReadOnlyTextBoxClickKeyboardAndDragPass />
+                                    </b:Interaction.Behaviors>
+                                    <b:Interaction.Triggers>
+                                        <b:EventTrigger EventName="SelectionChanged">
+                                            <wpfBehavior:EventToCommand
+                                                Command="{Binding SelectedTextTracker.SelectedTextChangedCommand}"
+                                                PassEventArgsToCommand="True" />
+                                        </b:EventTrigger>
+                                    </b:Interaction.Triggers>
                                 </TextBox>
                                 <Button Content="PW Map"
                                         Command="{Binding ItemActions.ShowOnMapCommand}"
@@ -1666,7 +1686,11 @@
                                   x:Name="InTemplateContentMenuButton"
                                   Grid.Column="0"
                                   ToolTip="Line content actions"
-                                  Style="{StaticResource InTemplateContentMenuToggleButtonStyle}" />
+                                  Style="{StaticResource InTemplateContentMenuToggleButtonStyle}">
+                        <b:Interaction.Behaviors>
+                            <wpfBehavior:ToggleButtonSelectsParentListItem/>
+                        </b:Interaction.Behaviors>
+                    </ToggleButton>
                     <Border Grid.Column="0"
                             Grid.Row="0"
                             Grid.ColumnSpan="2" Style="{StaticResource InTemplateContentMenuBorderStyle}">
@@ -1731,13 +1755,44 @@
                                             <Binding Path="DbEntry.Longitude" />
                                         </MultiBinding>
                                     </TextBox.Text>
+                                    <b:Interaction.Behaviors>
+                                        <wpfBehavior:ReadOnlyTextBoxClickKeyboardAndDragPass />
+                                    </b:Interaction.Behaviors>
+                                    <b:Interaction.Triggers>
+                                        <b:EventTrigger EventName="SelectionChanged">
+                                            <wpfBehavior:EventToCommand
+                                                Command="{Binding SelectedTextTracker.SelectedTextChangedCommand}"
+                                                PassEventArgsToCommand="True" />
+                                        </b:EventTrigger>
+                                    </b:Interaction.Triggers>
                                 </TextBox>
                                 <TextBox>
                                     <TextBox.Text>
                                         <Binding Path="DbEntry.Elevation" StringFormat="Elv: {0:N0}'"></Binding>
                                     </TextBox.Text>
+                                    <b:Interaction.Behaviors>
+                                        <wpfBehavior:ReadOnlyTextBoxClickKeyboardAndDragPass />
+                                    </b:Interaction.Behaviors>
+                                    <b:Interaction.Triggers>
+                                        <b:EventTrigger EventName="SelectionChanged">
+                                            <wpfBehavior:EventToCommand
+                                                Command="{Binding SelectedTextTracker.SelectedTextChangedCommand}"
+                                                PassEventArgsToCommand="True" />
+                                        </b:EventTrigger>
+                                    </b:Interaction.Triggers>
                                 </TextBox>
-                                <TextBox Text="{Binding DbEntry.PhotoDirection, StringFormat='Dir: {0}&#176;'}"></TextBox>
+                                <TextBox Text="{Binding DbEntry.PhotoDirection, StringFormat='Dir: {0}&#176;'}">
+                                    <b:Interaction.Behaviors>
+                                        <wpfBehavior:ReadOnlyTextBoxClickKeyboardAndDragPass />
+                                    </b:Interaction.Behaviors>
+                                    <b:Interaction.Triggers>
+                                        <b:EventTrigger EventName="SelectionChanged">
+                                            <wpfBehavior:EventToCommand
+                                                Command="{Binding SelectedTextTracker.SelectedTextChangedCommand}"
+                                                PassEventArgsToCommand="True" />
+                                        </b:EventTrigger>
+                                    </b:Interaction.Triggers>
+                                </TextBox>
                                 <Button Content="PW Map"
                                         Command="{Binding ItemActions.ShowOnMapCommand}"
                                         CommandParameter="{Binding DbEntry}" />
