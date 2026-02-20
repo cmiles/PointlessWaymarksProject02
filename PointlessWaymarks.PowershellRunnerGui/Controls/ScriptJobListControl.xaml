@@ -404,7 +404,8 @@
                                         <WrapPanel
                                             Grid.Row="3"
                                             Margin="6,10,4,0"
-                                            Orientation="Horizontal">
+                                            Orientation="Horizontal"
+                                            behaviors:SelectParentListItemOnChildClick.IsEnabled="True">
                                             <WrapPanel.Resources>
                                                 <Style TargetType="Button">
                                                     <Setter Property="Margin" Value="2" />
@@ -499,7 +500,8 @@
                                             </ListBox.ContextMenu>
                                             <ListBox.ItemTemplate>
                                                 <DataTemplate DataType="{x:Type models:ScriptJobRun}">
-                                                    <Border BorderThickness="1" CornerRadius="2">
+                                                    <Border BorderThickness="1" CornerRadius="2"
+                                                            behaviors:SelectGrandParentListItemOnChildClick.IsEnabled="True">
                                                         <Border.Style>
                                                             <Style TargetType="Border">
                                                                 <Setter Property="BorderBrush" Value="LightGray" />
