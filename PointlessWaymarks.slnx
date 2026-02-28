@@ -103,6 +103,10 @@
   <Project Path="PointlessWaymarks.GeoToolsGui/PointlessWaymarks.GeoToolsGui.csproj">
     <Platform Project="x64" />
   </Project>
+  <Project Path="PointlessWaymarks.PhotoMetadataBasicsGui/PointlessWaymarks.PhotoMetadataBasicsGui.csproj">
+    <BuildType Solution="LamaDebug|*" Project="Release" />
+    <Platform Project="x64" />
+  </Project>
   <Project Path="PointlessWaymarks.PowerShellRunnerData/PointlessWaymarks.PowerShellRunnerData.csproj">
     <Platform Project="x64" />
   </Project>

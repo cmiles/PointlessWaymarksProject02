@@ -81,7 +81,7 @@ public static class LineGenerator
         newEntry.RecordingEndedOn = trackInformation.EndsOnLocal;
         newEntry.RecordingEndedOnUtc = trackInformation.EndsOnUtc;
         newEntry.IncludeInActivityLog = newEntry is { RecordingStartedOn: not null, RecordingEndedOn: not null };
-        newEntry.Tags = Db.TagListJoin(tagList);
+        newEntry.Tags = SlugTagTools.TagListJoinToSpacedString(tagList);
 
         if (newEntry.Title.Contains("Hike", StringComparison.CurrentCultureIgnoreCase)
             || newEntry.Title.Contains("Hiking", StringComparison.CurrentCultureIgnoreCase)
@@ -93,7 +93,7 @@ public static class LineGenerator
             newEntry.ActivityType = "Biking";
 
         if (!string.IsNullOrWhiteSpace(trackInformation.Name))
-            newEntry.Slug = SlugTools.CreateSlug(true, trackInformation.Name);
+            newEntry.Slug = SlugTagTools.CreateSlug(true, trackInformation.Name);
         if (trackInformation.StartsOnLocal != null)
             newEntry.Folder = trackInformation.StartsOnLocal.Value.Year.ToString();
 
@@ -176,7 +176,7 @@ public static class LineGenerator
         newEntry.ClimbElevation = lineStatistics.ElevationClimb;
         newEntry.DescentElevation = lineStatistics.ElevationDescent;
         newEntry.IncludeInActivityLog = newEntry is { RecordingStartedOn: not null, RecordingEndedOn: not null };
-        newEntry.Tags = Db.TagListJoin(tagList);
+        newEntry.Tags = SlugTagTools.TagListJoinToSpacedString(tagList);
 
         if (newEntry.Title.Contains("Hike", StringComparison.CurrentCultureIgnoreCase)
             || newEntry.Title.Contains("Hiking", StringComparison.CurrentCultureIgnoreCase)
@@ -188,7 +188,7 @@ public static class LineGenerator
             newEntry.ActivityType = "Biking";
 
         if (!string.IsNullOrWhiteSpace(trackInformation.Name))
-            newEntry.Slug = SlugTools.CreateSlug(true, trackInformation.Name);
+            newEntry.Slug = SlugTagTools.CreateSlug(true, trackInformation.Name);
 
         return newEntry;
     }
@@ -210,7 +210,7 @@ public static class LineGenerator
         try
         {
             Db.DefaultPropertyCleanup(toSave);
-            toSave.Tags = Db.TagListCleanup(toSave.Tags);
+            toSave.Tags = SlugTagTools.TagListCleanupToSpacedString(toSave.Tags);
 
             var lineFeature = LineContent.FeatureFromGeoJsonLine(toSave.Line);
 

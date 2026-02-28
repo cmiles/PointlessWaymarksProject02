@@ -2,6 +2,8 @@ using PointlessWaymarks.CmsData.ContentHtml.PointHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsData.Json;
+using PointlessWaymarks.CommonTools;
+using PointlessWaymarks.SpatialTools;
 
 namespace PointlessWaymarks.CmsData.ContentGeneration;
 
@@ -36,7 +38,7 @@ public static class PointGenerator
         try
         {
             Db.DefaultPropertyCleanup(toSave);
-            toSave.Tags = Db.TagListCleanup(toSave.Tags);
+            toSave.Tags = SlugTagTools.TagListCleanupToSpacedString(toSave.Tags);
 
             savedPoint = await Db.SavePointContent(toSave).ConfigureAwait(false);
 
@@ -79,15 +81,15 @@ public static class PointGenerator
         if (!commonContentCheck.Valid)
             return GenerationReturn.Error(commonContentCheck.Explanation, pointContent.ContentId);
 
-        var latitudeCheck = await CommonContentValidation.LatitudeValidation(pointContent.Latitude);
+        var latitudeCheck = await SpatialValue.LatitudeValidation(pointContent.Latitude);
         if (!latitudeCheck.Valid)
             return GenerationReturn.Error(latitudeCheck.Explanation, pointContent.ContentId);
 
-        var longitudeCheck = await CommonContentValidation.LongitudeValidation(pointContent.Longitude);
+        var longitudeCheck = await SpatialValueValidations.LongitudeValidation(pointContent.Longitude);
         if (!longitudeCheck.Valid)
             return GenerationReturn.Error(longitudeCheck.Explanation, pointContent.ContentId);
 
-        var elevationCheck = await CommonContentValidation.ElevationValidation(pointContent.Elevation);
+        var elevationCheck = await SpatialValueValidations.ElevationValidation(pointContent.Elevation);
         if (!elevationCheck.Valid)
             return GenerationReturn.Error(elevationCheck.Explanation, pointContent.ContentId);
 

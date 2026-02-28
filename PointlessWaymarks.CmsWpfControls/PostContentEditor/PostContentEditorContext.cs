@@ -20,6 +20,7 @@ using PointlessWaymarks.CmsWpfControls.UpdateNotesEditor;
 using PointlessWaymarks.CmsWpfControls.Utility;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
+using PointlessWaymarks.SpatialTools;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.BoolDataEntry;
 using PointlessWaymarks.WpfCommon.ChangesAndValidation;
@@ -225,9 +226,9 @@ If your intent is just to put a single piece of content onto the main page of th
         }
 
         var latitudeValidation =
-            await CommonContentValidation.LatitudeValidation(OptionalLocationEntry.LatitudeEntry.UserValue.Value);
+            await SpatialValue.LatitudeValidation(OptionalLocationEntry.LatitudeEntry.UserValue.Value);
         var longitudeValidation =
-            await CommonContentValidation.LongitudeValidation(OptionalLocationEntry.LongitudeEntry.UserValue.Value);
+            await SpatialValueValidations.LongitudeValidation(OptionalLocationEntry.LongitudeEntry.UserValue.Value);
 
         if (!latitudeValidation.Valid || !longitudeValidation.Valid)
         {
@@ -244,7 +245,7 @@ If your intent is just to put a single piece of content onto the main page of th
         newPartialPoint.BodyContent = BracketCodePosts.Create(DbEntry);
         newPartialPoint.Title = $"Point From {TitleSummarySlugFolder!.TitleEntry.UserValue}";
         newPartialPoint.Tags = TagEdit!.TagListString();
-        newPartialPoint.Slug = SlugTools.CreateSlug(true, newPartialPoint.Title);
+        newPartialPoint.Slug = SlugTagTools.CreateSlug(true, newPartialPoint.Title);
         newPartialPoint.Latitude = OptionalLocationEntry.LatitudeEntry.UserValue.Value;
         newPartialPoint.Longitude = OptionalLocationEntry.LongitudeEntry.UserValue.Value;
         newPartialPoint.Elevation = OptionalLocationEntry.ElevationEntry!.UserValue;

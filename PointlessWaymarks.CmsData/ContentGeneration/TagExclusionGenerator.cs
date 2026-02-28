@@ -26,7 +26,7 @@ public static class TagExclusionGenerator
 
             if (toSave.Id < 1)
             {
-                toSave.Tag = Db.TagListItemCleanup(toSave.Tag);
+                toSave.Tag = SlugTagTools.TagListItemCleanupToSpacedString(toSave.Tag);
                 toSave.ContentVersion = DateTime.Now.ToUniversalTime().TrimDateTimeToSeconds();
 
                 await db.AddAsync(toSave).ConfigureAwait(false);
@@ -41,7 +41,7 @@ public static class TagExclusionGenerator
 
             toModify = await db.TagExclusions.SingleAsync(x => x.Id == toSave.Id).ConfigureAwait(false);
 
-            toModify.Tag = Db.TagListItemCleanup(toSave.Tag);
+            toModify.Tag = SlugTagTools.TagListItemCleanupToSpacedString(toSave.Tag);
             toModify.ContentVersion = DateTime.Now.ToUniversalTime().TrimDateTimeToSeconds();
 
             await db.SaveChangesAsync(true).ConfigureAwait(false);
@@ -70,7 +70,7 @@ public static class TagExclusionGenerator
         var validationResult = CommonContentValidation.ValidateTags(toValidate.Tag.TrimNullToEmpty());
         if (!validationResult.Valid) return GenerationReturn.Error(validationResult.Explanation);
 
-        var cleanedTag = Db.TagListItemCleanup(toValidate.Tag);
+        var cleanedTag = SlugTagTools.TagListItemCleanupToSpacedString(toValidate.Tag);
 
         var db = await Db.Context().ConfigureAwait(false);
         if (db.TagExclusions.Any(x => x.Id != toValidate.Id && x.Tag == cleanedTag))

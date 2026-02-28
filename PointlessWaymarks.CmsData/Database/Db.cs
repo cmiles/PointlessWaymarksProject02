@@ -1,6 +1,5 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Omu.ValueInjecter;
 using PointlessWaymarks.CmsData.BracketCodes;
@@ -3160,7 +3159,7 @@ public static class Db
         var context = await Context().ConfigureAwait(false);
 
         return (await context.TagExclusions.OrderBy(x => x.Tag).ToListAsync().ConfigureAwait(false))
-            .Select(x => (SlugTools.CreateSlug(true, x.Tag, 200), x)).ToList();
+            .Select(x => (SlugTagTools.CreateSlug(true, x.Tag, 200), x)).ToList();
     }
 
     public static async Task<List<string>> TagExclusionSlugs()
@@ -3168,50 +3167,9 @@ public static class Db
         var context = await Context().ConfigureAwait(false);
 
         return (await context.TagExclusions.OrderBy(x => x.Tag).ToListAsync().ConfigureAwait(false))
-            .Select(x => SlugTools.CreateSlug(true, x.Tag, 200)).ToList();
+            .Select(x => SlugTagTools.CreateSlug(true, x.Tag, 200)).ToList();
     }
 
-    public static string TagListCleanup(string? tags)
-    {
-        return string.IsNullOrWhiteSpace(tags) ? string.Empty : TagListJoin(TagListParse(tags));
-    }
-
-    public static List<string> TagListCleanup(List<string> listToClean)
-    {
-        if (!listToClean.Any()) return [];
-
-        return listToClean.Select(TagListItemCleanup).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList();
-    }
-
-    /// <summary>
-    ///     Use to clean up a single tag - trims and removes inner multi-space
-    /// </summary>
-    /// <param name="toClean"></param>
-    /// <returns></returns>
-    public static string TagListItemCleanup(string? toClean)
-    {
-        if (string.IsNullOrWhiteSpace(toClean)) return string.Empty;
-
-        return Regex.Replace(SlugTools.CreateSpacedString(true, toClean, 200), @"\s+", " ").TrimNullToEmpty()
-            .ToLower();
-    }
-
-
-    /// <summary>
-    ///     Cleans and joins a list of tags into a string suitable for use as a database Tag value with this program's
-    ///     conventions.
-    /// </summary>
-    /// <param name="tagList"></param>
-    /// <returns></returns>
-    public static string TagListJoin(List<string> tagList)
-    {
-        if (tagList.Count < 1) return string.Empty;
-
-        var cleanedList = tagList.Select(TagListItemCleanup).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct()
-            .OrderBy(x => x).ToList();
-
-        return string.Join(",", cleanedList);
-    }
 
     public static string TagListJoinAsSlugs(List<string> tagList, bool removeExcludedTags)
     {
@@ -3222,42 +3180,14 @@ public static class Db
         if (removeExcludedTags)
         {
             var db = Context().Result;
-            excludedTags = db.TagExclusions.ToList().Select(x => SlugTools.CreateSlug(true, x.Tag, 200)).ToList();
+            excludedTags = db.TagExclusions.ToList().Select(x => SlugTagTools.CreateSlug(true, x.Tag, 200)).ToList();
         }
 
         var cleanedList = tagList.Where(x => !string.IsNullOrWhiteSpace(x))
-            .Select(x => SlugTools.CreateSlug(true, x.Trim(), 200)).Distinct().Except(excludedTags).OrderBy(x => x)
+            .Select(x => SlugTagTools.CreateSlug(true, x.Trim(), 200)).Distinct().Except(excludedTags).OrderBy(x => x)
             .ToList();
 
         return string.Join(",", cleanedList);
-    }
-
-    /// <summary>
-    ///     Converts a string into a List of Tags - resulting tags will be cleaned/converted according to program conventions
-    /// </summary>
-    /// <param name="rawTagString"></param>
-    /// <returns></returns>
-    public static List<string> TagListParse(string? rawTagString)
-    {
-        if (rawTagString == null) return [];
-        if (string.IsNullOrWhiteSpace(rawTagString)) return [];
-
-        return rawTagString.Split(",").Select(TagListItemCleanup).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct()
-            .OrderBy(x => x).ToList();
-    }
-
-    /// <summary>
-    ///     Takes an incoming string, parses and cleans tags according to program conventions, joins the tags
-    ///     back into a string. This can be used to convert user input into a database
-    ///     appropriate tag value. Note: the output of this method will be clean and correctly formatted but may not
-    ///     be what the user intended - this method may be best used in a situation where the user has had
-    ///     a preview of the converted content.
-    /// </summary>
-    /// <param name="toClean"></param>
-    /// <returns></returns>
-    public static string TagListParseCleanAndJoin(string? toClean)
-    {
-        return TagListJoin(TagListParse(toClean));
     }
 
     public static List<string> TagListParseToSlugs(string? rawTagString, bool removeExcludedTags)
@@ -3270,11 +3200,11 @@ public static class Db
         if (removeExcludedTags)
         {
             var db = Context().Result;
-            excludedTags = db.TagExclusions.ToList().Select(x => SlugTools.CreateSlug(true, x.Tag, 200)).ToList();
+            excludedTags = db.TagExclusions.ToList().Select(x => SlugTagTools.CreateSlug(true, x.Tag, 200)).ToList();
         }
 
         return rawTagString.Split(",").Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim())
-            .Select(x => SlugTools.CreateSlug(true, x, 200)).Distinct().Where(x => !excludedTags.Contains(x))
+            .Select(x => SlugTagTools.CreateSlug(true, x, 200)).Distinct().Where(x => !excludedTags.Contains(x))
             .OrderBy(x => x).ToList();
     }
 
@@ -3300,10 +3230,10 @@ public static class Db
         if (string.IsNullOrWhiteSpace(rawTagString)) return [];
 
         var db = Context().Result;
-        var excludedTags = db.TagExclusions.ToList().Select(x => SlugTools.CreateSlug(true, x.Tag, 200)).ToList();
+        var excludedTags = db.TagExclusions.ToList().Select(x => SlugTagTools.CreateSlug(true, x.Tag, 200)).ToList();
 
         var tagSlugs = rawTagString.Split(",").Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim())
-            .Select(x => SlugTools.CreateSlug(true, x, 200)).Distinct().ToList();
+            .Select(x => SlugTagTools.CreateSlug(true, x, 200)).Distinct().ToList();
 
         return tagSlugs.Select(x => new TagSlugAndIsExcluded(x, excludedTags.Contains(x))).ToList();
     }

@@ -297,7 +297,7 @@ public static class PhotoGenerator
 
         tags.AddRange(FileMetadataEmbeddedTools.KeywordsFromExif(metadataDirectories, true));
 
-        toReturn.Tags = tags.Any() ? Db.TagListJoin(tags) : string.Empty;
+        toReturn.Tags = tags.Any() ? SlugTagTools.TagListJoinToSpacedString(tags) : string.Empty;
 
         return (GenerationReturn.Success($"Parsed Photo Metadata for {selectedFile.FullName} without error"), toReturn);
     }
@@ -321,7 +321,7 @@ public static class PhotoGenerator
         toReturn.CreatedBy = string.IsNullOrWhiteSpace(photoContentCreatedBy)
             ? UserSettingsSingleton.CurrentSettings().DefaultCreatedBy
             : photoContentCreatedBy.Trim();
-        toReturn.Slug = SlugTools.CreateSlug(true, toReturn.Title);
+        toReturn.Slug = SlugTagTools.CreateSlug(true, toReturn.Title);
         toReturn.BodyContentFormat = ContentFormatDefaults.Content.ToString();
         toReturn.UpdateNotesFormat = ContentFormatDefaults.Content.ToString();
         toReturn.ShowLocation = UserSettingsSingleton.CurrentSettings().PhotoPagesShowPositionByDefault;
@@ -361,7 +361,7 @@ public static class PhotoGenerator
         try
         {
             Db.DefaultPropertyCleanup(toSave);
-            toSave.Tags = Db.TagListCleanup(toSave.Tags);
+            toSave.Tags = SlugTagTools.TagListCleanupToSpacedString(toSave.Tags);
             await FileManagement.WriteSelectedPhotoContentFileToMediaArchive(selectedFile).ConfigureAwait(false);
             await Db.SavePhotoContent(toSave).ConfigureAwait(false);
             await WritePhotoFromMediaArchiveToLocalSite(toSave, overwriteExistingFiles, progress).ConfigureAwait(false);
@@ -425,11 +425,11 @@ public static class PhotoGenerator
         if (!commonContentCheck.Valid)
             return GenerationReturn.Error(commonContentCheck.Explanation, photoContent.ContentId);
 
-        var latitudeCheck = await CommonContentValidation.LatitudeValidationWithNullOk(photoContent.Latitude);
+        var latitudeCheck = await SpatialValueValidations.LatitudeValidationWithNullOk(photoContent.Latitude);
         if (!latitudeCheck.Valid)
             return GenerationReturn.Error(latitudeCheck.Explanation, photoContent.ContentId);
 
-        var longitudeCheck = await CommonContentValidation.LongitudeValidationWithNullOk(photoContent.Longitude);
+        var longitudeCheck = await SpatialValueValidations.LongitudeValidationWithNullOk(photoContent.Longitude);
         if (!longitudeCheck.Valid)
             return GenerationReturn.Error(longitudeCheck.Explanation, photoContent.ContentId);
 

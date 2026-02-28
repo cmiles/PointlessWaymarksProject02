@@ -1,25 +1,7 @@
-﻿namespace PointlessWaymarks.CmsData.Spatial;
+namespace PointlessWaymarks.CmsData.Spatial;
 
 public static class SpatialHelpers
 {
-    public static bool IsApproximatelyEqualTo(this double initialValue, double value,
-        double maximumDifferenceAllowed)
-    {
-        // Handle comparisons of floating point values that may not be exactly the same
-        return Math.Abs(initialValue - value) < maximumDifferenceAllowed;
-    }
-
-    public static bool IsApproximatelyEqualTo(this double? initialValue, double? value,
-        double maximumDifferenceAllowed)
-    {
-        if (initialValue == null && value == null) return true;
-        if (initialValue != null && value == null) return false;
-        if (initialValue == null /*&& value != null*/) return false;
-        // ReSharper disable PossibleInvalidOperationException Checked above
-        return initialValue.Value.IsApproximatelyEqualTo(value!.Value, maximumDifferenceAllowed);
-        // ReSharper restore PossibleInvalidOperationException
-    }
-
     /// <summary>
     ///     Uses reflection to look for Latitude, Longitude and Elevation properties on an object and rounds them to 6 digits.
     /// </summary>

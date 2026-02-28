@@ -153,7 +153,7 @@ public partial class VideoListWithActionsContext
 
         foreach (var loopContents in allContents)
         {
-            var titleFilename = SlugTools.CreateSlug(false, loopContents.Title.TrimNullToEmpty());
+            var titleFilename = SlugTagTools.CreateSlug(false, loopContents.Title.TrimNullToEmpty());
 
             if (string.IsNullOrWhiteSpace(titleFilename)) returnList.Add(loopContents);
 
@@ -416,7 +416,7 @@ public partial class VideoListWithActionsContext
                     continue;
                 }
 
-                var cleanedName = SlugTools.CreateSlug(false, loopVideo.DbEntry.Title.TrimNullToEmpty());
+                var cleanedName = SlugTagTools.CreateSlug(false, loopVideo.DbEntry.Title.TrimNullToEmpty());
 
                 if (string.IsNullOrWhiteSpace(cleanedName))
                 {

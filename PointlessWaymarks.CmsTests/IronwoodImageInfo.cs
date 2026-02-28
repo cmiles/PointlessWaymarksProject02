@@ -29,7 +29,7 @@ public static class IronwoodImageInfo
             Title = "Ironwood Forest National Monument Map Cover Page",
             ShowInMainSiteFeed = false,
             ShowInSearch = false,
-            Slug = SlugTools.CreateSlug(true, "Ironwood Forest National Monument Map Cover Page"),
+            Slug = SlugTagTools.CreateSlug(true, "Ironwood Forest National Monument Map Cover Page"),
             Summary = "Cover Page From Ironwood Forest National Monument Map.",
             Tags = "ironwood forest national monument,map",
             UpdateNotesFormat = ContentFormatDefaults.Content.ToString()
@@ -96,12 +96,12 @@ public static class IronwoodImageInfo
         ImageContent toCompare)
     {
         Db.DefaultPropertyCleanup(reference);
-        reference.Tags = Db.TagListCleanup(reference.Tags);
+        reference.Tags = SlugTagTools.TagListCleanupToSpacedString(reference.Tags);
         if (string.IsNullOrWhiteSpace(reference.CreatedBy))
             reference.CreatedBy = UserSettingsSingleton.CurrentSettings().DefaultCreatedBy;
 
         Db.DefaultPropertyCleanup(toCompare);
-        toCompare.Tags = Db.TagListCleanup(toCompare.Tags);
+        toCompare.Tags = SlugTagTools.TagListCleanupToSpacedString(toCompare.Tags);
 
         var compareLogic = new CompareLogic
         {

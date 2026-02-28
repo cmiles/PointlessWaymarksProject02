@@ -138,7 +138,7 @@ public static class ImageGenerator
 
         tags.AddRange(FileMetadataEmbeddedTools.KeywordsFromExif(metadataDirectories, true));
 
-        toReturn.Tags = tags.Any() ? Db.TagListJoin(tags) : string.Empty;
+        toReturn.Tags = tags.Any() ? SlugTagTools.TagListJoinToSpacedString(tags) : string.Empty;
 
         return (GenerationReturn.Success($"Parsed Image Metadata for {selectedFile.FullName} without error"), toReturn);
     }
@@ -163,7 +163,7 @@ public static class ImageGenerator
         try
         {
             Db.DefaultPropertyCleanup(toSave);
-            toSave.Tags = Db.TagListCleanup(toSave.Tags);
+            toSave.Tags = SlugTagTools.TagListCleanupToSpacedString(toSave.Tags);
             toSave.OriginalFileName = selectedFile.Name;
             await FileManagement.WriteSelectedImageContentFileToMediaArchive(selectedFile).ConfigureAwait(false);
             await Db.SaveImageContent(toSave).ConfigureAwait(false);

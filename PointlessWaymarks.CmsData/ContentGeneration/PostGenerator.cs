@@ -2,6 +2,7 @@ using PointlessWaymarks.CmsData.ContentHtml.PostHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsData.Json;
+using PointlessWaymarks.CommonTools;
 
 namespace PointlessWaymarks.CmsData.ContentGeneration;
 
@@ -34,7 +35,7 @@ public static class PostGenerator
         try
         {
             Db.DefaultPropertyCleanup(toSave);
-            toSave.Tags = Db.TagListCleanup(toSave.Tags);
+            toSave.Tags = SlugTagTools.TagListCleanupToSpacedString(toSave.Tags);
 
             await Db.SavePostContent(toSave).ConfigureAwait(false);
             await GenerateHtml(toSave, generationVersion, progress).ConfigureAwait(false);

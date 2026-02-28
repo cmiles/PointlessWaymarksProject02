@@ -38,7 +38,7 @@ public partial class TagsEditorContext : IHasChanges, IHasValidationIssues,
 
     public void CheckForChangesAndValidationIssues()
     {
-        Tags = SlugTools.CreateRelaxedInputSpacedString(true, Tags, new List<char> { ',', ' ', '-', '_' }).ToLower();
+        Tags = SlugTagTools.CreateRelaxedInputSpacedString(true, Tags, [',', ' ', '-', '_']).ToLower();
 
         HasChanges = !TagSlugList().SequenceEqual(DbTagList());
 
@@ -78,12 +78,12 @@ public partial class TagsEditorContext : IHasChanges, IHasValidationIssues,
 
     public List<string> TagList()
     {
-        return string.IsNullOrWhiteSpace(Tags) ? [] : Db.TagListParse(Tags);
+        return string.IsNullOrWhiteSpace(Tags) ? [] : SlugTagTools.TagListParseToSpacedString(Tags);
     }
 
     public string TagListString()
     {
-        return string.IsNullOrWhiteSpace(Tags) ? string.Empty : Db.TagListJoin(TagList());
+        return string.IsNullOrWhiteSpace(Tags) ? string.Empty : SlugTagTools.TagListJoinToSpacedString(TagList());
     }
 
     public List<string> TagSlugList()

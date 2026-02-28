@@ -2,6 +2,7 @@ using PointlessWaymarks.CmsData.ContentHtml.GeoJsonHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsData.Json;
+using PointlessWaymarks.CommonTools;
 
 namespace PointlessWaymarks.CmsData.ContentGeneration;
 
@@ -27,7 +28,7 @@ public static class GeoJsonGenerator
         try
         {
             Db.DefaultPropertyCleanup(toSave);
-            toSave.Tags = Db.TagListCleanup(toSave.Tags);
+            toSave.Tags = SlugTagTools.TagListCleanupToSpacedString(toSave.Tags);
             await Db.SaveGeoJsonContent(toSave).ConfigureAwait(false);
             await GenerateHtml(toSave, generationVersion, progress).ConfigureAwait(false);
             await Export.WriteGeoJsonContentData(toSave, progress).ConfigureAwait(false);

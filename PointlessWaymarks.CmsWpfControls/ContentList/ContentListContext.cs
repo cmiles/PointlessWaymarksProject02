@@ -276,7 +276,7 @@ public partial class ContentListContext : IDragSource, IDropTarget
         {
             if (dropInfo.Data is IDataObject dataObject)
             {
-                List<ContentClipboardRepresentation> contentRefs = new();
+                List<ContentClipboardRepresentation> contentRefs = [];
 
                 // Check for single content representation
                 if (dataObject.GetDataPresent(ContentClipboardRepresentation.ContentClipboardFormat))

@@ -39,14 +39,14 @@ public partial class NoteContentActions : IContentActions<NoteContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task DefaultBracketCodeToClipboard(NoteContent? content)
     {
         await NoteActions.DefaultBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task Delete(NoteContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -70,7 +70,7 @@ public partial class NoteContentActions : IContentActions<NoteContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task Edit(NoteContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -89,7 +89,7 @@ public partial class NoteContentActions : IContentActions<NoteContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ExtractNewLinks(NoteContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -105,7 +105,7 @@ public partial class NoteContentActions : IContentActions<NoteContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task GenerateHtml(NoteContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -122,7 +122,7 @@ public partial class NoteContentActions : IContentActions<NoteContent>
     public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewHistory(NoteContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -150,7 +150,7 @@ public partial class NoteContentActions : IContentActions<NoteContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewOnSite(NoteContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -164,7 +164,7 @@ public partial class NoteContentActions : IContentActions<NoteContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewSitePreview(NoteContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();

@@ -364,7 +364,7 @@ public static class ContentImport
             try
             {
                 Db.DefaultPropertyCleanup(importResult.processContent);
-                importResult.processContent.Tags = Db.TagListCleanup(importResult.processContent.Tags);
+                importResult.processContent.Tags = SlugTagTools.TagListCleanupToSpacedString(importResult.processContent.Tags);
             }
             catch
             {

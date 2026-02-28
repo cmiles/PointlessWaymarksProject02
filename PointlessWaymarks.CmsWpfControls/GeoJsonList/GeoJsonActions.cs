@@ -49,8 +49,8 @@ public static class GeoJsonActions
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        List<GeoJsonContent> dbEntriesToProcess = new();
-        List<IntersectResult> intersectResults = new();
+        List<GeoJsonContent> dbEntriesToProcess = [];
+        List<IntersectResult> intersectResults = [];
 
         var settings =
             JsonSerializer.Deserialize<IntersectSettings>(await File.ReadAllTextAsync(settingsFileInfo.FullName,
@@ -103,9 +103,9 @@ public static class GeoJsonActions
                     continue;
                 }
 
-                var tagListForIntersection = Db.TagListParse(loopSelected.Tags);
+                var tagListForIntersection = SlugTagTools.TagListParseToSpacedString(loopSelected.Tags);
                 tagListForIntersection.AddRange(taggerResult.Tags);
-                loopSelected.Tags = Db.TagListJoin(tagListForIntersection);
+                loopSelected.Tags = SlugTagTools.TagListJoinToSpacedString(tagListForIntersection);
                 loopSelected.LastUpdatedBy = "Feature Intersection Tagger";
                 loopSelected.LastUpdatedOn = updateTime;
 

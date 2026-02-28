@@ -53,8 +53,8 @@ public static class PointActions
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        List<PointContentDto> dbEntriesToProcess = new();
-        List<IntersectResult> intersectResults = new();
+        List<PointContentDto> dbEntriesToProcess = [];
+        List<IntersectResult> intersectResults = [];
 
         var settings =
             JsonSerializer.Deserialize<IntersectSettings>(await File.ReadAllTextAsync(settingsFileInfo.FullName,
@@ -108,9 +108,9 @@ public static class PointActions
                     continue;
                 }
 
-                var tagListForIntersection = Db.TagListParse(loopSelected.Tags);
+                var tagListForIntersection = SlugTagTools.TagListParseToSpacedString(loopSelected.Tags);
                 tagListForIntersection.AddRange(taggerResult.Tags);
-                loopSelected.Tags = Db.TagListJoin(tagListForIntersection);
+                loopSelected.Tags = SlugTagTools.TagListJoinToSpacedString(tagListForIntersection);
                 loopSelected.LastUpdatedBy = "Feature Intersection Tagger";
                 loopSelected.LastUpdatedOn = updateTime;
 

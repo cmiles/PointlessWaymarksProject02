@@ -63,7 +63,7 @@ public static class ContentList
             listItemContainerDiv.Data("trail-bikes", trailForData.Bikes);
             listItemContainerDiv.Data("trail-dogs", trailForData.Dogs);
             if (!string.IsNullOrWhiteSpace(trailForData.LocationArea))
-                listItemContainerDiv.Data("trail-location-area", SlugTools.CreateSlug(true, trailForData.LocationArea));
+                listItemContainerDiv.Data("trail-location-area", SlugTagTools.CreateSlug(true, trailForData.LocationArea));
 
             if (trailForData.LineContentId is not null || trailForData.StartingPointContentId is not null ||
                 trailForData.EndingPointContentId is not null)

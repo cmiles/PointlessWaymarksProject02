@@ -33,7 +33,7 @@ public static class TestFileInfo
             Title = "Grandview Trail",
             ShowInMainSiteFeed = true,
             ShowInSearch = true,
-            Slug = SlugTools.CreateSlug(true, "Grandview Trail"),
+            Slug = SlugTagTools.CreateSlug(true, "Grandview Trail"),
             Summary = "NPS Grandview Overview.",
             Tags = "grand canyon national park, grandview trail, nps",
             UpdateNotesFormat = ContentFormatDefaults.Content.ToString()
@@ -54,7 +54,7 @@ public static class TestFileInfo
             Title = "Ironwood Forest National Monument Map",
             ShowInMainSiteFeed = true,
             ShowInSearch = true,
-            Slug = SlugTools.CreateSlug(true, "Ironwood Forest National Monument Map"),
+            Slug = SlugTagTools.CreateSlug(true, "Ironwood Forest National Monument Map"),
             Summary = "A map of Ironwood.",
             Tags = "ironwood forest national monument,map",
             UpdateNotesFormat = ContentFormatDefaults.Content.ToString()
@@ -128,12 +128,12 @@ public static class TestFileInfo
         FileContent toCompare)
     {
         Db.DefaultPropertyCleanup(reference);
-        reference.Tags = Db.TagListCleanup(reference.Tags);
+        reference.Tags = SlugTagTools.TagListCleanupToSpacedString(reference.Tags);
         if (string.IsNullOrWhiteSpace(reference.CreatedBy))
             reference.CreatedBy = UserSettingsSingleton.CurrentSettings().DefaultCreatedBy;
 
         Db.DefaultPropertyCleanup(toCompare);
-        toCompare.Tags = Db.TagListCleanup(toCompare.Tags);
+        toCompare.Tags = SlugTagTools.TagListCleanupToSpacedString(toCompare.Tags);
 
         var compareLogic = new CompareLogic
         {

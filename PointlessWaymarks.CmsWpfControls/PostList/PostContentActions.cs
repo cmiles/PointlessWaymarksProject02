@@ -39,14 +39,14 @@ public partial class PostContentActions : IContentActions<PostContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task DefaultBracketCodeToClipboard(PostContent? content)
     {
         await PostActions.DefaultBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task Delete(PostContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -70,7 +70,7 @@ public partial class PostContentActions : IContentActions<PostContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task Edit(PostContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -92,7 +92,7 @@ public partial class PostContentActions : IContentActions<PostContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ExtractNewLinks(PostContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -108,7 +108,7 @@ public partial class PostContentActions : IContentActions<PostContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task GenerateHtml(PostContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -125,7 +125,7 @@ public partial class PostContentActions : IContentActions<PostContent>
     public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewHistory(PostContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -153,7 +153,7 @@ public partial class PostContentActions : IContentActions<PostContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewOnSite(PostContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -167,7 +167,7 @@ public partial class PostContentActions : IContentActions<PostContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewSitePreview(PostContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();

@@ -41,7 +41,7 @@ public partial class GeoJsonContentActions : IContentActions<GeoJsonContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task DefaultBracketCodeToClipboard(GeoJsonContent? content)
     {
         await GeoJsonActions.DefaultBracketCodesToClipboard(content!.AsList(), StatusContext);
@@ -77,7 +77,7 @@ public partial class GeoJsonContentActions : IContentActions<GeoJsonContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task Edit(GeoJsonContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -100,7 +100,7 @@ public partial class GeoJsonContentActions : IContentActions<GeoJsonContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ExtractNewLinks(GeoJsonContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -116,7 +116,7 @@ public partial class GeoJsonContentActions : IContentActions<GeoJsonContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task GenerateHtml(GeoJsonContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -133,7 +133,7 @@ public partial class GeoJsonContentActions : IContentActions<GeoJsonContent>
     public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewHistory(GeoJsonContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -161,7 +161,7 @@ public partial class GeoJsonContentActions : IContentActions<GeoJsonContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewOnSite(GeoJsonContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -175,7 +175,7 @@ public partial class GeoJsonContentActions : IContentActions<GeoJsonContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewSitePreview(GeoJsonContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -195,35 +195,35 @@ public partial class GeoJsonContentActions : IContentActions<GeoJsonContent>
 
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task AddIntersectionTagsWithOsm(GeoJsonContent? content)
     {
         await GeoJsonActions.AddIntersectionTags(content!.AsList(), StatusContext, true, CancellationToken.None);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task AddIntersectionTagsWithoutOsm(GeoJsonContent? content)
     {
         await GeoJsonActions.AddIntersectionTags(content!.AsList(), StatusContext, false, CancellationToken.None);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ExportGeoJsonAsFiles(GeoJsonContent? content)
     {
         await GeoJsonActions.ExportFiles(content!.AsList(), StatusContext, CancellationToken.None);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task GeoJsonTextToClipboard(GeoJsonContent? content)
     {
         await GeoJsonActions.GeoJsonTextToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ImageBracketCodeToClipboard(GeoJsonContent? content)
     {
         await GeoJsonActions.ImageBracketCodesToClipboard(content!.AsList(), StatusContext);
@@ -243,14 +243,14 @@ public partial class GeoJsonContentActions : IContentActions<GeoJsonContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ShowIntersectionTags(GeoJsonContent? content)
     {
         await GeoJsonActions.ShowIntersectionTagsForSelected(content!.AsList(), StatusContext, CancellationToken.None);
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ShowOnMap(GeoJsonContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -271,7 +271,7 @@ public partial class GeoJsonContentActions : IContentActions<GeoJsonContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task TextBracketCodeToClipboard(GeoJsonContent? content)
     {
         await GeoJsonActions.TextBracketCodesToClipboard(content!.AsList(), StatusContext);

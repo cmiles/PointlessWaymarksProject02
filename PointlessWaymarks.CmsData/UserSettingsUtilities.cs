@@ -13,6 +13,7 @@ using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsData.ImageHelpers;
 using PointlessWaymarks.CommonTools;
+using PointlessWaymarks.SpatialTools;
 using Serilog;
 
 namespace PointlessWaymarks.CmsData;
@@ -176,7 +177,7 @@ public static class UserSettingsUtilities
     {
         var currentSetting = settings.LatitudeDefault;
 
-        if (!(await CommonContentValidation.LatitudeValidation(currentSetting)).Valid)
+        if (!(await SpatialValue.LatitudeValidation(currentSetting)).Valid)
             return ProjectDefaultLatitude;
 
         return currentSetting;
@@ -186,7 +187,7 @@ public static class UserSettingsUtilities
     {
         var currentSetting = settings.LongitudeDefault;
 
-        if (!(await CommonContentValidation.LongitudeValidation(currentSetting)).Valid)
+        if (!(await SpatialValueValidations.LongitudeValidation(currentSetting)).Valid)
             return ProjectDefaultLongitude;
 
         return currentSetting;
@@ -1310,7 +1311,7 @@ public static class UserSettingsUtilities
     public static FileInfo LocalSiteTagListFileInfo(this UserSettings settings, string tag)
     {
         var directory = settings.LocalSiteTagsDirectory();
-        var sluggedTag = SlugTools.CreateSlug(true, tag, 200);
+        var sluggedTag = SlugTagTools.CreateSlug(true, tag, 200);
         return new FileInfo($"{Path.Combine(directory.FullName, $"TagList-{sluggedTag}")}.html");
     }
 
@@ -1920,7 +1921,7 @@ public static class UserSettingsUtilities
 
     public static string TagPageUrl(this UserSettings settings, string tag)
     {
-        var sluggedTag = SlugTools.CreateSlug(true, tag, 200);
+        var sluggedTag = SlugTagTools.CreateSlug(true, tag, 200);
         return $"{settings.SiteUrl()}/Tags/TagList-{sluggedTag}.html";
     }
 

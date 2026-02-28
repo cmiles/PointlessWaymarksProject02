@@ -40,14 +40,14 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task DefaultBracketCodeToClipboard(PhotoContent? content)
     {
         await PhotoActions.DefaultBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task Delete(PhotoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -72,7 +72,7 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task Edit(PhotoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -91,7 +91,7 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ExtractNewLinks(PhotoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -106,7 +106,7 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task GenerateHtml(PhotoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -122,7 +122,7 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewHistory(PhotoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -149,7 +149,7 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewOnSite(PhotoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -162,7 +162,7 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewSitePreview(PhotoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -180,14 +180,14 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     public event PropertyChangedEventHandler? PropertyChanged;
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task AddIntersectionTagsWithOsm(PhotoContent? content)
     {
         await PhotoActions.AddIntersectionTags(content!.AsList(), StatusContext, true, CancellationToken.None);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task AddIntersectionTagsWithoutOsm(PhotoContent? content)
     {
         await PhotoActions.AddIntersectionTags(content!.AsList(), StatusContext, false, CancellationToken.None);
@@ -256,7 +256,7 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ExportFile(PhotoContent? content)
     {
         await PhotoActions.ExportFiles(content!.AsList(), StatusContext, CancellationToken.None);
@@ -415,7 +415,7 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ShowIntersectionTags(PhotoContent? content)
     {
         await PhotoActions.ShowIntersectionTagsForSelected(content!.AsList(), StatusContext, CancellationToken.None);
@@ -428,7 +428,7 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ShowOnMap(PhotoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -455,7 +455,7 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ShowOnOsmCycleMaps(PhotoContent? content)
     {
         await PhotoActions.ShowInOsmCycleMap(content!, StatusContext);
@@ -480,14 +480,14 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task TextBracketCodesToClipboard(PhotoContent? content)
     {
         await PhotoActions.TextBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewFile(PhotoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();

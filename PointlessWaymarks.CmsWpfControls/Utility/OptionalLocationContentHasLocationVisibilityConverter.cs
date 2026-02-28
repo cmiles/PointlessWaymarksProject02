@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Data;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.Database.Models;
+using PointlessWaymarks.SpatialTools;
 
 namespace PointlessWaymarks.CmsWpfControls.Utility;
 
@@ -13,8 +14,8 @@ public class OptionalLocationContentHasLocationVisibilityConverter : IValueConve
         var converted = value as IOptionalLocation;
         if (converted?.Latitude is null || converted?.Longitude is null) return Visibility.Hidden;
 
-        var latitudeValidation = CommonContentValidation.LatitudeValidation(converted.Latitude.Value).Result;
-        var longitudeValidation = CommonContentValidation.LongitudeValidation(converted.Longitude.Value).Result;
+        var latitudeValidation = SpatialValue.LatitudeValidation(converted.Latitude.Value).Result;
+        var longitudeValidation = SpatialValueValidations.LongitudeValidation(converted.Longitude.Value).Result;
         if (!latitudeValidation.Valid || !longitudeValidation.Valid) return Visibility.Hidden;
         return Visibility.Visible;
     }

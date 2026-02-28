@@ -39,7 +39,7 @@ public static class VideoGenerator
         try
         {
             Db.DefaultPropertyCleanup(toSave);
-            toSave.Tags = Db.TagListCleanup(toSave.Tags);
+            toSave.Tags = SlugTagTools.TagListCleanupToSpacedString(toSave.Tags);
             toSave.OriginalFileName = selectedVideo.Name;
             await FileManagement.WriteSelectedVideoContentFileToMediaArchive(selectedVideo).ConfigureAwait(false);
             await Db.SaveVideoContent(toSave).ConfigureAwait(false);

@@ -142,7 +142,7 @@ public partial class SearchListPage(
 
             foreach (var loopFilters in filterList)
             {
-                var checkboxId = $"{SlugTools.CreateSlug(true, loopFilters.displayName)}-trail-list-filter-checkbox";
+                var checkboxId = $"{SlugTagTools.CreateSlug(true, loopFilters.displayName)}-trail-list-filter-checkbox";
                 var trailFilterItemContainer = new DivTag().AddClass("trail-list-filter-item");
                 var checkbox = new CheckboxTag(true)
                     .Id(checkboxId)
@@ -165,7 +165,7 @@ public partial class SearchListPage(
                 var selectTag = new SelectTag();
 
                 foreach (var loopLocation in locations)
-                    selectTag.Option(loopLocation, SlugTools.CreateSlug(true, loopLocation));
+                    selectTag.Option(loopLocation, SlugTagTools.CreateSlug(true, loopLocation));
 
                 selectTag.DefaultOption("All").Id("trail-location-filter-dropdown")
                     .AddClasses("trail-location-filter-dropdown").Attr("onchange", "processSearchContent()");

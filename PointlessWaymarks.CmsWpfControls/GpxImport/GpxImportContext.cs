@@ -291,7 +291,7 @@ public partial class GpxImportContext : IWebViewMessenger
         if (!string.IsNullOrWhiteSpace(toImport.UserContentName))
         {
             newLine.Title = toImport.UserContentName;
-            newLine.Slug = SlugTools.CreateSlug(true, toImport.UserContentName);
+            newLine.Slug = SlugTagTools.CreateSlug(true, toImport.UserContentName);
         }
 
         if (!string.IsNullOrWhiteSpace(toImport.Route.Comment))
@@ -314,9 +314,9 @@ public partial class GpxImportContext : IWebViewMessenger
 
         if (!string.IsNullOrWhiteSpace(TagEntry.TagListString()))
         {
-            var slugs = Db.TagListParse(newLine.Tags);
+            var slugs = SlugTagTools.TagListParseToSpacedString(newLine.Tags);
             slugs = slugs.Union(TagEntry.TagList()).ToList();
-            newLine.Tags = Db.TagListJoin(slugs);
+            newLine.Tags = SlugTagTools.TagListJoinToSpacedString(slugs);
         }
 
         var validationResult = await LineGenerator.Validate(newLine);
@@ -335,7 +335,7 @@ public partial class GpxImportContext : IWebViewMessenger
         {
             ContentId = Guid.NewGuid(),
             Title = toImport.UserContentName,
-            Slug = SlugTools.CreateSlug(true, toImport.UserContentName),
+            Slug = SlugTagTools.CreateSlug(true, toImport.UserContentName),
             Summary = string.IsNullOrWhiteSpace(toImport.Waypoint.Comment)
                 ? string.IsNullOrWhiteSpace(toImport.Waypoint.Description)
                     ? toImport.UserContentName
@@ -387,7 +387,7 @@ public partial class GpxImportContext : IWebViewMessenger
             Log.Error(e, "Silent Error with FeatureIntersectionTags in Point GPX Import");
         }
 
-        newPoint.Tags = Db.TagListJoin(tagList);
+        newPoint.Tags = SlugTagTools.TagListJoinToSpacedString(tagList);
 
         var validationResult = await PointGenerator.Validate(newPoint);
 
@@ -420,7 +420,7 @@ public partial class GpxImportContext : IWebViewMessenger
         if (!string.IsNullOrWhiteSpace(toImport.UserContentName))
         {
             newLine.Title = toImport.UserContentName;
-            newLine.Slug = SlugTools.CreateSlug(true, toImport.UserContentName);
+            newLine.Slug = SlugTagTools.CreateSlug(true, toImport.UserContentName);
         }
 
         if (!string.IsNullOrWhiteSpace(toImport.Track.Comment))
@@ -443,9 +443,9 @@ public partial class GpxImportContext : IWebViewMessenger
         
         if(!string.IsNullOrWhiteSpace(TagEntry.TagListString()))
         {
-            var slugs = Db.TagListParse(newLine.Tags);
+            var slugs = SlugTagTools.TagListParseToSpacedString(newLine.Tags);
             slugs = slugs.Union(TagEntry.TagList()).ToList();
-            newLine.Tags = Db.TagListJoin(slugs);
+            newLine.Tags = SlugTagTools.TagListJoinToSpacedString(slugs);
         }
 
         var validationResult = await LineGenerator.Validate(newLine);

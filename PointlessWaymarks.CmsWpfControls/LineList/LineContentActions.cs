@@ -41,14 +41,14 @@ public partial class LineContentActions : IContentActions<LineContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task DefaultBracketCodeToClipboard(LineContent? content)
     {
         await LineActions.DefaultBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task Delete(LineContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -72,7 +72,7 @@ public partial class LineContentActions : IContentActions<LineContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task Edit(LineContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -91,7 +91,7 @@ public partial class LineContentActions : IContentActions<LineContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ExtractNewLinks(LineContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -113,7 +113,7 @@ public partial class LineContentActions : IContentActions<LineContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task GenerateHtml(LineContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -130,7 +130,7 @@ public partial class LineContentActions : IContentActions<LineContent>
     public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewHistory(LineContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -158,7 +158,7 @@ public partial class LineContentActions : IContentActions<LineContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewOnSite(LineContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -172,7 +172,7 @@ public partial class LineContentActions : IContentActions<LineContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewSitePreview(LineContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -191,35 +191,35 @@ public partial class LineContentActions : IContentActions<LineContent>
     public event PropertyChangedEventHandler? PropertyChanged;
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task AddIntersectionTagsWithOsm(LineContent? content, CancellationToken cancellationToken)
     {
         await LineActions.AddIntersectionTags(content!.AsList(), StatusContext, true, cancellationToken);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task AddIntersectionTagsWithoutOsm(LineContent? content, CancellationToken cancellationToken)
     {
         await LineActions.AddIntersectionTags(content!.AsList(), StatusContext, false, cancellationToken);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ElevationChartBracketCodeToClipboard(LineContent? content)
     {
         await LineActions.ElevationChartBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task GeoJsonToClipboard(LineContent? content)
     {
         await LineActions.GeoJsonToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task LinkBracketCodeToClipboard(LineContent? content)
     {
         await LineActions.LinkBracketCodesToClipboard(content!.AsList(), StatusContext);
@@ -254,7 +254,7 @@ public partial class LineContentActions : IContentActions<LineContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task SearchRecordedOnDaysForPhotoContent(LineContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -305,7 +305,7 @@ public partial class LineContentActions : IContentActions<LineContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task SearchRecordedOnForPhotoContent(LineContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -353,14 +353,14 @@ public partial class LineContentActions : IContentActions<LineContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ShowIntersectionTags(LineContent? content, CancellationToken cancellationToken)
     {
         await LineActions.ShowIntersectionTagsForSelected(content!.AsList(), StatusContext, cancellationToken);
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ShowOnMap(LineContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -381,21 +381,21 @@ public partial class LineContentActions : IContentActions<LineContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task StatsBracketCodeToClipboard(LineContent? content)
     {
         await LineActions.StatsBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task TextStatsBracketCodeToClipboard(LineContent? content)
     {
         await LineActions.TextStatsBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ToGpxFile(LineContent? content)
     {
         await LineActions.ToGpxFile(content!.AsList(), StatusContext);

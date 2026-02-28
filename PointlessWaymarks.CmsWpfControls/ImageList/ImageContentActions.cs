@@ -40,14 +40,14 @@ public partial class ImageContentActions : IContentActions<ImageContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task DefaultBracketCodeToClipboard(ImageContent? content)
     {
         await ImageActions.DefaultBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task Delete(ImageContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -71,7 +71,7 @@ public partial class ImageContentActions : IContentActions<ImageContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task Edit(ImageContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -94,7 +94,7 @@ public partial class ImageContentActions : IContentActions<ImageContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ExtractNewLinks(ImageContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -109,7 +109,7 @@ public partial class ImageContentActions : IContentActions<ImageContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task GenerateHtml(ImageContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -126,7 +126,7 @@ public partial class ImageContentActions : IContentActions<ImageContent>
     public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewHistory(ImageContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -154,7 +154,7 @@ public partial class ImageContentActions : IContentActions<ImageContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewOnSite(ImageContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -168,7 +168,7 @@ public partial class ImageContentActions : IContentActions<ImageContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewSitePreview(ImageContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -187,21 +187,21 @@ public partial class ImageContentActions : IContentActions<ImageContent>
     public event PropertyChangedEventHandler? PropertyChanged;
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task AddIntersectionTagsWithOsm(ImageContent? content)
     {
         await ImageActions.AddIntersectionTags(content!.AsList(), StatusContext, true, CancellationToken.None);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task AddIntersectionTagsWithoutOsm(ImageContent? content)
     {
         await ImageActions.AddIntersectionTags(content!.AsList(), StatusContext, false, CancellationToken.None);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ExportFile(ImageContent? content)
     {
         await ImageActions.ExportFiles(content!.AsList(), StatusContext, CancellationToken.None);
@@ -221,7 +221,7 @@ public partial class ImageContentActions : IContentActions<ImageContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task MetaDataReport(ImageContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -230,7 +230,7 @@ public partial class ImageContentActions : IContentActions<ImageContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ShowFileInExplorer(ImageContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -255,28 +255,28 @@ public partial class ImageContentActions : IContentActions<ImageContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ShowInPeakFinderWeb(ImageContent? content)
     {
         await ImageActions.ShowInPeakFinderWeb(content!, StatusContext);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ShowIntersectionTags(ImageContent? content)
     {
         await ImageActions.ShowIntersectionTagsForSelected(content!.AsList(), StatusContext, CancellationToken.None);
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ShowOnGoogleMaps(ImageContent? content)
     {
         await ImageActions.ShowInGoogleMapsWeb(content!, StatusContext);
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ShowOnMap(ImageContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -303,21 +303,21 @@ public partial class ImageContentActions : IContentActions<ImageContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ShowOnOsmCycleMaps(ImageContent? content)
     {
         await ImageActions.ShowInOsmCycleMap(content!, StatusContext);
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task TextBracketCodeToClipboard(ImageContent? content)
     {
         await ImageActions.TextBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewFile(ImageContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();

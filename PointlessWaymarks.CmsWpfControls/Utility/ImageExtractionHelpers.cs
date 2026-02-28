@@ -117,7 +117,7 @@ public static class ImageExtractionHelpers
             newImage.ShowInSearch = false;
             newImage.Folder = content.Folder;
             newImage.Tags = content.Tags;
-            newImage.Slug = SlugTools.CreateSlug(true, newImage.Title);
+            newImage.Slug = SlugTagTools.CreateSlug(true, newImage.Title);
             newImage.BodyContentFormat = ContentFormatDefaults.Content.ToString();
             newImage.BodyContent = $"Generated from {BracketCodeFiles.Create(content)}.";
             newImage.UpdateNotesFormat = ContentFormatDefaults.Content.ToString();
@@ -220,7 +220,7 @@ public static class ImageExtractionHelpers
         newImage.ShowInSearch = false;
         newImage.Folder = selected.Folder;
         newImage.Tags = selected.Tags;
-        newImage.Slug = SlugTools.CreateSlug(true, newImage.Title);
+        newImage.Slug = SlugTagTools.CreateSlug(true, newImage.Title);
         newImage.BodyContentFormat = ContentFormatDefaults.Content.ToString();
         newImage.BodyContent = $"Generated from {BracketCodeFiles.Create(selected)}.";
         newImage.UpdateNotesFormat = ContentFormatDefaults.Content.ToString();
@@ -318,7 +318,7 @@ public static class ImageExtractionHelpers
                 ShowImageSizes = UserSettingsSingleton.CurrentSettings().ImagePagesHaveLinksToImageSizesByDefault
             };
 
-            newImage.Slug = SlugTools.CreateSlug(true, newImage.Title);
+            newImage.Slug = SlugTagTools.CreateSlug(true, newImage.Title);
             newImage.BodyContentFormat = ContentFormatDefaults.Content.ToString();
             newImage.BodyContent = $"Image from {BracketCodeFiles.Create(content)}.";
             newImage.UpdateNotesFormat = ContentFormatDefaults.Content.ToString();
@@ -383,7 +383,7 @@ public static class ImageExtractionHelpers
             ShowInSearch = false,
             Folder = selected.Folder,
             Tags = selected.Tags,
-            Slug = SlugTools.CreateSlug(true, $"{selected.Title} Video Cover Image"),
+            Slug = SlugTagTools.CreateSlug(true, $"{selected.Title} Video Cover Image"),
             BodyContentFormat = ContentFormatDefaults.Content.ToString(),
             BodyContent = $"Frame from {BracketCodeFiles.Create(selected)}.",
             UpdateNotesFormat = ContentFormatDefaults.Content.ToString(),
@@ -460,7 +460,7 @@ public static class ImageExtractionHelpers
             ShowInSearch = false,
             Folder = selected.Folder,
             Tags = selected.Tags,
-            Slug = SlugTools.CreateSlug(true, $"{selected.Title} Video Cover Image"),
+            Slug = SlugTagTools.CreateSlug(true, $"{selected.Title} Video Cover Image"),
             BodyContentFormat = ContentFormatDefaults.Content.ToString(),
             BodyContent = $"Frame from {BracketCodeVideoLinks.Create(selected)}.",
             UpdateNotesFormat = ContentFormatDefaults.Content.ToString(),

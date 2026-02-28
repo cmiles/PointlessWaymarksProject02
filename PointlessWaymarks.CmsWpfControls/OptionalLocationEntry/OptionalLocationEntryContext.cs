@@ -7,6 +7,7 @@ using PointlessWaymarks.CmsWpfControls.PointContentEditor;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.FeatureIntersectionTags;
 using PointlessWaymarks.LlamaAspects;
+using PointlessWaymarks.SpatialTools;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.BoolDataEntry;
 using PointlessWaymarks.WpfCommon.ChangesAndValidation;
@@ -67,9 +68,9 @@ public partial class OptionalLocationEntryContext : IHasChanges, IHasValidationI
         if (LatitudeEntry!.UserValue == null || LongitudeEntry!.UserValue == null) return null;
 
         var latitudeValidation =
-            await CommonContentValidation.LatitudeValidation(LatitudeEntry.UserValue.Value);
+            await SpatialValue.LatitudeValidation(LatitudeEntry.UserValue.Value);
         var longitudeValidation =
-            await CommonContentValidation.LongitudeValidation(LongitudeEntry.UserValue.Value);
+            await SpatialValueValidations.LongitudeValidation(LongitudeEntry.UserValue.Value);
 
         if (!latitudeValidation.Valid || !longitudeValidation.Valid) return null;
 
@@ -166,7 +167,7 @@ public partial class OptionalLocationEntryContext : IHasChanges, IHasValidationI
         LatitudeEntry =
             await ConversionDataEntryContext<double?>.CreateInstance(
                 ConversionDataEntryHelpers.DoubleNullableConversion);
-        LatitudeEntry.ValidationFunctions = [CommonContentValidation.LatitudeValidationWithNullOk];
+        LatitudeEntry.ValidationFunctions = [SpatialValueValidations.LatitudeValidationWithNullOk];
         LatitudeEntry.ComparisonFunction = (o, u) => o.IsApproximatelyEqualTo(u, .0000001);
         LatitudeEntry.Title = "Latitude";
         LatitudeEntry.HelpText = "In DDD.DDDDDD°";
@@ -176,7 +177,7 @@ public partial class OptionalLocationEntryContext : IHasChanges, IHasValidationI
         LongitudeEntry =
             await ConversionDataEntryContext<double?>.CreateInstance(
                 ConversionDataEntryHelpers.DoubleNullableConversion);
-        LongitudeEntry.ValidationFunctions = [CommonContentValidation.LongitudeValidationWithNullOk];
+        LongitudeEntry.ValidationFunctions = [SpatialValueValidations.LongitudeValidationWithNullOk];
         LongitudeEntry.ComparisonFunction = (o, u) => o.IsApproximatelyEqualTo(u, .0000001);
         LongitudeEntry.Title = "Longitude";
         LongitudeEntry.HelpText = "In DDD.DDDDDD°";
@@ -186,7 +187,7 @@ public partial class OptionalLocationEntryContext : IHasChanges, IHasValidationI
         ElevationEntry =
             await ConversionDataEntryContext<double?>.CreateInstance(
                 ConversionDataEntryHelpers.DoubleNullableConversion);
-        ElevationEntry.ValidationFunctions = [CommonContentValidation.ElevationValidation];
+        ElevationEntry.ValidationFunctions = [SpatialValueValidations.ElevationValidation];
         ElevationEntry.ComparisonFunction = (o, u) => o.IsApproximatelyEqualTo(u, .001);
         ElevationEntry.Title = "Elevation (feet)";
         ElevationEntry.HelpText = "Elevation in Feet";

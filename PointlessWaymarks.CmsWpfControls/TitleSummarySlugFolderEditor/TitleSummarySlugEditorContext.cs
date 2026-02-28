@@ -94,7 +94,7 @@ public partial class TitleSummarySlugEditorContext : IHasChanges, IHasValidation
                 return;
             }
 
-            TitleToSlugEnabled = SlugTools.CreateSlug(true, TitleEntry.UserValue) != SlugEntry.UserValue;
+            TitleToSlugEnabled = SlugTagTools.CreateSlug(true, TitleEntry.UserValue) != SlugEntry.UserValue;
 
             if(string.IsNullOrWhiteSpace(SummaryEntry.UserValue)) TitleToSummaryEnabled = true;
             else
@@ -160,7 +160,7 @@ public partial class TitleSummarySlugEditorContext : IHasChanges, IHasValidation
     [BlockingCommand]
     public Task TitleToSlug()
     {
-        SlugEntry.UserValue = SlugTools.CreateSlug(true, TitleEntry.UserValue);
+        SlugEntry.UserValue = SlugTagTools.CreateSlug(true, TitleEntry.UserValue);
         return Task.CompletedTask;
     }
 

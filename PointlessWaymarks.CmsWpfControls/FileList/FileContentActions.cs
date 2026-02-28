@@ -39,7 +39,7 @@ public partial class FileContentActions : IContentActions<FileContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task DefaultBracketCodeToClipboard(FileContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -48,7 +48,7 @@ public partial class FileContentActions : IContentActions<FileContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task Delete(FileContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -72,7 +72,7 @@ public partial class FileContentActions : IContentActions<FileContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task Edit(FileContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -94,7 +94,7 @@ public partial class FileContentActions : IContentActions<FileContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ExtractNewLinks(FileContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -109,7 +109,7 @@ public partial class FileContentActions : IContentActions<FileContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task GenerateHtml(FileContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -126,7 +126,7 @@ public partial class FileContentActions : IContentActions<FileContent>
     public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewHistory(FileContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -154,7 +154,7 @@ public partial class FileContentActions : IContentActions<FileContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewOnSite(FileContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -168,7 +168,7 @@ public partial class FileContentActions : IContentActions<FileContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewSitePreview(FileContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -187,35 +187,35 @@ public partial class FileContentActions : IContentActions<FileContent>
     public event PropertyChangedEventHandler? PropertyChanged;
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task DownloadBracketCodeToClipboard(FileContent? content)
     {
         await FileActions.DownloadBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task EmbedBracketCodeToClipboard(FileContent? content)
     {
         await FileActions.EmbedBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ExportFile(FileContent? content)
     {
         await FileActions.ExportFiles(content!.AsList(), StatusContext, CancellationToken.None);
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task FileUrlBracketCodeToClipboard(FileContent? content)
     {
         await FileActions.FileUrlBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ImageBracketCodeToClipboard(FileContent? content)
     {
         await FileActions.ImageBracketCodesToClipboard(content!.AsList(), StatusContext);
@@ -234,7 +234,7 @@ public partial class FileContentActions : IContentActions<FileContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ShowFileInExplorer(FileContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -259,7 +259,7 @@ public partial class FileContentActions : IContentActions<FileContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewFile(FileContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();

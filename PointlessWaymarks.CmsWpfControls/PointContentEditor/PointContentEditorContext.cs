@@ -385,7 +385,7 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
         ElevationEntry =
             await ConversionDataEntryContext<double?>.CreateInstance(
                 ConversionDataEntryHelpers.DoubleNullableConversion);
-        ElevationEntry.ValidationFunctions = [CommonContentValidation.ElevationValidation];
+        ElevationEntry.ValidationFunctions = [SpatialValueValidations.ElevationValidation];
         ElevationEntry.ComparisonFunction = (o, u) => (o == null && u == null) || o.IsApproximatelyEqualTo(u, .001);
         ElevationEntry.Title = "Elevation (feet)";
         ElevationEntry.HelpText = "Elevation in Feet";
@@ -394,7 +394,7 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
 
         LatitudeEntry =
             await ConversionDataEntryContext<double>.CreateInstance(ConversionDataEntryHelpers.DoubleConversion);
-        LatitudeEntry.ValidationFunctions = [CommonContentValidation.LatitudeValidation];
+        LatitudeEntry.ValidationFunctions = [SpatialValue.LatitudeValidation];
         LatitudeEntry.ComparisonFunction = (o, u) => o.IsApproximatelyEqualTo(u, .000001);
         LatitudeEntry.Title = "Latitude";
         LatitudeEntry.HelpText = "In DDD.DDDDDD°";
@@ -408,7 +408,7 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
 
         LongitudeEntry =
             await ConversionDataEntryContext<double>.CreateInstance(ConversionDataEntryHelpers.DoubleConversion);
-        LongitudeEntry.ValidationFunctions = [CommonContentValidation.LongitudeValidation];
+        LongitudeEntry.ValidationFunctions = [SpatialValueValidations.LongitudeValidation];
         LongitudeEntry.ComparisonFunction = (o, u) => o.IsApproximatelyEqualTo(u, .000001);
         LongitudeEntry.Title = "Longitude";
         LongitudeEntry.HelpText = "In DDD.DDDDDD°";

@@ -244,7 +244,7 @@ public partial class FileListWithActionsContext : IListSelectionWithContext<File
                     continue;
                 }
 
-                var cleanedName = SlugTools.CreateSlug(false, loopFile.DbEntry.Title.TrimNullToEmpty());
+                var cleanedName = SlugTagTools.CreateSlug(false, loopFile.DbEntry.Title.TrimNullToEmpty());
 
                 if (string.IsNullOrWhiteSpace(cleanedName))
                 {
@@ -383,7 +383,7 @@ public partial class FileListWithActionsContext : IListSelectionWithContext<File
 
         foreach (var loopContents in allContents)
         {
-            var titleFilename = SlugTools.CreateSlug(false, loopContents.Title.TrimNullToEmpty());
+            var titleFilename = SlugTagTools.CreateSlug(false, loopContents.Title.TrimNullToEmpty());
 
             if (string.IsNullOrWhiteSpace(titleFilename)) returnList.Add(loopContents);
 

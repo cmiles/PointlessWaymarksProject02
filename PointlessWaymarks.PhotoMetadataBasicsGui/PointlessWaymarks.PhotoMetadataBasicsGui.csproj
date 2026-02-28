@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <UseWPF>true</UseWPF>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+        <ApplicationIcon>PointlessWaymarksPhotoMetadataBasicsIcon.ico</ApplicationIcon>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <None Remove="PointlessWaymarksPhotoMetadataBasicsIcon.ico" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Jot" Version="2.1.17" />
+        <PackageReference Include="Metalama.Patterns.Observability" Version="2026.0.16" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\PointlessWaymarksTools\PointlessWaymarks.WpfCommon\PointlessWaymarks.WpfCommon.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Resource Include="PointlessWaymarksPhotoMetadataBasicsIcon.ico">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="PhotoMetadataBasicsInstallerLeftImage.bmp">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="PhotoMetadataBasicsTopRightImage.bmp">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+</Project>

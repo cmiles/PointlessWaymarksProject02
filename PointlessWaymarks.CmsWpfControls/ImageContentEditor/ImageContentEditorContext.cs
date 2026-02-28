@@ -25,6 +25,7 @@ using PointlessWaymarks.CmsWpfControls.UpdateNotesEditor;
 using PointlessWaymarks.CmsWpfControls.Utility;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
+using PointlessWaymarks.SpatialTools;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.BoolDataEntry;
 using PointlessWaymarks.WpfCommon.ChangesAndValidation;
@@ -239,7 +240,7 @@ public partial class ImageContentEditorContext : IHasChanges, IHasValidationIssu
             "To File Name",
             AutoRenameSelectedFileBasedOnTitleCommand,
             x => SelectedFile != null && !Path.GetFileNameWithoutExtension(SelectedFile.Name)
-                .Equals(SlugTools.CreateSlug(false, x.TitleEntry.UserValue), StringComparison.OrdinalIgnoreCase));
+                .Equals(SlugTagTools.CreateSlug(false, x.TitleEntry.UserValue), StringComparison.OrdinalIgnoreCase));
         MainSiteFeed = await ContentSiteFeedAndIsDraftContext.CreateInstance(StatusContext, DbEntry);
         ShowInSearch = await BoolDataEntryTypes.CreateInstanceForShowInSearch(DbEntry, true);
         CreatedUpdatedDisplay = await CreatedAndUpdatedByAndOnDisplayContext.CreateInstance(StatusContext, DbEntry);
@@ -368,9 +369,9 @@ public partial class ImageContentEditorContext : IHasChanges, IHasValidationIssu
         }
 
         var latitudeValidation =
-            await CommonContentValidation.LatitudeValidation(OptionalLocationEntry.LatitudeEntry.UserValue.Value);
+            await SpatialValue.LatitudeValidation(OptionalLocationEntry.LatitudeEntry.UserValue.Value);
         var longitudeValidation =
-            await CommonContentValidation.LongitudeValidation(OptionalLocationEntry.LongitudeEntry.UserValue.Value);
+            await SpatialValueValidations.LongitudeValidation(OptionalLocationEntry.LongitudeEntry.UserValue.Value);
 
         if (!latitudeValidation.Valid || !longitudeValidation.Valid)
         {
@@ -387,7 +388,7 @@ public partial class ImageContentEditorContext : IHasChanges, IHasValidationIssu
         newPartialPoint.BodyContent = BracketCodeImages.Create(DbEntry);
         newPartialPoint.Title = $"Point From {TitleSummarySlugFolder!.TitleEntry.UserValue}";
         newPartialPoint.Tags = TagEdit!.TagListString();
-        newPartialPoint.Slug = SlugTools.CreateSlug(true, newPartialPoint.Title);
+        newPartialPoint.Slug = SlugTagTools.CreateSlug(true, newPartialPoint.Title);
         newPartialPoint.Latitude = OptionalLocationEntry.LatitudeEntry.UserValue.Value;
         newPartialPoint.Longitude = OptionalLocationEntry.LongitudeEntry.UserValue.Value;
         newPartialPoint.Elevation = OptionalLocationEntry.ElevationEntry!.UserValue;

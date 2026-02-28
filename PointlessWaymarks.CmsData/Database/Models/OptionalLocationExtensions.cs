@@ -42,8 +42,8 @@ public static class OptionalLocationExtensions
     {
         if (content.Longitude is null || content.Latitude is null) return false;
 
-        if (!(await CommonContentValidation.LatitudeValidation(content.Latitude.Value)).Valid) return false;
-        if (!(await CommonContentValidation.LongitudeValidation(content.Latitude.Value)).Valid) return false;
+        if (!(await SpatialValue.LatitudeValidation(content.Latitude.Value)).Valid) return false;
+        if (!(await SpatialValueValidations.LongitudeValidation(content.Latitude.Value)).Valid) return false;
 
         return true;
     }

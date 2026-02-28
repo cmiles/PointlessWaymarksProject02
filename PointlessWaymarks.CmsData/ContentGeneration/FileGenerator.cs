@@ -39,7 +39,7 @@ public static class FileGenerator
         try
         {
             Db.DefaultPropertyCleanup(toSave);
-            toSave.Tags = Db.TagListCleanup(toSave.Tags);
+            toSave.Tags = SlugTagTools.TagListCleanupToSpacedString(toSave.Tags);
             toSave.OriginalFileName = selectedFile.Name;
             await FileManagement.WriteSelectedFileContentFileToMediaArchive(selectedFile).ConfigureAwait(false);
             await Db.SaveFileContent(toSave).ConfigureAwait(false);

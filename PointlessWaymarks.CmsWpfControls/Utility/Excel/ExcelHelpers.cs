@@ -367,7 +367,7 @@ public static class ExcelHelpers
                 if (string.IsNullOrWhiteSpace(cellValue))
                     continue;
 
-                var slugified = SlugTools.CreateSlug(true, cellValue);
+                var slugified = SlugTagTools.CreateSlug(true, cellValue);
 
                 cell.Value = slugified;
             }

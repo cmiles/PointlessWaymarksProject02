@@ -104,7 +104,7 @@ public static class CommonContentValidation
             toSearch += trailContent.DogsNote ?? string.Empty;
             toSearch += trailContent.FeesNote ?? string.Empty;
         }
-        
+
         if (string.IsNullOrWhiteSpace(toSearch) && !extracted.Any())
             return GenerationReturn.Success(
                 $"{Db.ContentTypeDisplayString(content)} {content.Title} - No Content Ids Found", content.ContentId);
@@ -223,32 +223,6 @@ public static class CommonContentValidation
         return GenerationReturn.Success("No Invalid Content Ids Found");
     }
 
-    public static Task<IsValid> ElevationValidation(double? elevation)
-    {
-        if (elevation == null) return Task.FromResult(new IsValid(true, "Null Elevation is Valid"));
-
-        if (elevation > 29500)
-            return Task.FromResult(new IsValid(false,
-                $"Elevations are limited to the elevation of Mount Everest - 29,092' above sea level - {elevation} was input..."));
-
-        if (elevation < -50000)
-            return Task.FromResult(new IsValid(false,
-                $"This is very unlikely to be a valid elevation, this exceeds the depth of the Mariana Trench and known Extended-Reach Drilling (as of 2020) - elevations under -50,000' are not considered valid - {elevation} was input..."));
-
-        return Task.FromResult(new IsValid(true, "Elevation is Valid"));
-    }
-
-    public static Task<IsValid> BearingValidation(double? bearing)
-    {
-        if (bearing == null) return Task.FromResult(new IsValid(true, "Null Bearing is Valid"));
-
-        if (bearing is < 0 or >= 360)
-            return Task.FromResult(new IsValid(false,
-                $"Bearings are limited 0-359 - {bearing} was input..."));
-
-        return Task.FromResult(new IsValid(true, "Bearing is Valid"));
-    }
-
     public static Task<bool> FileContentFileFileNameHasInvalidCharacters(FileInfo? fileContentFile,
         Guid? currentContentId)
     {
@@ -322,22 +296,6 @@ public static class CommonContentValidation
         return new IsValid(true, "File is Valid");
     }
 
-    public static Task<IsValid> LatitudeValidation(double latitude)
-    {
-        if (latitude is > 90 or < -90)
-            return Task.FromResult(new IsValid(false,
-                $"Latitude on Earth must be between -90 and 90 - {latitude} is not valid."));
-
-        return Task.FromResult(new IsValid(true, "Latitude is Valid"));
-    }
-
-    public static async Task<IsValid> LatitudeValidationWithNullOk(double? latitude)
-    {
-        if (latitude == null) return new IsValid(true, "No Latitude is Ok...");
-
-        return await LatitudeValidation(latitude.Value);
-    }
-
     public static IsValid LineGeoJsonValidation(string? geoJsonString)
     {
         if (string.IsNullOrWhiteSpace(geoJsonString)) return new IsValid(false, "Blank Line GeoJson is not Valid");
@@ -364,22 +322,6 @@ public static class CommonContentValidation
         }
 
         return new IsValid(true, string.Empty);
-    }
-
-    public static Task<IsValid> LongitudeValidation(double longitude)
-    {
-        if (longitude is > 180 or < -180)
-            return Task.FromResult(new IsValid(false,
-                $"Longitude on Earth must be between -180 and 180 - {longitude} is not valid."));
-
-        return Task.FromResult(new IsValid(true, "Longitude is Valid"));
-    }
-
-    public static async Task<IsValid> LongitudeValidationWithNullOk(double? longitude)
-    {
-        if (longitude == null) return new IsValid(true, "No Longitude is Ok...");
-
-        return await LongitudeValidation(longitude.Value);
     }
 
     public static async Task<IsValid> PhotoFileValidation(FileInfo? photoFile, Guid? currentContentId)
@@ -835,7 +777,7 @@ public static class CommonContentValidation
     {
         if (string.IsNullOrWhiteSpace(tags)) return new IsValid(false, "At least one tag must be included.");
 
-        var tagList = Db.TagListParse(tags);
+        var tagList = SlugTagTools.TagListParseToSpacedString(tags);
 
         if (tagList.Any(x => !FileAndFolderTools.IsNoUrlEncodingNeededLowerCaseSpacesOk(x) || x.Length > 200))
             return new IsValid(false, "Limit tags to a-z 0-9 _ - [space] and less than 200 characters per tag.");

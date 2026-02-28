@@ -214,7 +214,7 @@ public partial class ImageListWithActionsContext
                     continue;
                 }
 
-                var cleanedName = SlugTools.CreateSlug(false, loopImage.DbEntry.Title.TrimNullToEmpty());
+                var cleanedName = SlugTagTools.CreateSlug(false, loopImage.DbEntry.Title.TrimNullToEmpty());
 
                 if (string.IsNullOrWhiteSpace(cleanedName))
                 {
@@ -404,7 +404,7 @@ public partial class ImageListWithActionsContext
 
         foreach (var loopContents in allContents)
         {
-            var titleFilename = SlugTools.CreateSlug(false, loopContents.Title.TrimNullToEmpty());
+            var titleFilename = SlugTagTools.CreateSlug(false, loopContents.Title.TrimNullToEmpty());
 
             if (string.IsNullOrWhiteSpace(titleFilename)) returnList.Add(loopContents);
 

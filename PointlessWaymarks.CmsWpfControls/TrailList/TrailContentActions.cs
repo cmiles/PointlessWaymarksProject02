@@ -39,14 +39,14 @@ public partial class TrailContentActions : IContentActions<TrailContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task DefaultBracketCodeToClipboard(TrailContent? content)
     {
         await TrailActions.DefaultBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task Delete(TrailContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -70,7 +70,7 @@ public partial class TrailContentActions : IContentActions<TrailContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task Edit(TrailContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -92,7 +92,7 @@ public partial class TrailContentActions : IContentActions<TrailContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ExtractNewLinks(TrailContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -108,7 +108,7 @@ public partial class TrailContentActions : IContentActions<TrailContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task GenerateHtml(TrailContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -125,7 +125,7 @@ public partial class TrailContentActions : IContentActions<TrailContent>
     public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewHistory(TrailContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -153,7 +153,7 @@ public partial class TrailContentActions : IContentActions<TrailContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewOnSite(TrailContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -167,7 +167,7 @@ public partial class TrailContentActions : IContentActions<TrailContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewSitePreview(TrailContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -186,7 +186,7 @@ public partial class TrailContentActions : IContentActions<TrailContent>
     public event PropertyChangedEventHandler? PropertyChanged;
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ImageBracketCodeToClipboard(TrailContent? content)
     {
         await TrailActions.ImageBracketCodesToClipboard(content!.AsList(), StatusContext);
@@ -207,7 +207,7 @@ public partial class TrailContentActions : IContentActions<TrailContent>
 
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task TextStatsBracketCodeToClipboard(TrailContent? content)
     {
         await TrailActions.TextStatsBracketCodesToClipboard(content!.AsList(), StatusContext);
@@ -215,7 +215,7 @@ public partial class TrailContentActions : IContentActions<TrailContent>
 
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task TextStatsExtendedBracketCodeToClipboard(TrailContent? content)
     {
         await TrailActions.TextStatsExtendedBracketCodesToClipboard(content!.AsList(), StatusContext);

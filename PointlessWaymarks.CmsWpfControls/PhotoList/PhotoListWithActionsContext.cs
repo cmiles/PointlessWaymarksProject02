@@ -198,9 +198,9 @@ public partial class PhotoListWithActionsContext
                     continue;
                 }
 
-                var tagListForIntersection = Db.TagListParse(loopSelected.Tags);
+                var tagListForIntersection = SlugTagTools.TagListParseToSpacedString(loopSelected.Tags);
                 tagListForIntersection.AddRange(taggerResult.Tags);
-                loopSelected.Tags = Db.TagListJoin(tagListForIntersection);
+                loopSelected.Tags = SlugTagTools.TagListJoinToSpacedString(tagListForIntersection);
                 loopSelected.LastUpdatedBy = "Feature Intersection Tagger";
                 loopSelected.LastUpdatedOn = updateTime;
 
@@ -433,7 +433,7 @@ public partial class PhotoListWithActionsContext
                     continue;
                 }
 
-                var cleanedName = SlugTools.CreateSlug(false, loopPhoto.DbEntry.Title.TrimNullToEmpty());
+                var cleanedName = SlugTagTools.CreateSlug(false, loopPhoto.DbEntry.Title.TrimNullToEmpty());
 
                 if (string.IsNullOrWhiteSpace(cleanedName))
                 {
@@ -545,7 +545,7 @@ public partial class PhotoListWithActionsContext
             newPartialPoint.BodyContent = BracketCodePhotos.Create(loopPhoto.DbEntry);
             newPartialPoint.Title = $"Point From {loopPhoto.DbEntry.Title}";
             newPartialPoint.Tags = loopPhoto.DbEntry.Tags;
-            newPartialPoint.Slug = SlugTools.CreateSlug(true, newPartialPoint.Title);
+            newPartialPoint.Slug = SlugTagTools.CreateSlug(true, newPartialPoint.Title);
 
             if (loopPhoto.DbEntry.Latitude != null) newPartialPoint.Latitude = loopPhoto.DbEntry.Latitude.Value;
             if (loopPhoto.DbEntry.Longitude != null) newPartialPoint.Longitude = loopPhoto.DbEntry.Longitude.Value;
@@ -795,7 +795,7 @@ public partial class PhotoListWithActionsContext
 
         foreach (var loopContents in allContents)
         {
-            var titleFilename = SlugTools.CreateSlug(false, loopContents.Title.TrimNullToEmpty());
+            var titleFilename = SlugTagTools.CreateSlug(false, loopContents.Title.TrimNullToEmpty());
 
             if (string.IsNullOrWhiteSpace(titleFilename)) returnList.Add(loopContents);
 

@@ -39,14 +39,14 @@ public partial class VideoContentActions : IContentActions<VideoContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task DefaultBracketCodeToClipboard(VideoContent? content)
     {
         await VideoActions.DefaultBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task Delete(VideoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -70,7 +70,7 @@ public partial class VideoContentActions : IContentActions<VideoContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task Edit(VideoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -89,7 +89,7 @@ public partial class VideoContentActions : IContentActions<VideoContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ExtractNewLinks(VideoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -104,7 +104,7 @@ public partial class VideoContentActions : IContentActions<VideoContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task GenerateHtml(VideoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -121,7 +121,7 @@ public partial class VideoContentActions : IContentActions<VideoContent>
     public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewHistory(VideoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -149,7 +149,7 @@ public partial class VideoContentActions : IContentActions<VideoContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewOnSite(VideoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -163,7 +163,7 @@ public partial class VideoContentActions : IContentActions<VideoContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewSitePreview(VideoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -182,14 +182,14 @@ public partial class VideoContentActions : IContentActions<VideoContent>
     public event PropertyChangedEventHandler? PropertyChanged;
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ExportFile(VideoContent? content)
     {
         await VideoActions.ExportFiles(content!.AsList(), StatusContext, CancellationToken.None);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ImageBracketCodeToClipboard(VideoContent? content)
     {
         await VideoActions.ImageBracketCodesToClipboard(content!.AsList(), StatusContext);
@@ -210,7 +210,7 @@ public partial class VideoContentActions : IContentActions<VideoContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task MetaDataReport(VideoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -219,7 +219,7 @@ public partial class VideoContentActions : IContentActions<VideoContent>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ShowFileInExplorer(VideoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -244,14 +244,14 @@ public partial class VideoContentActions : IContentActions<VideoContent>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task TextBracketCodeToClipboard(VideoContent? content)
     {
         await VideoActions.TextBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewFile(VideoContent? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();

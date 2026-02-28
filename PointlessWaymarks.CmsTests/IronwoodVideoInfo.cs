@@ -6,6 +6,7 @@ using PointlessWaymarks.CmsData.ContentGeneration;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsData.Json;
+using PointlessWaymarks.CommonTools;
 
 namespace PointlessWaymarks.CmsTests;
 
@@ -102,12 +103,12 @@ public static class IronwoodVideoInfo
         VideoContent toCompare)
     {
         Db.DefaultPropertyCleanup(reference);
-        reference.Tags = Db.TagListCleanup(reference.Tags);
+        reference.Tags = SlugTagTools.TagListCleanupToSpacedString(reference.Tags);
         if (string.IsNullOrWhiteSpace(reference.CreatedBy))
             reference.CreatedBy = UserSettingsSingleton.CurrentSettings().DefaultCreatedBy;
 
         Db.DefaultPropertyCleanup(toCompare);
-        toCompare.Tags = Db.TagListCleanup(toCompare.Tags);
+        toCompare.Tags = SlugTagTools.TagListCleanupToSpacedString(toCompare.Tags);
 
         var compareLogic = new CompareLogic
         {

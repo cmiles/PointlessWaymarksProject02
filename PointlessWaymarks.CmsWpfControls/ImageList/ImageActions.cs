@@ -27,7 +27,7 @@ public static class ImageActions
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        List<ImageContent> contentsWithLocation = new();
+        List<ImageContent> contentsWithLocation = [];
 
         foreach (var loopImages in contents)
             if (await loopImages.HasValidLocation())
@@ -61,8 +61,8 @@ public static class ImageActions
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        List<ImageContent> dbEntriesToProcess = new();
-        List<IntersectResult> intersectResults = new();
+        List<ImageContent> dbEntriesToProcess = [];
+        List<IntersectResult> intersectResults = [];
 
         var settings =
             JsonSerializer.Deserialize<IntersectSettings>(await File.ReadAllTextAsync(settingsFileInfo.FullName,
@@ -118,9 +118,9 @@ public static class ImageActions
                     continue;
                 }
 
-                var tagListForIntersection = Db.TagListParse(loopSelected.Tags);
+                var tagListForIntersection = SlugTagTools.TagListParseToSpacedString(loopSelected.Tags);
                 tagListForIntersection.AddRange(taggerResult.Tags);
-                loopSelected.Tags = Db.TagListJoin(tagListForIntersection);
+                loopSelected.Tags = SlugTagTools.TagListJoinToSpacedString(tagListForIntersection);
                 loopSelected.LastUpdatedBy = "Feature Intersection Tagger";
                 loopSelected.LastUpdatedOn = updateTime;
 
@@ -339,7 +339,7 @@ public static class ImageActions
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        List<ImageContent> contentsWithLocation = new();
+        List<ImageContent> contentsWithLocation = [];
 
         foreach (var loopImages in contents)
             if (await loopImages.HasValidLocation())

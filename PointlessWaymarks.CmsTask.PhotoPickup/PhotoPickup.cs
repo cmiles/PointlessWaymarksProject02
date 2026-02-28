@@ -187,7 +187,7 @@ public class PhotoPickup
             filePostfix++;
 
             var newFileName =
-                SlugTools.CreateSlug(false,
+                SlugTagTools.CreateSlug(false,
                     $"{Path.GetFileNameWithoutExtension(baseFile.Name)}-{filePostfix:000}{baseFile.Extension}");
 
             fileExistsInDatabase = await searchContext.PhotoFilenameExistsInDatabase(newFileName, null);
@@ -211,9 +211,9 @@ public class PhotoPickup
             randomPostfixLimit++;
             randomPostfixCounter++;
 
-            var postFix = SlugTools.RandomLowerCaseString(6);
+            var postFix = SlugTagTools.RandomLowerCaseString(6);
 
-            var newFileName = SlugTools.CreateSlug(false,
+            var newFileName = SlugTagTools.CreateSlug(false,
                 $"{Path.GetFileNameWithoutExtension(baseFile.Name)}-{postFix}{baseFile.Extension}");
 
             fileExistsInDatabase = await searchContext.PhotoFilenameExistsInDatabase(newFileName, null);

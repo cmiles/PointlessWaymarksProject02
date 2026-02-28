@@ -5,6 +5,7 @@ using pinboard.net.Models;
 using PointlessWaymarks.CmsData.ContentHtml.LinkListHtml;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
+using PointlessWaymarks.CommonTools;
 
 namespace PointlessWaymarks.CmsData.ContentGeneration;
 
@@ -246,6 +247,8 @@ public static class LinkGenerator
         {
             progress?.Report("Playwright: Launching browser");
 
+            Program.Main(["install", "chromium"]);
+
             using var playwright = await Playwright.CreateAsync().ConfigureAwait(false);
             await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
@@ -434,7 +437,7 @@ public static class LinkGenerator
         try
         {
             Db.DefaultPropertyCleanup(toSave);
-            toSave.Tags = Db.TagListCleanup(toSave.Tags);
+            toSave.Tags = SlugTagTools.TagListCleanupToSpacedString(toSave.Tags);
             await Db.SaveLinkContent(toSave).ConfigureAwait(false);
             await SaveLinkToPinboard(toSave, progress).ConfigureAwait(false);
             await GenerateHtmlAndJson(generationVersion, progress).ConfigureAwait(false);
@@ -468,7 +471,7 @@ public static class LinkGenerator
         if (!string.IsNullOrWhiteSpace(toSave.Comments)) descriptionFragments.Add($"Comments: {toSave.Comments}");
         if (!string.IsNullOrWhiteSpace(toSave.Author)) descriptionFragments.Add($"Author: {toSave.Author}");
 
-        var tagList = Db.TagListParse(toSave.Tags);
+        var tagList = SlugTagTools.TagListParseToSpacedString(toSave.Tags);
         tagList.Add(UserSettingsSingleton.CurrentSettings().SiteName);
         tagList = tagList.Select(x => x.Replace(" ", "-")).ToList();
 

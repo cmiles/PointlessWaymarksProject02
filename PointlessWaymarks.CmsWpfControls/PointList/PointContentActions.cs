@@ -40,14 +40,14 @@ public partial class PointContentActions : IContentActions<PointContentDto>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task DefaultBracketCodeToClipboard(PointContentDto? content)
     {
         await PointActions.DefaultBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task Delete(PointContentDto? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -71,7 +71,7 @@ public partial class PointContentActions : IContentActions<PointContentDto>
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
 
     public async Task Edit(PointContentDto? content)
     {
@@ -91,7 +91,7 @@ public partial class PointContentActions : IContentActions<PointContentDto>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ExtractNewLinks(PointContentDto? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -107,7 +107,7 @@ public partial class PointContentActions : IContentActions<PointContentDto>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task GenerateHtml(PointContentDto? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -132,7 +132,7 @@ public partial class PointContentActions : IContentActions<PointContentDto>
     public StatusControlContext StatusContext { get; set; }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewHistory(PointContentDto? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -160,7 +160,7 @@ public partial class PointContentActions : IContentActions<PointContentDto>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewOnSite(PointContentDto? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -175,7 +175,7 @@ public partial class PointContentActions : IContentActions<PointContentDto>
 
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ViewSitePreview(PointContentDto? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -194,42 +194,42 @@ public partial class PointContentActions : IContentActions<PointContentDto>
     public event PropertyChangedEventHandler? PropertyChanged;
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task AddIntersectionTagsWithOsm(PointContentDto? content)
     {
         await PointActions.AddIntersectionTags(content!.AsList(), StatusContext, true, CancellationToken.None);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task AddIntersectionTagsWithoutOsm(PointContentDto? content)
     {
         await PointActions.AddIntersectionTags(content!.AsList(), StatusContext, false, CancellationToken.None);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task CoordinatesToClipboard(PointContentDto? content)
     {
         await PointActions.CoordinateTextToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ExternalDirectionsBracketCodeToClipboard(PointContentDto? content)
     {
         await PointActions.ExternalDirectionsBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task GoogleMapsBracketCodeToClipboard(PointContentDto? content)
     {
         await PointActions.GoogleMapsBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ImageBracketCodeToClipboard(PointContentDto? content)
     {
         await PointActions.ImageBracketCodesToClipboard(content!.AsList(), StatusContext);
@@ -263,28 +263,28 @@ public partial class PointContentActions : IContentActions<PointContentDto>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task PointDetailsBracketCodeToClipboard(PointContentDto? content)
     {
         await PointActions.PointDetailsBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ShowIntersectionTags(PointContentDto? content)
     {
         await PointActions.ShowIntersectionTagsForSelected(content!.AsList(), StatusContext, CancellationToken.None);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ShowOnGoogleMaps(PointContentDto? content)
     {
         await PointActions.ShowInGoogleMapsWeb(content!, StatusContext);
     }
 
     [NonBlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ShowOnMap(PointContentDto? content)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -305,21 +305,21 @@ public partial class PointContentActions : IContentActions<PointContentDto>
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ShowOnOsmCycleMaps(PointContentDto? content)
     {
         await PointActions.ShowInOsmCycleMap(content!, StatusContext);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task TextBracketCodeToClipboard(PointContentDto? content)
     {
         await PointActions.TextBracketCodesToClipboard(content!.AsList(), StatusContext);
     }
 
     [BlockingCommand]
-    [StopAndWarnIfContentIsNull]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ToGpxFile(PointContentDto? content)
     {
         await PointActions.ToGpxFile(content!.AsList(), StatusContext);

@@ -37,7 +37,7 @@ public static class NoteGenerator
         try
         {
             Db.DefaultPropertyCleanup(toSave);
-            toSave.Tags = Db.TagListCleanup(toSave.Tags);
+            toSave.Tags = SlugTagTools.TagListCleanupToSpacedString(toSave.Tags);
             await Db.SaveNoteContent(toSave).ConfigureAwait(false);
             await GenerateHtml(toSave, generationVersion, progress).ConfigureAwait(false);
             await Export.WriteNoteContentData(toSave, progress).ConfigureAwait(false);
@@ -72,7 +72,7 @@ public static class NoteGenerator
             currentLength = dbMaxLength > currentLength ? dbMaxLength : currentLength;
         }
 
-        var possibleSlug = SlugTools.RandomLowerCaseString(currentLength);
+        var possibleSlug = SlugTagTools.RandomLowerCaseString(currentLength);
 
         async Task<bool> SlugAlreadyExists(string slug)
         {
@@ -86,7 +86,7 @@ public static class NoteGenerator
                     "Could not create a unique note slug in 1000 iterations - this almost certainly represents an error.");
             if (attemptCount % 10 == 0) currentLength++;
             attemptCount++;
-            possibleSlug = SlugTools.RandomLowerCaseString(currentLength);
+            possibleSlug = SlugTagTools.RandomLowerCaseString(currentLength);
         }
 
         return possibleSlug;

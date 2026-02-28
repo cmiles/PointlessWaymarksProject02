@@ -7,6 +7,7 @@ using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsData.ImageHelpers;
 using PointlessWaymarks.CmsData.Json;
+using PointlessWaymarks.CommonTools;
 
 namespace PointlessWaymarks.CmsTests;
 
@@ -365,10 +366,10 @@ public static class IronwoodPhotoInfo
 
 
         Db.DefaultPropertyCleanup(reference);
-        reference.Tags = Db.TagListCleanup(reference.Tags);
+        reference.Tags = SlugTagTools.TagListCleanupToSpacedString(reference.Tags);
 
         Db.DefaultPropertyCleanup(toCompare);
-        toCompare.Tags = Db.TagListCleanup(toCompare.Tags);
+        toCompare.Tags = SlugTagTools.TagListCleanupToSpacedString(toCompare.Tags);
 
         var compareLogic = new CompareLogic
         {

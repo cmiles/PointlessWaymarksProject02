@@ -417,7 +417,7 @@ public class TestSeries01Ironwood
         newVideo.Summary = metadata.Summary;
         newVideo.Tags = metadata.Tags;
         newVideo.Title = metadata.Title;
-        newVideo.Slug = SlugTools.CreateSlug(true, metadata.Title);
+        newVideo.Slug = SlugTagTools.CreateSlug(true, metadata.Title);
         newVideo.Folder = metadata.PhotoCreatedOn.Year.ToString("F0");
         newVideo.ShowInMainSiteFeed = IronwoodVideoInfo.BlueSkyAndCloudsVideoContent01.ShowInMainSiteFeed;
         newVideo.ShowInSearch = IronwoodVideoInfo.BlueSkyAndCloudsVideoContent01.ShowInSearch;

@@ -198,9 +198,9 @@ public class GpxTrackImport
 
                 var newEntry = await LineGenerator.NewFromGpxTrack(loopTracks, false, false, true, consoleProgress);
 
-                var tagList = Db.TagListParse(newEntry.Tags);
+                var tagList = SlugTagTools.TagListParseToSpacedString(newEntry.Tags);
                 tagList.Add("garmin connect import");
-                newEntry.Tags = Db.TagListJoin(tagList);
+                newEntry.Tags = SlugTagTools.TagListJoinToSpacedString(tagList);
                 newEntry.ShowInMainSiteFeed = settings.ShowInMainSiteFeed;
 
                 var validation =
@@ -212,7 +212,7 @@ public class GpxTrackImport
                 {
                     renameCount++;
                     newEntry.Title = $"{baseTitle} - {renameCount}";
-                    newEntry.Slug = SlugTools.CreateSlug(true, newEntry.Title);
+                    newEntry.Slug = SlugTagTools.CreateSlug(true, newEntry.Title);
                     validation =
                         await CommonContentValidation.ValidateSlugLocalAndDb(newEntry.Slug, newEntry.ContentId);
                 }
@@ -230,9 +230,9 @@ public class GpxTrackImport
 
                         if (tagResult.Any())
                         {
-                            var tagListForIntersection = Db.TagListParse(newEntry.Tags);
+                            var tagListForIntersection = SlugTagTools.TagListParseToSpacedString(newEntry.Tags);
                             tagListForIntersection.AddRange(tagResult);
-                            newEntry.Tags = Db.TagListJoin(tagListForIntersection);
+                            newEntry.Tags = SlugTagTools.TagListJoinToSpacedString(tagListForIntersection);
                         }
                     }
                 }

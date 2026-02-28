@@ -1,0 +1,226 @@
+<UserControl x:Class="PointlessWaymarks.PhotoMetadataBasicsGui.Controls.PhotoListControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:PointlessWaymarks.PhotoMetadataBasicsGui.Controls"
+             xmlns:dd="urn:gong-wpf-dragdrop"
+             xmlns:behaviors="clr-namespace:PointlessWaymarks.WpfCommon.Behaviors;assembly=PointlessWaymarks.WpfCommon"
+             xmlns:stringDataEntry="clr-namespace:PointlessWaymarks.WpfCommon.StringDataEntry;assembly=PointlessWaymarks.WpfCommon"
+             xmlns:conversionDataEntry="clr-namespace:PointlessWaymarks.WpfCommon.ConversionDataEntry;assembly=PointlessWaymarks.WpfCommon"
+             xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:valueConverters="clr-namespace:PointlessWaymarks.WpfCommon.ValueConverters;assembly=PointlessWaymarks.WpfCommon"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="800" d:DataContext="{d:DesignInstance local:PhotoListContext}">
+    <UserControl.Resources>
+        <valueConverters:BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
+        <valueConverters:BooleanToHiddenConverter x:Key="BooleanToHidden" />
+        <valueConverters:BooleanNotConverter x:Key="BooleanNot" />
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Border>
+            <ListBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}"
+                     HorizontalContentAlignment="Stretch"
+                     behaviors:MultiSelectBehavior.SynchronizedSelectedItems="{Binding SelectedItems}"
+                     dd:DragDrop.DropHandler="{Binding}"
+                     dd:DragDrop.IsDragSource="True"
+                     dd:DragDrop.IsDropTarget="True"
+                     ScrollViewer.CanContentScroll="False"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     SelectionMode="Extended"
+                     x:Name="PhotoGroupList">
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type local:PhotoListGroupListItem}">
+                        <Grid x:Name="PhotoGroupGrid">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="300"></ColumnDefinition>
+                                    <ColumnDefinition Width="220"></ColumnDefinition>
+                                </Grid.ColumnDefinitions>
+                                <Border BorderBrush="LightGray"
+                                        BorderThickness="2,2,2,2"
+                                        CornerRadius="4"
+                                        Margin="2">
+                                    <StackPanel Orientation="Vertical" Margin="4,4,12,8">
+                                        <stringDataEntry:StringDataEntryControl
+                                            DataContext="{Binding TitleEntryContext}">
+                                        </stringDataEntry:StringDataEntryControl>
+                                        <stringDataEntry:StringDataEntryMultiLineControl
+                                            DataContext="{Binding SummaryEntryContext}">
+                                        </stringDataEntry:StringDataEntryMultiLineControl>
+                                        <local:TagEditorControl Height="180" DataContext="{Binding TagEntryContext}" />
+                                        <stringDataEntry:StringDataEntryControl
+                                            DataContext="{Binding PhotoCreatedByEntry}">
+                                        </stringDataEntry:StringDataEntryControl>
+                                        <stringDataEntry:StringDataEntryControl DataContext="{Binding LicenseEntry}"></stringDataEntry:StringDataEntryControl>
+                                        <Button Command="{Binding AddCopyWriteSymbolToLicenseCommand}" Margin="0,4,0,0"
+                                                HorizontalAlignment="Left">
+                                            Insert ©
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                                <Grid Grid.Column="1">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"></RowDefinition>
+                                        <RowDefinition Height="Auto"></RowDefinition>
+                                    </Grid.RowDefinitions>
+                                    <Border BorderBrush="LightGray"
+                                            BorderThickness="2"
+                                            CornerRadius="4"
+                                            Margin="4,2,8,2">
+                                        <StackPanel Orientation="Vertical" Margin="4,4,12,8">
+                                            <conversionDataEntry:ConversionDataEntryControl
+                                                DataContext="{Binding LatitudeEntry}">
+                                            </conversionDataEntry:ConversionDataEntryControl>
+                                            <conversionDataEntry:ConversionDataEntryControl
+                                                DataContext="{Binding LongitudeEntry}">
+                                            </conversionDataEntry:ConversionDataEntryControl>
+                                            <conversionDataEntry:ConversionDataEntryControl
+                                                DataContext="{Binding ElevationEntry}">
+                                            </conversionDataEntry:ConversionDataEntryControl>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Grid.Row="1" BorderBrush="LightGray"
+                                            BorderThickness="2"
+                                            CornerRadius="4"
+                                            Margin="4,2,8,2">
+                                        <Grid Margin="4">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition></RowDefinition>
+                                                <RowDefinition></RowDefinition>
+                                                <RowDefinition></RowDefinition>
+                                                <RowDefinition></RowDefinition>
+                                                <RowDefinition></RowDefinition>
+                                            </Grid.RowDefinitions>
+                                            <Button Grid.Row="0" HorizontalAlignment="Stretch"
+                                                    Command="{Binding ChooseAndAddFilesCommand}">
+                                                Add Files
+                                            </Button>
+                                            <Button Grid.Row="1" HorizontalAlignment="Stretch"
+                                                    Command="{Binding RescanMetadataAndUpdateCommand}">
+                                                Metadata - Update
+                                            </Button>
+                                            <Button Grid.Row="2" HorizontalAlignment="Stretch"
+                                                    Command="{Binding RescanMetadataAndOverwriteCommand}">
+                                                Metadata - Overwrite
+                                            </Button>
+                                            <Button Grid.Row="3" HorizontalAlignment="Stretch"
+                                                    Command="{Binding RenameFilesCommand}">
+                                                Rename Files
+                                            </Button>
+                                            <Button Grid.Row="4" HorizontalAlignment="Stretch"
+                                                    Command="{Binding WriteMetadataCommand}">
+                                                Write Metadata
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </Grid>
+                            <Border Grid.Column="1" BorderBrush="LightGray"
+                                    BorderThickness="2,2,2,2"
+                                    CornerRadius="4"
+                                    Margin="2">
+                                <ListBox ItemsSource="{Binding Items}"
+                                         ScrollViewer.CanContentScroll="False"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                         behaviors:MultiSelectBehavior.SynchronizedSelectedItems="{Binding SelectedItems}"
+                                         SelectedItem="{Binding SelectedItem}"
+                                         SelectionMode="Extended">
+                                    <ListBox.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel Orientation="Horizontal" />
+                                        </ItemsPanelTemplate>
+                                    </ListBox.ItemsPanel>
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="Margin" Value="0" />
+                                            <Setter Property="Padding" Value="0" />
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                            <Setter Property="VerticalContentAlignment" Value="Center" />
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                    <b:Interaction.Behaviors>
+                                        <behaviors:IgnoreMouseWheelBehavior />
+                                    </b:Interaction.Behaviors>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type local:PhotoListFileItem}">
+                                            <Border Grid.Column="1" BorderBrush="LightGray"
+                                                    BorderThickness="2"
+                                                    CornerRadius="4"
+                                                    Margin="4">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="150"></ColumnDefinition>
+                                                        <ColumnDefinition Width="200"></ColumnDefinition>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Image Source="{Binding ThumbnailImage}" Width="140" Height="140" />
+                                                    <StackPanel Grid.Column="1" Orientation="Vertical" Margin="4">
+                                                        <TextBlock TextWrapping="Wrap" Text="{Binding PhotoFile.Name}" />
+                                                        <TextBlock TextWrapping="Wrap"
+                                                                   Text="{Binding Metadata.PhotoCreatedOn}">
+                                                        </TextBlock>
+                                                        <TextBlock Margin="2" FontWeight="Bold"
+                                                                   Visibility="{Binding IsPrimaryPhoto, Converter={StaticResource BooleanToVisibility}}">
+                                                            Primary Photo
+                                                        </TextBlock>
+                                                        <Button
+                                                            Command="{Binding DataContext.MakePrimaryPhotoCommand, ElementName=PhotoGroupGrid}"
+                                                            CommandParameter="{Binding }"
+                                                            IsEnabled="{Binding IsPrimaryPhoto, Converter={StaticResource BooleanNot}}"
+                                                            Margin="0,4,0,0"
+                                                            HorizontalAlignment="Left">
+                                                            Make Primary
+                                                        </Button>
+                                                        <Button
+                                                            Command="{Binding DataContext.FileMetadataReportCommand, ElementName=PhotoGroupGrid}"
+                                                            CommandParameter="{Binding .}">
+                                                            Metadata
+                                                        </Button>
+                                                        <Button
+                                                            Command="{Binding DataContext.RemoveFileCommand, ElementName=PhotoGroupGrid}"
+                                                            CommandParameter="{Binding .}">
+                                                            Remove File
+                                                        </Button>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Border>
+                            <Button Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                    Margin="0,8,8,0"
+                                    Opacity=".7"
+                                    Command="{Binding DataContext.RemoveGroupCommand, ElementName=PhotoGroupList}"
+                                    CommandParameter="{Binding }">
+                                Remove Group
+                            </Button>
+                            <Button Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                    Margin="0,0,8,8"
+                                    Opacity=".7"
+                                    Command="{Binding DataContext.SplitSelectedFilesCommand, ElementName=PhotoGroupList}"
+                                    CommandParameter="{Binding }">
+                                Split Selected
+                            </Button>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+        <Border Grid.Row="1">
+            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                <Button Command="{Binding MergeSelectedGroupsCommand}" HorizontalAlignment="Left" Margin="4">
+                    Merge Selected Groups
+                </Button>
+            </WrapPanel>
+        </Border>
+    </Grid>
+</UserControl>
