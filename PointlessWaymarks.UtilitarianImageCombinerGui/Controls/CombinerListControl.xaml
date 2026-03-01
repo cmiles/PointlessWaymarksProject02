@@ -62,7 +62,8 @@
                     HorizontalAlignment="Center"
                     Orientation="Horizontal">
                     <conversionDataEntry:ConversionDataEntryControl DataContext="{Binding ItemMaxWidthEntryContext}" />
-                    <conversionDataEntry:ConversionDataEntryControl Margin="8,0,0,0" DataContext="{Binding ItemMaxHeightEntryContext}" />
+                    <conversionDataEntry:ConversionDataEntryControl Margin="8,0,0,0"
+                                                                    DataContext="{Binding ItemMaxHeightEntryContext}" />
                 </WrapPanel>
             </GroupBox>
             <GroupBox
@@ -78,7 +79,8 @@
                         VerticalAlignment="Top"
                         DataContext="{Binding FinalImageJpegQuality}" />
                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Top">
-                        <Label Style="{StaticResource DataEntryLabelStyle}" ToolTip="Background Color for the Final Document">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
+                               ToolTip="Background Color for the Final Document">
                             Background Color
                         </Label>
                         <ComboBox
@@ -154,6 +156,23 @@
                             BorderThickness="2"
                             CornerRadius="4">
                             <Grid Margin="4">
+                                <Grid.Resources>
+                                    <Style TargetType="GroupBox"
+                                           BasedOn="{StaticResource UiComponentGroupBoxStyle}">
+                                        <Setter Property="BorderThickness" Value="0"></Setter>
+                                        <Setter Property="Padding" Value="4,0,0,0"></Setter>
+                                        <Setter Property="HeaderTemplate">
+                                            <Setter.Value>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding}"
+                                                               FontWeight="DemiBold"
+                                                               FontSize="{DynamicResource {x:Static SystemFonts.CaptionFontSizeKey}}"
+                                                               Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+                                                </DataTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </Grid.Resources>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="300" />
                                     <ColumnDefinition Width="*" />
@@ -194,7 +213,9 @@
                                         Grid.Row="1"
                                         Margin="14,6,4,4"
                                         Orientation="Horizontal">
-                                        <Button Command="{Binding Data.RotateLeftCommand, Source={StaticResource Proxy}}" CommandParameter="{Binding .}">
+                                        <Button
+                                            Command="{Binding Data.RotateLeftCommand, Source={StaticResource Proxy}}"
+                                            CommandParameter="{Binding .}">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto" />
@@ -214,7 +235,9 @@
                                                 </TextBlock>
                                             </Grid>
                                         </Button>
-                                        <Button Command="{Binding Data.RotateRightCommand, Source={StaticResource Proxy}}" CommandParameter="{Binding .}">
+                                        <Button
+                                            Command="{Binding Data.RotateRightCommand, Source={StaticResource Proxy}}"
+                                            CommandParameter="{Binding .}">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto" />
@@ -234,13 +257,18 @@
                                                 </TextBlock>
                                             </Grid>
                                         </Button>
-                                        <Button Command="{Binding Data.RemoveItemCommand, Source={StaticResource Proxy}}" CommandParameter="{Binding .}">
+                                        <Button
+                                            Command="{Binding Data.RemoveItemCommand, Source={StaticResource Proxy}}"
+                                            CommandParameter="{Binding .}">
                                             Remove from List
                                         </Button>
-                                        <Button Command="{Binding Data.ShowInExplorerCommand, Source={StaticResource Proxy}}" CommandParameter="{Binding .}">
+                                        <Button
+                                            Command="{Binding Data.ShowInExplorerCommand, Source={StaticResource Proxy}}"
+                                            CommandParameter="{Binding .}">
                                             Show in Explorer
                                         </Button>
-                                        <Button Command="{Binding Data.OpenFileCommand, Source={StaticResource Proxy}}" CommandParameter="{Binding .}">
+                                        <Button Command="{Binding Data.OpenFileCommand, Source={StaticResource Proxy}}"
+                                                CommandParameter="{Binding .}">
                                             View Image
                                         </Button>
                                     </WrapPanel>
@@ -255,16 +283,20 @@
                                                 </TextBlock.Text>
                                             </TextBlock>
                                         </GroupBox>
-                                        <GroupBox Header="Title" Visibility="{Binding Title, Converter={StaticResource NullOrWhiteSpaceStringToCollapsed}}">
+                                        <GroupBox Header="Title"
+                                                  Visibility="{Binding Title, Converter={StaticResource NullOrWhiteSpaceStringToCollapsed}}">
                                             <TextBlock Text="{Binding Title}" />
                                         </GroupBox>
-                                        <GroupBox Header="Created By" Visibility="{Binding CreatedBy, Converter={StaticResource NullOrWhiteSpaceStringToCollapsed}}">
+                                        <GroupBox Header="Created By"
+                                                  Visibility="{Binding CreatedBy, Converter={StaticResource NullOrWhiteSpaceStringToCollapsed}}">
                                             <TextBlock Text="{Binding CreatedBy}" />
                                         </GroupBox>
-                                        <GroupBox Header="Created On" Visibility="{Binding CreatedOn, Converter={StaticResource NullToCollapsedVisibility}}">
+                                        <GroupBox Header="Created On"
+                                                  Visibility="{Binding CreatedOn, Converter={StaticResource NullToCollapsedVisibility}}">
                                             <TextBlock Text="{Binding CreatedOn}" />
                                         </GroupBox>
-                                        <GroupBox Header="Location" Visibility="{Binding Latitude, Converter={StaticResource NullToCollapsedVisibility}}">
+                                        <GroupBox Header="Location"
+                                                  Visibility="{Binding Latitude, Converter={StaticResource NullToCollapsedVisibility}}">
                                             <TextBlock>
                                                 <TextBlock.Text>
                                                     <MultiBinding StringFormat="{}{0:N3}, {1:N3}">
@@ -274,8 +306,10 @@
                                                 </TextBlock.Text>
                                             </TextBlock>
                                         </GroupBox>
-                                        <GroupBox Header="Elevation" Visibility="{Binding Elevation, Converter={StaticResource NullToCollapsedVisibility}}">
-                                            <TextBlock HorizontalAlignment="Center" Text="{Binding Elevation, StringFormat='{}{0:N0} feet'}" />
+                                        <GroupBox Header="Elevation"
+                                                  Visibility="{Binding Elevation, Converter={StaticResource NullToCollapsedVisibility}}">
+                                            <TextBlock HorizontalAlignment="Center"
+                                                       Text="{Binding Elevation, StringFormat='{}{0:N0} feet'}" />
                                         </GroupBox>
                                     </WrapPanel>
                                     <GroupBox
@@ -344,8 +378,10 @@
                         <ColumnDefinition Width="120" />
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
-                    <conversionDataEntry:ConversionDataEntryControl Grid.Column="0" DataContext="{Binding GridRowEntryContext}" />
-                    <conversionDataEntry:ConversionDataEntryControl Grid.Column="1" DataContext="{Binding GridColumnEntryContext}" />
+                    <conversionDataEntry:ConversionDataEntryControl Grid.Column="0"
+                                                                    DataContext="{Binding GridRowEntryContext}" />
+                    <conversionDataEntry:ConversionDataEntryControl Grid.Column="1"
+                                                                    DataContext="{Binding GridColumnEntryContext}" />
                     <Button
                         Grid.Column="2"
                         Margin="8,0,0,0"
