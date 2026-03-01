@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using MathNet.Numerics;
 using Metalama.Patterns.Observability;
 using Microsoft.Win32;
@@ -464,11 +465,11 @@ public partial class PhotoListGroupListItem
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         // Resolve ExifTool
-        string exifToolExe;
+        FileInfo? exifToolExe;
         try
         {
             exifToolExe =
-                await PhotoMetadataBasicsGuiSettingTools.CheckAndResolveExifTool(StatusContext.ProgressTracker());
+                await PhotoMetadataBasicsGuiSettingTools.ExifTool(StatusContext);
         }
         catch (Exception ex)
         {
@@ -476,7 +477,7 @@ public partial class PhotoListGroupListItem
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(exifToolExe) || !File.Exists(exifToolExe))
+        if (exifToolExe is null || !exifToolExe.Exists)
         {
             await StatusContext.ToastError("Unable to locate ExifTool executable.");
             return;
@@ -496,50 +497,50 @@ public partial class PhotoListGroupListItem
 
         var errors = new List<string>();
 
-        var commandlineString = string.Empty;
-
         foreach (var file in filesToProcess)
+        {
+            string? argsFilePath = null;
             try
             {
                 StatusContext.Progress($"Writing metadata to {file.Name}...");
 
-                var args = new List<string> { "-overwrite_original" };
+                var args = new List<string> { "-overwrite_original", "-charset", "iptc=utf8" };
 
                 // Title
                 var title = TitleEntryContext.UserValue.TrimNullToEmpty();
                 args.AddRange([
-                    $"-Title={Escape(title)}",
-                    $"-XMP:Title={Escape(title)}",
-                    $"-IPTC:ObjectName={Escape(title)}"
+                    $"-Title={title}",
+                    $"-XMP:Title={title}",
+                    $"-IPTC:ObjectName={title}"
                 ]);
 
                 // Summary / description
                 var desc = SummaryEntryContext.UserValue.TrimNullToEmpty();
                 args.AddRange([
-                    $"-Description={Escape(desc)}",
-                    $"-XMP-dc:Description={Escape(desc)}",
-                    $"-IPTC:Caption-Abstract={Escape(desc)}"
+                    $"-Description={desc}",
+                    $"-XMP-dc:Description={desc}",
+                    $"-IPTC:Caption-Abstract={desc}"
                 ]);
 
                 // Creator / artist
                 var creator = PhotoCreatedByEntry.UserValue.TrimNullToEmpty();
                 args.AddRange([
-                    $"-Artist={Escape(creator)}",
-                    $"-XMP-dc:Creator={Escape(creator)}",
-                    $"-IPTC:By-line={Escape(creator)}"
+                    $"-Artist={creator}",
+                    $"-XMP-dc:Creator={creator}",
+                    $"-IPTC:By-line={creator}"
                 ]);
 
                 var rights = LicenseEntry.UserValue.TrimNullToEmpty();
                 args.AddRange([
-                    $"-Copyright={Escape(rights)}",
-                    $"-XMP-dc:Rights={Escape(rights)}",
-                    $"-IPTC:CopyrightNotice={Escape(rights)}"
+                    $"-Copyright={rights}",
+                    $"-XMP-dc:Rights={rights}",
+                    $"-IPTC:CopyrightNotice={rights}"
                 ]);
 
                 var tags = SlugTagTools.TagListParseToSpacedString(TagEntryContext.Tags);
 
                 args.Add("-Keywords="); // clear existing
-                args.AddRange(tags.Select(t => $"-Keywords={Escape(t)}"));
+                args.AddRange(tags.Select(t => $"-Keywords={t}"));
 
                 // GPS
                 args.Add($"-GPSLatitude={LatitudeEntry.UserValue?.Round(6).ToString(CultureInfo.InvariantCulture)}");
@@ -548,16 +549,19 @@ public partial class PhotoListGroupListItem
                 args.Add(
                     $"-GPSAltitude={ElevationEntry.UserValue?.FeetToMeters().Round(2).ToString(CultureInfo.InvariantCulture)}");
 
-                args.Add($"\"{file.FullName}\"");
+                args.Add(file.FullName);
 
-                var argsString = string.Join(" ", args);
-                commandlineString = $"{exifToolExe} {argsString}";
+                // Write args to a UTF-8 file so non-ASCII characters (©, accents, etc.)
+                // are preserved. ExifTool's -@ reads one argument per line.
+                argsFilePath = Path.Combine(FileLocationTools.TempStorageDirectory().FullName,
+                    $"exiftool-args-{Guid.NewGuid():N}.txt");
+                await File.WriteAllLinesAsync(argsFilePath, args, new UTF8Encoding(false));
 
-                StatusContext.Progress(commandlineString);
+                StatusContext.Progress($"{exifToolExe.FullName} -@ {argsFilePath}");
 
-                var psi = new ProcessStartInfo(exifToolExe)
+                var psi = new ProcessStartInfo(exifToolExe.FullName)
                 {
-                    Arguments = argsString,
+                    Arguments = $"-@ \"{argsFilePath}\"",
                     RedirectStandardError = true,
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
@@ -577,8 +581,21 @@ public partial class PhotoListGroupListItem
             }
             catch (Exception ex)
             {
-                errors.Add($"{file.Name}: {ex.Message}{Environment.NewLine}{Environment.NewLine}{commandlineString}");
+                errors.Add($"{file.Name}: {ex.Message}");
             }
+            finally
+            {
+                if (!string.IsNullOrWhiteSpace(argsFilePath))
+                    try
+                    {
+                        File.Delete(argsFilePath);
+                    }
+                    catch
+                    {
+                        /* ignore cleanup */
+                    }
+            }
+        }
 
         if (errors.Any())
         {
@@ -593,10 +610,5 @@ public partial class PhotoListGroupListItem
         foreach (var loopItems in Items) await loopItems.RefreshMetadata();
 
         OverwriteAllEntriesWithCurrentMetadata();
-
-        static string Escape(string value)
-        {
-            return $"\"{value.Replace("\"", "\\\"")}\"";
-        }
     }
 }
