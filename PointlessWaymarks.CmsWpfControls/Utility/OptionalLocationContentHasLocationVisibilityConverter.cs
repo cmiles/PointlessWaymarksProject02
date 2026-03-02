@@ -14,7 +14,7 @@ public class OptionalLocationContentHasLocationVisibilityConverter : IValueConve
         var converted = value as IOptionalLocation;
         if (converted?.Latitude is null || converted?.Longitude is null) return Visibility.Hidden;
 
-        var latitudeValidation = SpatialValue.LatitudeValidation(converted.Latitude.Value).Result;
+        var latitudeValidation = SpatialValueValidations.LatitudeValidation(converted.Latitude.Value).Result;
         var longitudeValidation = SpatialValueValidations.LongitudeValidation(converted.Longitude.Value).Result;
         if (!latitudeValidation.Valid || !longitudeValidation.Valid) return Visibility.Hidden;
         return Visibility.Visible;

@@ -177,7 +177,7 @@ public static class UserSettingsUtilities
     {
         var currentSetting = settings.LatitudeDefault;
 
-        if (!(await SpatialValue.LatitudeValidation(currentSetting)).Valid)
+        if (!(await SpatialValueValidations.LatitudeValidation(currentSetting)).Valid)
             return ProjectDefaultLatitude;
 
         return currentSetting;

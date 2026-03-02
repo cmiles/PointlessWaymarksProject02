@@ -48,12 +48,13 @@
                                 <Border BorderBrush="LightGray"
                                         BorderThickness="2,2,2,2"
                                         CornerRadius="4"
-                                        Margin="2">
+                                        Margin="2"
+                                        Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
                                     <StackPanel Orientation="Vertical" Margin="4,4,12,8">
                                         <stringDataEntry:StringDataEntryControl
                                             DataContext="{Binding TitleEntryContext}">
                                         </stringDataEntry:StringDataEntryControl>
-                                        <stringDataEntry:StringDataEntryMultiLineControl
+                                        <stringDataEntry:StringDataEntryMultiLineControl ValueTextBoxHeight="90"
                                             DataContext="{Binding SummaryEntryContext}">
                                         </stringDataEntry:StringDataEntryMultiLineControl>
                                         <local:TagEditorControl Height="180" DataContext="{Binding TagEntryContext}" />
@@ -61,7 +62,7 @@
                                             DataContext="{Binding PhotoCreatedByEntry}">
                                         </stringDataEntry:StringDataEntryControl>
                                         <stringDataEntry:StringDataEntryControl DataContext="{Binding LicenseEntry}"></stringDataEntry:StringDataEntryControl>
-                                        <Button Command="{Binding AddCopyWriteSymbolToLicenseCommand}" Margin="0,4,0,0"
+                                        <Button Command="{Binding AddCopyWriteSymbolToLicenseCommand}" Margin="8,4,0,0"
                                                 HorizontalAlignment="Left">
                                             Insert ©
                                         </Button>
@@ -75,7 +76,8 @@
                                     <Border BorderBrush="LightGray"
                                             BorderThickness="2"
                                             CornerRadius="4"
-                                            Margin="4,2,8,2">
+                                            Margin="4,2,8,2"
+                                            Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
                                         <StackPanel Orientation="Vertical" Margin="4,4,12,8">
                                             <conversionDataEntry:ConversionDataEntryControl
                                                 DataContext="{Binding LatitudeEntry}">
@@ -91,7 +93,8 @@
                                     <Border Grid.Row="1" BorderBrush="LightGray"
                                             BorderThickness="2"
                                             CornerRadius="4"
-                                            Margin="4,2,8,2">
+                                            Margin="4,2,8,2"
+                                            Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
                                         <Grid Margin="4">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition></RowDefinition>
@@ -168,7 +171,7 @@
                                                                    Text="{Binding Metadata.PhotoCreatedOn}">
                                                         </TextBlock>
                                                         <TextBlock Margin="2" FontWeight="Bold"
-                                                                   Visibility="{Binding IsPrimaryPhoto, Converter={StaticResource BooleanToVisibility}}">
+                                                                   Visibility="{Binding IsPrimaryPhoto, Converter={StaticResource BooleanToHidden}}">
                                                             Primary Photo
                                                         </TextBlock>
                                                         <Button
@@ -176,40 +179,55 @@
                                                             CommandParameter="{Binding }"
                                                             IsEnabled="{Binding IsPrimaryPhoto, Converter={StaticResource BooleanNot}}"
                                                             Margin="0,4,0,0"
-                                                            HorizontalAlignment="Left">
+                                                            HorizontalAlignment="Stretch">
                                                             Make Primary
                                                         </Button>
                                                         <Button
                                                             Command="{Binding DataContext.FileMetadataReportCommand, ElementName=PhotoGroupGrid}"
-                                                            CommandParameter="{Binding .}">
+                                                            CommandParameter="{Binding .}"
+                                                            HorizontalAlignment="Stretch">
                                                             Metadata
                                                         </Button>
-                                                        <Button
-                                                            Command="{Binding DataContext.RemoveFileCommand, ElementName=PhotoGroupGrid}"
-                                                            CommandParameter="{Binding .}">
-                                                            Remove File
-                                                        </Button>
                                                     </StackPanel>
+                                                    <Button
+                                                        Grid.Column="1"
+                                                        HorizontalAlignment="Right"
+                                                        VerticalAlignment="Top"
+                                                        Margin="0,1,2,0"
+                                                        Width="22" Height="22"
+                                                        Padding="0"
+                                                        FontSize="13"
+                                                        FontWeight="Bold"
+                                                        ToolTip="Remove"
+                                                        Command="{Binding DataContext.RemoveFileCommand, ElementName=PhotoGroupGrid}"
+                                                        CommandParameter="{Binding .}">
+                                                        ✕
+                                                    </Button>
                                                 </Grid>
                                             </Border>
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>
                                 </ListBox>
                             </Border>
-                            <Button Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top"
-                                    Margin="0,8,8,0"
-                                    Opacity=".7"
-                                    Command="{Binding DataContext.RemoveGroupCommand, ElementName=PhotoGroupList}"
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom"
+                                        HorizontalAlignment="Right"
+                                        Margin="0,0,8,8" Opacity=".7">
+                                <Button
+                                    Command="{Binding DataContext.RemoveSelectedFilesCommand, ElementName=PhotoGroupGrid}"
                                     CommandParameter="{Binding }">
-                                Remove Group
-                            </Button>
-                            <Button Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                                    Margin="0,0,8,8"
-                                    Opacity=".7"
+                                    Remove Selected Files
+                                </Button>
+                                <Button
                                     Command="{Binding DataContext.SplitSelectedFilesCommand, ElementName=PhotoGroupList}"
                                     CommandParameter="{Binding }">
-                                Split Selected
-                            </Button>
+                                    Split Selected Files
+                                </Button>
+                                <Button Command="{Binding DataContext.RemoveGroupCommand, ElementName=PhotoGroupList}"
+                                        CommandParameter="{Binding }">
+                                    Remove Group
+                                </Button>
+                            </StackPanel>
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>

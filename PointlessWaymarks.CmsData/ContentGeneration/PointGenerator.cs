@@ -81,7 +81,7 @@ public static class PointGenerator
         if (!commonContentCheck.Valid)
             return GenerationReturn.Error(commonContentCheck.Explanation, pointContent.ContentId);
 
-        var latitudeCheck = await SpatialValue.LatitudeValidation(pointContent.Latitude);
+        var latitudeCheck = await SpatialValueValidations.LatitudeValidation(pointContent.Latitude);
         if (!latitudeCheck.Valid)
             return GenerationReturn.Error(latitudeCheck.Explanation, pointContent.ContentId);
 

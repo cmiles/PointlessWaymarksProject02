@@ -13,7 +13,7 @@ public class HasValidLatLongVisibilityConverter : IMultiValueConverter
         if (values.Length != 2) return Visibility.Hidden;
         if (values[0] is not double latitude ||
             values[1] is not double longitude) return Visibility.Hidden;
-        var latitudeValidation = SpatialValue.LatitudeValidation(latitude).Result;
+        var latitudeValidation = SpatialValueValidations.LatitudeValidation(latitude).Result;
         var longitudeValidation = SpatialValueValidations.LongitudeValidation(longitude).Result;
         if (!latitudeValidation.Valid || !longitudeValidation.Valid) return Visibility.Hidden;
         return Visibility.Visible;

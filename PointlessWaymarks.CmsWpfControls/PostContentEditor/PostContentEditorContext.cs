@@ -226,7 +226,7 @@ If your intent is just to put a single piece of content onto the main page of th
         }
 
         var latitudeValidation =
-            await SpatialValue.LatitudeValidation(OptionalLocationEntry.LatitudeEntry.UserValue.Value);
+            await SpatialValueValidations.LatitudeValidation(OptionalLocationEntry.LatitudeEntry.UserValue.Value);
         var longitudeValidation =
             await SpatialValueValidations.LongitudeValidation(OptionalLocationEntry.LongitudeEntry.UserValue.Value);
 

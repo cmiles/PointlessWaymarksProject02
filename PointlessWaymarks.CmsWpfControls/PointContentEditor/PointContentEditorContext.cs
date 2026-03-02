@@ -394,7 +394,7 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
 
         LatitudeEntry =
             await ConversionDataEntryContext<double>.CreateInstance(ConversionDataEntryHelpers.DoubleConversion);
-        LatitudeEntry.ValidationFunctions = [SpatialValue.LatitudeValidation];
+        LatitudeEntry.ValidationFunctions = [SpatialValueValidations.LatitudeValidation];
         LatitudeEntry.ComparisonFunction = (o, u) => o.IsApproximatelyEqualTo(u, .000001);
         LatitudeEntry.Title = "Latitude";
         LatitudeEntry.HelpText = "In DDD.DDDDDD°";

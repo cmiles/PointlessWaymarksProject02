@@ -607,7 +607,7 @@ Notes:
         }
 
         var latitudeValidation =
-            await SpatialValue.LatitudeValidation(OptionalLocationEntry.LatitudeEntry.UserValue.Value);
+            await SpatialValueValidations.LatitudeValidation(OptionalLocationEntry.LatitudeEntry.UserValue.Value);
         var longitudeValidation =
             await SpatialValueValidations.LongitudeValidation(OptionalLocationEntry.LongitudeEntry.UserValue.Value);
 

@@ -117,6 +117,28 @@ public partial class PhotoListContext : IDropTarget
                         continue;
                     confirmedFiles.Add(f);
                 }
+
+                // 4) Numbered-suffix grouping: if the base name ends with -NN,
+                //    find the root name and all its numbered variants (and the root itself).
+                var suffixMatch = Regex.Match(baseName, @"^(.+)-\d+$");
+                if (suffixMatch.Success)
+                {
+                    var rootName = suffixMatch.Groups[1].Value;
+                    foreach (var f in dir.GetFiles("*", SearchOption.TopDirectoryOnly)
+                                 .Where(x =>
+                                 {
+                                     var cb = Path.GetFileNameWithoutExtension(x.Name);
+                                     return cb.Equals(rootName, StringComparison.OrdinalIgnoreCase)
+                                            || Regex.IsMatch(cb, $"^{Regex.Escape(rootName)}-\\d+$",
+                                                RegexOptions.IgnoreCase);
+                                 }))
+                    {
+                        if (confirmedFiles.Any(x =>
+                                x.FullName.Equals(f.FullName, StringComparison.OrdinalIgnoreCase)))
+                            continue;
+                        confirmedFiles.Add(f);
+                    }
+                }
             }
         }
 
@@ -192,6 +214,24 @@ public partial class PhotoListContext : IDropTarget
                     if (processed.Add(f.FullName) && groupSet.Add(f.FullName))
                         group.Add(f.FullName);
 
+                // Numbered-suffix grouping: if the base name ends with -NN,
+                // find the root name and all its numbered variants (and the root itself).
+                var suffixMatch = Regex.Match(baseName, @"^(.+)-\d+$");
+                if (suffixMatch.Success)
+                {
+                    var rootName = suffixMatch.Groups[1].Value;
+                    foreach (var f in dirInfo.GetFiles("*", SearchOption.TopDirectoryOnly)
+                                 .Where(x =>
+                                 {
+                                     var cb = Path.GetFileNameWithoutExtension(x.Name);
+                                     return cb.Equals(rootName, StringComparison.OrdinalIgnoreCase)
+                                            || Regex.IsMatch(cb, $"^{Regex.Escape(rootName)}-\\d+$",
+                                                RegexOptions.IgnoreCase);
+                                 }))
+                        if (processed.Add(f.FullName) && groupSet.Add(f.FullName))
+                            group.Add(f.FullName);
+                }
+
                 // Ensure unique list and load
                 var distinctGroup = group.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
                 if (distinctGroup.Count > 0)
@@ -211,6 +251,16 @@ public partial class PhotoListContext : IDropTarget
         await ThreadSwitcher.ResumeForegroundAsync();
 
         Items.Remove(toRemove!);
+    }
+
+    public PhotoListGroupListItem? SelectedListItem()
+    {
+        return SelectedItem;
+    }
+
+    public List<PhotoListGroupListItem> SelectedListItems()
+    {
+        return SelectedItems;
     }
 
     [BlockingCommand]

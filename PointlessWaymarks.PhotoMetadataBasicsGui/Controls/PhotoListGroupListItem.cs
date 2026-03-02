@@ -10,6 +10,7 @@ using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.SpatialTools;
 using PointlessWaymarks.WpfCommon;
+using PointlessWaymarks.WpfCommon.ChangesAndValidation;
 using PointlessWaymarks.WpfCommon.ConversionDataEntry;
 using PointlessWaymarks.WpfCommon.FileMetadataDisplay;
 using PointlessWaymarks.WpfCommon.Status;
@@ -20,7 +21,8 @@ namespace PointlessWaymarks.PhotoMetadataBasicsGui.Controls;
 
 [Observable]
 [GenerateStatusCommands]
-public partial class PhotoListGroupListItem
+public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndValidation,
+    IHasValidationIssues
 {
     public required ConversionDataEntryContext<double?> ElevationEntry { get; set; }
     public required ObservableCollection<PhotoListFileItem> Items { get; set; }
@@ -33,9 +35,17 @@ public partial class PhotoListGroupListItem
     public required StatusControlContext StatusContext { get; set; }
     public required StringDataEntryContext SummaryEntryContext { get; set; }
     public required TagsEditorContext TagEntryContext { get; set; }
-
-    // Entry contexts exposed as required properties so callers / bindings can use them
     public required StringDataEntryContext TitleEntryContext { get; set; }
+
+    public void CheckForChangesAndValidationIssues()
+    {
+        HasChanges = PropertyScanners.ChildPropertiesHaveChanges(this);
+        HasValidationIssues = PropertyScanners.ChildPropertiesHaveValidationIssues(this);
+    }
+
+    public bool HasChanges { get; set; }
+
+    public bool HasValidationIssues { get; set; }
 
     [NonBlockingCommand]
     public async Task AddCopyWriteSymbolToLicense()
@@ -164,6 +174,9 @@ public partial class PhotoListGroupListItem
         factoryReturn.DesignateBestGuessPrimary();
 
         factoryReturn.OverwriteAllEntriesWithCurrentMetadata();
+
+        PropertyScanners.SubscribeToChildHasChangesAndHasValidationIssues(factoryReturn,
+            factoryReturn.CheckForChangesAndValidationIssues);
 
         return factoryReturn;
     }
@@ -312,6 +325,19 @@ public partial class PhotoListGroupListItem
         if (!Items.Any(x => x.IsPrimaryPhoto)) DesignateBestGuessPrimary();
     }
 
+    [NonBlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task RemoveSelectedFiles()
+    {
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        var frozenSelected = SelectedItems.ToList();
+
+        foreach (var item in frozenSelected) Items.Remove(item);
+
+        if (!Items.Any(x => x.IsPrimaryPhoto)) DesignateBestGuessPrimary();
+    }
+
     [BlockingCommand]
     public async Task RenameFiles()
     {
@@ -443,6 +469,16 @@ public partial class PhotoListGroupListItem
         await StatusContext.ToastSuccess($"Updated Metadata for {TitleEntryContext.UserValue}");
     }
 
+    public PhotoListFileItem? SelectedListItem()
+    {
+        return SelectedItem;
+    }
+
+    public List<PhotoListFileItem> SelectedListItems()
+    {
+        return SelectedItems;
+    }
+
     public void SetDefaultCreatedByAndLicenseIfPossible()
     {
         var currentSettings = PhotoMetadataBasicsGuiSettingTools.ReadSettings();
@@ -463,6 +499,21 @@ public partial class PhotoListGroupListItem
     public async Task WriteMetadata()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (HasValidationIssues)
+        {
+            await StatusContext.ToastError("Please fix validation issues before writing metadata.");
+            return;
+        }
+
+        if (!HasChanges)
+        {
+            var result = await StatusContext.ShowMessageWithYesNoButton("No Changes?",
+                "The program is not detecting any changes to write - write anyway?");
+
+            if (!result.Equals("yes", StringComparison.CurrentCultureIgnoreCase))
+                return;
+        }
 
         // Resolve ExifTool
         FileInfo? exifToolExe;

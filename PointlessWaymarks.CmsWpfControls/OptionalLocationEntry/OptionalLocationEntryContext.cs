@@ -68,7 +68,7 @@ public partial class OptionalLocationEntryContext : IHasChanges, IHasValidationI
         if (LatitudeEntry!.UserValue == null || LongitudeEntry!.UserValue == null) return null;
 
         var latitudeValidation =
-            await SpatialValue.LatitudeValidation(LatitudeEntry.UserValue.Value);
+            await SpatialValueValidations.LatitudeValidation(LatitudeEntry.UserValue.Value);
         var longitudeValidation =
             await SpatialValueValidations.LongitudeValidation(LongitudeEntry.UserValue.Value);
 
