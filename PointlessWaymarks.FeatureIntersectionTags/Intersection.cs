@@ -248,7 +248,6 @@ public static class Intersection
         }
 
         var intersectionResult = new IntersectResult(toCheck) { Description = "IFeature Tagging" };
-        ;
 
         progress?.Report($"Getting Settings from {intersectSettingsFile}");
         var settings =
@@ -660,22 +659,24 @@ public static class Intersection
 
             loopWrite.FinalTagString = string.Join(",", allTags);
 
-            var exifToolKeyword = allTags.Select(x => $"-keywords=\"{x.Replace("\"", "&quot;")}\"").ToList();
-            var exifToolSubject = allTags.Select(x => $"-subject=\"{x.Replace("\"", "&quot;")}\"").ToList();
-            var exifToolParameters =
-                $"-E {string.Join(" ", exifToolKeyword)} {string.Join(" ", exifToolSubject)} -overwrite_original \"{loopWrite.FileToTag.FullName}\"";
+            var writeRequest = new ExifToolWriteRequest
+            {
+                Keywords = allTags
+            };
+
+            var argsPreview = string.Join(" ", ExifToolWriter.BuildArguments(writeRequest, loopWrite.FileToTag));
 
             if (testRun)
             {
                 loopWrite.Result = "Test Run Success";
-                loopWrite.Notes = $"Test Run - would have run ExifTool with {exifToolParameters}";
+                loopWrite.Notes = $"Test Run - would have run ExifTool with {argsPreview}";
                 continue;
             }
 
             if (!exifTool.isPresent)
             {
                 loopWrite.Result = "ExifTool Not Found";
-                loopWrite.Notes = $"Would have run ExifTool with {exifToolParameters}";
+                loopWrite.Notes = $"Would have run ExifTool with {argsPreview}";
                 continue;
             }
 
@@ -704,20 +705,20 @@ public static class Intersection
 
             try
             {
-                var exifToolWriteOutcome =
-                    await ProcessTools.Execute(exifTool.exifToolFile!.FullName, exifToolParameters, progress);
+                var writeResult =
+                    await ExifToolWriter.WriteMetadataAsync(exifTool.exifToolFile!, writeRequest,
+                        [loopWrite.FileToTag], progress);
 
-                if (!exifToolWriteOutcome.success)
+                if (!writeResult.Success)
                 {
-                    Log.ForContext("standardOutput", exifToolWriteOutcome.standardOutput)
-                        .ForContext("errorOutput", exifToolWriteOutcome.errorOutput)
-                        .ForContext("success", exifToolWriteOutcome.success)
+                    Log.ForContext("writeErrors", writeResult.Errors)
                         .ForContext("intersectResults", loopWrite.SafeObjectDump())
                         .ForContext("exifTool", exifTool.SafeObjectDump())
                         .Error($"Writing with ExifTool did not Succeed - {loopWrite.FileToTag.FullName}");
 
                     loopWrite.Result = "ExifTool Error";
-                    loopWrite.Notes = $"ExifTool Reported an Error - {exifToolWriteOutcome.standardOutput}";
+                    loopWrite.Notes =
+                        $"ExifTool Reported an Error - {string.Join("; ", writeResult.Errors)}";
 
                     continue;
                 }
@@ -725,7 +726,7 @@ public static class Intersection
             catch (Exception e)
             {
                 Log
-                    .ForContext("exifToolParameters", exifToolParameters)
+                    .ForContext("exifToolArgs", argsPreview)
                     .ForContext("exifTool", exifTool.SafeObjectDump())
                     .ForContext("intersectResults", loopWrite.SafeObjectDump())
                     .Error(e,

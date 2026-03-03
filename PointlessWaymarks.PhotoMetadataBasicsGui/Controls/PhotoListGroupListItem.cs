@@ -1,8 +1,6 @@
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Text;
 using MathNet.Numerics;
 using Metalama.Patterns.Observability;
 using Microsoft.Win32;
@@ -546,111 +544,24 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
             return;
         }
 
-        var errors = new List<string>();
-
-        foreach (var file in filesToProcess)
+        var request = new ExifToolWriteRequest
         {
-            string? argsFilePath = null;
-            try
-            {
-                StatusContext.Progress($"Writing metadata to {file.Name}...");
+            Title = TitleEntryContext.UserValue.TrimNullToEmpty(),
+            Description = SummaryEntryContext.UserValue.TrimNullToEmpty(),
+            Creator = PhotoCreatedByEntry.UserValue.TrimNullToEmpty(),
+            Copyright = LicenseEntry.UserValue.TrimNullToEmpty(),
+            Keywords = SlugTagTools.TagListParseToSpacedString(TagEntryContext.Tags),
+            Latitude = LatitudeEntry.UserValue?.Round(6),
+            Longitude = LongitudeEntry.UserValue?.Round(6),
+            AltitudeInMeters = ElevationEntry.UserValue?.FeetToMeters().Round(2)
+        };
 
-                var args = new List<string> { "-overwrite_original", "-charset", "iptc=utf8" };
+        var writeResult = await ExifToolWriter.WriteMetadataAsync(
+            exifToolExe, request, filesToProcess, StatusContext.ProgressTracker());
 
-                // Title
-                var title = TitleEntryContext.UserValue.TrimNullToEmpty();
-                args.AddRange([
-                    $"-Title={title}",
-                    $"-XMP:Title={title}",
-                    $"-IPTC:ObjectName={title}"
-                ]);
-
-                // Summary / description
-                var desc = SummaryEntryContext.UserValue.TrimNullToEmpty();
-                args.AddRange([
-                    $"-Description={desc}",
-                    $"-XMP-dc:Description={desc}",
-                    $"-IPTC:Caption-Abstract={desc}"
-                ]);
-
-                // Creator / artist
-                var creator = PhotoCreatedByEntry.UserValue.TrimNullToEmpty();
-                args.AddRange([
-                    $"-Artist={creator}",
-                    $"-XMP-dc:Creator={creator}",
-                    $"-IPTC:By-line={creator}"
-                ]);
-
-                var rights = LicenseEntry.UserValue.TrimNullToEmpty();
-                args.AddRange([
-                    $"-Copyright={rights}",
-                    $"-XMP-dc:Rights={rights}",
-                    $"-IPTC:CopyrightNotice={rights}"
-                ]);
-
-                var tags = SlugTagTools.TagListParseToSpacedString(TagEntryContext.Tags);
-
-                args.Add("-Keywords="); // clear existing
-                args.AddRange(tags.Select(t => $"-Keywords={t}"));
-
-                // GPS
-                args.Add($"-GPSLatitude={LatitudeEntry.UserValue?.Round(6).ToString(CultureInfo.InvariantCulture)}");
-                args.Add(
-                    $"-GPSLongitude={LongitudeEntry.UserValue?.Round(6).ToString(CultureInfo.InvariantCulture)}");
-                args.Add(
-                    $"-GPSAltitude={ElevationEntry.UserValue?.FeetToMeters().Round(2).ToString(CultureInfo.InvariantCulture)}");
-
-                args.Add(file.FullName);
-
-                // Write args to a UTF-8 file so non-ASCII characters (©, accents, etc.)
-                // are preserved. ExifTool's -@ reads one argument per line.
-                argsFilePath = Path.Combine(FileLocationTools.TempStorageDirectory().FullName,
-                    $"exiftool-args-{Guid.NewGuid():N}.txt");
-                await File.WriteAllLinesAsync(argsFilePath, args, new UTF8Encoding(false));
-
-                StatusContext.Progress($"{exifToolExe.FullName} -@ {argsFilePath}");
-
-                var psi = new ProcessStartInfo(exifToolExe.FullName)
-                {
-                    Arguments = $"-@ \"{argsFilePath}\"",
-                    RedirectStandardError = true,
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-
-                using var proc = Process.Start(psi);
-                if (proc == null)
-                    throw new InvalidOperationException("Failed to start ExifTool process.");
-
-                var stdOut = await proc.StandardOutput.ReadToEndAsync();
-                var stdErr = await proc.StandardError.ReadToEndAsync();
-                await proc.WaitForExitAsync();
-
-                if (proc.ExitCode != 0)
-                    throw new InvalidOperationException($"ExifTool error ({proc.ExitCode}): {stdErr}\n{stdOut}");
-            }
-            catch (Exception ex)
-            {
-                errors.Add($"{file.Name}: {ex.Message}");
-            }
-            finally
-            {
-                if (!string.IsNullOrWhiteSpace(argsFilePath))
-                    try
-                    {
-                        File.Delete(argsFilePath);
-                    }
-                    catch
-                    {
-                        /* ignore cleanup */
-                    }
-            }
-        }
-
-        if (errors.Any())
+        if (!writeResult.Success)
         {
-            var message = string.Join("\n", errors);
+            var message = string.Join("\n", writeResult.Errors);
             await StatusContext.ShowMessageWithOkButton("Metadata Write Errors", message);
         }
         else

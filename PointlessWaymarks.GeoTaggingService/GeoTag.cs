@@ -307,25 +307,31 @@ public class GeoTag
                         continue;
                     }
 
-            var exifToolParameters = loopFile.Elevation is null
-                ? $"-GPSLatitude*={loopFile.Latitude} -GPSLongitude*={loopFile.Longitude} -overwrite_original \"{fileToWriteTo.FullName}\" "
-                : $"-GPSLatitude*={loopFile.Latitude} -GPSLongitude*={loopFile.Longitude} -GPSAltitude*={loopFile.Elevation} -overwrite_original \"{fileToWriteTo.FullName}\"";
+            var writeRequest = new ExifToolWriteRequest
+            {
+                Latitude = loopFile.Latitude,
+                Longitude = loopFile.Longitude,
+                AltitudeInMeters = loopFile.Elevation
+            };
+
             try
             {
-                var exifToolWriteOutcome =
-                    await ProcessTools.Execute(exifTool.exifToolFile!.FullName, exifToolParameters, progress);
+                var writeResult =
+                    await ExifToolWriter.WriteMetadataAsync(exifTool.exifToolFile!, writeRequest,
+                        [fileToWriteTo], progress);
 
-                if (!exifToolWriteOutcome.success)
+                if (!writeResult.Success)
                 {
-                    Log.ForContext("standardOutput", exifToolWriteOutcome.standardOutput)
-                        .ForContext("errorOutput", exifToolWriteOutcome.errorOutput)
-                        .ForContext("success", exifToolWriteOutcome.success)
-                        .ForContext("exifToolParameters", exifToolParameters)
+                    var argsPreview =
+                        string.Join(" ", ExifToolWriter.BuildArguments(writeRequest, fileToWriteTo));
+
+                    Log.ForContext("writeErrors", writeResult.Errors)
+                        .ForContext("exifToolArgs", argsPreview)
                         .ForContext("exifTool", exifTool.SafeObjectDump())
                         .Error($"Writing with ExifTool did not Succeed - {fileToWriteTo.FullName}");
 
                     returnFileResults.Add(new GeoTagMetadataWrite(fileToWriteTo.FullName, false,
-                        $"Trying to write {loopFile.Latitude}, {loopFile.Longitude} - Elevation: {loopFile.Elevation} with TagSharp resulted in an error.",
+                        $"Trying to write {loopFile.Latitude}, {loopFile.Longitude} - Elevation: {loopFile.Elevation} with ExifTool resulted in an error - {string.Join("; ", writeResult.Errors)}",
                         loopFile.Source, loopFile.Latitude, loopFile.Longitude, loopFile.Elevation));
 
                     continue;
@@ -348,7 +354,7 @@ public class GeoTag
                 loopFile.Longitude, loopFile.Elevation));
 
             progress?.Report(
-                $"GeoTag - Wrote Metadata with ExifTool - {exifTool.exifToolFile.FullName} {exifToolParameters}");
+                $"GeoTag - Wrote Metadata with ExifTool to {fileToWriteTo.FullName}");
         }
 
         return new GeoTagWriteMetadataToFilesResult(returnTitle, returnNotes.ToString(), returnFileResults);
