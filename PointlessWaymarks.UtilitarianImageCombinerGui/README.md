@@ -4,13 +4,11 @@ This program combines images and pdfs into a single JPEG image. It is designed f
             
 To add images or pdfs use the 'Add Images' button or drag and drop files into the list. You can drag and drop items to reorder the list, rotate and view images, and remove items.
             
-Images and pdfs can be combined into a Vertical, Horizontal, or Grid orientation. The maximum width and height for each image can be set and along with a JPEG quality setting gives you some control over the size of the final image.
-            
-Supported File Extensions: {string.Join(", ", SupportedExtensions)}
+Images and pdfs can be combined into a Vertical, Horizontal, or Grid orientation. The maximum width and height and JPEG quality can be set for the final image.
             
 ## Background
             
-For several years I have been generating private sites with the [Pointless Waymarks CMS](https://github.com/cmiles/PointlessWaymarksProject) to track personal items like camera gear, books and home purchases. For these sites it has been very useful to take several photos of an item with my phone (a photo of a lens showing the brand/model, another showing the serial number, maybe one showing the packaging, sometimes another with accessories...), and sometimes a PDF receipt, and combine them into a single image for record keeping. In the past I often did this on my Android phone with [ZomboDroid Image Combiner & Editor](https://play.google.com/store/apps/details?id=com.zombodroid.imagecombinerfree) - but over time as I did this more the photos were not always on my phone and I wanted to be able to also combine images of PDF receipts - so I created this program!
+For several years I have been generating private sites with the [Pointless Waymarks CMS](https://cmiles.info/Posts/Software/pointless-waymarks-cms/pointless-waymarks-cms.html) to track personal items like camera gear, books and home purchases. For these sites it has been very useful to take several photos of an item with my phone (a photo of a lens showing the brand/model, another showing the serial number, maybe one showing the packaging, another with accessories...), and sometimes a PDF receipt, and combine them into a single image for record keeping. In the past I often did this on my Android phone with [ZomboDroid Image Combiner & Editor](https://play.google.com/store/apps/details?id=com.zombodroid.imagecombinerfree) - but over time as I did this more the photos were not always on my phone and I wanted to be able to also combine images of PDF receipts and websites - so I created this program!
             
 ## About the Author
             

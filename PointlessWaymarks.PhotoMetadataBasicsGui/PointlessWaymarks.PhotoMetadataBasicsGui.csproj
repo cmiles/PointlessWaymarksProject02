@@ -8,6 +8,18 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <AssemblyAttribute Include="PointlessWaymarks.CommonTools.BuildDateAttribute">
+            <_Parameter1>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
+
+    <PropertyGroup>
+        <Version>$([System.DateTime]::Now.ToString("yyyy.M.d.Hmm"))</Version>
+        <AssemblyVersion>$([System.DateTime]::Now.ToString("yyyy.M.d.Hmm"))</AssemblyVersion>
+        <FileVersion>$([System.DateTime]::Now.ToString("yyyy.M.d.Hmm"))</FileVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
       <None Remove="PointlessWaymarksPhotoMetadataBasicsIcon.ico" />
     </ItemGroup>
 
@@ -30,7 +42,7 @@
       <None Update="PhotoMetadataBasicsInstallerLeftImage.bmp">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
-      <None Update="PhotoMetadataBasicsTopRightImage.bmp">
+      <None Update="PhotoMetadataBasicsInstallerTopRightImage.bmp">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
     </ItemGroup>
