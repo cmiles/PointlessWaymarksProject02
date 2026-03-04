@@ -5,18 +5,22 @@ Console.Write(
 
 var mainReadme = new FileInfo(Path.Combine(searchDirectory.FullName, "README-Fossil.md"));
 
-if (mainReadme.Exists && File.Exists(Path.Combine(searchDirectory.FullName, "PointlessWaymarks.sln")))
+if (mainReadme.Exists && File.Exists(Path.Combine(searchDirectory.FullName, "PointlessWaymarks.slnx")))
 {
     var gitMirrorInformation =
         $"""
          ## Fossil Repository Mirror - This is a Read Only View ##
 
          *This file is auto-generated - do not edit this directly, changes will be overwritten.*
+         
+         {await File.ReadAllTextAsync(mainReadme.FullName)}
          """;
 
-    await File.WriteAllTextAsync(Path.Combine(searchDirectory.FullName, "README.md"), gitMirrorInformation);
+    var readmeFilename = Path.Combine(searchDirectory.FullName, "README.md");
 
-    Console.WriteLine("Found the main README-Fossil.md - prepended mirror message and wrote to README.md");
+    await File.WriteAllTextAsync(readmeFilename, gitMirrorInformation);
+
+    Console.WriteLine($"Found the main README-Fossil.md - prepended mirror message and wrote to {readmeFilename}");
     Console.WriteLine();
 }
 
