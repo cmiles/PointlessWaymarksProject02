@@ -45,6 +45,9 @@
       <None Update="PhotoMetadataBasicsInstallerTopRightImage.bmp">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <None Update="README_PhotoMetadataBasicsGui.md">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>
