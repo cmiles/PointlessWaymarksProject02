@@ -16,6 +16,9 @@
     <Project Path="PointlessWaymarksTools/PointlessWaymarks.FeedReader/PointlessWaymarks.FeedReader.csproj">
       <Platform Project="x64" />
     </Project>
+    <Project Path="PointlessWaymarksTools/PointlessWaymarks.GeoTaggingService/PointlessWaymarks.GeoTaggingService.csproj">
+      <Platform Project="x64" />
+    </Project>
     <Project Path="PointlessWaymarksTools/PointlessWaymarks.LlamaAspects/PointlessWaymarks.LlamaAspects.csproj">
       <Platform Project="x64" />
     </Project>
@@ -95,9 +98,6 @@
     <Platform Project="x64" />
   </Project>
   <Project Path="PointlessWaymarks.FeedReaderGui/PointlessWaymarks.FeedReaderGui.csproj">
-    <Platform Project="x64" />
-  </Project>
-  <Project Path="PointlessWaymarks.GeoTaggingService/PointlessWaymarks.GeoTaggingService.csproj">
     <Platform Project="x64" />
   </Project>
   <Project Path="PointlessWaymarks.GeoToolsGui/PointlessWaymarks.GeoToolsGui.csproj">

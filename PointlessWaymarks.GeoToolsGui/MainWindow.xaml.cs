@@ -5,6 +5,8 @@ using PointlessWaymarks.GeoToolsGui.Controls;
 using PointlessWaymarks.GeoToolsGui.Messages;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
+using PointlessWaymarks.WpfCommon.FeatureIntersectTagger;
+using PointlessWaymarks.WpfCommon.FileBasedGeoTagger;
 using PointlessWaymarks.WpfCommon.MarkdownDisplay;
 using PointlessWaymarks.WpfCommon.ProgramUpdateMessage;
 using PointlessWaymarks.WpfCommon.Status;
@@ -54,8 +56,8 @@ public partial class MainWindow
 
     public HelpDisplayContext? AboutContext { get; set; }
     public ConnectBasedGeoTaggerContext? ConnectGeoTaggerContext { get; set; }
-    public FeatureIntersectTaggerContext? FeatureIntersectContext { get; set; }
-    public FileBasedGeoTaggerContext? FileGeoTaggerContext { get; set; }
+    public WpfCommon.FeatureIntersectTagger.FeatureIntersectTaggerContext? FeatureIntersectContext { get; set; }
+    public WpfCommon.FileBasedGeoTagger.FileBasedGeoTaggerContext? FileGeoTaggerContext { get; set; }
     public ConnectDownloadContext? GarminConnectDownloadContext { get; set; }
     public string InfoTitle { get; set; }
     public int SelectedTab { get; set; }
@@ -83,9 +85,9 @@ public partial class MainWindow
 
     private async Task LoadData()
     {
-        FileGeoTaggerContext = await FileBasedGeoTaggerContext.CreateInstance(StatusContext, WindowStatus);
+        FileGeoTaggerContext = await WpfCommon.FileBasedGeoTagger.FileBasedGeoTaggerContext.CreateInstance(StatusContext, WindowStatus);
         ConnectGeoTaggerContext = await ConnectBasedGeoTaggerContext.CreateInstance(StatusContext, WindowStatus);
-        FeatureIntersectContext = await FeatureIntersectTaggerContext.CreateInstance(StatusContext, WindowStatus);
+        FeatureIntersectContext = await WpfCommon.FeatureIntersectTagger.FeatureIntersectTaggerContext.CreateInstance(StatusContext, WindowStatus);
         GarminConnectDownloadContext = await ConnectDownloadContext.CreateInstance(StatusContext, WindowStatus);
         AboutContext = new HelpDisplayContext([
             HelpMarkdown.CombinedAboutToolsAndPackages
@@ -122,7 +124,7 @@ public partial class MainWindow
             });
         });
 
-        WeakReferenceMessenger.Default.Register<FeatureIntersectFileAddRequestMessage>(this, (_, m) =>
+        WeakReferenceMessenger.Default.Register<WpfCommon.FileBasedGeoTagger.FeatureIntersectFileAddRequestMessage>(this, (_, m) =>
         {
             StatusContext.RunFireAndForgetNonBlockingTask(async () =>
             {

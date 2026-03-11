@@ -11,6 +11,8 @@
     xmlns:status="clr-namespace:PointlessWaymarks.WpfCommon.Status;assembly=PointlessWaymarks.WpfCommon"
     xmlns:ui="http://schemas.modernwpf.com/2019"
     xmlns:windowScreenShot="clr-namespace:PointlessWaymarks.WpfCommon.WindowScreenShot;assembly=PointlessWaymarks.WpfCommon"
+    xmlns:featureIntersectTagger="clr-namespace:PointlessWaymarks.WpfCommon.FeatureIntersectTagger;assembly=PointlessWaymarks.WpfCommon"
+    xmlns:fileBasedGeoTagger="clr-namespace:PointlessWaymarks.WpfCommon.FileBasedGeoTagger;assembly=PointlessWaymarks.WpfCommon"
     Title="{Binding InfoTitle}"
     Width="800"
     Height="450"
@@ -21,13 +23,13 @@
     <Grid>
         <TabControl SelectedIndex="{Binding SelectedTab, Mode=TwoWay}" TabStripPlacement="Left" ItemContainerStyle="{StaticResource UnderlineOnSelectTabItemStyle}">
             <TabItem Header="GeoTag from Gpx Files">
-                <controls1:FileBasedGeoTaggerControl DataContext="{Binding FileGeoTaggerContext}" />
+                <fileBasedGeoTagger:FileBasedGeoTaggerControl DataContext="{Binding FileGeoTaggerContext}" />
             </TabItem>
             <TabItem Header="GeoTag from Garmin Connect">
                 <controls1:ConnectBasedGeoTaggerControl DataContext="{Binding ConnectGeoTaggerContext}" />
             </TabItem>
             <TabItem Header="Feature Intersect Tags">
-                <controls1:FeatureIntersectTaggerControl DataContext="{Binding FeatureIntersectContext}" />
+                <featureIntersectTagger:FeatureIntersectTaggerControl DataContext="{Binding FeatureIntersectContext}" />
             </TabItem>
             <TabItem Header="Garmin Connect Download">
                 <controls1:ConnectDownloadControl DataContext="{Binding GarminConnectDownloadContext}" />
