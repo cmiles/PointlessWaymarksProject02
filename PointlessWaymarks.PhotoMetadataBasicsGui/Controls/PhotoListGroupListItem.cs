@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
+using System.Windows;
 using MathNet.Numerics;
 using Metalama.Patterns.Observability;
 using Microsoft.Win32;
@@ -11,6 +12,7 @@ using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.ChangesAndValidation;
 using PointlessWaymarks.WpfCommon.ConversionDataEntry;
 using PointlessWaymarks.WpfCommon.FileMetadataDisplay;
+using PointlessWaymarks.WpfCommon.LocationPicker;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.StringDataEntry;
 using PointlessWaymarks.WpfCommon.Utility;
@@ -96,6 +98,35 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
             var selectedFiles = filePicker.FileNames.Select(f => new FileInfo(f)).ToList();
             await AddFiles(selectedFiles);
         }
+    }
+
+    [BlockingCommand]
+    public async Task ChooseLocationOnMap()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var initialLat = LatitudeEntry.UserValue ?? 32.1092;
+        var initialLong = LongitudeEntry.UserValue ?? -110.5315;
+        var initialElev = ElevationEntry.UserValue;
+
+        var locationWindow = await LocationPickerWindow.CreateInstance(
+            initialLat, initialLong, initialElev,
+            $"Choose Location - {TitleEntryContext.UserValue.TrimNullToEmpty()}");
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        locationWindow.Owner = Application.Current.MainWindow;
+        var result = locationWindow.ShowDialog();
+
+        if (result != true) return;
+
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var picker = locationWindow.LocationPicker!;
+        LatitudeEntry.UserText = picker.LatitudeEntry!.UserValue.ToString("F6");
+        LongitudeEntry.UserText = picker.LongitudeEntry!.UserValue.ToString("F6");
+        if (picker.ElevationEntry?.UserValue is not null)
+            ElevationEntry.UserText = picker.ElevationEntry.UserValue.Value.ToString("N0");
     }
 
     public static async Task<PhotoListGroupListItem> CreateInstance(
@@ -238,6 +269,17 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
             Longitude = MostFrequentValue(items, x => x.Metadata.Longitude)
         };
         return composite;
+    }
+
+
+    public async Task<bool> HasValidLatLong()
+    {
+        if (LongitudeEntry.UserValue is null || LatitudeEntry.UserValue is null) return false;
+
+        if (!(await SpatialValueValidations.LatitudeValidation(LatitudeEntry.UserValue.Value)).Valid) return false;
+        if (!(await SpatialValueValidations.LongitudeValidation(LongitudeEntry.UserValue.Value)).Valid) return false;
+
+        return true;
     }
 
     [NonBlockingCommand]

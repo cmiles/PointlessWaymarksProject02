@@ -8,7 +8,7 @@ using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsWpfControls.ContentHistoryView;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.CmsWpfControls.ContentMap;
-using PointlessWaymarks.CmsWpfControls.PointContentEditor;
+using PointlessWaymarks.WpfCommon.Elevation;
 using PointlessWaymarks.CmsWpfControls.SitePreview;
 using PointlessWaymarks.CmsWpfControls.Utility;
 using PointlessWaymarks.CommonTools;

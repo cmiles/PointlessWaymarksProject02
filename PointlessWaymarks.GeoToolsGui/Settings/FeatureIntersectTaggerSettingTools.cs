@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Text.Json;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.CommonTools.S3;
@@ -11,9 +11,7 @@ public static class FeatureIntersectTaggerSettingTools
 
     public static async Task<FileInfo> DefaultSettingsFile()
     {
-        var settingsFile =
-            new FileInfo(Path.Combine(FileLocationTools.DefaultStorageDirectory().FullName,
-                "PwGtgFeatureIntersectTaggerSettings.json"));
+        var settingsFile = FileLocationTools.DefaultFeatureIntersectSettingsFile();
 
         if (!settingsFile.Exists)
         {

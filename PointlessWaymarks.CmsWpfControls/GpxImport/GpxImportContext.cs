@@ -16,7 +16,7 @@ using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsData.Spatial;
 using PointlessWaymarks.CmsWpfControls.LineContentEditor;
-using PointlessWaymarks.CmsWpfControls.PointContentEditor;
+using PointlessWaymarks.WpfCommon.Elevation;
 using PointlessWaymarks.CmsWpfControls.TagsEditor;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.FeatureIntersectionTags;

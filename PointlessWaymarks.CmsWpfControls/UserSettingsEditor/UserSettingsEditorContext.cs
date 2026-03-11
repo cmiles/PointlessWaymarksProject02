@@ -14,6 +14,7 @@ using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.CommonTools.S3;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
+using PointlessWaymarks.WpfCommon.GeoNamesControl;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
 
@@ -218,7 +219,7 @@ public partial class UserSettingsEditorContext
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        GeoNamesApiCredentials.RemoveGeoNamesSiteCredentials();
+        GeoNamesApiCredentials.RemoveGeoNamesSiteCredentials(UserSettingsSingleton.CurrentSettings().SettingsId);
     }
 
     [BlockingCommand]
@@ -533,6 +534,6 @@ public partial class UserSettingsEditorContext
 
         if (string.IsNullOrWhiteSpace(cleanedUsername)) return;
 
-        GeoNamesApiCredentials.SaveGeoNamesSiteCredential(cleanedUsername);
+        GeoNamesApiCredentials.SaveGeoNamesSiteCredential(cleanedUsername, UserSettingsSingleton.CurrentSettings().SettingsId);
     }
 }

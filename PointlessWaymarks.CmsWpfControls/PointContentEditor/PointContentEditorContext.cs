@@ -12,7 +12,6 @@ using PointlessWaymarks.CmsWpfControls.ContentSiteFeedAndIsDraft;
 using PointlessWaymarks.CmsWpfControls.CreatedAndUpdatedByAndOnDisplay;
 using PointlessWaymarks.CmsWpfControls.DataEntry;
 using PointlessWaymarks.CmsWpfControls.DropdownDataEntry;
-using PointlessWaymarks.CmsWpfControls.GeoSearch;
 using PointlessWaymarks.CmsWpfControls.HelpDisplay;
 using PointlessWaymarks.CmsWpfControls.PointDetailEditor;
 using PointlessWaymarks.CmsWpfControls.TagsEditor;
@@ -38,9 +37,10 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Windows;
+using PointlessWaymarks.WpfCommon.GeoSearch;
 using Point = NetTopologySuite.Geometries.Point;
 
-namespace PointlessWaymarks.CmsWpfControls.PointContentEditor;
+namespace PointlessWaymarks.WpfCommon.Elevation;
 
 [NotifyPropertyChanged]
 [GenerateStatusCommands]
@@ -202,7 +202,7 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         var factoryMapIcons = await MapIconGenerator.SerializedMapIcons();
-        var factoryLocationSearchContext = await GeoSearchContext.CreateInstance(factoryStatusContext);
+        var factoryLocationSearchContext = await GeoSearchContext.CreateInstance(factoryStatusContext, UserSettingsSingleton.CurrentSettings().SettingsId);
 
         var newControl = new PointContentEditorContext(factoryStatusContext,
             NewContentModels.InitializePointContent(pointContent), factoryMapIcons, factoryLocationSearchContext);

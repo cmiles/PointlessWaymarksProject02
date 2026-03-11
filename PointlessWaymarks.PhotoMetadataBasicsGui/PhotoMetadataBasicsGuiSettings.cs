@@ -10,6 +10,7 @@ public partial class PhotoMetadataBasicsGuiSettings
     public string DefaultLicense { get; set; } = string.Empty;
 
     public string ExifToolPath { get; set; } = string.Empty;
+    public string FeatureIntersectSettingsFile { get; set; } = string.Empty;
 
     public string ProgramUpdateDirectory { get; set; } =
         @"https://software.pointlesswaymarks.com/Software/PointlessWaymarksSoftwareList.json";

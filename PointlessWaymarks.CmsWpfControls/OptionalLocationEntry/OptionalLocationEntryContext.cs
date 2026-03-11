@@ -3,7 +3,7 @@ using NetTopologySuite.Features;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsData.Spatial;
-using PointlessWaymarks.CmsWpfControls.PointContentEditor;
+using PointlessWaymarks.WpfCommon.Elevation;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.FeatureIntersectionTags;
 using PointlessWaymarks.LlamaAspects;

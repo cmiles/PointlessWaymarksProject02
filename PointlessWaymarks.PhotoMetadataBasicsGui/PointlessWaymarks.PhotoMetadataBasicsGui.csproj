@@ -29,6 +29,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\PointlessWaymarks.FeatureIntersectionTags\PointlessWaymarks.FeatureIntersectionTags.csproj" />
         <ProjectReference Include="..\PointlessWaymarksTools\PointlessWaymarks.WpfCommon\PointlessWaymarks.WpfCommon.csproj" />
     </ItemGroup>
 

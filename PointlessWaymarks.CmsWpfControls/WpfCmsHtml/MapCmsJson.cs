@@ -17,7 +17,7 @@ using PointlessWaymarks.CmsWpfControls.LineContentEditor;
 using PointlessWaymarks.CmsWpfControls.LineList;
 using PointlessWaymarks.CmsWpfControls.PhotoContentEditor;
 using PointlessWaymarks.CmsWpfControls.PhotoList;
-using PointlessWaymarks.CmsWpfControls.PointContentEditor;
+using PointlessWaymarks.WpfCommon.Elevation;
 using PointlessWaymarks.CmsWpfControls.PointList;
 using PointlessWaymarks.CmsWpfControls.PostList;
 using PointlessWaymarks.CmsWpfControls.SitePreview;

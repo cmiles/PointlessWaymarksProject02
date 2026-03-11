@@ -19,7 +19,7 @@ using PointlessWaymarks.CmsWpfControls.HelpDisplay;
 using PointlessWaymarks.CmsWpfControls.ImageContentEditor;
 using PointlessWaymarks.CmsWpfControls.OptionalLocationEntry;
 using PointlessWaymarks.CmsWpfControls.PhotoContentEditor;
-using PointlessWaymarks.CmsWpfControls.PointContentEditor;
+using PointlessWaymarks.WpfCommon.Elevation;
 using PointlessWaymarks.CmsWpfControls.TagsEditor;
 using PointlessWaymarks.CmsWpfControls.TitleSummarySlugFolderEditor;
 using PointlessWaymarks.CmsWpfControls.UpdateNotesEditor;

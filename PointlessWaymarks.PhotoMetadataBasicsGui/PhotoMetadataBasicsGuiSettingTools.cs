@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text.Json;
 using PointlessWaymarks.CommonTools;
+using PointlessWaymarks.FeatureIntersectionTags.Models;
 using PointlessWaymarks.WpfCommon.Status;
 
 namespace PointlessWaymarks.PhotoMetadataBasicsGui;
@@ -17,6 +18,47 @@ public static class PhotoMetadataBasicsGuiSettingTools
         }
 
         return result.ExifToolExe;
+    }
+
+    public static async Task<IntersectSettings> FeatureIntersectSettings(StatusControlContext statusContext)
+    {
+        var settings = ReadSettings();
+
+        // 1) Try the user-configured settings file
+        if (!string.IsNullOrWhiteSpace(settings.FeatureIntersectSettingsFile))
+        {
+            var userFile = new FileInfo(settings.FeatureIntersectSettingsFile);
+            if (userFile.Exists)
+                try
+                {
+                    var json = await File.ReadAllTextAsync(userFile.FullName);
+                    var deserialized = JsonSerializer.Deserialize<IntersectSettings>(json);
+                    if (deserialized != null) return deserialized;
+                }
+                catch (Exception e)
+                {
+                    statusContext.Progress(
+                        $"Could not deserialize Feature Intersect Settings from {userFile.FullName}: {e.Message}");
+                }
+        }
+
+        // 2) Fall back to the default settings file
+        var defaultFile = FileLocationTools.DefaultFeatureIntersectSettingsFile();
+        if (defaultFile.Exists)
+            try
+            {
+                var json = await File.ReadAllTextAsync(defaultFile.FullName);
+                var deserialized = JsonSerializer.Deserialize<IntersectSettings>(json);
+                if (deserialized != null) return deserialized;
+            }
+            catch (Exception e)
+            {
+                statusContext.Progress(
+                    $"Could not deserialize Feature Intersect Settings from {defaultFile.FullName}: {e.Message}");
+            }
+
+        // 3) Return new default settings
+        return new IntersectSettings();
     }
 
     public static async Task<FileInfo?> Ffprobe(StatusControlContext statusContext)

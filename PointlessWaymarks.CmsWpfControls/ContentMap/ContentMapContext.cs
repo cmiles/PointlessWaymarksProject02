@@ -10,7 +10,6 @@ using PointlessWaymarks.CmsWpfControls.AllContentList;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.CmsWpfControls.FileList;
 using PointlessWaymarks.CmsWpfControls.GeoJsonList;
-using PointlessWaymarks.CmsWpfControls.GeoSearch;
 using PointlessWaymarks.CmsWpfControls.ImageList;
 using PointlessWaymarks.CmsWpfControls.LineList;
 using PointlessWaymarks.CmsWpfControls.PhotoList;
@@ -22,6 +21,7 @@ using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.SpatialTools;
 using PointlessWaymarks.WpfCommon;
+using PointlessWaymarks.WpfCommon.GeoSearch;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
 using PointlessWaymarks.WpfCommon.WebViewVirtualDomain;
@@ -154,7 +154,7 @@ public partial class ContentMapContext : IWebViewMessenger
             await ContentListContext.CreateInstance(factoryStatusContext, new AllContentListLoader(100), [],
                 windowStatus);
         var factoryIcons = await MapIconGenerator.SerializedMapIcons();
-        var factoryLocationSearchContext = await GeoSearchContext.CreateInstance(factoryStatusContext);
+        var factoryLocationSearchContext = await GeoSearchContext.CreateInstance(factoryStatusContext, UserSettingsSingleton.CurrentSettings().SettingsId);
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -175,7 +175,7 @@ public partial class ContentMapContext : IWebViewMessenger
 
         var factoryListContext = await ContentListContext.CreateInstance(factoryStatusContext, reportFilter, []);
         var factoryIcons = await MapIconGenerator.SerializedMapIcons();
-        var factoryLocationSearchContext = await GeoSearchContext.CreateInstance(factoryStatusContext);
+        var factoryLocationSearchContext = await GeoSearchContext.CreateInstance(factoryStatusContext, UserSettingsSingleton.CurrentSettings().SettingsId);
 
         await ThreadSwitcher.ResumeForegroundAsync();
 

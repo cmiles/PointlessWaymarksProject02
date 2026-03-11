@@ -4,9 +4,7 @@ using System.Text.Json.Nodes;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.ContentGeneration;
 using PointlessWaymarks.CmsData.Database;
-using PointlessWaymarks.CmsData.Spatial;
-using PointlessWaymarks.CmsWpfControls.GeoSearch;
-using PointlessWaymarks.CmsWpfControls.PointContentEditor;
+using PointlessWaymarks.WpfCommon.Elevation;
 using PointlessWaymarks.CmsWpfControls.WpfCmsHtml;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
@@ -14,6 +12,7 @@ using PointlessWaymarks.SpatialTools;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.ChangesAndValidation;
 using PointlessWaymarks.WpfCommon.ConversionDataEntry;
+using PointlessWaymarks.WpfCommon.GeoSearch;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.WebViewVirtualDomain;
 using PointlessWaymarks.WpfCommon.WpfHtml;
@@ -129,7 +128,7 @@ public partial class LocationChooserContext : IHasChanges, ICheckForChangesAndVa
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         var factoryMapIcons = await MapIconGenerator.SerializedMapIcons();
-        var factoryLocationSearchContext = await GeoSearchContext.CreateInstance(windowStatusContext);
+        var factoryLocationSearchContext = await GeoSearchContext.CreateInstance(windowStatusContext, UserSettingsSingleton.CurrentSettings().SettingsId);
 
         return new LocationChooserContext(windowStatusContext, factoryMapIcons, factoryLocationSearchContext)
         {

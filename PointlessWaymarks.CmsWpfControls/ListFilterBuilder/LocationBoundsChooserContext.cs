@@ -3,12 +3,12 @@ using System.Text.Json.Nodes;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.ContentGeneration;
 using PointlessWaymarks.CmsData.Database;
-using PointlessWaymarks.CmsWpfControls.GeoSearch;
 using PointlessWaymarks.CmsWpfControls.WpfCmsHtml;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.SpatialTools;
 using PointlessWaymarks.WpfCommon;
+using PointlessWaymarks.WpfCommon.GeoSearch;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.WebViewVirtualDomain;
 using PointlessWaymarks.WpfCommon.WpfHtml;
@@ -69,7 +69,7 @@ public partial class LocationBoundsChooserContext : IWebViewMessenger
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         var factoryMapIcons = await MapIconGenerator.SerializedMapIcons();
-        var factoryGeoSearchContext = await GeoSearchContext.CreateInstance(windowStatusContext);
+        var factoryGeoSearchContext = await GeoSearchContext.CreateInstance(windowStatusContext, UserSettingsSingleton.CurrentSettings().SettingsId);
 
         await ThreadSwitcher.ResumeForegroundAsync();
 

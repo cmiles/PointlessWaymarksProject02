@@ -15,7 +15,7 @@ using PointlessWaymarks.CmsWpfControls.LineContentEditor;
 using PointlessWaymarks.CmsWpfControls.LinkContentEditor;
 using PointlessWaymarks.CmsWpfControls.NoteContentEditor;
 using PointlessWaymarks.CmsWpfControls.PhotoContentEditor;
-using PointlessWaymarks.CmsWpfControls.PointContentEditor;
+using PointlessWaymarks.WpfCommon.Elevation;
 using PointlessWaymarks.CmsWpfControls.PostContentEditor;
 using PointlessWaymarks.CmsWpfControls.TrailContentEditor;
 using PointlessWaymarks.CmsWpfControls.Utility.Excel;

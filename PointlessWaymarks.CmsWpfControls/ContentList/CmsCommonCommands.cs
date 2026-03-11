@@ -30,7 +30,7 @@ using PointlessWaymarks.CmsWpfControls.NoteContentEditor;
 using PointlessWaymarks.CmsWpfControls.NoteList;
 using PointlessWaymarks.CmsWpfControls.PhotoContentEditor;
 using PointlessWaymarks.CmsWpfControls.PhotoList;
-using PointlessWaymarks.CmsWpfControls.PointContentEditor;
+using PointlessWaymarks.WpfCommon.Elevation;
 using PointlessWaymarks.CmsWpfControls.PointList;
 using PointlessWaymarks.CmsWpfControls.PostContentEditor;
 using PointlessWaymarks.CmsWpfControls.PostList;

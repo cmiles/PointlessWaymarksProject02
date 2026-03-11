@@ -1,14 +1,18 @@
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Text.RegularExpressions;
-using System.Windows;
 using GongSolutions.Wpf.DragDrop;
 using Metalama.Patterns.Observability;
+using NetTopologySuite.Features;
 using PointlessWaymarks.CommonTools;
+using PointlessWaymarks.FeatureIntersectionTags.Models;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Text.RegularExpressions;
+using System.Windows;
+using PointlessWaymarks.FeatureIntersectionTags;
+using Point = NetTopologySuite.Geometries.Point;
 
 namespace PointlessWaymarks.PhotoMetadataBasicsGui.Controls;
 
@@ -40,6 +44,62 @@ public partial class PhotoListContext : IDropTarget
             true);
         if (files.Count == 0) return;
         StatusContext.RunBlockingTask(() => LoadItems(files));
+    }
+
+    [BlockingCommand]
+    public async Task AddFeatureIntersectTags(PhotoListGroupListItem toProcess, CancellationToken cancellationToken)
+    {
+        await AddFeatureIntersectTags([toProcess], cancellationToken);
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task AddFeatureIntersectTagsForSelected(CancellationToken cancellationToken)
+    {
+        await AddFeatureIntersectTags(SelectedItems, cancellationToken);
+    }
+
+    public async Task AddFeatureIntersectTags(List<PhotoListGroupListItem> toProcess,
+        CancellationToken cancellationToken)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        foreach (var loopGroup in toProcess)
+        {
+            var validLatLong = await loopGroup.HasValidLatLong();
+            if (!validLatLong)
+            {
+                await StatusContext.ToastError("No valid Lat/Long to check?");
+                return;
+            }
+
+            var featureToCheck = new Feature(
+                new Point(loopGroup.LongitudeEntry.UserValue!.Value,
+                    loopGroup.LatitudeEntry.UserValue!.Value),
+                new AttributesTable());
+            var intersectionResult = new IntersectResult(featureToCheck)
+                { Description = "Photo Basic Metadata Tagging" };
+            var settings = await PhotoMetadataBasicsGuiSettingTools.FeatureIntersectSettings(StatusContext);
+
+            settings.UseOsmOverpass = true;
+            settings.OsmInTagging = true;
+
+            var possibleTags = await intersectionResult.AsList().IntersectionTags(settings,
+                cancellationToken, StatusContext.ProgressTracker());
+
+            if (!possibleTags.Any())
+            {
+                await StatusContext.ToastWarning("No tags found...");
+                return;
+            }
+
+            var taggerTags = possibleTags.SelectMany(t => t.Tags).Distinct().ToList();
+            var cleanedTaggerTags = SlugTagTools.TagListCleanupToSpacedString(taggerTags);
+            var combinedTags =
+                SlugTagTools.TagListCleanupToSpacedString(loopGroup.TagEntryContext.TagsList().Union(cleanedTaggerTags)
+                    .ToList());
+            loopGroup.TagEntryContext.Tags = SlugTagTools.TagListJoinToSpacedString(combinedTags);
+        }
     }
 
     public static async Task<PhotoListContext> CreateInstance(StatusControlContext? statusContext)

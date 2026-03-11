@@ -5,7 +5,7 @@ using PointlessWaymarks.CmsWpfControls.WpfCmsHtml;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.WpfCommon;
 
-namespace PointlessWaymarks.CmsWpfControls.PointContentEditor;
+namespace PointlessWaymarks.WpfCommon.Elevation;
 
 /// <summary>
 ///     Interaction logic for PointContentEditorControl.xaml
