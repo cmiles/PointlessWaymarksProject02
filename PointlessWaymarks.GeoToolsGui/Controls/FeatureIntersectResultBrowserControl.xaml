@@ -58,7 +58,7 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                    <TabControl Grid.Column="1">
+                    <TabControl Grid.Column="1" ItemContainerStyle="{StaticResource UnderlineOnSelectTabItemStyle}">
                         <TabItem Header="Map">
                             <wpf:WebView2CompositionControl>
                                 <b:Interaction.Behaviors>

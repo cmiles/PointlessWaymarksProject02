@@ -25,7 +25,7 @@
         <CommandBinding Command="{x:Static wpf:Commands.Hyperlink}" Executed="OpenHyperlink" />
     </FrameworkElement.CommandBindings>
     <Grid>
-        <TabControl SelectedIndex="{Binding SelectedTab, Mode=TwoWay}">
+        <TabControl SelectedIndex="{Binding SelectedTab, Mode=TwoWay}" ItemContainerStyle="{StaticResource UnderlineOnSelectTabItemStyle}">
             <TabItem Header="Files To Tag">
                 <Grid>
                     <GroupBox Margin="4" Header="Files To Tag">

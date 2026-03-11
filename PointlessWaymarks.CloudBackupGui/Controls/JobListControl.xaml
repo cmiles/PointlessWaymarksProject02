@@ -300,7 +300,7 @@
                                         </TextBox.Text>
                                     </TextBox>
                                 </WrapPanel>
-                                <TabControl Grid.Row="1" Margin="4">
+                                <TabControl Grid.Row="1" Margin="4" ItemContainerStyle="{StaticResource UnderlineOnSelectTabItemStyle}">
                                     <TabItem Header="Overview">
                                         <Grid Style="{StaticResource ContentListOuterGridStyle}">
                                             <Grid.RowDefinitions>
