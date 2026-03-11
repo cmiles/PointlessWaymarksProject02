@@ -13,7 +13,6 @@
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800" d:DataContext="{d:DesignInstance local:PhotoListContext}">
     <UserControl.Resources>
-        <valueConverters:BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
         <valueConverters:BooleanToHiddenConverter x:Key="BooleanToHidden" />
         <valueConverters:BooleanNotConverter x:Key="BooleanNot" />
     </UserControl.Resources>

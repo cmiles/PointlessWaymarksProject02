@@ -7,9 +7,6 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
-    <UserControl.Resources>
-        <BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
-    </UserControl.Resources>
     <Grid>
         <GroupBox Header="Program Update Location">
             <Grid Margin="4">

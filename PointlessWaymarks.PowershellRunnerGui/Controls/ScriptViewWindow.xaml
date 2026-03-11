@@ -12,13 +12,6 @@
     Height="600"
     d:DataContext="{d:DesignInstance local:ScriptViewWindow}"
     mc:Ignorable="d">
-    <Window.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/PointlessWaymarks.WpfCommon;component/ClassicGreenResourceDictionary.xaml" />
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </Window.Resources>
     <Grid>
         <local:ScriptViewControl DataContext="{Binding ScriptContext}" />
         <status:StatusControl

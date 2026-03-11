@@ -1,4 +1,4 @@
-﻿<Window
+<Window
     x:Class="PointlessWaymarks.PowerShellRunnerGui.Controls.ScriptJobRunViewerWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -12,13 +12,6 @@
     Height="700"
     d:DataContext="{d:DesignInstance local:ScriptJobRunViewerWindow}"
     mc:Ignorable="d">
-    <Window.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/PointlessWaymarks.WpfCommon;component/ClassicGreenResourceDictionary.xaml" />
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </Window.Resources>
     <Grid>
         <local:ScriptJobRunViewerControl DataContext="{Binding JobRunContext}" />
         <status:StatusControl

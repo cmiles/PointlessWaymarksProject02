@@ -21,9 +21,6 @@
     mc:Ignorable="d">
     <UserControl.Resources>
         <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/PointlessWaymarks.WpfCommon;component/ClassicGreenResourceDictionary.xaml" />
-            </ResourceDictionary.MergedDictionaries>
             <utility:BindingProxy x:Key="Proxy" Data="{Binding}" />
             <valueConverters:S3ProviderIsAmazonCollapsedConverter x:Key="S3ProviderIsAmazonCollapsed" />
         </ResourceDictionary>

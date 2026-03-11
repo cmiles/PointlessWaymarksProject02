@@ -17,9 +17,6 @@
     mc:Ignorable="d">
     <UserControl.Resources>
         <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/PointlessWaymarks.WpfCommon;component/ClassicGreenResourceDictionary.xaml" />
-            </ResourceDictionary.MergedDictionaries>
             <valueConverters:ImageCacheConverter x:Key="ImageCache" />
             <utility:BindingProxy x:Key="Proxy" Data="{Binding}" />
         </ResourceDictionary>

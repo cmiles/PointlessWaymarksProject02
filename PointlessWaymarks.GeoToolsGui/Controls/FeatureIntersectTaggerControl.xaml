@@ -8,7 +8,6 @@
     xmlns:fileList="clr-namespace:PointlessWaymarks.WpfCommon.FileList;assembly=PointlessWaymarks.WpfCommon"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:PointlessWaymarks.GeoToolsGui.Models"
-    xmlns:numericUpDownLib="clr-namespace:NumericUpDownLib;assembly=NumericUpDownLib"
     xmlns:utility="clr-namespace:PointlessWaymarks.WpfCommon.Utility;assembly=PointlessWaymarks.WpfCommon"
     xmlns:valueConverters="clr-namespace:PointlessWaymarks.WpfCommon.ValueConverters;assembly=PointlessWaymarks.WpfCommon"
     xmlns:wpf="clr-namespace:Markdig.Wpf;assembly=Markdig.Wpf"
@@ -20,7 +19,6 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <utility:BindingProxy x:Key="Proxy" Data="{Binding}" />
-            <valueConverters:StringToNullableIntConverter x:Key="StringToNullableInt" />
         </ResourceDictionary>
     </UserControl.Resources>
     <FrameworkElement.CommandBindings>

@@ -15,8 +15,6 @@
     Width="800"
     Height="450"
     d:DataContext="{d:DesignInstance geoToolsGui:MainWindow}"
-    ui:ThemeManager.IsThemeAware="True"
-    ui:WindowHelper.UseModernWindowStyle="True"
     Closing="MainWindow_OnClosing"
     Icon="PointlessWaymarksGeoToolsIcon.ico"
     mc:Ignorable="d">

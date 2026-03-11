@@ -17,11 +17,8 @@
     mc:Ignorable="d">
     <UserControl.Resources>
         <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/PointlessWaymarks.WpfCommon;component/ClassicGreenResourceDictionary.xaml" />
-            </ResourceDictionary.MergedDictionaries>
             <valueConverters:FileSizeConverter x:Key="FileSizePresentation" />
-            <utility:BindingProxy x:Key="proxy" Data="{Binding}" />
+            <utility:BindingProxy x:Key="Proxy" Data="{Binding}" />
             <valueConverters:FileSizeConverter x:Key="HumanFileSize" />
             <ToolTip
                 x:Key="BatchUploadStatisticsTooltip"
@@ -264,7 +261,7 @@
                         <Border Style="{StaticResource ContentListOuterBorderStyle}">
                             <Border.InputBindings>
                                 <MouseBinding
-                                    Command="{Binding Data.EditJobCommand, Source={StaticResource proxy}}"
+                                    Command="{Binding Data.EditJobCommand, Source={StaticResource Proxy}}"
                                     CommandParameter="{Binding DbJob}"
                                     Gesture="Shift+LeftDoubleClick" />
                             </Border.InputBindings>
@@ -329,31 +326,31 @@
                                                 </WrapPanel.Resources>
                                                 <Button
                                                     Width="100"
-                                                    Command="{Binding Data.EditJobCommand, Source={StaticResource proxy}}"
+                                                    Command="{Binding Data.EditJobCommand, Source={StaticResource Proxy}}"
                                                     CommandParameter="{Binding DbJob}">
                                                     Edit
                                                 </Button>
                                                 <Button
                                                     Width="200"
-                                                    Command="{Binding Data.IncludedAndExcludedFilesReportCommand, Source={StaticResource proxy}}"
+                                                    Command="{Binding Data.IncludedAndExcludedFilesReportCommand, Source={StaticResource Proxy}}"
                                                     CommandParameter="{Binding DbJob}">
                                                     Included/Excluded Files Report
                                                 </Button>
                                                 <Button
                                                     Width="100"
-                                                    Command="{Binding Data.NewBatchWindowCommand, Source={StaticResource proxy}}"
+                                                    Command="{Binding Data.NewBatchWindowCommand, Source={StaticResource Proxy}}"
                                                     CommandParameter="{Binding DbJob}">
                                                     Batch List
                                                 </Button>
                                                 <Button
                                                     Width="200"
-                                                    Command="{Binding Data.RunJobForceCloudCacheRescanCommand, Source={StaticResource proxy}}"
+                                                    Command="{Binding Data.RunJobForceCloudCacheRescanCommand, Source={StaticResource Proxy}}"
                                                     CommandParameter="{Binding DbJob}">
                                                     Run - New Batch/Full Rescan
                                                 </Button>
                                                 <Button
                                                     Width="100"
-                                                    Command="{Binding Data.RunJobCommand, Source={StaticResource proxy}}"
+                                                    Command="{Binding Data.RunJobCommand, Source={StaticResource Proxy}}"
                                                     CommandParameter="{Binding DbJob}">
                                                     Run
                                                 </Button>
@@ -444,25 +441,25 @@
                                                 </WrapPanel.Resources>
                                                 <Button
                                                     Width="200"
-                                                    Command="{Binding Data.CloudCacheFilesReportCommand, Source={StaticResource proxy}}"
+                                                    Command="{Binding Data.CloudCacheFilesReportCommand, Source={StaticResource Proxy}}"
                                                     CommandParameter="{Binding DbJob}">
                                                     Cloud Cache Files To Excel
                                                 </Button>
                                                 <Button
                                                     Width="150"
-                                                    Command="{Binding Data.NewProgressWindowCommand, Source={StaticResource proxy}}"
+                                                    Command="{Binding Data.NewProgressWindowCommand, Source={StaticResource Proxy}}"
                                                     CommandParameter="{Binding DbJob}">
                                                     Progress to Window
                                                 </Button>
                                                 <Button
                                                     Width="150"
-                                                    Command="{Binding Data.DeleteJobCommand, Source={StaticResource proxy}}"
+                                                    Command="{Binding Data.DeleteJobCommand, Source={StaticResource Proxy}}"
                                                     CommandParameter="{Binding DbJob}">
                                                     Delete Backup Job
                                                 </Button>
                                                 <Button
                                                     Width="250"
-                                                    Command="{Binding Data.BasicCommandLineCommandToClipboardCommand, Source={StaticResource proxy}}"
+                                                    Command="{Binding Data.BasicCommandLineCommandToClipboardCommand, Source={StaticResource Proxy}}"
                                                     CommandParameter="{Binding DbJob}">
                                                     Command Line Command to Clipboard
                                                 </Button>

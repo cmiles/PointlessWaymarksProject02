@@ -13,9 +13,6 @@
     mc:Ignorable="d">
     <UserControl.Resources>
         <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/PointlessWaymarks.WpfCommon;component/ClassicGreenResourceDictionary.xaml" />
-            </ResourceDictionary.MergedDictionaries>
             <local:ScriptJobRunViewerEditorTemplateSelector x:Key="ScriptEditorTemplateSelector">
                 <local:ScriptJobRunViewerEditorTemplateSelector.PowerShellEditorTemplate>
                     <DataTemplate>
