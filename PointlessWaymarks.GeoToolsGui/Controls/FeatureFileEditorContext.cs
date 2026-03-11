@@ -147,7 +147,6 @@ public partial class FeatureFileEditorContext
         EndEdit?.Invoke(this, (FeatureFileEditorEndEditCondition.Saved, Model));
 
         IsVisible = false;
-        return;
     }
 
     [NonBlockingCommand]

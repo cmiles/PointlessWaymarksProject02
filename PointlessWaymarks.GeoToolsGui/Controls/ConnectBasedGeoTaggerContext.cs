@@ -1,11 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Web;
 using CommunityToolkit.Mvvm.Messaging;
-using HtmlTableHelper;
-using MetadataExtractor;
-using MetadataExtractor.Formats.Xmp;
 using NetTopologySuite.Features;
 using NetTopologySuite.Geometries;
 using Ookii.Dialogs.Wpf;
@@ -22,7 +18,6 @@ using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
 using PointlessWaymarks.WpfCommon.WebViewVirtualDomain;
 using PointlessWaymarks.WpfCommon.WpfHtml;
-using XmpCore;
 using Directory = System.IO.Directory;
 
 namespace PointlessWaymarks.GeoToolsGui.Controls;
@@ -394,8 +389,6 @@ public partial class ConnectBasedGeoTaggerContext
 
         WeakReferenceMessenger.Default.Send(new FeatureIntersectFileAddRequestMessage((this,
             WriteToFileResults.FileResults.Select(x => x.FileName).ToList())));
-
-        return;
     }
 
     [NonBlockingCommand]
