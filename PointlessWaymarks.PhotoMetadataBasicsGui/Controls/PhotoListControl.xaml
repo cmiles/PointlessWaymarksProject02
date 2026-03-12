@@ -88,7 +88,7 @@
                                                 DataContext="{Binding ElevationEntry}">
                                             </conversionDataEntry:ConversionDataEntryControl>
                                             <Button Margin="6,12,0,0" HorizontalAlignment="Stretch" Command="{Binding ChooseLocationOnMapCommand}">Choose on Map</Button>
-                                            <Button Margin="6,4,0,0" HorizontalAlignment="Stretch" Command="{Binding DataContext.AddFeatureIntersectTagsCommand, ElementName=PhotoGroupList}" CommandParameter="{Binding }">Add Intersect Tags</Button>
+                                            <Button Margin="6,2,0,0" HorizontalAlignment="Stretch" Command="{Binding DataContext.AddFeatureIntersectTagsCommand, ElementName=PhotoGroupList}" CommandParameter="{Binding }">Add Intersect Tags</Button>
                                         </StackPanel>
                                     </Border>
                                     <Border Grid.Row="1" BorderBrush="LightGray"
@@ -233,6 +233,11 @@
                                     CommandParameter="{Binding }">
                                     Split Selected Files
                                 </Button>
+                                <Button
+                                    Command="{Binding GeoTagSelectedFilesCommand}"
+                                    CommandParameter="{Binding }">
+                                    GeoTag Selected Files
+                                </Button>
                                 <Button Command="{Binding DataContext.RemoveGroupCommand, ElementName=PhotoGroupList}"
                                         CommandParameter="{Binding }">
                                     Remove Group
@@ -250,6 +255,9 @@
                 </Button>
                 <Button Command="{Binding AddFeatureIntersectTagsForSelectedCommand}" HorizontalAlignment="Left" Margin="4">
                     Feature Intersect Tags - Selected
+                </Button>
+                <Button Command="{Binding GeoTagSelectedItemsCommand}" HorizontalAlignment="Left" Margin="4">
+                    GeoTag - Selected
                 </Button>
             </WrapPanel>
         </Border>

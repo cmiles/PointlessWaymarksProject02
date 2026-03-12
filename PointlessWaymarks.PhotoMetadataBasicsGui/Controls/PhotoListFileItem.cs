@@ -79,7 +79,7 @@ public partial class PhotoListFileItem
                 null).ConfigureAwait(false);
             toReturn.Latitude = location.Latitude;
             toReturn.Longitude = location.Longitude;
-            toReturn.Elevation = location.Elevation is double elevMeters
+            toReturn.Elevation = location.Elevation is { } elevMeters
                 ? elevMeters.MetersToFeet()
                 : null;
             toReturn.PhotoDirection = location.PhotoDirection;

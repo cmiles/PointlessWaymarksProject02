@@ -9,7 +9,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:programUpdateMessage="clr-namespace:PointlessWaymarks.WpfCommon.ProgramUpdateMessage;assembly=PointlessWaymarks.WpfCommon"
     xmlns:status="clr-namespace:PointlessWaymarks.WpfCommon.Status;assembly=PointlessWaymarks.WpfCommon"
-    xmlns:ui="http://schemas.modernwpf.com/2019"
     xmlns:windowScreenShot="clr-namespace:PointlessWaymarks.WpfCommon.WindowScreenShot;assembly=PointlessWaymarks.WpfCommon"
     xmlns:featureIntersectTagger="clr-namespace:PointlessWaymarks.WpfCommon.FeatureIntersectTagger;assembly=PointlessWaymarks.WpfCommon"
     xmlns:fileBasedGeoTagger="clr-namespace:PointlessWaymarks.WpfCommon.FileBasedGeoTagger;assembly=PointlessWaymarks.WpfCommon"

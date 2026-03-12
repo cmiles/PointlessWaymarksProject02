@@ -1,17 +1,17 @@
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Text.RegularExpressions;
+using System.Windows;
 using GongSolutions.Wpf.DragDrop;
 using Metalama.Patterns.Observability;
 using NetTopologySuite.Features;
 using PointlessWaymarks.CommonTools;
+using PointlessWaymarks.FeatureIntersectionTags;
 using PointlessWaymarks.FeatureIntersectionTags.Models;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Text.RegularExpressions;
-using System.Windows;
-using PointlessWaymarks.FeatureIntersectionTags;
 using Point = NetTopologySuite.Geometries.Point;
 
 namespace PointlessWaymarks.PhotoMetadataBasicsGui.Controls;
@@ -47,16 +47,10 @@ public partial class PhotoListContext : IDropTarget
     }
 
     [BlockingCommand]
-    public async Task AddFeatureIntersectTags(PhotoListGroupListItem toProcess, CancellationToken cancellationToken)
+    [StopAndWarnIfFirstParameterIsNull]
+    public async Task AddFeatureIntersectTags(PhotoListGroupListItem? toProcess, CancellationToken cancellationToken)
     {
-        await AddFeatureIntersectTags([toProcess], cancellationToken);
-    }
-
-    [BlockingCommand]
-    [StopAndWarnIfNoSelectedListItems]
-    public async Task AddFeatureIntersectTagsForSelected(CancellationToken cancellationToken)
-    {
-        await AddFeatureIntersectTags(SelectedItems, cancellationToken);
+        await AddFeatureIntersectTags([toProcess!], cancellationToken);
     }
 
     public async Task AddFeatureIntersectTags(List<PhotoListGroupListItem> toProcess,
@@ -102,6 +96,13 @@ public partial class PhotoListContext : IDropTarget
         }
     }
 
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task AddFeatureIntersectTagsForSelected(CancellationToken cancellationToken)
+    {
+        await AddFeatureIntersectTags(SelectedItems, cancellationToken);
+    }
+
     public static async Task<PhotoListContext> CreateInstance(StatusControlContext? statusContext)
     {
         var factoryReturn = new PhotoListContext
@@ -113,6 +114,15 @@ public partial class PhotoListContext : IDropTarget
         factoryReturn.BuildCommands();
 
         return factoryReturn;
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task GeoTagSelectedItems(CancellationToken cancellationToken)
+    {
+        var frozenSelected = SelectedItems;
+
+        foreach (var loopSelected in frozenSelected) await loopSelected.GeoTagAllFiles(cancellationToken);
     }
 
     public async Task LoadItems(List<string> files)

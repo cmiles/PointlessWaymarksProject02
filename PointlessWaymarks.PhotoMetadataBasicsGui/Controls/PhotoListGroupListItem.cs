@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Windows;
+using CommunityToolkit.Mvvm.Messaging;
 using MathNet.Numerics;
 using Metalama.Patterns.Observability;
 using Microsoft.Win32;
@@ -9,8 +10,10 @@ using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.SpatialTools;
 using PointlessWaymarks.WpfCommon;
+using PointlessWaymarks.WpfCommon.AppMessages;
 using PointlessWaymarks.WpfCommon.ChangesAndValidation;
 using PointlessWaymarks.WpfCommon.ConversionDataEntry;
+using PointlessWaymarks.WpfCommon.FileBasedGeoTagger;
 using PointlessWaymarks.WpfCommon.FileMetadataDisplay;
 using PointlessWaymarks.WpfCommon.LocationPicker;
 using PointlessWaymarks.WpfCommon.Status;
@@ -207,6 +210,10 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         PropertyScanners.SubscribeToChildHasChangesAndHasValidationIssues(factoryReturn,
             factoryReturn.CheckForChangesAndValidationIssues);
 
+        WeakReferenceMessenger.Default.Register<FileMetadataLocationUpdateMessage>(factoryReturn,
+            (r, m) => ((PhotoListGroupListItem)r).StatusContext.RunFireAndForgetNonBlockingTask(() =>
+                ((PhotoListGroupListItem)r).OnFileMetadataLocationUpdate(m)));
+
         return factoryReturn;
     }
 
@@ -229,6 +236,30 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         await ThreadSwitcher.ResumeBackgroundAsync();
         var window = await FileMetadataDisplayWindow.CreateInstance(fileItem!.PhotoFile.FullName, null);
         await window.PositionWindowAndShowOnUiThread();
+    }
+
+    public async Task GeoTagAllFiles(CancellationToken cancellationToken)
+    {
+        await GeoTagFiles(Items.ToList(), cancellationToken);
+    }
+
+    public async Task GeoTagFiles(List<PhotoListFileItem> toProcess, CancellationToken cancellationToken)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var window =
+            await FileBasedGeoTaggerWindow.CreateInstance(toProcess.Select(x => x.PhotoFile.FullName).ToList());
+
+        window.CloseAfterWrite = true;
+
+        await window.PositionWindowAndShowDialogOnUiThread();
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task GeoTagSelectedFiles(CancellationToken cancellationToken)
+    {
+        await GeoTagFiles(SelectedItems, cancellationToken);
     }
 
     private static PhotoGroupMetadata GetCompositeMetadata(List<PhotoListFileItem> items)
@@ -289,6 +320,25 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         foreach (var loopItems in Items) loopItems.IsPrimaryPhoto = loopItems == item;
+    }
+
+    public async Task OnFileMetadataLocationUpdate(FileMetadataLocationUpdateMessage message)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var changedFiles = message.Value.writtenFiles
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var affectedItems = Items
+            .Where(x => changedFiles.Contains(x.PhotoFile.FullName))
+            .ToList();
+
+        if (affectedItems.Count == 0) return;
+
+        foreach (var item in affectedItems)
+            await item.RefreshMetadata();
+
+        UpdateLocation();
     }
 
     public void OverwriteAllEntriesWithCurrentMetadata()
@@ -533,6 +583,18 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         if (string.IsNullOrWhiteSpace(PhotoCreatedByEntry.UserValue) &&
             !string.IsNullOrWhiteSpace(currentSettings.DefaultCreatedBy))
             PhotoCreatedByEntry.UserValue = currentSettings.DefaultCreatedBy;
+    }
+
+    public void UpdateLocation()
+    {
+        var composite = GetCompositeMetadata(Items.ToList());
+
+        LatitudeEntry.ReferenceValue = composite.Latitude;
+        LatitudeEntry.UserText = composite.Latitude?.ToString("F6") ?? string.Empty;
+        LongitudeEntry.ReferenceValue = composite.Longitude;
+        LongitudeEntry.UserText = composite.Longitude?.ToString("F6") ?? string.Empty;
+        ElevationEntry.ReferenceValue = composite.Elevation;
+        ElevationEntry.UserText = composite.Elevation?.ToString("N0") ?? string.Empty;
     }
 
     [BlockingCommand]

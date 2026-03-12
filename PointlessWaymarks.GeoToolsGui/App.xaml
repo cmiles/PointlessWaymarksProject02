@@ -13,7 +13,6 @@
                 <ResourceDictionary Source="/PointlessWaymarks.WpfCommon;component/ClassicGreenResourceDictionary.xaml" />
                 <ResourceDictionary Source="/PointlessWaymarks.WpfCommon;component/WpfCommonResourceDictionary.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            <valueConverters:MetersToFeetValueConverter x:Key="MetersToFeet" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
