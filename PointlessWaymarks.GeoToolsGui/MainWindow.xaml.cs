@@ -97,21 +97,6 @@ public partial class MainWindow
 
         await CheckForProgramUpdate(_currentDateVersion);
 
-        WeakReferenceMessenger.Default.Register<ExifToolSettingsUpdateMessage>(this, (_, m) =>
-        {
-            StatusContext.RunFireAndForgetNonBlockingTask(async () =>
-            {
-                await ThreadSwitcher.ResumeBackgroundAsync();
-
-                if (ConnectGeoTaggerContext?.Settings != null)
-                    ConnectGeoTaggerContext.Settings.ExifToolFullName = m.Value.exifToolFullName;
-                if (FeatureIntersectContext?.Settings != null)
-                    FeatureIntersectContext.Settings.ExifToolFullName = m.Value.exifToolFullName;
-                if (FileGeoTaggerContext?.Settings != null)
-                    FileGeoTaggerContext.Settings.ExifToolFullName = m.Value.exifToolFullName;
-            });
-        });
-
         WeakReferenceMessenger.Default.Register<ArchiveDirectoryUpdateMessage>(this, (_, m) =>
         {
             StatusContext.RunFireAndForgetNonBlockingTask(async () =>

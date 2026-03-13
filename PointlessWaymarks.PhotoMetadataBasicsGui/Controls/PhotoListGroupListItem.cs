@@ -617,22 +617,11 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
                 return;
         }
 
-        // Resolve ExifTool
-        FileInfo? exifToolExe;
-        try
-        {
-            exifToolExe =
-                await PhotoMetadataBasicsGuiSettingTools.ExifTool(StatusContext);
-        }
-        catch (Exception ex)
-        {
-            await StatusContext.ToastError($"Error locating ExifTool: {ex.Message}");
-            return;
-        }
+        var exifToolCheckResult = await FileLocationTools.FindDownloadUpdateExifTool(null, StatusContext.ProgressTracker());
 
-        if (exifToolExe is null || !exifToolExe.Exists)
+        if (!exifToolCheckResult.Success || exifToolCheckResult.ExifToolExe is null)
         {
-            await StatusContext.ToastError("Unable to locate ExifTool executable.");
+            await StatusContext.ShowMessageWithOkButton("ExifTool Issue", exifToolCheckResult.Message);
             return;
         }
 
@@ -661,7 +650,7 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         };
 
         var writeResult = await ExifToolWriter.WriteMetadataAsync(
-            exifToolExe, request, filesToProcess, StatusContext.ProgressTracker());
+            exifToolCheckResult.ExifToolExe, request, filesToProcess, StatusContext.ProgressTracker());
 
         if (!writeResult.Success)
         {

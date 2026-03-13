@@ -5,7 +5,6 @@ public partial class IntersectSettings
     public int? BufferPointsAndLinesByFeet { get; set; } = null;
     public bool CreateBackups { get; set; }
     public bool CreateBackupsInDefaultStorage { get; set; }
-    public string ExifToolFullName { get; set; } = string.Empty;
     public List<IntersectFile> FeatureIntersectFiles { get; set; } = [];
     public string FilesToTagLastDirectoryFullName { get; set; } = string.Empty;
     public string? OsmOverpassUrl { get; set; } = "https://overpass-api.de/api/interpreter";

@@ -42,7 +42,6 @@ public partial class ConnectBasedGeoTaggerContext
 
     public bool ArchiveDirectoryExists { get; set; }
     public string CurrentCredentialsNote { get; set; } = string.Empty;
-    public bool ExifToolExists { get; set; }
     public FileListContext? FilesToTagFileList { get; set; }
     public ConnectBasedGeoTagFilesToTagSettings? FilesToTagSettings { get; set; }
     public int OffsetPhotoTimeInMinutes { get; set; }
@@ -78,28 +77,6 @@ public partial class ConnectBasedGeoTaggerContext
         ArchiveDirectoryExists = exists;
     }
 
-    public async Task CheckThatExifToolExists(bool writeSettings)
-    {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (string.IsNullOrWhiteSpace(Settings.ExifToolFullName))
-        {
-            ExifToolExists = false;
-            return;
-        }
-
-        var exists = File.Exists(Settings.ExifToolFullName.Trim());
-
-        if (exists && writeSettings)
-        {
-            await ConnectBasedGeoTaggerSettingTools.WriteSettings(Settings);
-            WeakReferenceMessenger.Default.Send(
-                new ExifToolSettingsUpdateMessage((this, Settings.ExifToolFullName)));
-        }
-
-        ExifToolExists = exists;
-    }
-
     [BlockingCommand]
     public async Task ChooseArchiveDirectory()
     {
@@ -120,20 +97,6 @@ public partial class ConnectBasedGeoTaggerContext
         if (!result ?? false) return;
 
         Settings.ArchiveDirectory = folderPicker.SelectedPath;
-    }
-
-    [BlockingCommand]
-    public async Task ChooseExifFile()
-    {
-        Debug.Assert(Settings != null, nameof(GeoToolsGui.Settings) + " != null");
-
-        var newFile = await ExifFilePicker.ChooseExifFile(StatusContext, Settings.ExifToolFullName);
-
-        if (!newFile.validFileFound) return;
-
-        if (Settings.ExifToolFullName.Equals(newFile.pickedFileName)) return;
-
-        Settings.ExifToolFullName = newFile.pickedFileName;
     }
 
     public static async Task<ConnectBasedGeoTaggerContext> CreateInstance(StatusControlContext? statusContext,
@@ -217,6 +180,14 @@ public partial class ConnectBasedGeoTaggerContext
             return;
         }
 
+        var exifToolCheckResult = await FileLocationTools.FindDownloadUpdateExifTool(null, StatusContext.ProgressTracker());
+
+        if (!exifToolCheckResult.Success || exifToolCheckResult.ExifToolExe is null)
+        {
+            await StatusContext.ShowMessageWithOkButton("ExifTool Issue", exifToolCheckResult.Message);
+            return;
+        }
+
         var fileListGpxService =
             new GarminConnectGpxService(Settings.ArchiveDirectory,
                 new ConnectGpxService
@@ -227,7 +198,7 @@ public partial class ConnectBasedGeoTaggerContext
             Settings.PointsMustBeWithinMinutes, OffsetPhotoTimeInMinutes,
             Settings.OverwriteExistingGeoLocation,
             StatusContext.ProgressTracker(),
-            Settings.ExifToolFullName);
+            exifToolCheckResult.ExifToolExe.FullName);
 
         var resultsWithLocation =
             PreviewResults.FileResults.Where(x => x is { Latitude: not null, Longitude: not null }).ToList();
@@ -282,13 +253,10 @@ public partial class ConnectBasedGeoTaggerContext
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        Settings.ExifToolFullName = Settings.ExifToolFullName;
-
         PreviewMap.SetupCmsLeafletMapHtmlAndJs("Preview", 32.12063, -110.52313, true);
         WriteMap.SetupCmsLeafletMapHtmlAndJs("Write", 32.12063, -110.52313, true);
 
         await UpdateCredentialsNote();
-        await CheckThatExifToolExists(false);
         await CheckThatArchiveDirectoryExists(false);
     }
 
@@ -341,7 +309,6 @@ public partial class ConnectBasedGeoTaggerContext
         if (e.PropertyName == nameof(GeoToolsGui.Settings))
         {
             StatusContext.RunNonBlockingTask(async () => await CheckThatArchiveDirectoryExists(false));
-            StatusContext.RunNonBlockingTask(async () => await CheckThatExifToolExists(false));
         }
     }
 
@@ -351,9 +318,6 @@ public partial class ConnectBasedGeoTaggerContext
 
         if (e.PropertyName == nameof(Settings.ArchiveDirectory))
             StatusContext.RunNonBlockingTask(async () => await CheckThatArchiveDirectoryExists(true));
-
-        if (e.PropertyName == nameof(Settings.ExifToolFullName))
-            StatusContext.RunNonBlockingTask(async () => await CheckThatExifToolExists(true));
     }
 
     [NonBlockingCommand]
@@ -437,12 +401,20 @@ public partial class ConnectBasedGeoTaggerContext
             return;
         }
 
+        var exifToolCheckResult = await FileLocationTools.FindDownloadUpdateExifTool(null, StatusContext.ProgressTracker());
+
+        if (!exifToolCheckResult.Success || exifToolCheckResult.ExifToolExe is null)
+        {
+            await StatusContext.ShowMessageWithOkButton("ExifTool Issue", exifToolCheckResult.Message);
+            return;
+        }
+
         var tagger = new GeoTag();
 
         WriteToFileResults = await tagger.WriteGeoTagActions(
             PreviewResults.FileResults.Where(x => x.ShouldWriteMetadata).ToList(),
             Settings.CreateBackups, Settings.CreateBackupsInDefaultStorage,
-            Settings.ExifToolFullName, StatusContext.ProgressTracker());
+            exifToolCheckResult.ExifToolExe.FullName, StatusContext.ProgressTracker());
 
         var writtenResults = WriteToFileResults.FileResults.Where(x => x.WroteMetadata).ToList();
 

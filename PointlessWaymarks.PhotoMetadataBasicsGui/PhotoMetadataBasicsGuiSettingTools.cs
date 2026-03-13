@@ -8,18 +8,6 @@ namespace PointlessWaymarks.PhotoMetadataBasicsGui;
 
 public static class PhotoMetadataBasicsGuiSettingTools
 {
-    public static async Task<FileInfo?> ExifTool(StatusControlContext statusContext)
-    {
-        var result = await FileLocationTools.DownloadAndSetupExifTool(progress: statusContext.ProgressTracker());
-        if (!result.Success)
-        {
-            await statusContext.ShowMessageWithOkButton("ExifTool Problem", result.Message);
-            return null;
-        }
-
-        return result.ExifToolExe;
-    }
-
     public static async Task<IntersectSettings> FeatureIntersectSettings(StatusControlContext statusContext)
     {
         var settings = ReadSettings();
@@ -59,18 +47,6 @@ public static class PhotoMetadataBasicsGuiSettingTools
 
         // 3) Return new default settings
         return new IntersectSettings();
-    }
-
-    public static async Task<FileInfo?> Ffprobe(StatusControlContext statusContext)
-    {
-        var result = await FileLocationTools.DownloadAndSetupFfmpeg(progress: statusContext.ProgressTracker());
-        if (!result.Success)
-        {
-            await statusContext.ShowMessageWithOkButton("ExifTool Problem", result.Message);
-            return null;
-        }
-
-        return result.FfprobeExe;
     }
 
     public static PhotoMetadataBasicsGuiSettings ReadSettings()
