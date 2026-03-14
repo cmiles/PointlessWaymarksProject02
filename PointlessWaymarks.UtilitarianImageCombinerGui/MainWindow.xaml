@@ -18,7 +18,7 @@
     mc:Ignorable="d">
     <Grid>
         <TabControl Margin="2" ItemContainerStyle="{StaticResource UnderlineOnSelectTabItemStyle}">
-            <TabItem HeaderStringFormat="Combine Images">
+            <TabItem Header="Combine Images">
                 <controls:CombinerListControl DataContext="{Binding CombinerTabContext}" />
             </TabItem>
             <TabItem Header="Settings">

@@ -16,10 +16,16 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
+    <UserControl.Resources>
+        <Style x:Key="InTabMarginStyle" TargetType="FrameworkElement">
+            <Setter Property="Margin" Value="16,0,4,4" />
+        </Style>
+    </UserControl.Resources>
     <Grid>
-        <TabControl SelectedIndex="{Binding SelectedTab, Mode=TwoWay}" ItemContainerStyle="{StaticResource UnderlineOnSelectTabItemStyle}">
+        <TabControl SelectedIndex="{Binding SelectedTab, Mode=TwoWay}"
+                    ItemContainerStyle="{StaticResource UnderlineOnSelectTabItemStyle}">
             <TabItem Header="Files To Tag">
-                <Grid>
+                <Grid Style="{StaticResource InTabMarginStyle}">
                     <GroupBox Header="Files To Tag">
                         <Grid Margin="4">
                             <Grid.RowDefinitions>
@@ -61,7 +67,7 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Garmin Connect Settings">
-                <Grid>
+                <Grid Style="{StaticResource InTabMarginStyle}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -161,197 +167,210 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Settings">
-                <ScrollViewer>
-                    <GroupBox Margin="4" Header="Settings and Start Preview">
-                        <Grid>
-                            <StackPanel>
-                                <Button
-                                    Height="40"
-                                    Margin="8,8,8,12"
-                                    HorizontalAlignment="Stretch"
-                                    Command="{Binding GeneratePreviewCommand}">
-                                    Generate Preview
-                                </Button>
-                                <GroupBox Header="File Handling">
-                                    <StackPanel Orientation="Vertical">
+                <Grid Style="{StaticResource InTabMarginStyle}">
+                    <ScrollViewer>
+                        <GroupBox Margin="4" Header="Settings and Start Preview">
+                            <Grid>
+                                <StackPanel>
+                                    <Button
+                                        Height="40"
+                                        Margin="8,8,8,12"
+                                        HorizontalAlignment="Stretch"
+                                        Command="{Binding GeneratePreviewCommand}">
+                                        Generate Preview
+                                    </Button>
+                                    <GroupBox Header="File Handling">
                                         <StackPanel Orientation="Vertical">
-                                            <CheckBox IsChecked="{Binding Settings.CreateBackups}">
-                                                <TextBlock TextWrapping="Wrap">
-                                                    <Run FontWeight="Bold">Create Backups</Run>
-                                                    <Run>- When Geolocation information is found for a file the original version will be copied into a backup directory.</Run>
-                                                </TextBlock>
-                                            </CheckBox>
-                                            <CheckBox Margin="24,12,0,0" IsChecked="{Binding Settings.CreateBackupsInDefaultStorage}">
-                                                <TextBlock TextWrapping="Wrap">
-                                                    <Run FontWeight="Bold">Backup into My Documents</Run>
-                                                    <Run>- If this is checked backups will be written into a folder in My Documents - this keeps all backups in one place and doesn't add extra files into existing directories. If un-checked backups will be written to a folder under the file's current folder - this keeps the backups close to the original file.</Run>
-                                                </TextBlock>
-                                            </CheckBox>
+                                            <StackPanel Orientation="Vertical">
+                                                <CheckBox IsChecked="{Binding Settings.CreateBackups}">
+                                                    <TextBlock TextWrapping="Wrap">
+                                                        <Run FontWeight="Bold">Create Backups</Run>
+                                                        <Run>- When Geolocation information is found for a file the original version will be copied into a backup directory.</Run>
+                                                    </TextBlock>
+                                                </CheckBox>
+                                                <CheckBox Margin="24,12,0,0"
+                                                          IsChecked="{Binding Settings.CreateBackupsInDefaultStorage}">
+                                                    <TextBlock TextWrapping="Wrap">
+                                                        <Run FontWeight="Bold">Backup into My Documents</Run>
+                                                        <Run>- If this is checked backups will be written into a folder in My Documents - this keeps all backups in one place and doesn't add extra files into existing directories. If un-checked backups will be written to a folder under the file's current folder - this keeps the backups close to the original file.</Run>
+                                                    </TextBlock>
+                                                </CheckBox>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Vertical">
+                                                <CheckBox IsChecked="{Binding Settings.OverwriteExistingGeoLocation}">
+                                                    <TextBlock TextWrapping="Wrap">
+                                                        <Run FontWeight="Bold">Overwrite Existing Geolocation</Run>
+                                                        <Run>- If checked any existing Geolocation Metadata will be overwritten if a location is found.</Run>
+                                                    </TextBlock>
+                                                </CheckBox>
+                                            </StackPanel>
                                         </StackPanel>
+                                    </GroupBox>
+                                    <GroupBox Header="Timing">
                                         <StackPanel Orientation="Vertical">
-                                            <CheckBox IsChecked="{Binding Settings.OverwriteExistingGeoLocation}">
-                                                <TextBlock TextWrapping="Wrap">
-                                                    <Run FontWeight="Bold">Overwrite Existing Geolocation</Run>
-                                                    <Run>- If checked any existing Geolocation Metadata will be overwritten if a location is found.</Run>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox
+                                                    Width="80"
+                                                    Margin="0,7,4,0"
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Top"
+                                                    HorizontalContentAlignment="Right"
+                                                    behaviors:TextBoxNumericInputHelper.DefaultValue="0"
+                                                    behaviors:TextBoxNumericInputHelper.OnlyNumeric="Uint"
+                                                    Text="{Binding Settings.PointsMustBeWithinMinutes, UpdateSourceTrigger=PropertyChanged, FallbackValue='0', TargetNullValue='0'}" />
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    Margin="4"
+                                                    HorizontalAlignment="Left"
+                                                    TextWrapping="Wrap">
+                                                    <Run FontWeight="Bold">File Time must be Within Minutes of Point</Run>
+                                                    <Run>- The program will look for points with the specified number of minutes - too large a value risks associating points with a location that doesn't make sense, too small and points sparse track may be missed.</Run>
                                                 </TextBlock>
-                                            </CheckBox>
+                                            </Grid>
+                                            <Grid Margin="0,6,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox
+                                                    Width="80"
+                                                    Margin="0,7,4,0"
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Top"
+                                                    HorizontalContentAlignment="Right"
+                                                    behaviors:TextBoxNumericInputHelper.DefaultValue="0"
+                                                    behaviors:TextBoxNumericInputHelper.OnlyNumeric="Uint"
+                                                    Text="{Binding OffsetPhotoTimeInMinutes, UpdateSourceTrigger=PropertyChanged, FallbackValue='0', TargetNullValue='0'}" />
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    Margin="4"
+                                                    TextWrapping="Wrap">
+                                                    <Run FontWeight="Bold">Adjust File Time by Minutes</Run>
+                                                    <Run>- File times for photographs and other files can be created by devices that don't have accurate clocks - use this setting if you know that the created time for a file is offset by a consistent number of minutes (positive or negative).</Run>
+                                                </TextBlock>
+                                            </Grid>
                                         </StackPanel>
-                                    </StackPanel>
-                                </GroupBox>
-                                <GroupBox Header="Timing">
-                                    <StackPanel Orientation="Vertical">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBox
-                                                Width="80"
-                                                Margin="0,7,4,0"
-                                                HorizontalAlignment="Left"
-                                                VerticalAlignment="Top"
-                                                HorizontalContentAlignment="Right"
-                                                behaviors:TextBoxNumericInputHelper.DefaultValue="0"
-                                                behaviors:TextBoxNumericInputHelper.OnlyNumeric="Uint"
-                                                Text="{Binding Settings.PointsMustBeWithinMinutes, UpdateSourceTrigger=PropertyChanged, FallbackValue='0', TargetNullValue='0'}" />
-                                            <TextBlock
-                                                Grid.Column="1"
-                                                Margin="4"
-                                                HorizontalAlignment="Left"
-                                                TextWrapping="Wrap">
-                                                <Run FontWeight="Bold">File Time must be Within Minutes of Point</Run>
-                                                <Run>- The program will look for points with the specified number of minutes - too large a value risks associating points with a location that doesn't make sense, too small and points sparse track may be missed.</Run>
-                                            </TextBlock>
-                                        </Grid>
-                                        <Grid Margin="0,6,0,0">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBox
-                                                Width="80"
-                                                Margin="0,7,4,0"
-                                                HorizontalAlignment="Left"
-                                                VerticalAlignment="Top"
-                                                HorizontalContentAlignment="Right"
-                                                behaviors:TextBoxNumericInputHelper.DefaultValue="0"
-                                                behaviors:TextBoxNumericInputHelper.OnlyNumeric="Uint"
-                                                Text="{Binding OffsetPhotoTimeInMinutes, UpdateSourceTrigger=PropertyChanged, FallbackValue='0', TargetNullValue='0'}" />
-                                            <TextBlock
-                                                Grid.Column="1"
-                                                Margin="4"
-                                                TextWrapping="Wrap">
-                                                <Run FontWeight="Bold">Adjust File Time by Minutes</Run>
-                                                <Run>- File times for photographs and other files can be created by devices that don't have accurate clocks - use this setting if you know that the created time for a file is offset by a consistent number of minutes (positive or negative).</Run>
-                                            </TextBlock>
-                                        </Grid>
-                                    </StackPanel>
-                                </GroupBox>
-                            </StackPanel>
-                        </Grid>
-                    </GroupBox>
-                </ScrollViewer>
+                                    </GroupBox>
+                                </StackPanel>
+                            </Grid>
+                        </GroupBox>
+                    </ScrollViewer>
+                </Grid>
             </TabItem>
             <TabItem Header="Preview">
-                <GroupBox Header="Preview">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <Button
-                            Height="40"
-                            Margin="8,8,8,12"
-                            HorizontalAlignment="Stretch"
-                            Command="{Binding WriteResultsToFileCommand}">
-                            Write Location to Files
-                        </Button>
-                        <DataGrid
-                            Grid.Row="1"
-                            AutoGenerateColumns="false"
-                            CanUserAddRows="False"
-                            CanUserDeleteRows="false"
-                            CanUserReorderColumns="true"
-                            CanUserResizeColumns="true"
-                            CanUserResizeRows="false"
-                            CanUserSortColumns="true"
-                            FrozenColumnCount="1"
-                            ItemsSource="{Binding PreviewResults.FileResults}">
-                            <DataGrid.Columns>
-                                <DataGridTemplateColumn>
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Image
-                                                Width="{StaticResource SmallIconSize}"
-                                                VerticalAlignment="Center"
-                                                Source="{svgc:SvgImage Source=/Icons/alert-octagon.svg,
+                <Grid Style="{StaticResource InTabMarginStyle}">
+                    <GroupBox Header="Preview">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Button
+                                Height="40"
+                                Margin="8,8,8,12"
+                                HorizontalAlignment="Stretch"
+                                Command="{Binding WriteResultsToFileCommand}">
+                                Write Location to Files
+                            </Button>
+                            <DataGrid
+                                Grid.Row="1"
+                                AutoGenerateColumns="false"
+                                CanUserAddRows="False"
+                                CanUserDeleteRows="false"
+                                CanUserReorderColumns="true"
+                                CanUserResizeColumns="true"
+                                CanUserResizeRows="false"
+                                CanUserSortColumns="true"
+                                FrozenColumnCount="1"
+                                ItemsSource="{Binding PreviewResults.FileResults}">
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn>
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Image
+                                                    Width="{StaticResource SmallIconSize}"
+                                                    VerticalAlignment="Center"
+                                                    Source="{svgc:SvgImage Source=/Icons/alert-octagon.svg,
                                                                        AppName=PointlessWaymarks.WpfCommon}"
-                                                ToolTip="{Binding Notes}"
-                                                Visibility="{Binding ShouldWriteMetadata, Converter={StaticResource BooleanNotToHidden}}" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTextColumn Binding="{Binding FileName}" Header="File Name" />
-                                <DataGridTextColumn Binding="{Binding ShouldWriteMetadata}" Header="Will Write" />
-                                <DataGridTextColumn Binding="{Binding Notes}" Header="Notes" />
-                                <DataGridTextColumn Binding="{Binding Source}" Header="Source" />
-                                <DataGridTextColumn Binding="{Binding UtcDateTime}" Header="UTC" />
-                                <DataGridTextColumn Binding="{Binding Latitude}" Header="Latitude" />
-                                <DataGridTextColumn Binding="{Binding Longitude}" Header="Longitude" />
-                                <DataGridTextColumn Binding="{Binding Elevation, Converter={StaticResource MetersToFeet}, StringFormat=N0}" Header="Elevation" />
-                            </DataGrid.Columns>
-                        </DataGrid>
-                        <wpf:WebView2CompositionControl Grid.Row="2">
-                            <b:Interaction.Behaviors>
-                                <webViewVirtualDomain:WebViewGeneratedVirtualDomainBehavior WebViewMessenger="{Binding PreviewMap}" />
-                            </b:Interaction.Behaviors>
-                        </wpf:WebView2CompositionControl>
-                    </Grid>
-                </GroupBox>
+                                                    ToolTip="{Binding Notes}"
+                                                    Visibility="{Binding ShouldWriteMetadata, Converter={StaticResource BooleanNotToHidden}}" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Binding="{Binding FileName}" Header="File Name" />
+                                    <DataGridTextColumn Binding="{Binding ShouldWriteMetadata}" Header="Will Write" />
+                                    <DataGridTextColumn Binding="{Binding Notes}" Header="Notes" />
+                                    <DataGridTextColumn Binding="{Binding Source}" Header="Source" />
+                                    <DataGridTextColumn Binding="{Binding UtcDateTime}" Header="UTC" />
+                                    <DataGridTextColumn Binding="{Binding Latitude}" Header="Latitude" />
+                                    <DataGridTextColumn Binding="{Binding Longitude}" Header="Longitude" />
+                                    <DataGridTextColumn
+                                        Binding="{Binding Elevation, Converter={StaticResource MetersToFeet}, StringFormat=N0}"
+                                        Header="Elevation" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <wpf:WebView2CompositionControl Grid.Row="2">
+                                <b:Interaction.Behaviors>
+                                    <webViewVirtualDomain:WebViewGeneratedVirtualDomainBehavior
+                                        WebViewMessenger="{Binding PreviewMap}" />
+                                </b:Interaction.Behaviors>
+                            </wpf:WebView2CompositionControl>
+                        </Grid>
+                    </GroupBox>
+                </Grid>
             </TabItem>
             <TabItem Header="Result">
-                <GroupBox Header="Results">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <DataGrid
-                            AutoGenerateColumns="false"
-                            CanUserAddRows="False"
-                            CanUserDeleteRows="false"
-                            CanUserReorderColumns="true"
-                            CanUserResizeColumns="true"
-                            CanUserResizeRows="false"
-                            CanUserSortColumns="true"
-                            FrozenColumnCount="1"
-                            ItemsSource="{Binding WriteToFileResults.FileResults}">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Binding="{Binding FileName}" Header="File Name" />
-                                <DataGridTextColumn Binding="{Binding WroteMetadata}" Header="Written" />
-                                <DataGridTextColumn Binding="{Binding Notes}" Header="Notes" />
-                                <DataGridTextColumn Binding="{Binding Source}" Header="Source" />
-                                <DataGridTextColumn Binding="{Binding Latitude}" Header="Latitude" />
-                                <DataGridTextColumn Binding="{Binding Longitude}" Header="Longitude" />
-                                <DataGridTextColumn Binding="{Binding Elevation, Converter={StaticResource MetersToFeet}, StringFormat=N0}" Header="Elevation" />
-                            </DataGrid.Columns>
-                        </DataGrid>
-                        <StackPanel
-                            Grid.Row="1"
-                            Margin="0,6,0,6"
-                            HorizontalAlignment="Right"
-                            Orientation="Horizontal">
-                            <Button Command="{Binding SendResultFilesToFeatureIntersectTaggerCommand}">Send Files to Feature Intersect Tagger</Button>
-                        </StackPanel>
-                        <wpf:WebView2CompositionControl Grid.Row="2">
-                            <b:Interaction.Behaviors>
-                                <webViewVirtualDomain:WebViewGeneratedVirtualDomainBehavior WebViewMessenger="{Binding WriteMap}" />
-                            </b:Interaction.Behaviors>
-                        </wpf:WebView2CompositionControl>
-                    </Grid>
-                </GroupBox>
+                <Grid Style="{StaticResource InTabMarginStyle}">
+                    <GroupBox Header="Results">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <DataGrid
+                                AutoGenerateColumns="false"
+                                CanUserAddRows="False"
+                                CanUserDeleteRows="false"
+                                CanUserReorderColumns="true"
+                                CanUserResizeColumns="true"
+                                CanUserResizeRows="false"
+                                CanUserSortColumns="true"
+                                FrozenColumnCount="1"
+                                ItemsSource="{Binding WriteToFileResults.FileResults}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Binding="{Binding FileName}" Header="File Name" />
+                                    <DataGridTextColumn Binding="{Binding WroteMetadata}" Header="Written" />
+                                    <DataGridTextColumn Binding="{Binding Notes}" Header="Notes" />
+                                    <DataGridTextColumn Binding="{Binding Source}" Header="Source" />
+                                    <DataGridTextColumn Binding="{Binding Latitude}" Header="Latitude" />
+                                    <DataGridTextColumn Binding="{Binding Longitude}" Header="Longitude" />
+                                    <DataGridTextColumn
+                                        Binding="{Binding Elevation, Converter={StaticResource MetersToFeet}, StringFormat=N0}"
+                                        Header="Elevation" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <StackPanel
+                                Grid.Row="1"
+                                Margin="0,6,0,6"
+                                HorizontalAlignment="Right"
+                                Orientation="Horizontal">
+                                <Button Command="{Binding SendResultFilesToFeatureIntersectTaggerCommand}">Send Files to Feature Intersect Tagger</Button>
+                            </StackPanel>
+                            <wpf:WebView2CompositionControl Grid.Row="2">
+                                <b:Interaction.Behaviors>
+                                    <webViewVirtualDomain:WebViewGeneratedVirtualDomainBehavior
+                                        WebViewMessenger="{Binding WriteMap}" />
+                                </b:Interaction.Behaviors>
+                            </wpf:WebView2CompositionControl>
+                        </Grid>
+                    </GroupBox>
+                </Grid>
             </TabItem>
         </TabControl>
     </Grid>

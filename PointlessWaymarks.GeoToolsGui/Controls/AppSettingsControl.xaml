@@ -11,7 +11,7 @@
     mc:Ignorable="d">
     <Grid>
         <GroupBox Header="Program Update Location">
-            <Grid Margin="4">
+            <Grid Margin="16,0,4,4">
                 <StackPanel Orientation="Vertical">
                     <TextBox Text="{Binding ProgramUpdateLocation, Delay=400, UpdateSourceTrigger=PropertyChanged}" />
                     <TextBlock Margin="8,4,4,4" TextWrapping="Wrap">

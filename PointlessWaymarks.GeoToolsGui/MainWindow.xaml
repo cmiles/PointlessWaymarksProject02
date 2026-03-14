@@ -19,10 +19,16 @@
     Closing="MainWindow_OnClosing"
     Icon="PointlessWaymarksGeoToolsIcon.ico"
     mc:Ignorable="d">
+    <Window.Resources>
+        <Style BasedOn="{StaticResource UnderlineOnSelectTabItemStyle}" TargetType="TabItem" x:Key="VerticalTabs">
+            <Setter Property="Height" Value="40" />
+            <Setter Property="Width" Value="250" />
+        </Style>
+    </Window.Resources>
     <Grid>
-        <TabControl SelectedIndex="{Binding SelectedTab, Mode=TwoWay}" TabStripPlacement="Left" ItemContainerStyle="{StaticResource UnderlineOnSelectTabItemStyle}">
+        <TabControl SelectedIndex="{Binding SelectedTab, Mode=TwoWay}" TabStripPlacement="Left" ItemContainerStyle="{StaticResource VerticalTabs}">
             <TabItem Header="GeoTag from Gpx Files">
-                <fileBasedGeoTagger:FileBasedGeoTaggerControl DataContext="{Binding FileGeoTaggerContext}" />
+                <fileBasedGeoTagger:FileBasedGeoTaggerControl DataContext="{Binding FileGeoTaggerContext}" Margin="2" />
             </TabItem>
             <TabItem Header="GeoTag from Garmin Connect">
                 <controls1:ConnectBasedGeoTaggerControl DataContext="{Binding ConnectGeoTaggerContext}" />
