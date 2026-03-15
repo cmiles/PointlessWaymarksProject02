@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using System.IO;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
@@ -20,6 +22,23 @@ public partial class PhotoListFileItem
 
     public BitmapSource? ThumbnailImage { get; set; }
 
+    private static BitmapSource ApplyRotation(BitmapSource source, Rotation rotation)
+    {
+        if (rotation == Rotation.Rotate0) return source;
+
+        var angle = rotation switch
+        {
+            Rotation.Rotate90 => 90.0,
+            Rotation.Rotate180 => 180.0,
+            Rotation.Rotate270 => 270.0,
+            _ => 0.0
+        };
+
+        var transformed = new TransformedBitmap(source, new RotateTransform(angle));
+        transformed.Freeze();
+        return transformed;
+    }
+
     public static async Task<PhotoListFileItem> CreateInstance(FileInfo photoFile)
     {
         var item = new PhotoListFileItem
@@ -30,6 +49,111 @@ public partial class PhotoListFileItem
         };
 
         return item;
+    }
+
+    private static FileInfo? ExtractLargestPreviewAsJpeg(FileInfo file, IProgress<string>? progress = null)
+    {
+        try
+        {
+            progress?.Report($"Reading {file.Name} ({file.Length / 1024.0 / 1024.0:N1} MB)...");
+            var bytes = File.ReadAllBytes(file.FullName);
+            var exifRotation = GetExifRotation(bytes);
+
+            // --- Strategy 1: WPF/WIC full-frame decode ---
+            try
+            {
+                progress?.Report("Attempting WIC decode of full image...");
+                using var ms = new MemoryStream(bytes);
+                var decoder = BitmapDecoder.Create(ms,
+                    BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+
+                if (decoder.Frames.Count > 0)
+                {
+                    var frame = decoder.Frames[0];
+                    progress?.Report($"WIC decoded {frame.PixelWidth}x{frame.PixelHeight} image, saving preview...");
+                    var source = ApplyRotation(frame, exifRotation);
+                    return SavePreviewJpeg(source, file.Name);
+                }
+            }
+            catch
+            {
+                progress?.Report("WIC could not decode this format, scanning for embedded JPEG previews...");
+            }
+
+            // --- Strategy 2: Scan for the largest embedded JPEG ---
+            BitmapSource? bestSource = null;
+            var bestPixelCount = 0L;
+            var jpegCount = 0;
+
+            for (var i = 0; i < bytes.Length - 2; i++)
+            {
+                if (bytes[i] != 0xFF || bytes[i + 1] != 0xD8 || bytes[i + 2] != 0xFF)
+                    continue;
+
+                try
+                {
+                    using var ms = new MemoryStream(bytes, i, bytes.Length - i);
+                    var bi = new BitmapImage();
+                    bi.BeginInit();
+                    bi.CacheOption = BitmapCacheOption.OnLoad;
+                    bi.StreamSource = ms;
+                    bi.EndInit();
+                    bi.Freeze();
+
+                    jpegCount++;
+                    var pixelCount = (long)bi.PixelWidth * bi.PixelHeight;
+                    progress?.Report($"Found embedded JPEG #{jpegCount}: {bi.PixelWidth}x{bi.PixelHeight}");
+                    if (pixelCount > bestPixelCount)
+                    {
+                        bestPixelCount = pixelCount;
+                        bestSource = bi;
+                    }
+                }
+                catch
+                {
+                    // Invalid JPEG at this offset; continue scanning.
+                }
+            }
+
+            if (bestSource != null)
+            {
+                progress?.Report($"Using largest embedded JPEG ({bestSource.PixelWidth}x{bestSource.PixelHeight}), saving preview...");
+                var rotated = ApplyRotation(bestSource, exifRotation);
+                return SavePreviewJpeg(rotated, file.Name);
+            }
+
+            progress?.Report("No viewable preview could be extracted.");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            progress?.Report($"Error extracting preview: {ex.Message}");
+            return null;
+        }
+    }
+
+    private static Rotation GetExifRotation(byte[] imageBytes)
+    {
+        try
+        {
+            using var ms = new MemoryStream(imageBytes);
+            var directories = ImageMetadataReader.ReadMetadata(ms);
+            var ifd0 = directories.OfType<ExifIfd0Directory>().FirstOrDefault();
+            if (ifd0 != null && ifd0.TryGetUInt16(ExifDirectoryBase.TagOrientation, out var orientation))
+                return orientation switch
+                {
+                    3 => Rotation.Rotate180,
+                    6 => Rotation.Rotate90,
+                    8 => Rotation.Rotate270,
+                    _ => Rotation.Rotate0
+                };
+        }
+        catch
+        {
+            // If orientation can't be read, assume normal
+        }
+
+        return Rotation.Rotate0;
     }
 
     /// <summary>
@@ -145,6 +269,9 @@ public partial class PhotoListFileItem
                 // Read the entire file into memory first so no handle is held beyond here.
                 var bytes = File.ReadAllBytes(file.FullName);
 
+                // Read EXIF orientation so portrait images are displayed correctly.
+                var exifRotation = GetExifRotation(bytes);
+
                 // --- Pass 1: WPF BitmapDecoder ---
                 try
                 {
@@ -161,8 +288,9 @@ public partial class PhotoListFileItem
                         // include one, and it is already a small, ready-to-use image.
                         if (frame.Thumbnail is { } thumb)
                         {
-                            if (!thumb.IsFrozen) thumb.Freeze();
-                            return thumb;
+                            var rotatedThumb = ApplyRotation(thumb, exifRotation);
+                            if (!rotatedThumb.IsFrozen) rotatedThumb.Freeze();
+                            return rotatedThumb;
                         }
 
                         // No embedded thumbnail — re-decode at reduced width so the
@@ -173,6 +301,7 @@ public partial class PhotoListFileItem
                         bi.CacheOption = BitmapCacheOption.OnLoad;
                         bi.StreamSource = ms2;
                         bi.DecodePixelWidth = thumbnailWidth;
+                        bi.Rotation = exifRotation;
                         bi.EndInit();
                         bi.Freeze();
                         return bi;
@@ -199,6 +328,7 @@ public partial class PhotoListFileItem
                         bi.CacheOption = BitmapCacheOption.OnLoad;
                         bi.StreamSource = ms;
                         bi.DecodePixelWidth = thumbnailWidth;
+                        bi.Rotation = exifRotation;
                         bi.EndInit();
                         bi.Freeze();
                         return bi;
@@ -221,5 +351,60 @@ public partial class PhotoListFileItem
     public async Task RefreshMetadata()
     {
         Metadata = await GetMetadataAsync(PhotoFile);
+    }
+
+    private static FileInfo SavePreviewJpeg(BitmapSource source, string originalFileName)
+    {
+        var tempDir = FileLocationTools.TempStorageDirectory();
+        var safeName = Path.GetFileNameWithoutExtension(originalFileName);
+        var datePart = DateTime.Now.ToString("yyyy-MM-dd");
+        var tempPath = Path.Combine(tempDir.FullName,
+            $"Preview-{datePart}-{safeName}-{Guid.NewGuid():N}.jpg");
+
+        var encoder = new JpegBitmapEncoder { QualityLevel = 95 };
+        encoder.Frames.Add(BitmapFrame.Create(source));
+
+        using var fs = File.Create(tempPath);
+        encoder.Save(fs);
+
+        return new FileInfo(tempPath);
+    }
+
+    /// <summary>
+    ///     Opens a preview of the image in the OS default viewer. For formats the OS
+    ///     can display natively (JPEG, PNG, etc.) the file is opened directly. For RAW
+    ///     and other formats the largest embedded preview is extracted as a JPEG temp
+    ///     file and opened.
+    /// </summary>
+    public static async Task ShowPreviewInOperatingSystem(FileInfo file, IProgress<string>? progress = null)
+    {
+        if (!file.Exists)
+        {
+            progress?.Report($"File not found: {file.FullName}");
+            return;
+        }
+
+        HashSet<string> nativeViewableExtensions =
+            [".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tif", ".tiff", ".webp"];
+
+        if (nativeViewableExtensions.Contains(file.Extension.ToLowerInvariant()))
+        {
+            progress?.Report($"Opening {file.Name} in default viewer...");
+            Process.Start(new ProcessStartInfo(file.FullName) { UseShellExecute = true });
+            return;
+        }
+
+        progress?.Report($"Extracting preview from {file.Name}...");
+        var previewFile = await Task.Run(() => ExtractLargestPreviewAsJpeg(file, progress)).ConfigureAwait(false);
+
+        if (previewFile is { Exists: true })
+        {
+            progress?.Report($"Opening extracted preview: {previewFile.Name}");
+            Process.Start(new ProcessStartInfo(previewFile.FullName) { UseShellExecute = true });
+        }
+        else
+        {
+            progress?.Report($"Could not generate a preview for {file.Name}.");
+        }
     }
 }

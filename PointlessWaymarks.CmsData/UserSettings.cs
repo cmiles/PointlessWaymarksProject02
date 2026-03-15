@@ -5,7 +5,6 @@ namespace PointlessWaymarks.CmsData;
 [NotifyPropertyChanged]
 public partial class UserSettings
 {
-    public string BingApiKey { get; set; } = string.Empty;
     public string CalTopoApiKey { get; set; } = string.Empty;
 
     /// <summary>

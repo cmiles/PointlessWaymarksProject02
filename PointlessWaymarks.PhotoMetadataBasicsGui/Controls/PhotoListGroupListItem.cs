@@ -104,6 +104,15 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
     }
 
     [BlockingCommand]
+    [StopAndWarnIfFirstParameterIsNull]
+    public async Task FileItemPreview(PhotoListFileItem? item)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+        
+        PhotoListFileItem.ShowPreviewInOperatingSystem(item!.PhotoFile, StatusContext.ProgressTracker());
+    }
+
+    [BlockingCommand]
     public async Task ChooseLocationOnMap()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -582,7 +591,7 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
                     string.Empty);
         if (string.IsNullOrWhiteSpace(PhotoCreatedByEntry.UserValue) &&
             !string.IsNullOrWhiteSpace(currentSettings.DefaultCreatedBy))
-            PhotoCreatedByEntry.UserValue = currentSettings.DefaultCreatedBy;
+            PhotoCreatedByEntry.UserValue = $"© {currentSettings.DefaultCreatedBy}" ;
     }
 
     public void UpdateLocation()

@@ -323,6 +323,23 @@ public partial class PhotoListContext : IDropTarget
         Items.Remove(toRemove!);
     }
 
+    [BlockingCommand]
+    public async Task RenameFilesAllItems(CancellationToken cancellationToken)
+    {
+        var toRename = Items.ToList();
+
+        foreach (var loopSelected in toRename) await loopSelected.RenameFiles();
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task RenameFilesSelectedItems(CancellationToken cancellationToken)
+    {
+        var frozenSelected = SelectedItems;
+
+        foreach (var loopSelected in frozenSelected) await loopSelected.RenameFiles();
+    }
+
     public PhotoListGroupListItem? SelectedListItem()
     {
         return SelectedItem;
@@ -355,5 +372,22 @@ public partial class PhotoListContext : IDropTarget
         Items.Add(newGroup);
 
         foreach (var x in selectedFileItems) await item.RemoveFile(x);
+    }
+
+    [BlockingCommand]
+    public async Task WriteMetadataAllItems(CancellationToken cancellationToken)
+    {
+        var toWrite = Items.ToList();
+
+        foreach (var loopSelected in toWrite) await loopSelected.WriteMetadata();
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task WriteMetadataSelectedItems(CancellationToken cancellationToken)
+    {
+        var frozenSelected = SelectedItems;
+
+        foreach (var loopSelected in frozenSelected) await loopSelected.WriteMetadata();
     }
 }

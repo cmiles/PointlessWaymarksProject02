@@ -40,9 +40,6 @@ public partial class UserSettingsEditorContext
     public CmsCommonCommands CommonCommands { get; set; }
     public UserSettings EditorSettings { get; set; }
 
-    public static string HelpMarkdownBingMapsApiKey =>
-        "If you have a Bing Maps API key you can enter it here - this will allow access to some Bing layers in the maps. This is NOT required for maps to be functional.";
-
     public static string HelpMarkdownCalTopoMapsApiKey =>
         "If you have a CalTopo Maps API key you can enter it here - this will allow access to some CalTopo layers in the maps. This is NOT required for maps to be functional.";
 

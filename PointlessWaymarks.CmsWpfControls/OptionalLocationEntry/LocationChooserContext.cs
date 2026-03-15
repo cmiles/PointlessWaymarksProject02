@@ -42,7 +42,7 @@ public partial class LocationChooserContext : IHasChanges, ICheckForChangesAndVa
 
         this.SetupCmsLeafletPointChooserMapHtmlAndJs("Map", UserSettingsSingleton.CurrentSettings().LatitudeDefault,
             UserSettingsSingleton.CurrentSettings().LongitudeDefault, serializedMapIcons,
-            UserSettingsSingleton.CurrentSettings().CalTopoApiKey, UserSettingsSingleton.CurrentSettings().BingApiKey);
+            UserSettingsSingleton.CurrentSettings().CalTopoApiKey);
 
         PropertyChanged += OnPropertyChanged;
 

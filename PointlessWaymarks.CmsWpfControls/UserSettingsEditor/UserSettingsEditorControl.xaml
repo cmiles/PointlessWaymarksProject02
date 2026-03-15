@@ -522,21 +522,6 @@
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
                         <Label Style="{StaticResource DataEntryLabelStyle}"
-                               Target="{Binding ElementName=BingApiKeyTextBox}">
-                            Bing Maps Api Key
-                        </Label>
-                        <TextBox
-                            Name="BingApiKeyTextBox"
-                            Style="{StaticResource DataEntryTextBoxSingleLineStyle}"
-                            Text="{Binding EditorSettings.BingApiKey, UpdateSourceTrigger=PropertyChanged}" />
-                        <wpf:MarkdownViewer Markdown="{Binding HelpMarkdownBingMapsApiKey}">
-                            <b:Interaction.Behaviors>
-                                <behaviors:IgnoreMouseWheelBehavior />
-                            </b:Interaction.Behaviors>
-                        </wpf:MarkdownViewer>
-                    </StackPanel>
-                    <StackPanel Orientation="Vertical">
-                        <Label Style="{StaticResource DataEntryLabelStyle}"
                                Target="{Binding ElementName=CalTopoApiKeyTextBox}">
                             CalTopo Maps Api Key
                         </Label>

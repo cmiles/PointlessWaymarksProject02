@@ -57,7 +57,7 @@ public partial class GeoJsonContentEditorContext : IHasChanges, IHasValidationIs
 
         this.SetupCmsLeafletMapHtmlAndJs("Map", UserSettingsSingleton.CurrentSettings().LatitudeDefault,
             UserSettingsSingleton.CurrentSettings().LongitudeDefault, true, serializedMapIcons,
-            UserSettingsSingleton.CurrentSettings().CalTopoApiKey, UserSettingsSingleton.CurrentSettings().BingApiKey);
+            UserSettingsSingleton.CurrentSettings().CalTopoApiKey);
 
         DbEntry = dbEntry;
 

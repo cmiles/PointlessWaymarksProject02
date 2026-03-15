@@ -13,6 +13,7 @@ using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsData.ImageHelpers;
 using PointlessWaymarks.CommonTools;
+using PointlessWaymarks.FeatureIntersectionTags.Models;
 using PointlessWaymarks.SpatialTools;
 using Serilog;
 
@@ -1768,6 +1769,15 @@ public static class UserSettingsUtilities
             await WriteSettings(readResult).ConfigureAwait(false);
         }
 
+        try
+        {
+            readResult.CalTopoApiKey = (await IntersectSettingTools.ReadSettings(readResult.FeatureIntersectionTagSettingsFile)).CalTopoApiKey;
+        }
+        catch (Exception e)
+        {
+            Log.Error($"Error trying to read CalTopoApiKey from {readResult.FeatureIntersectionTagSettingsFile} - {e}");
+        }
+
         return readResult;
     }
 
@@ -2024,6 +2034,8 @@ public static class UserSettingsUtilities
 
         foreach (var loopProperties in currentProperties)
         {
+            if (loopProperties.Name.Contains("CalTopoApiKey")) continue;
+
             var propertyExists = iniResult.TryGetKey(loopProperties.Name, out _);
 
             if (propertyExists)
@@ -2046,5 +2058,7 @@ public static class UserSettingsUtilities
         var writer = new FileIniDataParser();
 
         writer.WriteFile(currentFile.FullName, iniResult);
+
+        await IntersectSettingTools.WriteCalTopoApi(toWrite.CalTopoApiKey, toWrite.FeatureIntersectionTagSettingsFile);
     }
 }

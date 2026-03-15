@@ -37,8 +37,7 @@ public partial class LocationBoundsChooserContext : IWebViewMessenger
 
         this.SetupCmsLeafletMapHtmlAndJs("Map", UserSettingsSingleton.CurrentSettings().LatitudeDefault,
             UserSettingsSingleton.CurrentSettings().LongitudeDefault, false, serializedMapIcons,
-            UserSettingsSingleton.CurrentSettings().CalTopoApiKey,
-            UserSettingsSingleton.CurrentSettings().BingApiKey);
+            UserSettingsSingleton.CurrentSettings().CalTopoApiKey);
 
         LocationSearchContext = searchContext;
 

@@ -59,7 +59,7 @@ public partial class LineContentEditorContext : IHasChanges, IHasValidationIssue
         this.SetupCmsLeafletMapWithLineElevationChartHtmlAndJs("Map",
             UserSettingsSingleton.CurrentSettings().LatitudeDefault,
             UserSettingsSingleton.CurrentSettings().LongitudeDefault, serializedMapIcons,
-            UserSettingsSingleton.CurrentSettings().CalTopoApiKey, UserSettingsSingleton.CurrentSettings().BingApiKey);
+            UserSettingsSingleton.CurrentSettings().CalTopoApiKey);
 
         JsonFromWebView = new WorkQueue<FromWebViewMessage>(true);
 
