@@ -104,15 +104,6 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
     }
 
     [BlockingCommand]
-    [StopAndWarnIfFirstParameterIsNull]
-    public async Task FileItemPreview(PhotoListFileItem? item)
-    {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-        
-        PhotoListFileItem.ShowPreviewInOperatingSystem(item!.PhotoFile, StatusContext.ProgressTracker());
-    }
-
-    [BlockingCommand]
     public async Task ChooseLocationOnMap()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -236,6 +227,15 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
             .FirstOrDefault();
 
         if (primaryCandidate != null) primaryCandidate.IsPrimaryPhoto = true;
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfFirstParameterIsNull]
+    public async Task FileItemPreview(PhotoListFileItem? item)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        await PhotoListFileItem.ShowPreviewInOperatingSystem(item!.PhotoFile, StatusContext.ProgressTracker());
     }
 
     [NonBlockingCommand]
@@ -583,15 +583,16 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         var currentSettings = PhotoMetadataBasicsGuiSettingTools.ReadSettings();
 
         if (string.IsNullOrWhiteSpace(LicenseEntry.UserValue) &&
-            !string.IsNullOrWhiteSpace(currentSettings.DefaultLicense))
-            LicenseEntry.UserValue =
-                currentSettings.DefaultLicense.Replace("[CurrentYear]", DateTime.Now.Year.ToString()).Replace(
-                    "[PrimaryYear]",
-                    Items.FirstOrDefault(x => x.IsPrimaryPhoto)?.Metadata.PhotoCreatedOn?.Year.ToString() ??
-                    string.Empty);
+            !string.IsNullOrWhiteSpace(currentSettings.DefaultCreatedBy))
+        {
+            var year = Items.FirstOrDefault(x => x.IsPrimaryPhoto)?.Metadata.PhotoCreatedOn?.Year.ToString() ??
+                       DateTime.Now.Year.ToString();
+            LicenseEntry.UserValue = $"© {year} {currentSettings.DefaultCreatedBy}";
+        }
+
         if (string.IsNullOrWhiteSpace(PhotoCreatedByEntry.UserValue) &&
             !string.IsNullOrWhiteSpace(currentSettings.DefaultCreatedBy))
-            PhotoCreatedByEntry.UserValue = $"© {currentSettings.DefaultCreatedBy}" ;
+            PhotoCreatedByEntry.UserValue = $"{currentSettings.DefaultCreatedBy}";
     }
 
     public void UpdateLocation()
@@ -626,7 +627,8 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
                 return;
         }
 
-        var exifToolCheckResult = await FileLocationTools.FindDownloadUpdateExifTool(null, StatusContext.ProgressTracker());
+        var exifToolCheckResult =
+            await FileLocationTools.FindDownloadUpdateExifTool(null, StatusContext.ProgressTracker());
 
         if (!exifToolCheckResult.Success || exifToolCheckResult.ExifToolExe is null)
         {

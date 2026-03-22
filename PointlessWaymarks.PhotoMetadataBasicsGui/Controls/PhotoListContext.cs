@@ -2,17 +2,24 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
+using CommunityToolkit.Mvvm.Messaging;
 using GongSolutions.Wpf.DragDrop;
 using Metalama.Patterns.Observability;
+using Microsoft.VisualBasic.FileIO;
 using NetTopologySuite.Features;
+using NetTopologySuite.Geometries;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.FeatureIntersectionTags;
 using PointlessWaymarks.FeatureIntersectionTags.Models;
 using PointlessWaymarks.LlamaAspects;
+using PointlessWaymarks.SpatialTools;
 using PointlessWaymarks.WpfCommon;
+using PointlessWaymarks.WpfCommon.AppMessages;
+using PointlessWaymarks.WpfCommon.FileBasedGeoTagger;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
 using Point = NetTopologySuite.Geometries.Point;
+using SearchOption = System.IO.SearchOption;
 
 namespace PointlessWaymarks.PhotoMetadataBasicsGui.Controls;
 
@@ -20,6 +27,7 @@ namespace PointlessWaymarks.PhotoMetadataBasicsGui.Controls;
 [GenerateStatusCommands]
 public partial class PhotoListContext : IDropTarget
 {
+    private PhotoPreviewWindow? _previewWindow;
     public required ObservableCollection<PhotoListGroupListItem> Items { get; set; }
     public PhotoListGroupListItem? SelectedItem { get; set; }
     public List<PhotoListGroupListItem> SelectedItems { get; set; } = [];
@@ -58,6 +66,9 @@ public partial class PhotoListContext : IDropTarget
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
+        var settings = await PhotoMetadataBasicsGuiSettingTools.FeatureIntersectSettings(StatusContext);
+        var bufferInFeet = Math.Max((double)(settings.BufferPointsAndLinesByFeet ?? 0M), 50);
+
         foreach (var loopGroup in toProcess)
         {
             var validLatLong = await loopGroup.HasValidLatLong();
@@ -67,13 +78,23 @@ public partial class PhotoListContext : IDropTarget
                 return;
             }
 
-            var featureToCheck = new Feature(
-                new Point(loopGroup.LongitudeEntry.UserValue!.Value,
-                    loopGroup.LatitudeEntry.UserValue!.Value),
-                new AttributesTable());
-            var intersectionResult = new IntersectResult(featureToCheck)
-                { Description = "Photo Basic Metadata Tagging" };
-            var settings = await PhotoMetadataBasicsGuiSettingTools.FeatureIntersectSettings(StatusContext);
+            var point = new Point(loopGroup.LongitudeEntry.UserValue!.Value,
+                loopGroup.LatitudeEntry.UserValue!.Value);
+
+            var feature = bufferInFeet <= 0
+                ? new Feature(point, new AttributesTable())
+                : new Feature(PointTools.CreateCircle(loopGroup.LongitudeEntry.UserValue!.Value,
+                    loopGroup.LatitudeEntry.UserValue!.Value, bufferInFeet), new AttributesTable());
+
+            var intersectionResult = new IntersectResult(feature)
+            {
+                Description = "Photo Basic Metadata Tagging",
+                OsmIsInPoints =
+                {
+                    new Coordinate(loopGroup.LongitudeEntry.UserValue!.Value,
+                        loopGroup.LatitudeEntry.UserValue!.Value)
+                }
+            };
 
             settings.UseOsmOverpass = true;
             settings.OsmInTagging = true;
@@ -113,16 +134,197 @@ public partial class PhotoListContext : IDropTarget
 
         factoryReturn.BuildCommands();
 
+        WeakReferenceMessenger.Default.Register<PhotoPreviewNextItemMessage>(factoryReturn,
+            (r, _) => ((PhotoListContext)r).StatusContext.RunFireAndForgetNonBlockingTask(
+                ((PhotoListContext)r).OnPreviewNextItem));
+        WeakReferenceMessenger.Default.Register<PhotoPreviewPreviousItemMessage>(factoryReturn,
+            (r, _) => ((PhotoListContext)r).StatusContext.RunFireAndForgetNonBlockingTask(
+                ((PhotoListContext)r).OnPreviewPreviousItem));
+        WeakReferenceMessenger.Default.Register<PhotoPreviewFlagItemMessage>(factoryReturn,
+            (r, _) => ((PhotoListContext)r).StatusContext.RunFireAndForgetNonBlockingTask(
+                ((PhotoListContext)r).OnPreviewFlagItem));
+        WeakReferenceMessenger.Default.Register<PhotoPreviewUnFlagItemMessage>(factoryReturn,
+            (r, _) => ((PhotoListContext)r).StatusContext.RunFireAndForgetNonBlockingTask(
+                ((PhotoListContext)r).OnPreviewUnFlagItem));
+
+        factoryReturn.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(SelectedItem) && factoryReturn._previewWindow != null)
+                factoryReturn.SendPreviewRequest();
+        };
+
         return factoryReturn;
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfFirstParameterIsNull]
+    public async Task DeleteSelectedFiles(PhotoListGroupListItem? listItem)
+    {
+        var selectedFiles = listItem!.SelectedItems.ToList();
+
+        if (selectedFiles.Count < 1)
+        {
+            await StatusContext.ToastWarning("Select at least one file to delete.");
+            return;
+        }
+
+        var errors = new List<string>();
+        var deleted = new List<PhotoListFileItem>();
+
+        foreach (var loopFile in selectedFiles)
+            try
+            {
+                FileSystem.DeleteFile(loopFile.PhotoFile.FullName, UIOption.OnlyErrorDialogs,
+                    RecycleOption.SendToRecycleBin);
+                deleted.Add(loopFile);
+            }
+            catch (Exception ex)
+            {
+                errors.Add($"{loopFile.PhotoFile.Name}: {ex.Message}");
+            }
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        foreach (var loopDeleted in deleted)
+            listItem.Items.Remove(loopDeleted);
+
+        if (listItem.Items.Count == 0)
+            Items.Remove(listItem);
+
+        if (errors.Count > 0)
+            await StatusContext.ShowMessageWithOkButton("Delete Errors",
+                string.Join(Environment.NewLine, errors));
+    }
+
+    /// <summary>
+    ///     Extracts a camera sequence identifier token from a filename.
+    ///     Matches patterns like _DSC1234, _1234567, _IMG5678, _DSCF0001, etc.
+    /// </summary>
+    private static string? ExtractCameraIdentifier(string fileName)
+    {
+        var match = Regex.Match(fileName, @"_[A-Za-z]*\d{3,}", RegexOptions.None);
+        return match.Success ? match.Value : null;
+    }
+
+    /// <summary>
+    ///     Given an anchor file, finds all related files in the same directory by matching
+    ///     base name prefixes (bidirectional with separator boundary), camera identifier
+    ///     tokens, and numbered suffix variants.
+    /// </summary>
+    private static List<FileInfo> FindRelatedFiles(FileInfo anchor)
+    {
+        var dir = anchor.Directory;
+        if (dir is not { Exists: true }) return [anchor];
+
+        var baseName = Path.GetFileNameWithoutExtension(anchor.Name);
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { anchor.FullName };
+        var result = new List<FileInfo> { anchor };
+
+        // Pre-compute the camera identifier token (e.g. _DSC1234, _1234, _IMG5678)
+        var cameraToken = ExtractCameraIdentifier(anchor.Name);
+
+        // Pre-compute the numbered suffix root (e.g. "photo" from "photo-1" or "photo_2")
+        string? numberRoot = null;
+        var suffixMatch = Regex.Match(baseName, @"^(.+)[_-]\d+$");
+        if (suffixMatch.Success)
+            numberRoot = suffixMatch.Groups[1].Value;
+
+        foreach (var f in dir.GetFiles("*", SearchOption.TopDirectoryOnly))
+        {
+            if (!seen.Add(f.FullName)) continue;
+
+            var candidateBase = Path.GetFileNameWithoutExtension(f.Name);
+
+            // Same base name, different extension
+            if (candidateBase.Equals(baseName, StringComparison.OrdinalIgnoreCase))
+            {
+                result.Add(f);
+                continue;
+            }
+
+            // Forward prefix: candidate starts with anchor's base name + separator
+            if (candidateBase.Length > baseName.Length
+                && candidateBase.StartsWith(baseName, StringComparison.OrdinalIgnoreCase)
+                && IsGroupingSeparator(candidateBase[baseName.Length]))
+            {
+                result.Add(f);
+                continue;
+            }
+
+            // Reverse prefix: anchor starts with candidate's base name + separator
+            // (e.g. anchor "2026_Base-Deep Prime 3" finds "2026_Base")
+            if (baseName.Length > candidateBase.Length
+                && baseName.StartsWith(candidateBase, StringComparison.OrdinalIgnoreCase)
+                && IsGroupingSeparator(baseName[candidateBase.Length]))
+            {
+                result.Add(f);
+                continue;
+            }
+
+            // Camera identifier token shared between anchor and candidate
+            if (!string.IsNullOrEmpty(cameraToken)
+                && f.Name.Contains(cameraToken, StringComparison.OrdinalIgnoreCase))
+            {
+                result.Add(f);
+                continue;
+            }
+
+            // Numbered suffix grouping: if anchor is "root-N" or "root_N",
+            // also match "root" and "root-M" / "root_M"
+            if (numberRoot is not null
+                && (candidateBase.Equals(numberRoot, StringComparison.OrdinalIgnoreCase)
+                    || Regex.IsMatch(candidateBase, $@"^{Regex.Escape(numberRoot)}[_-]\d+$",
+                        RegexOptions.IgnoreCase)))
+                result.Add(f);
+        }
+
+        return result;
     }
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
     public async Task GeoTagSelectedItems(CancellationToken cancellationToken)
     {
-        var frozenSelected = SelectedItems;
+        await ThreadSwitcher.ResumeBackgroundAsync();
+        var filesFromSelected = SelectedItems.SelectMany(g => g.Items).ToList();
+        var window =
+            await FileBasedGeoTaggerWindow.CreateInstance(filesFromSelected.Select(x => x.PhotoFile.FullName).ToList());
 
-        foreach (var loopSelected in frozenSelected) await loopSelected.GeoTagAllFiles(cancellationToken);
+        window.CloseAfterWrite = true;
+
+        await window.PositionWindowAndShowDialogOnUiThread();
+    }
+
+    private FileInfo? GetCurrentPrimaryFile()
+    {
+        var group = SelectedItem;
+        if (group == null) return null;
+
+        var primary = group.Items.FirstOrDefault(x => x.IsPrimaryPhoto) ?? group.Items.FirstOrDefault();
+        return primary?.PhotoFile;
+    }
+
+    private static bool IsGroupingSeparator(char c)
+    {
+        return c is '-' or ' ';
+    }
+
+    [NonBlockingCommand]
+    public async Task LaunchPreviewWindow()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var primaryFile = GetCurrentPrimaryFile();
+        if (primaryFile == null)
+        {
+            await StatusContext.ToastWarning("No primary photo selected to preview.");
+            return;
+        }
+
+        _previewWindow = await PhotoPreviewWindow.CreateInstance();
+        await _previewWindow.PositionWindowAndShowOnUiThread();
+
+        SendPreviewRequest();
     }
 
     public async Task LoadItems(List<string> files)
@@ -148,69 +350,7 @@ public partial class PhotoListContext : IDropTarget
         }
 
         // If a single file was dropped, expand the set with likely related files in the same folder.
-        if (confirmedFiles.Count == 1)
-        {
-            var firstFile = confirmedFiles[0];
-            var dir = firstFile.Directory;
-            if (dir is { Exists: true })
-            {
-                var baseName = Path.GetFileNameWithoutExtension(firstFile.Name);
-
-                // 1) Same base name, different extension.
-                foreach (var f in dir.GetFiles(baseName + ".*"))
-                {
-                    if (confirmedFiles.Any(x => x.FullName.Equals(f.FullName, StringComparison.OrdinalIgnoreCase)))
-                        continue;
-                    confirmedFiles.Add(f);
-                }
-
-                // 2) Files containing _DSC[digits] token from the dropped file, if present.
-                var match = Regex.Match(firstFile.Name, "_DSC\\d+", RegexOptions.IgnoreCase);
-                if (match.Success)
-                {
-                    var token = match.Value;
-                    foreach (var f in dir.GetFiles("*", SearchOption.TopDirectoryOnly)
-                                 .Where(x => x.Name.Contains(token, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        if (confirmedFiles.Any(x => x.FullName.Equals(f.FullName, StringComparison.OrdinalIgnoreCase)))
-                            continue;
-                        confirmedFiles.Add(f);
-                    }
-                }
-
-                // 3) Files whose base name starts with the dropped file's base name.
-                foreach (var f in dir.GetFiles("*", SearchOption.TopDirectoryOnly)
-                             .Where(x => Path.GetFileNameWithoutExtension(x.Name)
-                                 .StartsWith(baseName, StringComparison.OrdinalIgnoreCase)))
-                {
-                    if (confirmedFiles.Any(x => x.FullName.Equals(f.FullName, StringComparison.OrdinalIgnoreCase)))
-                        continue;
-                    confirmedFiles.Add(f);
-                }
-
-                // 4) Numbered-suffix grouping: if the base name ends with -NN,
-                //    find the root name and all its numbered variants (and the root itself).
-                var suffixMatch = Regex.Match(baseName, @"^(.+)-\d+$");
-                if (suffixMatch.Success)
-                {
-                    var rootName = suffixMatch.Groups[1].Value;
-                    foreach (var f in dir.GetFiles("*", SearchOption.TopDirectoryOnly)
-                                 .Where(x =>
-                                 {
-                                     var cb = Path.GetFileNameWithoutExtension(x.Name);
-                                     return cb.Equals(rootName, StringComparison.OrdinalIgnoreCase)
-                                            || Regex.IsMatch(cb, $"^{Regex.Escape(rootName)}-\\d+$",
-                                                RegexOptions.IgnoreCase);
-                                 }))
-                    {
-                        if (confirmedFiles.Any(x =>
-                                x.FullName.Equals(f.FullName, StringComparison.OrdinalIgnoreCase)))
-                            continue;
-                        confirmedFiles.Add(f);
-                    }
-                }
-            }
-        }
+        if (confirmedFiles.Count == 1) confirmedFiles = FindRelatedFiles(confirmedFiles[0]);
 
         var group = await PhotoListGroupListItem.CreateInstance(StatusContext, confirmedFiles);
 
@@ -239,6 +379,48 @@ public partial class PhotoListContext : IDropTarget
         }
     }
 
+    private async Task OnPreviewFlagItem()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+        // Placeholder for future flag implementation
+    }
+
+    private async Task OnPreviewNextItem()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (Items.Count == 0 || SelectedItem == null) return;
+
+        var currentIndex = Items.IndexOf(SelectedItem);
+        if (currentIndex < 0) return;
+
+        var nextIndex = (currentIndex + 1) % Items.Count;
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+        SelectedItem = Items[nextIndex];
+    }
+
+    private async Task OnPreviewPreviousItem()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (Items.Count == 0 || SelectedItem == null) return;
+
+        var currentIndex = Items.IndexOf(SelectedItem);
+        if (currentIndex < 0) return;
+
+        var prevIndex = (currentIndex - 1 + Items.Count) % Items.Count;
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+        SelectedItem = Items[prevIndex];
+    }
+
+    private async Task OnPreviewUnFlagItem()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+        // Placeholder for future unflag implementation
+    }
+
     private async Task ProcessDroppedDirectoriesToFileGroups(List<string> directories)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -253,62 +435,21 @@ public partial class PhotoListContext : IDropTarget
 
             var files = dirInfo.GetFiles();
             StatusContext.Progress($"Scanning {files.Length} file(s) in {dirInfo.FullName}...");
+
             foreach (var file in files)
             {
                 if (!processed.Add(file.FullName)) continue;
 
-                var baseName = Path.GetFileNameWithoutExtension(file.Name);
-                var groupSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { file.FullName };
-                var group = new List<string> { file.FullName };
+                var related = FindRelatedFiles(file);
+                foreach (var f in related) processed.Add(f.FullName);
 
-                // Same base name, different extension
-                foreach (var f in dirInfo.GetFiles(baseName + ".*"))
-                    if (processed.Add(f.FullName) && groupSet.Add(f.FullName))
-                        group.Add(f.FullName);
+                var fileGroup = related.Select(f => f.FullName).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 
-                // _DSC[digits] token match
-                var match = Regex.Match(file.Name, "_DSC\\d+", RegexOptions.IgnoreCase);
-                if (match.Success)
-                {
-                    var token = match.Value;
-                    foreach (var f in dirInfo.GetFiles("*", SearchOption.TopDirectoryOnly)
-                                 .Where(x => x.Name.Contains(token, StringComparison.OrdinalIgnoreCase)))
-                        if (processed.Add(f.FullName) && groupSet.Add(f.FullName))
-                            group.Add(f.FullName);
-                }
-
-                // Starts with base name
-                foreach (var f in dirInfo.GetFiles("*", SearchOption.TopDirectoryOnly)
-                             .Where(x => Path.GetFileNameWithoutExtension(x.Name)
-                                 .StartsWith(baseName, StringComparison.OrdinalIgnoreCase)))
-                    if (processed.Add(f.FullName) && groupSet.Add(f.FullName))
-                        group.Add(f.FullName);
-
-                // Numbered-suffix grouping: if the base name ends with -NN,
-                // find the root name and all its numbered variants (and the root itself).
-                var suffixMatch = Regex.Match(baseName, @"^(.+)-\d+$");
-                if (suffixMatch.Success)
-                {
-                    var rootName = suffixMatch.Groups[1].Value;
-                    foreach (var f in dirInfo.GetFiles("*", SearchOption.TopDirectoryOnly)
-                                 .Where(x =>
-                                 {
-                                     var cb = Path.GetFileNameWithoutExtension(x.Name);
-                                     return cb.Equals(rootName, StringComparison.OrdinalIgnoreCase)
-                                            || Regex.IsMatch(cb, $"^{Regex.Escape(rootName)}-\\d+$",
-                                                RegexOptions.IgnoreCase);
-                                 }))
-                        if (processed.Add(f.FullName) && groupSet.Add(f.FullName))
-                            group.Add(f.FullName);
-                }
-
-                // Ensure unique list and load
-                var distinctGroup = group.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-                if (distinctGroup.Count > 0)
+                if (fileGroup.Count > 0)
                 {
                     StatusContext.Progress(
-                        $"Found group of {distinctGroup.Count} related file(s) starting with {file.Name}...");
-                    await LoadItems(distinctGroup);
+                        $"Found group of {fileGroup.Count} related file(s) starting with {file.Name}...");
+                    await LoadItems(fileGroup);
                 }
             }
         }
@@ -348,6 +489,17 @@ public partial class PhotoListContext : IDropTarget
     public List<PhotoListGroupListItem> SelectedListItems()
     {
         return SelectedItems;
+    }
+
+    public void SendPreviewRequest()
+    {
+        var primaryFile = GetCurrentPrimaryFile();
+        if (primaryFile == null) return;
+
+        var title = SelectedItem?.TitleEntryContext.UserValue.TrimNullToEmpty() ?? primaryFile.Name;
+
+        WeakReferenceMessenger.Default.Send(
+            new PhotoPreviewRequestMessage(new PhotoPreviewRequestData(primaryFile.FullName, title)));
     }
 
     [BlockingCommand]

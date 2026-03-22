@@ -11,7 +11,7 @@
         xmlns:local="clr-namespace:PointlessWaymarks.PhotoMetadataBasicsGui"
         mc:Ignorable="d"
         Closing="MainWindow_OnClosing"
-        Title="MainWindow" Height="450" Width="800" d:DataContext="{d:DesignInstance local:MainWindow}">
+        Title="{Binding InfoTitle}" Height="450" Width="800" d:DataContext="{d:DesignInstance local:MainWindow}">
     <Grid>
         <TabControl Margin="2" ItemContainerStyle="{StaticResource UnderlineOnSelectTabItemStyle}">
             <TabItem Header="Combine Images">

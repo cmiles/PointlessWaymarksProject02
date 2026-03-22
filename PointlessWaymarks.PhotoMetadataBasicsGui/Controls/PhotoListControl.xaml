@@ -30,11 +30,12 @@
                      dd:DragDrop.IsDropTarget="True"
                      ScrollViewer.CanContentScroll="False"
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     ScrollViewer.VerticalScrollBarVisibility="Visible"
                      SelectionMode="Extended"
                      x:Name="PhotoGroupList">
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="{x:Type local:PhotoListGroupListItem}">
-                        <Grid x:Name="PhotoGroupGrid">
+                        <Grid x:Name="PhotoGroupGrid" MaxHeight="520">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
@@ -133,6 +134,8 @@
                                     CornerRadius="4"
                                     Margin="2">
                                 <ListBox ItemsSource="{Binding Items}"
+                                         HorizontalAlignment="Left"
+                                         VerticalAlignment="Top"
                                          ScrollViewer.CanContentScroll="False"
                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                          behaviors:MultiSelectBehavior.SynchronizedSelectedItems="{Binding SelectedItems}"
@@ -245,6 +248,10 @@
                                     CommandParameter="{Binding }">
                                     GeoTag Selected Files
                                 </Button>
+                                <Button Command="{Binding DataContext.DeleteSelectedFilesCommand, ElementName=PhotoGroupList}"
+                                        CommandParameter="{Binding }">
+                                    Delete Selected Files
+                                </Button>
                                 <Button Command="{Binding DataContext.RemoveGroupCommand, ElementName=PhotoGroupList}"
                                         CommandParameter="{Binding }">
                                     Remove Group
@@ -277,6 +284,9 @@
                 </Button>
                 <Button Command="{Binding WriteMetadataAllItemsCommand}" HorizontalAlignment="Left" Margin="4">
                     Write Metadata - All
+                </Button>
+                <Button Command="{Binding LaunchPreviewWindowCommand}" HorizontalAlignment="Left" Margin="4">
+                    Photo Preview
                 </Button>
             </WrapPanel>
         </Border>

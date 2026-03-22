@@ -1,6 +1,6 @@
 using System.ComponentModel;
-using CommunityToolkit.Mvvm.ComponentModel;
 using PointlessWaymarks.CommonTools;
+using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.PhotoMetadataBasicsGui.Controls;
 using PointlessWaymarks.WpfCommon.MarkdownDisplay;
 using PointlessWaymarks.WpfCommon.ProgramUpdateMessage;
@@ -13,7 +13,7 @@ namespace PointlessWaymarks.PhotoMetadataBasicsGui;
 /// <summary>
 ///     Interaction logic for MainWindow.xaml
 /// </summary>
-[ObservableObject]
+[NotifyPropertyChanged]
 public partial class MainWindow
 {
     public MainWindow()
@@ -29,7 +29,7 @@ public partial class MainWindow
 
         var versionInfo =
             ProgramInfoTools.StandardAppInformationString(AppContext.BaseDirectory,
-                "Utilitarian Image Combiner Beta");
+                "Photo Metadata Basics Beta");
 
         InfoTitle = versionInfo.humanTitleString;
 
@@ -78,7 +78,7 @@ public partial class MainWindow
 
         var (dateString, setupFile) = await ProgramInfoTools.LatestInstaller(
             settings.ProgramUpdateDirectory,
-            "PointlessWaymarks-UtilitarianImageCombinerGui-Setup");
+            "PointlessWaymarks-PhotoMetadataBasicsGui-Setup");
 
         Log.Information(
             $"Program Update Check - Current Version {currentDateVersion}, Installer Directory {settings.ProgramUpdateDirectory}, Installer Date Found {dateString ?? string.Empty}, Setup File Found {setupFile ?? string.Empty}");

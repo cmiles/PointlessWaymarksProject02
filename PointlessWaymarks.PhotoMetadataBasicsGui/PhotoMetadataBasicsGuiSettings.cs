@@ -7,8 +7,6 @@ public partial class PhotoMetadataBasicsGuiSettings
 {
     public string DefaultCreatedBy { get; set; } = string.Empty;
 
-    public string DefaultLicense { get; set; } = string.Empty;
-
     public string FeatureIntersectSettingsFile { get; set; } = string.Empty;
 
     public string ProgramUpdateDirectory { get; set; } =
