@@ -4,6 +4,7 @@ public class ScriptJobRun
 {
     public DateTime? CompletedOnUtc { get; set; }
     public bool Errors { get; set; }
+    public string ExitReason { get; set; } = string.Empty;
     public int Id { get; set; }
     public int? LengthInSeconds { get; set; }
     public string Output { get; set; } = string.Empty;

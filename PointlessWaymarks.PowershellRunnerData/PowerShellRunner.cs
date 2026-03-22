@@ -27,6 +27,21 @@ public class PowerShellRunner
         return await runner.ExecuteJob();
     }
 
+    public static AlwaysRunningJobExecution StartAlwaysRunningJob(Guid jobId, string databaseFile,
+        string runType,
+        Func<ScriptJobRun, Task>? callbackAfterRunFirstSave = null)
+    {
+        var runner = new AlwaysRunningJobExecution
+        {
+            CallbackAfterRunFirstSave = callbackAfterRunFirstSave,
+            DatabaseFile = databaseFile, JobId = jobId, RunType = runType
+        };
+
+        _ = Task.Run(() => runner.Execute());
+
+        return runner;
+    }
+
     public static async Task<(bool errors, List<string> runLog)> ExecuteScript(string toInvoke, ScriptKind type, Guid databaseId,
         Guid jobId, Guid runId,
         string identifier)

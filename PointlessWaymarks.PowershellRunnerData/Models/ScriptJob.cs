@@ -3,6 +3,7 @@ namespace PointlessWaymarks.PowerShellRunnerData.Models;
 public class ScriptJob
 {
     public bool AllowSimultaneousRuns { get; set; }
+    public bool AlwaysRunning { get; set; }
     public string CronExpression { get; set; } = string.Empty;
     public int DeleteScriptJobRunsAfterMonths { get; set; } = 12;
     public string Description { get; set; } = string.Empty;
