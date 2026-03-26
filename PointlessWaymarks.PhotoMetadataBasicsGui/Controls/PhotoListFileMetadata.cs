@@ -13,6 +13,7 @@ public partial class PhotoListFileMetadata
     public DateTime? PhotoCreatedOn { get; set; }
     public DateTime? PhotoCreatedOnUtc { get; set; }
     public double? PhotoDirection { get; set; }
+    public int Rating { get; set; }
     public string? Summary { get; set; }
     public string? Tags { get; set; }
     public string? Title { get; set; }

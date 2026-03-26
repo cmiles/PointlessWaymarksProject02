@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Data;
 using CommunityToolkit.Mvvm.Messaging;
 using GongSolutions.Wpf.DragDrop;
 using Metalama.Patterns.Observability;
@@ -16,6 +18,7 @@ using PointlessWaymarks.SpatialTools;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.AppMessages;
 using PointlessWaymarks.WpfCommon.FileBasedGeoTagger;
+using PointlessWaymarks.WpfCommon.PhotoPreview;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
 using Point = NetTopologySuite.Geometries.Point;
@@ -28,7 +31,11 @@ namespace PointlessWaymarks.PhotoMetadataBasicsGui.Controls;
 public partial class PhotoListContext : IDropTarget
 {
     private PhotoPreviewWindow? _previewWindow;
+    private bool _previewFilterUnratedOnly;
     public required ObservableCollection<PhotoListGroupListItem> Items { get; set; }
+    public ICollectionView? FilteredItems { get; set; }
+    public int FilterMinimumRating { get; set; }
+    public bool FilterNoRatingOnly { get; set; }
     public PhotoListGroupListItem? SelectedItem { get; set; }
     public List<PhotoListGroupListItem> SelectedItems { get; set; } = [];
     public required StatusControlContext StatusContext { get; set; }
@@ -126,6 +133,8 @@ public partial class PhotoListContext : IDropTarget
 
     public static async Task<PhotoListContext> CreateInstance(StatusControlContext? statusContext)
     {
+        await ThreadSwitcher.ResumeForegroundAsync();
+
         var factoryReturn = new PhotoListContext
         {
             Items = new ObservableCollection<PhotoListGroupListItem>(),
@@ -134,18 +143,44 @@ public partial class PhotoListContext : IDropTarget
 
         factoryReturn.BuildCommands();
 
+        factoryReturn.FilteredItems = CollectionViewSource.GetDefaultView(factoryReturn.Items);
+        factoryReturn.FilteredItems.Filter = o =>
+            o is PhotoListGroupListItem item &&
+            item.Rating >= factoryReturn.FilterMinimumRating &&
+            (!factoryReturn.FilterNoRatingOnly || item.Rating == 0);
+
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        factoryReturn.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName is nameof(FilterMinimumRating) or nameof(FilterNoRatingOnly))
+                factoryReturn.FilteredItems?.Refresh();
+        };
+
+        factoryReturn.Items.CollectionChanged += (_, args) =>
+        {
+            if (args.NewItems != null)
+                foreach (PhotoListGroupListItem newItem in args.NewItems)
+                    newItem.PropertyChanged += factoryReturn.OnItemRatingChanged;
+
+            if (args.OldItems != null)
+                foreach (PhotoListGroupListItem oldItem in args.OldItems)
+                    oldItem.PropertyChanged -= factoryReturn.OnItemRatingChanged;
+
+            factoryReturn.FilteredItems?.Refresh();
+        };
+
         WeakReferenceMessenger.Default.Register<PhotoPreviewNextItemMessage>(factoryReturn,
             (r, _) => ((PhotoListContext)r).StatusContext.RunFireAndForgetNonBlockingTask(
                 ((PhotoListContext)r).OnPreviewNextItem));
         WeakReferenceMessenger.Default.Register<PhotoPreviewPreviousItemMessage>(factoryReturn,
             (r, _) => ((PhotoListContext)r).StatusContext.RunFireAndForgetNonBlockingTask(
                 ((PhotoListContext)r).OnPreviewPreviousItem));
-        WeakReferenceMessenger.Default.Register<PhotoPreviewFlagItemMessage>(factoryReturn,
-            (r, _) => ((PhotoListContext)r).StatusContext.RunFireAndForgetNonBlockingTask(
-                ((PhotoListContext)r).OnPreviewFlagItem));
-        WeakReferenceMessenger.Default.Register<PhotoPreviewUnFlagItemMessage>(factoryReturn,
-            (r, _) => ((PhotoListContext)r).StatusContext.RunFireAndForgetNonBlockingTask(
-                ((PhotoListContext)r).OnPreviewUnFlagItem));
+        WeakReferenceMessenger.Default.Register<PhotoItemRatingChangedMessage>(factoryReturn,
+            (r, m) => ((PhotoListContext)r).StatusContext.RunFireAndForgetNonBlockingTask(
+                () => ((PhotoListContext)r).OnRatingChangedFromPreview(m.Value)));
+        WeakReferenceMessenger.Default.Register<PhotoPreviewFilterUnratedMessage>(factoryReturn,
+            (r, m) => ((PhotoListContext)r)._previewFilterUnratedOnly = m.Value);
 
         factoryReturn.PropertyChanged += (_, e) =>
         {
@@ -194,6 +229,85 @@ public partial class PhotoListContext : IDropTarget
         if (errors.Count > 0)
             await StatusContext.ShowMessageWithOkButton("Delete Errors",
                 string.Join(Environment.NewLine, errors));
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task DeleteAllFilesInSelectedGroups()
+    {
+        var frozenGroups = SelectedItems.ToList();
+        var totalFiles = frozenGroups.Sum(g => g.Items.Count);
+
+        var errors = new List<string>();
+
+        foreach (var group in frozenGroups)
+        {
+            foreach (var fileItem in group.Items.ToList())
+                try
+                {
+                    FileSystem.DeleteFile(fileItem.PhotoFile.FullName, UIOption.OnlyErrorDialogs,
+                        RecycleOption.SendToRecycleBin);
+                }
+                catch (Exception ex)
+                {
+                    errors.Add($"{fileItem.PhotoFile.Name}: {ex.Message}");
+                }
+
+            await ThreadSwitcher.ResumeForegroundAsync();
+            Items.Remove(group);
+            await ThreadSwitcher.ResumeBackgroundAsync();
+        }
+
+        if (errors.Count > 0)
+            await StatusContext.ShowMessageWithOkButton("Delete Errors",
+                string.Join(Environment.NewLine, errors));
+        else
+            await StatusContext.ToastSuccess($"Deleted {totalFiles} file(s) from {frozenGroups.Count} group(s).");
+    }
+
+    [BlockingCommand]
+    public async Task DeleteFilteredOutGroups()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (FilteredItems == null) return;
+
+        var visibleSet = FilteredItems.Cast<PhotoListGroupListItem>().ToHashSet();
+        var hiddenGroups = Items.Where(x => !visibleSet.Contains(x)).ToList();
+
+        if (hiddenGroups.Count == 0)
+        {
+            await StatusContext.ToastWarning("No filtered-out groups to delete.");
+            return;
+        }
+
+        var totalFiles = hiddenGroups.Sum(g => g.Items.Count);
+        var errors = new List<string>();
+
+        foreach (var group in hiddenGroups)
+        {
+            foreach (var fileItem in group.Items.ToList())
+                try
+                {
+                    FileSystem.DeleteFile(fileItem.PhotoFile.FullName, UIOption.OnlyErrorDialogs,
+                        RecycleOption.SendToRecycleBin);
+                }
+                catch (Exception ex)
+                {
+                    errors.Add($"{fileItem.PhotoFile.Name}: {ex.Message}");
+                }
+
+            await ThreadSwitcher.ResumeForegroundAsync();
+            Items.Remove(group);
+            await ThreadSwitcher.ResumeBackgroundAsync();
+        }
+
+        if (errors.Count > 0)
+            await StatusContext.ShowMessageWithOkButton("Delete Errors",
+                string.Join(Environment.NewLine, errors));
+        else
+            await StatusContext.ToastSuccess(
+                $"Deleted {totalFiles} file(s) from {hiddenGroups.Count} filtered-out group(s).");
     }
 
     /// <summary>
@@ -379,46 +493,75 @@ public partial class PhotoListContext : IDropTarget
         }
     }
 
-    private async Task OnPreviewFlagItem()
+    private async Task OnRatingChangedFromPreview(PhotoItemRatingChangedData data)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
-        // Placeholder for future flag implementation
+
+        if (SelectedItem == null) return;
+
+        var primaryFile = GetCurrentPrimaryFile();
+        if (primaryFile == null) return;
+
+        if (string.Equals(primaryFile.FullName, data.FullFilePath, StringComparison.OrdinalIgnoreCase))
+        {
+            SelectedItem.Rating = data.Rating;
+            await ThreadSwitcher.ResumeForegroundAsync();
+            FilteredItems?.Refresh();
+        }
+    }
+
+    private void OnItemRatingChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(PhotoListGroupListItem.Rating))
+            FilteredItems?.Refresh();
     }
 
     private async Task OnPreviewNextItem()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (Items.Count == 0 || SelectedItem == null) return;
+        if (SelectedItem == null || FilteredItems == null) return;
 
-        var currentIndex = Items.IndexOf(SelectedItem);
+        var visible = FilteredItems.Cast<PhotoListGroupListItem>().ToList();
+        if (visible.Count == 0) return;
+
+        var currentIndex = visible.IndexOf(SelectedItem);
         if (currentIndex < 0) return;
 
-        var nextIndex = (currentIndex + 1) % Items.Count;
+        for (var i = 1; i <= visible.Count; i++)
+        {
+            var candidate = visible[(currentIndex + i) % visible.Count];
 
-        await ThreadSwitcher.ResumeForegroundAsync();
-        SelectedItem = Items[nextIndex];
+            if (_previewFilterUnratedOnly && candidate.Rating > 0) continue;
+
+            await ThreadSwitcher.ResumeForegroundAsync();
+            SelectedItem = candidate;
+            return;
+        }
     }
 
     private async Task OnPreviewPreviousItem()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (Items.Count == 0 || SelectedItem == null) return;
+        if (SelectedItem == null || FilteredItems == null) return;
 
-        var currentIndex = Items.IndexOf(SelectedItem);
+        var visible = FilteredItems.Cast<PhotoListGroupListItem>().ToList();
+        if (visible.Count == 0) return;
+
+        var currentIndex = visible.IndexOf(SelectedItem);
         if (currentIndex < 0) return;
 
-        var prevIndex = (currentIndex - 1 + Items.Count) % Items.Count;
+        for (var i = 1; i <= visible.Count; i++)
+        {
+            var candidate = visible[(currentIndex - i + visible.Count) % visible.Count];
 
-        await ThreadSwitcher.ResumeForegroundAsync();
-        SelectedItem = Items[prevIndex];
-    }
+            if (_previewFilterUnratedOnly && candidate.Rating > 0) continue;
 
-    private async Task OnPreviewUnFlagItem()
-    {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-        // Placeholder for future unflag implementation
+            await ThreadSwitcher.ResumeForegroundAsync();
+            SelectedItem = candidate;
+            return;
+        }
     }
 
     private async Task ProcessDroppedDirectoriesToFileGroups(List<string> directories)
@@ -491,15 +634,46 @@ public partial class PhotoListContext : IDropTarget
         return SelectedItems;
     }
 
+    private static FileInfo? GetPrimaryFileForGroup(PhotoListGroupListItem group)
+    {
+        var primary = group.Items.FirstOrDefault(x => x.IsPrimaryPhoto) ?? group.Items.FirstOrDefault();
+        return primary?.PhotoFile;
+    }
+
     public void SendPreviewRequest()
     {
         var primaryFile = GetCurrentPrimaryFile();
         if (primaryFile == null) return;
 
         var title = SelectedItem?.TitleEntryContext.UserValue.TrimNullToEmpty() ?? primaryFile.Name;
+        var rating = SelectedItem?.Rating ?? 0;
+
+        var upcomingPaths = new List<string>();
+
+        var visible = FilteredItems?.Cast<PhotoListGroupListItem>().ToList();
+        var currentIndex = visible != null && SelectedItem != null ? visible.IndexOf(SelectedItem) : -1;
+
+        if (currentIndex >= 0 && visible != null)
+        {
+            var collected = 0;
+            for (var i = 1; i <= visible.Count && collected < 3; i++)
+            {
+                var candidate = visible[(currentIndex + i) % visible.Count];
+
+                if (_previewFilterUnratedOnly && candidate.Rating > 0) continue;
+
+                var candidateFile = GetPrimaryFileForGroup(candidate);
+                if (candidateFile != null)
+                {
+                    upcomingPaths.Add(candidateFile.FullName);
+                    collected++;
+                }
+            }
+        }
 
         WeakReferenceMessenger.Default.Send(
-            new PhotoPreviewRequestMessage(new PhotoPreviewRequestData(primaryFile.FullName, title)));
+            new PhotoPreviewRequestMessage(new PhotoPreviewRequestData(primaryFile.FullName, title, rating,
+                upcomingPaths.Count > 0 ? upcomingPaths : null)));
     }
 
     [BlockingCommand]

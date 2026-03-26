@@ -14,8 +14,11 @@
         Title="{Binding InfoTitle}" Height="450" Width="800" d:DataContext="{d:DesignInstance local:MainWindow}">
     <Grid>
         <TabControl Margin="2" ItemContainerStyle="{StaticResource UnderlineOnSelectTabItemStyle}">
-            <TabItem Header="Combine Images">
+            <TabItem Header="Photos">
                 <controls:PhotoListControl DataContext="{Binding PhotoTabContext}" />
+            </TabItem>
+            <TabItem Header="Photo Import To Date Folders">
+                <controls:ImportPhotosControl DataContext="{Binding ImportPhotosTabContext}" />
             </TabItem>
             <TabItem Header="Settings">
                 <controls:AppSettingsControl DataContext="{Binding AppSettingsTabContext}" />

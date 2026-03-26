@@ -33,6 +33,7 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
     public required StringDataEntryContext LicenseEntry { get; set; }
     public required ConversionDataEntryContext<double?> LongitudeEntry { get; set; }
     public required StringDataEntryContext PhotoCreatedByEntry { get; set; }
+    public int Rating { get; set; }
     public PhotoListFileItem? SelectedItem { get; set; }
     public List<PhotoListFileItem> SelectedItems { get; set; } = [];
     public required StatusControlContext StatusContext { get; set; }
@@ -217,12 +218,24 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         return factoryReturn;
     }
 
+    private static readonly HashSet<string> RawExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".orf", ".nef", ".cr2", ".cr3", ".arw", ".dng", ".raf", ".rw2", ".pef",
+        ".srw", ".x3f", ".3fr", ".nrw", ".raw", ".rwl", ".mrw", ".iiq", ".erf"
+    };
+
     private void DesignateBestGuessPrimary()
     {
-        // Pick a primary photo: prefer DxO_DeepPRIME processed files with thumbnails, then most recent.
+        // Pick a primary photo:
+        //  1. Prefer raw file types over processed image formats
+        //  2. Prefer the "base" filename (shortest name without extension) — e.g.
+        //     "2026 Jan Photo.orf" over "2026 Jan Photo 01.orf"
+        //  3. Prefer DxO_DeepPRIME processed files as a tiebreaker
+        //  4. Fall back to most recent write time
         var primaryCandidate = Items
-            .Where(i => i.ThumbnailImage != null)
-            .OrderByDescending(i => i.PhotoFile.Name.Contains("DxO_DeepPRIME", StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(i => RawExtensions.Contains(i.PhotoFile.Extension))
+            .ThenBy(i => Path.GetFileNameWithoutExtension(i.PhotoFile.Name as string).Length)
+            .ThenByDescending(i => i.PhotoFile.Name.Contains("DxO_DeepPRIME", StringComparison.OrdinalIgnoreCase))
             .ThenByDescending(i => i.PhotoFile.LastWriteTimeUtc)
             .FirstOrDefault();
 
@@ -245,6 +258,14 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         await ThreadSwitcher.ResumeBackgroundAsync();
         var window = await FileMetadataDisplayWindow.CreateInstance(fileItem!.PhotoFile.FullName, null);
         await window.PositionWindowAndShowOnUiThread();
+    }
+
+    [NonBlockingCommand]
+    [StopAndWarnIfFirstParameterIsNull]
+    public async Task ShowFileLocationInOperatingSystem(PhotoListFileItem? item)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+        await ProcessHelpers.OpenExplorerWindowForFile(item!.PhotoFile.FullName);
     }
 
     public async Task GeoTagAllFiles(CancellationToken cancellationToken)
@@ -296,12 +317,19 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         }
 
         // At this point Items are empty; composite metadata will be populated once files are added.
+        // Rating: mode of non-zero ratings; fall back to 0 if every file is unrated
+        var ratedValues = items.Select(x => x.Metadata.Rating).Where(r => r > 0).ToList();
+        var compositeRating = ratedValues.Count > 0
+            ? ratedValues.GroupBy(r => r).OrderByDescending(g => g.Count()).ThenByDescending(g => g.Key).First().Key
+            : 0;
+
         var composite = new PhotoGroupMetadata
         {
             Tags = SlugTagTools.TagListCleanupToSpacedString(string.Join(",",
                 items.Select(x => x.Metadata.Tags))),
             License = MostFrequentString(items, x => x.Metadata.License),
             PhotoCreatedBy = MostFrequentString(items, x => x.Metadata.PhotoCreatedBy),
+            Rating = compositeRating,
             Summary = MostFrequentString(items, x => x.Metadata.Summary),
             Title = MostFrequentString(items, x => x.Metadata.Title),
             Elevation = MostFrequentValue(items, x => x.Metadata.Elevation),
@@ -369,6 +397,7 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         LongitudeEntry.UserText = composite.Longitude?.ToString("F6") ?? string.Empty;
         ElevationEntry.ReferenceValue = composite.Elevation;
         ElevationEntry.UserText = composite.Elevation?.ToString("N0") ?? string.Empty;
+        Rating = composite.Rating;
 
         SetDefaultCreatedByAndLicenseIfPossible();
     }
@@ -380,6 +409,7 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         ResetStringEntry(SummaryEntryContext, composite.Summary);
         ResetStringEntry(PhotoCreatedByEntry, composite.PhotoCreatedBy);
         ResetStringEntry(LicenseEntry, composite.License);
+        Rating = composite.Rating;
         ResetTagsEntry(TagEntryContext, composite.Tags);
 
         ResetConversionEntry(LatitudeEntry, composite.Latitude, "F6");
@@ -605,6 +635,7 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         LongitudeEntry.UserText = composite.Longitude?.ToString("F6") ?? string.Empty;
         ElevationEntry.ReferenceValue = composite.Elevation;
         ElevationEntry.UserText = composite.Elevation?.ToString("N0") ?? string.Empty;
+        Rating = composite.Rating;
     }
 
     [BlockingCommand]

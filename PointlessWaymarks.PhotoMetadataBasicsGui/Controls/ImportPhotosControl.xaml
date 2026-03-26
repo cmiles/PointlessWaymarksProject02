@@ -1,0 +1,85 @@
+<UserControl x:Class="PointlessWaymarks.PhotoMetadataBasicsGui.Controls.ImportPhotosControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:dd="urn:gong-wpf-dragdrop"
+             xmlns:local="clr-namespace:PointlessWaymarks.PhotoMetadataBasicsGui.Controls"
+             xmlns:stringDataEntry="clr-namespace:PointlessWaymarks.WpfCommon.StringDataEntry;assembly=PointlessWaymarks.WpfCommon"
+             mc:Ignorable="d"
+             d:DesignHeight="500" d:DesignWidth="800" d:DataContext="{d:DesignInstance local:ImportPhotosContext}">
+    <Grid Margin="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="140" />
+        </Grid.RowDefinitions>
+
+        <!-- Row 0: Destination Folder Setting -->
+        <StackPanel Grid.Row="0" Orientation="Vertical" Margin="0,0,0,8">
+            <stringDataEntry:StringDataEntryControl DataContext="{Binding DestinationFolderEntry}" />
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <Button Command="{Binding BrowseForDestinationFolderCommand}" Margin="0,0,6,0"
+                        Padding="12,4">Browse...</Button>
+                <Button Command="{Binding SaveDestinationFolderCommand}" Padding="12,4"
+                        Margin="0,0,12,0">Save</Button>
+                <CheckBox IsChecked="{Binding OverwriteExistingFiles}" VerticalAlignment="Center"
+                          Content="Overwrite existing files on import" />
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Row 1: Two Drop Areas -->
+        <Grid Grid.Row="1" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="8" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Working Files Drop Area -->
+            <Border Grid.Column="0" BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}"
+                    BorderThickness="2" CornerRadius="6" Background="Transparent"
+                    dd:DragDrop.IsDropTarget="True"
+                    dd:DragDrop.DropHandler="{Binding WorkingFilesDropHandler}">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="📂" FontSize="48" HorizontalAlignment="Center" />
+                    <TextBlock Text="Working Files" FontSize="18" FontWeight="SemiBold"
+                               HorizontalAlignment="Center" Margin="0,8,0,4" />
+                    <TextBlock Text="Drag photos here to import to" FontSize="12"
+                               HorizontalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                    <TextBlock Text="Destination/Working/YYYY/YYYY-MM-DD/" FontSize="12" FontFamily="Consolas"
+                               HorizontalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Finished Photos Drop Area -->
+            <Border Grid.Column="2" BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}"
+                    BorderThickness="2" CornerRadius="6" Background="Transparent"
+                    dd:DragDrop.IsDropTarget="True"
+                    dd:DragDrop.DropHandler="{Binding FinishedPhotosDropHandler}">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="📷" FontSize="48" HorizontalAlignment="Center" />
+                    <TextBlock Text="Finished Photos" FontSize="18" FontWeight="SemiBold"
+                               HorizontalAlignment="Center" Margin="0,8,0,4" />
+                    <TextBlock Text="Drag photos here to import to" FontSize="12"
+                               HorizontalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                    <TextBlock Text="Destination/YYYY/YYYY-MM-DD/" FontSize="12" FontFamily="Consolas"
+                               HorizontalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Row 2: Log Header -->
+        <DockPanel Grid.Row="2" Margin="0,0,0,4">
+            <TextBlock Text="Import Log" FontWeight="SemiBold" VerticalAlignment="Center" />
+            <Button Command="{Binding ClearLogCommand}" HorizontalAlignment="Right" Padding="8,2"
+                    Content="Clear" />
+        </DockPanel>
+
+        <!-- Row 3: Log Output -->
+        <TextBox Grid.Row="3" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                 FontFamily="Consolas" FontSize="11" Text="{Binding ImportLog, Mode=OneWay}"
+                 x:Name="LogTextBox" TextChanged="LogTextBox_OnTextChanged" />
+    </Grid>
+</UserControl>

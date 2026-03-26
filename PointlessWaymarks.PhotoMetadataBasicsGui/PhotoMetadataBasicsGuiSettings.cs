@@ -9,6 +9,10 @@ public partial class PhotoMetadataBasicsGuiSettings
 
     public string FeatureIntersectSettingsFile { get; set; } = string.Empty;
 
+    public string ImportPhotosDestinationFolder { get; set; } = string.Empty;
+
+    public bool OverwriteOnImport { get; set; }
+
     public string ProgramUpdateDirectory { get; set; } =
         @"https://software.pointlesswaymarks.com/Software/PointlessWaymarksSoftwareList.json";
 }

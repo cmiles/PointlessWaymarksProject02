@@ -52,6 +52,7 @@ public partial class MainWindow
 
     public AppSettingsContext? AppSettingsTabContext { get; set; }
     public HelpDisplayContext HelpTabContext { get; set; }
+    public ImportPhotosContext? ImportPhotosTabContext { get; set; }
 
     public string HelpText =>
         $"""
@@ -94,6 +95,7 @@ public partial class MainWindow
     public async Task Setup()
     {
         PhotoTabContext = await PhotoListContext.CreateInstance(StatusContext);
+        ImportPhotosTabContext = await ImportPhotosContext.CreateInstance(StatusContext);
         AppSettingsTabContext = await AppSettingsContext.CreateInstance(StatusContext);
     }
 }

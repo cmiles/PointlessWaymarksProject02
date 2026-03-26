@@ -19,7 +19,6 @@ public partial class PhotoListFileItem
     public bool IsPrimaryPhoto { get; set; }
     public required PhotoListFileMetadata Metadata { get; set; }
     public required FileInfo PhotoFile { get; set; }
-
     public BitmapSource? ThumbnailImage { get; set; }
 
     private static BitmapSource ApplyRotation(BitmapSource source, Rotation rotation)
@@ -117,7 +116,8 @@ public partial class PhotoListFileItem
 
             if (bestSource != null)
             {
-                progress?.Report($"Using largest embedded JPEG ({bestSource.PixelWidth}x{bestSource.PixelHeight}), saving preview...");
+                progress?.Report(
+                    $"Using largest embedded JPEG ({bestSource.PixelWidth}x{bestSource.PixelHeight}), saving preview...");
                 var rotated = ApplyRotation(bestSource, exifRotation);
                 return SavePreviewJpeg(rotated, file.Name);
             }
@@ -231,6 +231,31 @@ public partial class PhotoListFileItem
             if (string.IsNullOrWhiteSpace(toReturn.Summary))
                 toReturn.Summary = xmp?.XmpMeta?.GetArrayItem(XmpConstants.NsDC, "description", 1)?.Value ??
                                    string.Empty;
+
+            // Rating: XMP xmp:Rating (0-5) → EXIF MicrosoftRating (0-99 scale)
+            var rating = 0;
+            try
+            {
+                var xmpRating = xmp?.XmpMeta?.GetPropertyInteger("http://ns.adobe.com/xap/1.0/", "Rating");
+                if (xmpRating is > 0 and <= 5) rating = xmpRating.Value;
+            }
+            catch { /* property missing or not an integer */ }
+
+            if (rating == 0 && exifIfd0 != null &&
+                exifIfd0.TryGetUInt16(ExifDirectoryBase.TagRating, out var msRating))
+            {
+                rating = msRating switch
+                {
+                    >= 99 => 5,
+                    >= 75 => 4,
+                    >= 50 => 3,
+                    >= 25 => 2,
+                    >= 1 => 1,
+                    _ => 0
+                };
+            }
+
+            toReturn.Rating = rating;
 
             // Tags: combined XMP subject + IPTC keywords, de-duplicated
             var tags = FileMetadataEmbeddedTools.KeywordsFromExif(directories, true);
