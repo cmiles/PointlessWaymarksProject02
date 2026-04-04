@@ -6,8 +6,8 @@ using Amazon;
 using Omu.ValueInjecter;
 using Ookii.Dialogs.Wpf;
 using PointlessWaymarks.CmsData;
+using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.S3;
-using PointlessWaymarks.CmsData.Spatial;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.CmsWpfControls.SitePictureSizesEditor;
 using PointlessWaymarks.CommonTools;
@@ -16,6 +16,7 @@ using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.GeoNamesControl;
 using PointlessWaymarks.WpfCommon.Status;
+using PointlessWaymarks.WpfCommon.StringMultiSelectDataEntry;
 using PointlessWaymarks.WpfCommon.Utility;
 
 namespace PointlessWaymarks.CmsWpfControls.UserSettingsEditor;
@@ -24,7 +25,8 @@ namespace PointlessWaymarks.CmsWpfControls.UserSettingsEditor;
 [GenerateStatusCommands]
 public partial class UserSettingsEditorContext
 {
-    private UserSettingsEditorContext(StatusControlContext statusContext, UserSettings toLoad)
+    private UserSettingsEditorContext(StatusControlContext statusContext, UserSettings toLoad,
+        StringMultiSelectDataEntryContext featureIntersectionTagOnImportTypesContext)
     {
         StatusContext = statusContext;
         CommonCommands = new CmsCommonCommands(StatusContext);
@@ -34,11 +36,14 @@ public partial class UserSettingsEditorContext
         CloudProviderChoices = new List<string> { string.Empty }.Concat(Enum.GetNames(typeof(S3Providers))).ToList();
         RegionChoices = RegionEndpoint.EnumerableAllRegions.Select(x => x.SystemName).ToList();
         EditorSettings = toLoad;
+        FeatureIntersectionTagOnImportTypesContext = featureIntersectionTagOnImportTypesContext;
     }
 
     public List<string> CloudProviderChoices { get; set; }
     public CmsCommonCommands CommonCommands { get; set; }
     public UserSettings EditorSettings { get; set; }
+
+    public StringMultiSelectDataEntryContext FeatureIntersectionTagOnImportTypesContext { get; set; }
 
     public static string HelpMarkdownCalTopoMapsApiKey =>
         "If you have a CalTopo Maps API key you can enter it here - this will allow access to some CalTopo layers in the maps. This is NOT required for maps to be functional.";
@@ -57,7 +62,13 @@ public partial class UserSettingsEditorContext
         "This program can check a Point or Line against a set of GeoJson files to generate tags. The settings file for that feature must be specified here.";
 
     public static string HelpMarkdownFeatureIntersectionTagOnImport =>
-        "If checked - and the Feature Intersection Settings File is set/valid - newly imported content that has position information will have feature intersect tags added.";
+        "Select the types here that - when the Feature Intersection Settings File is set/valid and there is position information - will have feature intersect tags added on import.";
+
+    public static string HelpMarkdownFeatureIntersectionTagOnImportTypes =>
+        "Select the content types that should have Feature Intersection Tags added on import. Only content types selected here will have tags added when 'Tag on Import' is enabled.";
+
+    public static string HelpMarkdownFfmpegDir =>
+        "The Video Editor can make use of [FFmpeg](https://ffmpeg.org/)'s ffmpeg.exe and ffprobe.exe programs to help make sure that video files are in a format that will play correctly on the web.";
 
     public static string HelpMarkdownFilesHavePublicDownloadLinkByDefault =>
         "Default setting for whether File Content has a download link. All Content is ALWAYS sent to the site!!! Controls like this only determine if there is an obvious link to the content - private content should not be added to this program.";
@@ -116,9 +127,6 @@ public partial class UserSettingsEditorContext
 
     public static string HelpMarkdownSiteAuthors =>
         "A value for the site creators/authors - for example " + "'Pointless Waymarks Team'.";
-
-    public static string HelpMarkdownFfmpegDir =>
-        "The Video Editor can make use of [FFmpeg](https://ffmpeg.org/)'s ffmpeg.exe and ffprobe.exe programs to help make sure that video files are in a format that will play correctly on the web.";
 
     public static string HelpMarkdownSiteDirAttribute =>
         "Dir attribute indicating text direction for the site - see the [dir attribute on MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/dir) for more information.";
@@ -200,7 +208,16 @@ public partial class UserSettingsEditorContext
 
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        return new UserSettingsEditorContext(factoryStatusContext, toLoad);
+        var featureIntersectionTagOnImportTypesContext = StringMultiSelectDataEntryContext.CreateInstance();
+        featureIntersectionTagOnImportTypesContext.Title = "Feature Intersection Tag On Import - Content Types";
+        featureIntersectionTagOnImportTypesContext.HelpText = HelpMarkdownFeatureIntersectionTagOnImportTypes;
+        featureIntersectionTagOnImportTypesContext.ReferenceValues = toLoad.FeatureIntersectionTagOnImportTypes;
+        var contentTypeChoices = Db.ContentTypeDisplayStringList()
+            .Select(x => new MultiSelectDataChoice { DataString = x, DisplayString = x }).ToList();
+        featureIntersectionTagOnImportTypesContext.SetChoices(contentTypeChoices);
+        featureIntersectionTagOnImportTypesContext.TrySetUserValues(toLoad.FeatureIntersectionTagOnImportTypes);
+
+        return new UserSettingsEditorContext(factoryStatusContext, toLoad, featureIntersectionTagOnImportTypesContext);
     }
 
     [BlockingCommand]
@@ -450,6 +467,8 @@ public partial class UserSettingsEditorContext
     [BlockingCommand]
     public async Task SaveSettings()
     {
+        EditorSettings.FeatureIntersectionTagOnImportTypes = FeatureIntersectionTagOnImportTypesContext.UserValues;
+
         await EditorSettings.WriteSettings();
 
         UserSettingsSingleton.CurrentSettings().InjectFrom(EditorSettings);
@@ -531,6 +550,7 @@ public partial class UserSettingsEditorContext
 
         if (string.IsNullOrWhiteSpace(cleanedUsername)) return;
 
-        GeoNamesApiCredentials.SaveGeoNamesSiteCredential(cleanedUsername, UserSettingsSingleton.CurrentSettings().SettingsId);
+        GeoNamesApiCredentials.SaveGeoNamesSiteCredential(cleanedUsername,
+            UserSettingsSingleton.CurrentSettings().SettingsId);
     }
 }

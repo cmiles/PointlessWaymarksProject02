@@ -1,12 +1,8 @@
-using System.Diagnostics;
-using System.IO;
-using System.Windows;
-using System.Windows.Media.Imaging;
-using System.Windows.Shell;
 using Ookii.Dialogs.Wpf;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.CommonHtml;
 using PointlessWaymarks.CmsData.ContentGeneration;
+using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.ImageHelpers;
 using PointlessWaymarks.CmsWpfControls.AllContentList;
 using PointlessWaymarks.CmsWpfControls.ContentMap;
@@ -30,7 +26,6 @@ using PointlessWaymarks.CmsWpfControls.NoteContentEditor;
 using PointlessWaymarks.CmsWpfControls.NoteList;
 using PointlessWaymarks.CmsWpfControls.PhotoContentEditor;
 using PointlessWaymarks.CmsWpfControls.PhotoList;
-using PointlessWaymarks.WpfCommon.Elevation;
 using PointlessWaymarks.CmsWpfControls.PointList;
 using PointlessWaymarks.CmsWpfControls.PostContentEditor;
 using PointlessWaymarks.CmsWpfControls.PostList;
@@ -45,9 +40,15 @@ using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.SpatialTools;
 using PointlessWaymarks.WpfCommon;
+using PointlessWaymarks.WpfCommon.Elevation;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
 using PointlessWaymarks.WpfCommon.WpfHtml;
+using System.Diagnostics;
+using System.IO;
+using System.Windows;
+using System.Windows.Media.Imaging;
+using System.Windows.Shell;
 
 namespace PointlessWaymarks.CmsWpfControls.ContentList;
 
@@ -543,7 +544,7 @@ public partial class CmsCommonCommands
 
         var skipFeatureIntersectionTagging = false;
 
-        if (selectedFileInfos.Count > 10 && UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagOnImport &&
+        if (selectedFileInfos.Count > 10 && UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagOnImportTypes.Contains(Db.ContentTypeDisplayStringForLine, StringComparer.InvariantCultureIgnoreCase) &&
             !string.IsNullOrWhiteSpace(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile))
             skipFeatureIntersectionTagging = await statusContext.ShowMessage("Slow Feature Intersection Tag Warning",
                 $"You are importing {selectedFileInfos.Count} files, checking for Feature Intersection Tags on these will be slow, it will be faster to select all of the new entries in the Line List after they have been created/saved and generate Feature Intersection Tags then - skip Feature Intersection Tagging?",

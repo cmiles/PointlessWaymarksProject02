@@ -26,11 +26,11 @@
 
     <ItemGroup>
         <PackageReference Include="CommandLineParser" Version="2.9.1" />
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
         <PackageReference Include="Dragablz" Version="0.0.3.234" />
         <PackageReference Include="Jot" Version="2.1.17" />
-        <PackageReference Include="Metalama.Framework" Version="2026.0.17" />
-        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3800.47" />
+        <PackageReference Include="Metalama.Framework" Version="2026.0.20" />
+        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3856.49" />
         <PackageReference Include="Microsoft.Web.WebView2.DevToolsProtocolExtension" Version="1.0.2901" />
         <PackageReference Include="ModernWpfUI" Version="0.9.6" />
     </ItemGroup>

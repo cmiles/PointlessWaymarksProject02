@@ -63,7 +63,7 @@
                                         <stringDataEntry:StringDataEntryMultiLineControl ValueTextBoxHeight="90"
                                             DataContext="{Binding SummaryEntryContext}">
                                         </stringDataEntry:StringDataEntryMultiLineControl>
-                                        <local:TagEditorControl Height="180" DataContext="{Binding TagEntryContext}" />
+                                        <local:TagEditorControl Height="160" DataContext="{Binding TagEntryContext}" />
                                         <stringDataEntry:StringDataEntryControl
                                             DataContext="{Binding PhotoCreatedByEntry}">
                                         </stringDataEntry:StringDataEntryControl>
@@ -301,6 +301,12 @@
                 </Button>
                 <Button Command="{Binding WriteMetadataAllItemsCommand}" HorizontalAlignment="Left" Margin="4">
                     Write Metadata - All
+                </Button>
+                <Button Command="{Binding RemoveSelectedGroupsCommand}" HorizontalAlignment="Left" Margin="4">
+                    Remove - Selected
+                </Button>
+                <Button Command="{Binding RemoveAllGroupsCommand}" HorizontalAlignment="Left" Margin="4">
+                    Remove - All
                 </Button>
                 <Button Command="{Binding DeleteAllFilesInSelectedGroupsCommand}" HorizontalAlignment="Left" Margin="4">
                     Delete Groups - Selected

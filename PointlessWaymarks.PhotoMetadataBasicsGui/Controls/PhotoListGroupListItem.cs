@@ -27,6 +27,13 @@ namespace PointlessWaymarks.PhotoMetadataBasicsGui.Controls;
 public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndValidation,
     IHasValidationIssues
 {
+    private static readonly HashSet<string> RawExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".orf", ".nef", ".cr2", ".cr3", ".arw", ".dng", ".raf", ".rw2", ".pef",
+        ".srw", ".x3f", ".3fr", ".nrw", ".raw", ".rwl", ".mrw", ".iiq", ".erf"
+    };
+
+    public Guid ContentId { get; set; } = Guid.NewGuid();
     public required ConversionDataEntryContext<double?> ElevationEntry { get; set; }
     public required ObservableCollection<PhotoListFileItem> Items { get; set; }
     public required ConversionDataEntryContext<double?> LatitudeEntry { get; set; }
@@ -218,24 +225,18 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         return factoryReturn;
     }
 
-    private static readonly HashSet<string> RawExtensions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ".orf", ".nef", ".cr2", ".cr3", ".arw", ".dng", ".raf", ".rw2", ".pef",
-        ".srw", ".x3f", ".3fr", ".nrw", ".raw", ".rwl", ".mrw", ".iiq", ".erf"
-    };
-
     private void DesignateBestGuessPrimary()
     {
         // Pick a primary photo:
         //  1. Prefer raw file types over processed image formats
-        //  2. Prefer the "base" filename (shortest name without extension) — e.g.
+        //  2. Prefer DxO_DeepPRIME processed files
+        //  3. Prefer the "base" filename (shortest name without extension) — e.g.
         //     "2026 Jan Photo.orf" over "2026 Jan Photo 01.orf"
-        //  3. Prefer DxO_DeepPRIME processed files as a tiebreaker
         //  4. Fall back to most recent write time
         var primaryCandidate = Items
             .OrderByDescending(i => RawExtensions.Contains(i.PhotoFile.Extension))
-            .ThenBy(i => Path.GetFileNameWithoutExtension(i.PhotoFile.Name as string).Length)
             .ThenByDescending(i => i.PhotoFile.Name.Contains("DxO_DeepPRIME", StringComparison.OrdinalIgnoreCase))
+            .ThenBy(i => Path.GetFileNameWithoutExtension(i.PhotoFile.Name as string).Length)
             .ThenByDescending(i => i.PhotoFile.LastWriteTimeUtc)
             .FirstOrDefault();
 
@@ -258,14 +259,6 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         await ThreadSwitcher.ResumeBackgroundAsync();
         var window = await FileMetadataDisplayWindow.CreateInstance(fileItem!.PhotoFile.FullName, null);
         await window.PositionWindowAndShowOnUiThread();
-    }
-
-    [NonBlockingCommand]
-    [StopAndWarnIfFirstParameterIsNull]
-    public async Task ShowFileLocationInOperatingSystem(PhotoListFileItem? item)
-    {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-        await ProcessHelpers.OpenExplorerWindowForFile(item!.PhotoFile.FullName);
     }
 
     public async Task GeoTagAllFiles(CancellationToken cancellationToken)
@@ -623,6 +616,14 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         if (string.IsNullOrWhiteSpace(PhotoCreatedByEntry.UserValue) &&
             !string.IsNullOrWhiteSpace(currentSettings.DefaultCreatedBy))
             PhotoCreatedByEntry.UserValue = $"{currentSettings.DefaultCreatedBy}";
+    }
+
+    [NonBlockingCommand]
+    [StopAndWarnIfFirstParameterIsNull]
+    public async Task ShowFileLocationInOperatingSystem(PhotoListFileItem? item)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+        await ProcessHelpers.OpenExplorerWindowForFile(item!.PhotoFile.FullName);
     }
 
     public void UpdateLocation()

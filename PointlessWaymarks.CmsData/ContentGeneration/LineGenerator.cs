@@ -42,7 +42,7 @@ public static class LineGenerator
             tagList = [stateCounty.state, stateCounty.county];
         }
 
-        if (trackInformation.Track.Any() && UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagOnImport &&
+        if (trackInformation.Track.Any() && UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagOnImportTypes.Contains(Db.ContentTypeDisplayStringForLine, StringComparer.InvariantCultureIgnoreCase) &&
             !string.IsNullOrWhiteSpace(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile) &&
             !skipFeatureIntersectTagging)
             try
@@ -143,7 +143,7 @@ public static class LineGenerator
             tagList = [stateCounty.state, stateCounty.county];
         }
 
-        if (trackInformation.Track.Any() && UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagOnImport &&
+        if (trackInformation.Track.Any() && UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagOnImportTypes.Contains(Db.ContentTypeDisplayStringForLine, StringComparer.InvariantCultureIgnoreCase) &&
             !string.IsNullOrWhiteSpace(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile) &&
             !skipFeatureIntersectTagging)
             try

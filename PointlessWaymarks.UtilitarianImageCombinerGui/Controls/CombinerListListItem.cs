@@ -60,20 +60,20 @@ public partial class CombinerListListItem
 
         var metadataDirectories = ImageMetadataReader.ReadMetadata(FileFullName);
         var exifIfdDirectory = ImageMetadataReader.ReadMetadata(FileFullName).OfType<ExifIfd0Directory>()
-            .FirstOrDefault();
+            .ToList();
         var iptcDirectory = ImageMetadataReader.ReadMetadata(FileFullName).OfType<IptcDirectory>()
-            .FirstOrDefault();
+            .ToList();
         var xmpDirectory = ImageMetadataReader.ReadMetadata(FileFullName).OfType<XmpDirectory>()
-            .FirstOrDefault();
-
-        CreatedBy = exifIfdDirectory?.GetDescription(ExifDirectoryBase.TagArtist) ?? string.Empty;
+            .ToList();
+        
+        CreatedBy = exifIfdDirectory.GetDescription(ExifDirectoryBase.TagArtist) ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(CreatedBy))
-            CreatedBy = xmpDirectory?.XmpMeta?.GetArrayItem(XmpConstants.NsDC, "creator", 1)?.Value ??
+            CreatedBy = xmpDirectory.GetArrayItem(XmpConstants.NsDC, "creator", 1)?.Value ??
                         string.Empty;
 
         if (string.IsNullOrWhiteSpace(CreatedBy))
-            CreatedBy = iptcDirectory?.GetDescription(IptcDirectory.TagByLine) ?? string.Empty;
+            CreatedBy = iptcDirectory.GetDescription(IptcDirectory.TagByLine) ?? string.Empty;
 
         var createdOn =
             await FileMetadataEmbeddedTools.CreatedOnLocalAndUtc(metadataDirectories);
@@ -89,12 +89,12 @@ public partial class CombinerListListItem
         Longitude = locationInformation.Longitude;
         Elevation = locationInformation.Elevation?.MetersToFeet();
 
-        Title = xmpDirectory?.XmpMeta?.GetArrayItem(XmpConstants.NsDC, "title", 1)?.Value;
+        Title = xmpDirectory.GetArrayItem(XmpConstants.NsDC, "title", 1)?.Value;
 
         if (string.IsNullOrWhiteSpace(Title))
-            Title = iptcDirectory?.GetDescription(IptcDirectory.TagObjectName) ?? string.Empty;
+            Title = iptcDirectory.GetDescription(IptcDirectory.TagObjectName) ?? string.Empty;
 
-        Summary = exifIfdDirectory?.GetDescription(ExifDirectoryBase.TagImageDescription) ?? string.Empty;
+        Summary = exifIfdDirectory.GetDescription(ExifDirectoryBase.TagImageDescription) ?? string.Empty;
 
         var tagList = FileMetadataEmbeddedTools.KeywordsFromExif(metadataDirectories, true);
 

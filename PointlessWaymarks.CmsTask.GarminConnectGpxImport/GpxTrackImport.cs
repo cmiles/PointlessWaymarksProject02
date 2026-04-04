@@ -217,7 +217,7 @@ public class GpxTrackImport
                         await CommonContentValidation.ValidateSlugLocalAndDb(newEntry.Slug, newEntry.ContentId);
                 }
 
-                if (siteSettings.FeatureIntersectionTagOnImport &&
+                if (UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagOnImportTypes.Contains(Db.ContentTypeDisplayStringForLine, StringComparer.InvariantCultureIgnoreCase) &&
                     !string.IsNullOrWhiteSpace(siteSettings.FeatureIntersectionTagSettingsFile))
                 {
                     var featureToCheck = newEntry.FeatureFromGeoJsonLine();

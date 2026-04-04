@@ -26,10 +26,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
         <PackageReference Include="Jot" Version="2.1.17" />
-        <PackageReference Include="Metalama.Framework" Version="2026.0.17" />
-        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3800.47" />
+        <PackageReference Include="Metalama.Framework" Version="2026.0.20" />
+        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3856.49" />
     </ItemGroup>
 
     <ItemGroup>

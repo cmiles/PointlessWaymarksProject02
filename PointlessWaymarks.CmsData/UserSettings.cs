@@ -14,7 +14,7 @@ public partial class UserSettings
     public string DatabaseFile { get; set; } = string.Empty;
 
     public string DefaultCreatedBy { get; set; } = string.Empty;
-    public bool FeatureIntersectionTagOnImport { get; set; }
+    public List<string> FeatureIntersectionTagOnImportTypes { get; set; } = [];
     public string FeatureIntersectionTagSettingsFile { get; set; } = string.Empty;
     public string FfmpegDirectory { get; set; } = string.Empty;
     public bool FilesHavePublicDownloadLinkByDefault { get; set; }

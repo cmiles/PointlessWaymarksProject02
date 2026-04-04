@@ -43,6 +43,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Data;
+using PointlessWaymarks.SpatialTools;
 using TinyIpc.Messaging;
 
 namespace PointlessWaymarks.CmsWpfControls.ContentList;
@@ -1118,7 +1119,7 @@ public partial class ContentListContext : IDragSource, IDropTarget
 
         if (translatedMessage?.ContentIds == null) return;
 
-        var smallImageListItems = Items.Where(x => x is IContentListImage).Cast<IContentListImage>().ToList();
+        var smallImageListItems = Items.OfType<IContentListImage>().ToList();
 
         foreach (var loopListItem in smallImageListItems)
             if (((dynamic)loopListItem).DbEntry is IMainImage { MainPicture: not null } dbMainImageEntry &&
@@ -1269,16 +1270,16 @@ public partial class ContentListContext : IDragSource, IDropTarget
                 try
                 {
                     var exifDirectory = ImageMetadataReader.ReadMetadata(convertedFile).OfType<ExifIfd0Directory>()
-                        .FirstOrDefault();
+                        .ToList();
 
                     var exifSubIfdDirectory = ImageMetadataReader.ReadMetadata(convertedFile)
                         .OfType<ExifSubIfdDirectory>()
-                        .FirstOrDefault();
+                        .ToList();
 
-                    make = exifDirectory?.GetDescription(ExifDirectoryBase.TagMake) ??
-                           exifSubIfdDirectory?.GetDescription(ExifDirectoryBase.TagMake) ?? string.Empty;
-                    model = exifDirectory?.GetDescription(ExifDirectoryBase.TagModel) ??
-                            exifSubIfdDirectory?.GetDescription(ExifDirectoryBase.TagModel) ?? string.Empty;
+                    make = exifDirectory.GetDescription(ExifDirectoryBase.TagMake) ??
+                           exifSubIfdDirectory.GetDescription(ExifDirectoryBase.TagMake) ?? string.Empty;
+                    model = exifDirectory.GetDescription(ExifDirectoryBase.TagModel) ??
+                            exifSubIfdDirectory.GetDescription(ExifDirectoryBase.TagModel) ?? string.Empty;
                 }
                 catch (Exception e)
                 {

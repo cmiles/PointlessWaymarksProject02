@@ -94,22 +94,22 @@ public static class PhotoGenerator
 
         var metadataDirectories = ImageMetadataReader.ReadMetadata(selectedFile.FullName);
         var exifSubIfdDirectory = ImageMetadataReader.ReadMetadata(selectedFile.FullName).OfType<ExifSubIfdDirectory>()
-            .FirstOrDefault();
+            .ToList();
         var exifIfdDirectory = ImageMetadataReader.ReadMetadata(selectedFile.FullName).OfType<ExifIfd0Directory>()
-            .FirstOrDefault();
+            .ToList();
         var iptcDirectory = ImageMetadataReader.ReadMetadata(selectedFile.FullName).OfType<IptcDirectory>()
-            .FirstOrDefault();
+            .ToList();
         var xmpDirectory = ImageMetadataReader.ReadMetadata(selectedFile.FullName).OfType<XmpDirectory>()
-            .FirstOrDefault();
-
-        toReturn.PhotoCreatedBy = exifIfdDirectory?.GetDescription(ExifDirectoryBase.TagArtist) ?? string.Empty;
+            .ToList();
+        
+        toReturn.PhotoCreatedBy = exifIfdDirectory.GetDescription(ExifDirectoryBase.TagArtist) ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(toReturn.PhotoCreatedBy))
-            toReturn.PhotoCreatedBy = xmpDirectory?.XmpMeta?.GetArrayItem(XmpConstants.NsDC, "creator", 1)?.Value ??
+            toReturn.PhotoCreatedBy = xmpDirectory.GetArrayItem(XmpConstants.NsDC, "creator", 1)?.Value ??
                                       string.Empty;
 
         if (string.IsNullOrWhiteSpace(toReturn.PhotoCreatedBy))
-            toReturn.PhotoCreatedBy = iptcDirectory?.GetDescription(IptcDirectory.TagByLine) ?? string.Empty;
+            toReturn.PhotoCreatedBy = iptcDirectory.GetDescription(IptcDirectory.TagByLine) ?? string.Empty;
 
         var createdOn =
             await FileMetadataEmbeddedTools.CreatedOnLocalAndUtc(metadataDirectories);
@@ -150,7 +150,7 @@ public static class PhotoGenerator
             }
 
         if (toReturn is { Latitude: not null, Longitude: not null } &&
-            UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagOnImport &&
+            UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagOnImportTypes.Contains(Db.ContentTypeDisplayStringForPhoto, StringComparer.InvariantCultureIgnoreCase) &&
             !string.IsNullOrWhiteSpace(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile) &&
             !skipAdditionalTagDiscovery)
             try
@@ -179,22 +179,22 @@ public static class PhotoGenerator
                 Log.Error(e, "Silent Error with FeatureIntersectionTags in Photo Metadata Extraction");
             }
 
-        var isoString = exifSubIfdDirectory?.GetDescription(ExifDirectoryBase.TagIsoEquivalent);
+        var isoString = exifSubIfdDirectory.GetDescription(ExifDirectoryBase.TagIsoEquivalent);
         if (!string.IsNullOrWhiteSpace(isoString)) toReturn.Iso = int.Parse(isoString);
 
-        toReturn.CameraMake = exifIfdDirectory?.GetDescription(ExifDirectoryBase.TagMake) ??
-                              exifSubIfdDirectory?.GetDescription(ExifDirectoryBase.TagMake) ?? string.Empty;
-        toReturn.CameraModel = exifIfdDirectory?.GetDescription(ExifDirectoryBase.TagModel) ??
-                               exifSubIfdDirectory?.GetDescription(ExifDirectoryBase.TagModel) ?? string.Empty;
-        toReturn.FocalLength = exifSubIfdDirectory?.GetDescription(ExifDirectoryBase.TagFocalLength) ?? string.Empty;
+        toReturn.CameraMake = exifIfdDirectory.GetDescription(ExifDirectoryBase.TagMake) ??
+                              exifSubIfdDirectory.GetDescription(ExifDirectoryBase.TagMake) ?? string.Empty;
+        toReturn.CameraModel = exifIfdDirectory.GetDescription(ExifDirectoryBase.TagModel) ??
+                               exifSubIfdDirectory.GetDescription(ExifDirectoryBase.TagModel) ?? string.Empty;
+        toReturn.FocalLength = exifSubIfdDirectory.GetDescription(ExifDirectoryBase.TagFocalLength) ?? string.Empty;
 
-        toReturn.Lens = exifSubIfdDirectory?.GetDescription(ExifDirectoryBase.TagLensModel) ?? string.Empty;
+        toReturn.Lens = exifSubIfdDirectory.GetDescription(ExifDirectoryBase.TagLensModel) ?? string.Empty;
 
         if (toReturn.Lens is "" or "----")
-            toReturn.Lens = xmpDirectory?.XmpMeta?.GetProperty(XmpConstants.NsExifAux, "Lens")?.Value ?? string.Empty;
+            toReturn.Lens = xmpDirectory.GetProperty(XmpConstants.NsExifAux, "Lens")?.Value ?? string.Empty;
         if (toReturn.Lens is "" or "----")
         {
-            toReturn.Lens = xmpDirectory?.XmpMeta?.GetProperty(XmpConstants.NsCameraraw, "LensProfileName")?.Value ??
+            toReturn.Lens = xmpDirectory.GetProperty(XmpConstants.NsCameraraw, "LensProfileName")?.Value ??
                             string.Empty;
 
             if (toReturn.Lens.StartsWith("Adobe ("))
@@ -207,28 +207,28 @@ public static class PhotoGenerator
 
         if (toReturn.Lens == "----") toReturn.Lens = string.Empty;
 
-        toReturn.Aperture = exifSubIfdDirectory?.GetDescription(ExifDirectoryBase.TagAperture) ?? string.Empty;
+        toReturn.Aperture = exifSubIfdDirectory.GetDescription(ExifDirectoryBase.TagAperture) ?? string.Empty;
         if (string.IsNullOrWhiteSpace(toReturn.Aperture))
-            toReturn.Aperture = exifSubIfdDirectory?.GetDescription(ExifDirectoryBase.TagFNumber) ?? string.Empty;
+            toReturn.Aperture = exifSubIfdDirectory.GetDescription(ExifDirectoryBase.TagFNumber) ?? string.Empty;
 
         toReturn.Aperture = ApertureCleanup(toReturn.Aperture);
 
-        toReturn.License = exifIfdDirectory?.GetDescription(ExifDirectoryBase.TagCopyright) ?? string.Empty;
+        toReturn.License = exifIfdDirectory.GetDescription(ExifDirectoryBase.TagCopyright) ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(toReturn.License))
-            toReturn.License = xmpDirectory?.XmpMeta?.GetArrayItem(XmpConstants.NsDC, "rights", 1)?.Value ??
+            toReturn.License = xmpDirectory.GetArrayItem(XmpConstants.NsDC, "rights", 1)?.Value ??
                                string.Empty;
 
         if (string.IsNullOrWhiteSpace(toReturn.License))
-            toReturn.License = iptcDirectory?.GetDescription(IptcDirectory.TagCopyrightNotice) ?? string.Empty;
+            toReturn.License = iptcDirectory.GetDescription(IptcDirectory.TagCopyrightNotice) ?? string.Empty;
 
         // ReSharper disable once InlineOutVariableDeclaration - Better to establish type of shutterValue explicitly
         Rational shutterValue;
         // ReSharper disable once InlineOutVariableDeclaration - Better to establish type of exposureValue explicitly
         Rational exposureValue;
-        if (exifSubIfdDirectory?.TryGetRational(ExifDirectoryBase.TagShutterSpeed, out shutterValue) ?? false)
+        if (exifSubIfdDirectory.TryGetRational(ExifDirectoryBase.TagShutterSpeed, out shutterValue))
             toReturn.ShutterSpeed = ExifHelpers.ShutterSpeedToHumanReadableString(shutterValue);
-        else if (exifSubIfdDirectory?.TryGetRational(ExifDirectoryBase.TagExposureTime, out exposureValue) ?? false)
+        else if (exifSubIfdDirectory.TryGetRational(ExifDirectoryBase.TagExposureTime, out exposureValue))
             toReturn.ShutterSpeed = ExifHelpers.ExposureTimeToHumanReadableString(exposureValue);
         else
             toReturn.ShutterSpeed = string.Empty;
@@ -236,10 +236,10 @@ public static class PhotoGenerator
         //The XMP data - vs the IPTC - will hold the full Title for a very long title (the IPTC will be truncated) -
         //for a 'from Lightroom with no other concerns' export Title makes the most sense, but there are other possible
         //metadata fields to pull from that could be relevant in other contexts.
-        toReturn.Title = xmpDirectory?.XmpMeta?.GetArrayItem(XmpConstants.NsDC, "title", 1)?.Value;
+        toReturn.Title = xmpDirectory.GetArrayItem(XmpConstants.NsDC, "title", 1)?.Value;
 
         if (string.IsNullOrWhiteSpace(toReturn.Title))
-            toReturn.Title = iptcDirectory?.GetDescription(IptcDirectory.TagObjectName) ?? string.Empty;
+            toReturn.Title = iptcDirectory.GetDescription(IptcDirectory.TagObjectName) ?? string.Empty;
         //Use a variety of guess on common file names and make that the title - this could result in an initial title
         //like DSC001 style out of camera names but after having experimented with loading files I think 'default' is better
         //than an invalid blank.
@@ -264,7 +264,7 @@ public static class PhotoGenerator
             toReturn.Title = string.IsNullOrWhiteSpace(toReturn.Title)
                 ? toReturn.PhotoCreatedOn.ToString("yyyy MMMM dd h-mm-ss tt")
                 : $"{toReturn.PhotoCreatedOn:yyyy} {toReturn.PhotoCreatedOn:MMMM} {toReturn.Title.TrimNullToEmpty()}";
-            toReturn.Summary = iptcDirectory?.GetDescription(IptcDirectory.TagObjectName) ?? string.Empty;
+            toReturn.Summary = iptcDirectory.GetDescription(IptcDirectory.TagObjectName) ?? string.Empty;
         }
         else
         {
@@ -279,7 +279,7 @@ public static class PhotoGenerator
 
         //Order is important here - the title supplies the summary in the code above - but overwrite that if there is a
         //description.
-        var description = exifIfdDirectory?.GetDescription(ExifDirectoryBase.TagImageDescription) ?? string.Empty;
+        var description = exifIfdDirectory.GetDescription(ExifDirectoryBase.TagImageDescription) ?? string.Empty;
         if (!string.IsNullOrWhiteSpace(description))
             toReturn.Summary = description;
 

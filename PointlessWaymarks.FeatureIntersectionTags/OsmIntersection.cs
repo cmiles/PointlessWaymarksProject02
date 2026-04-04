@@ -14,6 +14,31 @@ public static class OsmIntersection
 {
     private const double MaxQueryAreaDegrees = 0.01; // Maximum area in square degrees
 
+    private static readonly List<OverpassServer> OverpassServers =
+    [
+        new() { Url = "https://overpass-api.de/api/interpreter" },
+        new() { Url = "https://maps.mail.ru/osm/tools/overpass/api/interpreter" },
+        new() { Url = "https://overpass.private.coffee/api/interpreter" }
+    ];
+
+    private static readonly HttpClient OsmHttpClient = new() { Timeout = TimeSpan.FromMinutes(3) };
+
+    private static void AddOsmApiServerToServerList(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return;
+        var existing =
+            OverpassServers.FirstOrDefault(s => string.Equals(s.Url, url, StringComparison.OrdinalIgnoreCase));
+        if (existing != null)
+        {
+            OverpassServers.Remove(existing);
+            OverpassServers.Add(existing);
+            return;
+        }
+
+        var server = new OverpassServer { Url = url };
+        OverpassServers.Add(server);
+    }
+
     // Add this helper method to divide the envelope if needed
     private static List<Envelope> DivideEnvelopeIfNeeded(Envelope envelope, IntersectResult intersectResult)
     {
@@ -202,11 +227,8 @@ public static class OsmIntersection
     {
         if (intersectResult.OsmIsInPoints.Count == 0) return;
 
-        var client = new HttpClient
-        {
-            Timeout = TimeSpan.FromMinutes(3) // Set timeout to 3 minutes
-        };
-
+        // Ensure settings.OsmOverpassUrl is in the static list
+        AddOsmApiServerToServerList(settings.OsmOverpassUrl);
         var counter = 0;
 
         foreach (var point in intersectResult.OsmIsInPoints)
@@ -220,52 +242,54 @@ public static class OsmIntersection
                          is_in({point.Y},{point.X});
                          out tags;
                          """;
-
             var content = new StringContent($"data={Uri.EscapeDataString(query)}", Encoding.UTF8,
                 "application/x-www-form-urlencoded");
 
-            HttpResponseMessage response;
-
-            try
+            string? jsonString = null;
+            Exception? lastEx = null;
+            var availableServers = OverpassServers.Where(s => !s.FailedIn).Reverse().ToList();
+            if (availableServers.Count == 0)
             {
-                await OsmOverpassRateLimiter.WaitForRateLimitAsync(settings.RateLimitOsmOverpass, cancellationToken);
-
-                response = await client.PostAsync(settings.OsmOverpassUrl, content, cancellationToken);
-
-                OsmOverpassRateLimiter.RecordApiCall();
-
-                Log.ForContext("query", query)
-                    .ForContext("response.StatusCode", response.StatusCode)
-                    .ForContext("hint",
-                        "This log entry records 'in' queries to the OSM Overpass API for point-based tag lookup.")
-                    .Information("OSM Overpass 'in' Query");
-
-                response.EnsureSuccessStatusCode();
-            }
-            catch (Exception ex)
-            {
-                // Log the first attempt failure as a warning
-                Log.Warning(ex, "First attempt to query OSM Overpass API failed, retrying after delay");
-                progress?.Report($"OSM Overpass API request failed, retrying: {ex.Message}");
-
-                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
-
-                // Retry once
-                await OsmOverpassRateLimiter.WaitForRateLimitAsync(settings.RateLimitOsmOverpass, cancellationToken);
-
-                response = await client.PostAsync(settings.OsmOverpassUrl, content, cancellationToken);
-
-                OsmOverpassRateLimiter.RecordApiCall();
-
-                Log.ForContext("query", query)
-                    .ForContext("response.StatusCode", response.StatusCode)
-                    .ForContext("hint",
-                        "This log entry records 'in' queries to the OSM Overpass API for point-based tag lookup.")
-                    .Information("OSM Overpass 'in' Query - Retry");
+                Log.Error("All OSM Overpass servers failed for 'is_in' query. Server list: {@Servers}",
+                    OverpassServers);
+                throw new InvalidOperationException(
+                    $"All OSM Overpass servers failed for 'is_in' query. Server list: {string.Join(", ", OverpassServers)}");
             }
 
-            response.EnsureSuccessStatusCode();
-            var jsonString = await response.Content.ReadAsStringAsync(cancellationToken);
+            foreach (var serverTry in availableServers)
+                try
+                {
+                    await OsmOverpassRateLimiter.WaitForRateLimitAsync(settings.RateLimitOsmOverpass,
+                        cancellationToken);
+                    var response = await OsmHttpClient.PostAsync(serverTry.Url, content, cancellationToken);
+                    OsmOverpassRateLimiter.RecordApiCall();
+                    Log.ForContext("query", query)
+                        .ForContext("server", serverTry.Url)
+                        .ForContext("response.StatusCode", response.StatusCode)
+                        .ForContext("hint",
+                            "This log entry records 'in' queries to the OSM Overpass API for point-based tag lookup.")
+                        .Information("OSM Overpass 'in' Query");
+                    response.EnsureSuccessStatusCode();
+                    jsonString = await response.Content.ReadAsStringAsync(cancellationToken);
+                    lastEx = null;
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    serverTry.FailedIn = true;
+                    lastEx = ex;
+                    Log.Warning(ex, "Failed OSM Overpass 'is_in' query on {ServerUrl}, trying next available...",
+                        serverTry.Url);
+                }
+
+            if (lastEx != null)
+            {
+                Log.Error(lastEx, "All OSM Overpass servers failed for 'is_in' query. Server list: {@Servers}",
+                    OverpassServers);
+                throw new InvalidOperationException(
+                    $"All OSM Overpass servers failed for 'is_in' query. Server list: {string.Join(", ", OverpassServers)}",
+                    lastEx);
+            }
 
             var options = new JsonSerializerOptions();
             options.Converters.Add(new OsmElementConverter());
@@ -273,16 +297,19 @@ public static class OsmIntersection
             OsmResponse? features;
             try
             {
-                features = JsonSerializer.Deserialize<OsmResponse>(jsonString, options);
+                features = JsonSerializer.Deserialize<OsmResponse>(jsonString ?? throw new InvalidOperationException(),
+                    options);
                 if (features?.Elements == null)
                     throw new JsonException("Deserialized OsmResponse is null or missing elements.");
             }
             catch (Exception ex)
             {
-                Log.ForContext("jsonString", jsonString)
+                Log.ForContext("query", query)
+                    .ForContext("jsonString", jsonString)
                     .Error(ex, "Failed to deserialize OSM Overpass API response. Raw response logged for analysis.");
                 throw new InvalidOperationException(
-                    $"Failed to deserialize OSM Overpass API response. See inner exception and logs for details. Raw response: {jsonString}", ex);
+                    $"Failed to deserialize OSM Overpass API response. See inner exception and logs for details. Raw response: {jsonString}",
+                    ex);
             }
 
             foreach (var osmElement in features.Elements)
@@ -325,10 +352,8 @@ public static class OsmIntersection
     {
         if (intersectResult.Features.Count == 0) return;
 
-        var client = new HttpClient
-        {
-            Timeout = TimeSpan.FromMinutes(3) // Set timeout to 3 minutes
-        };
+        // Ensure settings.OsmOverpassUrl is in the static list
+        AddOsmApiServerToServerList(settings.OsmOverpassUrl);
 
         // Calculate bounding box of all features
         Envelope? envelope = null;
@@ -389,49 +414,51 @@ public static class OsmIntersection
             var content = new StringContent($"data={Uri.EscapeDataString(query)}", Encoding.UTF8,
                 "application/x-www-form-urlencoded");
 
-            HttpResponseMessage response;
-
-            try
+            string? jsonString = null;
+            Exception? lastEx = null;
+            var availableServers = OverpassServers.Where(s => !s.FailedIntersect).Reverse().ToList();
+            if (availableServers.Count == 0)
             {
-                await OsmOverpassRateLimiter.WaitForRateLimitAsync(settings.RateLimitOsmOverpass, cancellationToken);
-
-                response = await client.PostAsync(settings.OsmOverpassUrl, content, cancellationToken);
-
-                OsmOverpassRateLimiter.RecordApiCall();
-
-                Log.ForContext("query", query)
-                    .ForContext("response.StatusCode", response.StatusCode)
-                    .ForContext("hint",
-                        "This log entry records queries to the OSM Overpass API in order to facilitate exploring the results at a later time - using the API for tagging is not unique, but I didn't come across useful helps/tips/guidance on best way to include/exclude relevant data - overpass-turbo.eu is a useful resource to manually run and see these queries.")
-                    .Information("OSM Overpass Query");
-
-                response.EnsureSuccessStatusCode();
-            }
-            catch (Exception ex)
-            {
-                // Log the first attempt failure as a warning
-                Log.Warning(ex, "First attempt to query OSM Overpass API failed, retrying after delay");
-                progress?.Report($"OSM Overpass API request failed, retrying: {ex.Message}");
-
-                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
-
-                // Retry once
-                await OsmOverpassRateLimiter.WaitForRateLimitAsync(settings.RateLimitOsmOverpass, cancellationToken);
-
-                response = await client.PostAsync(settings.OsmOverpassUrl, content, cancellationToken);
-
-                OsmOverpassRateLimiter.RecordApiCall();
-
-                Log.ForContext("intersectResultDescription", intersectResult.Description)
-                    .ForContext("query", query)
-                    .ForContext("response.StatusCode", response.StatusCode)
-                    .ForContext("hint",
-                        "This log entry records queries to the OSM Overpass API in order to facilitate exploring the results at a later time - using the API for tagging is not unique, but I didn't come across useful helps/tips/guidance on best way to include/exclude relevant data - overpass-turbo.eu is a useful resource to manually run and see these queries.")
-                    .Information("OSM Overpass Query - Retry");
+                Log.Error("All OSM Overpass servers failed for 'intersect' query. Server list: {@Servers}",
+                    OverpassServers);
+                throw new InvalidOperationException(
+                    $"All OSM Overpass servers failed for 'intersect' query. Server list: {string.Join(", ", OverpassServers)}");
             }
 
-            response.EnsureSuccessStatusCode();
-            var jsonString = await response.Content.ReadAsStringAsync(cancellationToken);
+            foreach (var serverTry in availableServers)
+                try
+                {
+                    await OsmOverpassRateLimiter.WaitForRateLimitAsync(settings.RateLimitOsmOverpass,
+                        cancellationToken);
+                    var response = await OsmHttpClient.PostAsync(serverTry.Url, content, cancellationToken);
+                    OsmOverpassRateLimiter.RecordApiCall();
+                    Log.ForContext("query", query)
+                        .ForContext("server", serverTry.Url)
+                        .ForContext("response.StatusCode", response.StatusCode)
+                        .ForContext("hint",
+                            "This log entry records queries to the OSM Overpass API in order to facilitate exploring the results at a later time - using the API for tagging is not unique, but I didn't come across useful helps/tips/guidance on best way to include/exclude relevant data - overpass-turbo.eu is a useful resource to manually run and see these queries.")
+                        .Information("OSM Overpass Query");
+                    response.EnsureSuccessStatusCode();
+                    jsonString = await response.Content.ReadAsStringAsync(cancellationToken);
+                    lastEx = null;
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    serverTry.FailedIntersect = true;
+                    lastEx = ex;
+                    Log.Warning(ex, "Failed OSM Overpass 'intersect' query on {ServerUrl}, trying next available...",
+                        serverTry.Url);
+                }
+
+            if (lastEx != null)
+            {
+                Log.Error(lastEx, "All OSM Overpass servers failed for 'intersect' query. Server list: {@Servers}",
+                    OverpassServers);
+                throw new InvalidOperationException(
+                    $"All OSM Overpass servers failed for 'intersect' query. Server list: {string.Join(", ", OverpassServers)}",
+                    lastEx);
+            }
 
             var options = new JsonSerializerOptions();
             options.Converters.Add(new OsmElementConverter());
@@ -440,11 +467,13 @@ public static class OsmIntersection
 
             try
             {
-                features = JsonSerializer.Deserialize<OsmResponse>(jsonString, options);
+                features = JsonSerializer.Deserialize<OsmResponse>(jsonString ?? throw new InvalidOperationException(),
+                    options);
             }
             catch (Exception e)
             {
-                Log.ForContext("intersectResultDescription", intersectResult.Description)
+                Log.ForContext("query", query)
+                    .ForContext("intersectResultDescription", intersectResult.Description)
                     .ForContext("json", jsonString).ForContext("query", query)
                     .Error(e, $"OSM Json Deserialization Error - {e.Message}");
                 throw;
@@ -513,5 +542,17 @@ public static class OsmIntersection
                             intersectResult.Sources.Add("OSM Feature Intersect");
                     }
                 }
+    }
+
+    private class OverpassServer
+    {
+        public bool FailedIn { get; set; }
+        public bool FailedIntersect { get; set; }
+        public string Url { get; init; } = string.Empty;
+
+        public override string ToString()
+        {
+            return $"Url={Url}, FailedIntersect={FailedIntersect}, FailedIn={FailedIn}";
+        }
     }
 }

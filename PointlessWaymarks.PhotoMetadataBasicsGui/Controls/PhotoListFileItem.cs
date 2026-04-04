@@ -138,8 +138,8 @@ public partial class PhotoListFileItem
         {
             using var ms = new MemoryStream(imageBytes);
             var directories = ImageMetadataReader.ReadMetadata(ms);
-            var ifd0 = directories.OfType<ExifIfd0Directory>().FirstOrDefault();
-            if (ifd0 != null && ifd0.TryGetUInt16(ExifDirectoryBase.TagOrientation, out var orientation))
+            var ifd0 = directories.OfType<ExifIfd0Directory>().ToList();
+            if (ifd0.TryGetUInt16(ExifDirectoryBase.TagOrientation, out var orientation))
                 return orientation switch
                 {
                     3 => Rotation.Rotate180,
@@ -178,17 +178,17 @@ public partial class PhotoListFileItem
         {
             var directories = ImageMetadataReader.ReadMetadata(file.FullName);
 
-            var exifIfd0 = directories.OfType<ExifIfd0Directory>().FirstOrDefault();
-            var iptc = directories.OfType<IptcDirectory>().FirstOrDefault();
-            var xmp = directories.OfType<XmpDirectory>().FirstOrDefault();
+            var exifIfd0 = directories.OfType<ExifIfd0Directory>().ToList();
+            var iptc = directories.OfType<IptcDirectory>().ToList();
+            var xmp = directories.OfType<XmpDirectory>().ToList();
 
             // PhotoCreatedBy
-            toReturn.PhotoCreatedBy = exifIfd0?.GetDescription(ExifDirectoryBase.TagArtist) ?? string.Empty;
+            toReturn.PhotoCreatedBy = exifIfd0.GetDescription(ExifDirectoryBase.TagArtist) ?? string.Empty;
             if (string.IsNullOrWhiteSpace(toReturn.PhotoCreatedBy))
                 toReturn.PhotoCreatedBy =
-                    xmp?.XmpMeta?.GetArrayItem(XmpConstants.NsDC, "creator", 1)?.Value ?? string.Empty;
+                    xmp.GetArrayItem(XmpConstants.NsDC, "creator", 1)?.Value ?? string.Empty;
             if (string.IsNullOrWhiteSpace(toReturn.PhotoCreatedBy))
-                toReturn.PhotoCreatedBy = iptc?.GetDescription(IptcDirectory.TagByLine) ?? string.Empty;
+                toReturn.PhotoCreatedBy = iptc.GetDescription(IptcDirectory.TagByLine) ?? string.Empty;
 
             // Dates
             var createdOn = await FileMetadataEmbeddedTools.CreatedOnLocalAndUtc(directories)
@@ -209,39 +209,39 @@ public partial class PhotoListFileItem
             toReturn.PhotoDirection = location.PhotoDirection;
 
             // License
-            toReturn.License = exifIfd0?.GetDescription(ExifDirectoryBase.TagCopyright) ?? string.Empty;
+            toReturn.License = exifIfd0.GetDescription(ExifDirectoryBase.TagCopyright) ?? string.Empty;
             if (string.IsNullOrWhiteSpace(toReturn.License))
                 toReturn.License =
-                    xmp?.XmpMeta?.GetArrayItem(XmpConstants.NsDC, "rights", 1)?.Value ?? string.Empty;
+                    xmp.GetArrayItem(XmpConstants.NsDC, "rights", 1)?.Value ?? string.Empty;
             if (string.IsNullOrWhiteSpace(toReturn.License))
-                toReturn.License = iptc?.GetDescription(IptcDirectory.TagCopyrightNotice) ?? string.Empty;
+                toReturn.License = iptc.GetDescription(IptcDirectory.TagCopyrightNotice) ?? string.Empty;
 
             // Title
-            toReturn.Title = xmp?.XmpMeta?.GetArrayItem(XmpConstants.NsDC, "title", 1)?.Value;
+            toReturn.Title = xmp.GetArrayItem(XmpConstants.NsDC, "title", 1)?.Value;
             if (string.IsNullOrWhiteSpace(toReturn.Title))
-                toReturn.Title = iptc?.GetDescription(IptcDirectory.TagObjectName) ?? string.Empty;
+                toReturn.Title = iptc.GetDescription(IptcDirectory.TagObjectName) ?? string.Empty;
             if (string.IsNullOrWhiteSpace(toReturn.Title))
                 toReturn.Title = Path.GetFileNameWithoutExtension(file.Name);
 
             // Summary: prefer EXIF ImageDescription, then IPTC ObjectName, then fall back to title
             toReturn.Summary =
-                exifIfd0?.GetDescription(ExifDirectoryBase.TagImageDescription) ?? string.Empty;
+                exifIfd0.GetDescription(ExifDirectoryBase.TagImageDescription) ?? string.Empty;
             if (string.IsNullOrWhiteSpace(toReturn.Summary))
-                toReturn.Summary = iptc?.GetDescription(IptcDirectory.TagCaption) ?? string.Empty;
+                toReturn.Summary = iptc.GetDescription(IptcDirectory.TagCaption) ?? string.Empty;
             if (string.IsNullOrWhiteSpace(toReturn.Summary))
-                toReturn.Summary = xmp?.XmpMeta?.GetArrayItem(XmpConstants.NsDC, "description", 1)?.Value ??
+                toReturn.Summary = xmp.GetArrayItem(XmpConstants.NsDC, "description", 1)?.Value ??
                                    string.Empty;
 
             // Rating: XMP xmp:Rating (0-5) → EXIF MicrosoftRating (0-99 scale)
             var rating = 0;
             try
             {
-                var xmpRating = xmp?.XmpMeta?.GetPropertyInteger("http://ns.adobe.com/xap/1.0/", "Rating");
+                var xmpRating = xmp.GetPropertyInteger("http://ns.adobe.com/xap/1.0/", "Rating");
                 if (xmpRating is > 0 and <= 5) rating = xmpRating.Value;
             }
             catch { /* property missing or not an integer */ }
 
-            if (rating == 0 && exifIfd0 != null &&
+            if (rating == 0 &&
                 exifIfd0.TryGetUInt16(ExifDirectoryBase.TagRating, out var msRating))
             {
                 rating = msRating switch

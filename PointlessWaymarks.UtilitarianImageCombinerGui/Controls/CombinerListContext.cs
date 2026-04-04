@@ -76,7 +76,8 @@ public partial class CombinerListContext : IDropTarget
             return;
         }
 
-        var files = DragAndDropFilesHelper.DroppedFiles(dropInfo, FileLocationTools.TempStorageDirectory(), true, Combiner.SupportedExtensions);
+        var files = DragAndDropFilesHelper.DroppedFiles(dropInfo, FileLocationTools.TempStorageDirectory(), true,
+            Combiner.SupportedExtensions);
 
         if (!files.Any()) return;
 
@@ -398,7 +399,8 @@ public partial class CombinerListContext : IDropTarget
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        var jpegUrlWindow = await InteractiveWebViewJpegImageWindow.CreateInstance(await StatusControlContext.CreateInstance());
+        var jpegUrlWindow =
+            await InteractiveWebViewJpegImageWindow.CreateInstance(await StatusControlContext.CreateInstance());
 
         void OnImageSaved(object? sender, InteractiveWebViewJpegImageWindowSavedEventArgs e)
         {

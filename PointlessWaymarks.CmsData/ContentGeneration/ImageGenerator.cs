@@ -73,11 +73,11 @@ public static class ImageGenerator
 
         var metadataDirectories = ImageMetadataReader.ReadMetadata(selectedFile.FullName);
         var exifIfdDirectory = ImageMetadataReader.ReadMetadata(selectedFile.FullName).OfType<ExifIfd0Directory>()
-            .FirstOrDefault();
+            .ToList();
         var iptcDirectory = ImageMetadataReader.ReadMetadata(selectedFile.FullName).OfType<IptcDirectory>()
-            .FirstOrDefault();
+            .ToList();
         var xmpDirectory = ImageMetadataReader.ReadMetadata(selectedFile.FullName).OfType<XmpDirectory>()
-            .FirstOrDefault();
+            .ToList();
 
         var createdOn =
             await FileMetadataEmbeddedTools.CreatedOnLocalAndUtc(metadataDirectories);
@@ -86,10 +86,10 @@ public static class ImageGenerator
 
         var tags = new List<string>();
 
-        toReturn.Title = xmpDirectory?.XmpMeta?.GetArrayItem(XmpConstants.NsDC, "title", 1)?.Value;
+        toReturn.Title = xmpDirectory.GetArrayItem(XmpConstants.NsDC, "title", 1)?.Value;
 
         if (string.IsNullOrWhiteSpace(toReturn.Title))
-            toReturn.Title = iptcDirectory?.GetDescription(IptcDirectory.TagObjectName) ?? string.Empty;
+            toReturn.Title = iptcDirectory.GetDescription(IptcDirectory.TagObjectName) ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(toReturn.Title))
             toReturn.Title = Path.GetFileNameWithoutExtension(selectedFile.Name).Replace("-", " ").Replace("_", " ")
@@ -105,7 +105,7 @@ public static class ImageGenerator
             toReturn.Title = string.IsNullOrWhiteSpace(toReturn.Title)
                 ? imageCreatedOn.ToString("yyyy MMMM dd h-mm-ss tt")
                 : $"{imageCreatedOn:yyyy} {imageCreatedOn:MMMM} {toReturn.Title.TrimNullToEmpty()}";
-            toReturn.Summary = iptcDirectory?.GetDescription(IptcDirectory.TagObjectName) ?? string.Empty;
+            toReturn.Summary = iptcDirectory.GetDescription(IptcDirectory.TagObjectName) ?? string.Empty;
         }
         else
         {
@@ -120,7 +120,7 @@ public static class ImageGenerator
 
         //Order is important here - the title supplies the summary in the code above - but overwrite that if there is a
         //description.
-        var description = exifIfdDirectory?.GetDescription(ExifDirectoryBase.TagImageDescription) ?? string.Empty;
+        var description = exifIfdDirectory.GetDescription(ExifDirectoryBase.TagImageDescription) ?? string.Empty;
         if (!string.IsNullOrWhiteSpace(description))
             toReturn.Summary = description;
 

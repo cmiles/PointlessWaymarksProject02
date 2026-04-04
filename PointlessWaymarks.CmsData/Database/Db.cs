@@ -581,6 +581,18 @@ public static class Db
         return ContentTypeDisplayString(await db.ContentFromContentId(contentGuid));
     }
 
+    public static List<string> ContentTypeDisplayStringList()
+    {
+        return
+        [
+            ContentTypeDisplayStringForFile, ContentTypeDisplayStringForGeoJson, ContentTypeDisplayStringForImage,
+            ContentTypeDisplayStringForLine, ContentTypeDisplayStringForLink, ContentTypeDisplayStringForMap,
+            ContentTypeDisplayStringForNote, ContentTypeDisplayStringForPhoto, ContentTypeDisplayStringForPoint,
+            ContentTypeDisplayStringForPost, ContentTypeDisplayStringForSnippet, ContentTypeDisplayStringForTrail,
+            ContentTypeDisplayStringForVideo
+        ];
+    }
+
     public static async Task<List<object>> ContentUpdatedOnDay(DateTime updatedOn)
     {
         var updatedOnOnOrAfter = updatedOn.Date;

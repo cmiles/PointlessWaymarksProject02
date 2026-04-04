@@ -1589,7 +1589,7 @@ public static class UserSettingsUtilities
             throw new NullReferenceException($"Trying to read Settings from {fileToRead.FullName} returned null");
 
         var currentProperties = typeof(UserSettings).GetProperties()
-            .Where(x => !x.Name.Equals(nameof(UserSettings.SitePictureSizes))).ToList();
+            .Where(x => !(x.Name.Equals(nameof(UserSettings.SitePictureSizes)) || x.Name.Equals(nameof(UserSettings.FeatureIntersectionTagOnImportTypes)))).ToList();
 
         var readResult = new UserSettings();
 
@@ -1654,6 +1654,17 @@ public static class UserSettingsUtilities
             {
                 readResult.SitePictureSizes = existingSitePictureSizesValue.Split(";")
                     .Select(SitePictureSize.FromString).OrderByDescending(x => x.MaxDimension).ToList();
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.ToString());
+            }
+
+        if (iniResult.TryGetKey(nameof(readResult.FeatureIntersectionTagOnImportTypes), out var existingFeatureIntersectOnImportTypeValue))
+            try
+            {
+                readResult.FeatureIntersectionTagOnImportTypes = existingFeatureIntersectOnImportTypeValue.Split(";")
+                    .Select(x => x.TrimNullToEmpty()).Where(x => !string.IsNullOrWhiteSpace(x) && Db.ContentTypeDisplayStringList().Contains(x, StringComparer.InvariantCultureIgnoreCase)).ToList();
             }
             catch (Exception e)
             {
@@ -1760,6 +1771,12 @@ public static class UserSettingsUtilities
         if (!readResult.SitePictureSizes.Any())
         {
             readResult.SitePictureSizes = PictureResizing.SrcSetSizeAndQualityDefaultSettingsList();
+            hasUpdates = true;
+        }
+
+        if (!readResult.FeatureIntersectionTagOnImportTypes.Any())
+        {
+            readResult.FeatureIntersectionTagOnImportTypes = [];
             hasUpdates = true;
         }
 
@@ -2030,7 +2047,7 @@ public static class UserSettingsUtilities
         var iniResult = (await ReadRawSettingsFromFile(currentFile))!;
 
         var currentProperties = typeof(UserSettings).GetProperties()
-            .Where(x => !x.Name.Equals(nameof(UserSettings.SitePictureSizes))).ToList();
+            .Where(x => !(x.Name.Equals(nameof(UserSettings.SitePictureSizes)) || x.Name.Equals(nameof(UserSettings.FeatureIntersectionTagOnImportTypes)))).ToList();
 
         foreach (var loopProperties in currentProperties)
         {
@@ -2054,6 +2071,17 @@ public static class UserSettingsUtilities
             iniResult.Global[nameof(UserSettings.SitePictureSizes)] = sitePictureSizesSettingString;
         else
             iniResult.Global.AddKey(nameof(UserSettings.SitePictureSizes), sitePictureSizesSettingString);
+
+        var featureIntersectImportTypesSettingExists = iniResult.TryGetKey(nameof(UserSettings.FeatureIntersectionTagOnImportTypes), out _);
+
+        var featureIntersectImportTypesSettingString =
+            string.Join(";",
+                toWrite.FeatureIntersectionTagOnImportTypes.Select(x => x.TrimNullToEmpty()).Where(x => !string.IsNullOrWhiteSpace(x) && Db.ContentTypeDisplayStringList().Contains(x, StringComparer.InvariantCultureIgnoreCase)).OrderByDescending(x => x).Select(x => x.ToString()));
+
+        if (featureIntersectImportTypesSettingExists)
+            iniResult.Global[nameof(UserSettings.FeatureIntersectionTagOnImportTypes)] = featureIntersectImportTypesSettingString;
+        else
+            iniResult.Global.AddKey(nameof(UserSettings.FeatureIntersectionTagOnImportTypes), featureIntersectImportTypesSettingString);
 
         var writer = new FileIniDataParser();
 
