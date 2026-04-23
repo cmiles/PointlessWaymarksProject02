@@ -373,7 +373,7 @@ public partial class LinkContentActions : IContentActions<LinkContent>
     }
 
     [BlockingCommand]
-    public async Task LinkSnapshotImage(LinkContent? content)
+    public async Task LinkSnapshotImage(LinkContent? content, CancellationToken cancellationToken)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -391,7 +391,8 @@ public partial class LinkContentActions : IContentActions<LinkContent>
 
         try
         {
-            var result = await PlaywrightScreenShot.CaptureScreenshot(content.Url, StatusContext.ProgressTracker());
+            var result = await PlaywrightScreenShot.CaptureScreenshot(content.Url, StatusContext.ProgressTracker(),
+                cancellationToken: cancellationToken);
 
             if (!result.Success)
             {
@@ -410,13 +411,17 @@ public partial class LinkContentActions : IContentActions<LinkContent>
                 Path.Combine(UserSettingsSingleton.CurrentSettings().LocalMediaArchiveLinkDirectory().FullName,
                     $"{content.ContentId}--{DateTime.Now:yyyy-MM-dd-HHmm}.jpg");
 
-            await File.WriteAllBytesAsync(fileName, result.ImageBytes);
+            await File.WriteAllBytesAsync(fileName, result.ImageBytes, cancellationToken);
 
             var ps = new ProcessStartInfo(fileName) { UseShellExecute = true, Verb = "open" };
             Process.Start(ps);
 
             DataNotifications.PublishDataNotification("Link Snapshot Image", DataNotificationContentType.Link,
                 DataNotificationUpdateType.Update, [content.ContentId]);
+        }
+        catch (OperationCanceledException)
+        {
+            await StatusContext.ToastWarning("Snapshot image capture was cancelled.");
         }
         catch (Exception e)
         {

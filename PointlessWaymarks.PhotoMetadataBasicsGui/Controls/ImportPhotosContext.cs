@@ -24,6 +24,8 @@ public partial class ImportPhotosContext
     public required StringDataEntryContext DestinationFolderEntry { get; set; }
     public required ImportDropHandler FinishedPhotosDropHandler { get; set; }
     public string ImportLog { get; set; } = string.Empty;
+    public bool MoveFinishedFilesOnImport { get; set; }
+    public bool MoveWorkingFilesOnImport { get; set; }
     public bool OverwriteExistingFiles { get; set; }
     public required StatusControlContext StatusContext { get; set; }
     public required ImportDropHandler WorkingFilesDropHandler { get; set; }
@@ -31,9 +33,11 @@ public partial class ImportPhotosContext
     private void AppendLog(string message)
     {
         var timestamp = DateTime.Now.ToString("HH:mm:ss");
-        ImportLog += string.IsNullOrEmpty(ImportLog)
-            ? $"[{timestamp}] {message}"
-            : $"{Environment.NewLine}[{timestamp}] {message}";
+        var entry = $"[{timestamp}] {message}";
+        ImportLog = string.IsNullOrEmpty(ImportLog)
+            ? entry
+            : $"{entry}{Environment.NewLine}{ImportLog}";
+        StatusContext.Progress(message);
     }
 
     [BlockingCommand]
@@ -78,10 +82,11 @@ public partial class ImportPhotosContext
                 StatusContext = statusContext ?? StatusControlContext.CreateInstance().Result,
                 DestinationFolderEntry = destinationFolderEntry,
                 WorkingFilesDropHandler = null!,
-                FinishedPhotosDropHandler = null!
+                FinishedPhotosDropHandler = null!,
+                MoveWorkingFilesOnImport = settings.MoveWorkingFilesOnImport,
+                MoveFinishedFilesOnImport = settings.MoveFinishedFilesOnImport,
+                OverwriteExistingFiles = settings.OverwriteOnImport
             };
-
-            context.OverwriteExistingFiles = settings.OverwriteOnImport;
 
             context.WorkingFilesDropHandler = new ImportDropHandler(context, true);
             context.FinishedPhotosDropHandler = new ImportDropHandler(context, false);
@@ -94,6 +99,20 @@ public partial class ImportPhotosContext
                 {
                     var current = PhotoMetadataBasicsGuiSettingTools.ReadSettings();
                     current.OverwriteOnImport = context.OverwriteExistingFiles;
+                    await PhotoMetadataBasicsGuiSettingTools.WriteSettings(current);
+                }
+
+                if (e.PropertyName == nameof(MoveWorkingFilesOnImport))
+                {
+                    var current = PhotoMetadataBasicsGuiSettingTools.ReadSettings();
+                    current.MoveWorkingFilesOnImport = context.MoveWorkingFilesOnImport;
+                    await PhotoMetadataBasicsGuiSettingTools.WriteSettings(current);
+                }
+
+                if (e.PropertyName == nameof(MoveFinishedFilesOnImport))
+                {
+                    var current = PhotoMetadataBasicsGuiSettingTools.ReadSettings();
+                    current.MoveFinishedFilesOnImport = context.MoveFinishedFilesOnImport;
                     await PhotoMetadataBasicsGuiSettingTools.WriteSettings(current);
                 }
             };
@@ -173,6 +192,8 @@ public partial class ImportPhotosContext
             }
 
         var label = isWorkingFiles ? "Working" : "Finished";
+        var moveFiles = isWorkingFiles ? MoveWorkingFilesOnImport : MoveFinishedFilesOnImport;
+        var operationLabel = moveFiles ? "Move" : "Copy";
         var overwrite = OverwriteExistingFiles;
         var importedCount = 0;
         var skippedCount = 0;
@@ -181,7 +202,7 @@ public partial class ImportPhotosContext
         var errors = new List<string>();
         var processed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        StatusContext.Progress($"Importing {files.Count} file(s) as {label}...");
+        AppendLog($"{operationLabel} importing {files.Count} file(s) as {label}...");
 
         foreach (var filePath in files)
         {
@@ -238,14 +259,20 @@ public partial class ImportPhotosContext
                             continue;
                         }
 
-                        File.Copy(companion.FullName, targetPath);
-                        AppendLog($"[Overwrite] {companion.Name} -> {targetPath}");
+                        if (moveFiles)
+                            File.Move(companion.FullName, targetPath);
+                        else
+                            File.Copy(companion.FullName, targetPath);
+                        AppendLog($"[Overwrite/{operationLabel}] {companion.Name} -> {targetPath}");
                         overwrittenCount++;
                     }
                     else
                     {
-                        File.Copy(companion.FullName, targetPath);
-                        AppendLog($"[{label}] {companion.Name} -> {targetPath}");
+                        if (moveFiles)
+                            File.Move(companion.FullName, targetPath);
+                        else
+                            File.Copy(companion.FullName, targetPath);
+                        AppendLog($"[{label}/{operationLabel}] {companion.Name} -> {targetPath}");
                         importedCount++;
                     }
                 }
@@ -259,9 +286,8 @@ public partial class ImportPhotosContext
         }
 
         var summary =
-            $"Import complete: {importedCount} imported, {overwrittenCount} overwritten, {skippedCount} skipped, {errorCount} error(s).";
+            $"{operationLabel} import complete: {importedCount} imported, {overwrittenCount} overwritten, {skippedCount} skipped, {errorCount} error(s).";
         AppendLog(summary);
-        StatusContext.Progress(summary);
 
         if (errors.Count > 0)
             await StatusContext.ShowMessageWithOkButton("Import Errors",

@@ -178,7 +178,7 @@ public partial class MainWindow
 
         var results = await FileManagement.CleanAndResizeAllImageFiles(StatusContext.ProgressTracker());
 
-        if (results.Any())
+        if (results.Any(x => x.HasError))
         {
             var frozenNow = DateTime.Now;
 
@@ -211,7 +211,7 @@ public partial class MainWindow
 
         var results = await FileManagement.CleanAndResizeAllPhotoFiles(StatusContext.ProgressTracker());
 
-        if (results.Any())
+        if (results.Any(x => x.HasError))
         {
             var frozenNow = DateTime.Now;
 

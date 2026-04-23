@@ -101,7 +101,7 @@ public static class PhotoGenerator
             .ToList();
         var xmpDirectory = ImageMetadataReader.ReadMetadata(selectedFile.FullName).OfType<XmpDirectory>()
             .ToList();
-        
+
         toReturn.PhotoCreatedBy = exifIfdDirectory.GetDescription(ExifDirectoryBase.TagArtist) ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(toReturn.PhotoCreatedBy))
@@ -150,7 +150,8 @@ public static class PhotoGenerator
             }
 
         if (toReturn is { Latitude: not null, Longitude: not null } &&
-            UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagOnImportTypes.Contains(Db.ContentTypeDisplayStringForPhoto, StringComparer.InvariantCultureIgnoreCase) &&
+            UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagOnImportTypes
+                .Contains(Db.ContentTypeDisplayStringForPhoto, StringComparer.InvariantCultureIgnoreCase) &&
             !string.IsNullOrWhiteSpace(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile) &&
             !skipAdditionalTagDiscovery)
             try
@@ -282,6 +283,17 @@ public static class PhotoGenerator
         var description = exifIfdDirectory.GetDescription(ExifDirectoryBase.TagImageDescription) ?? string.Empty;
         if (!string.IsNullOrWhiteSpace(description))
             toReturn.Summary = description;
+
+        var descriptionSubIfd = exifSubIfdDirectory.GetDescription(ExifDirectoryBase.TagImageDescription) ??
+                                string.Empty;
+        if (string.IsNullOrWhiteSpace(description) && !string.IsNullOrWhiteSpace(descriptionSubIfd))
+            toReturn.Summary = descriptionSubIfd;
+
+        var descriptionIptc = iptcDirectory.GetDescription(IptcDirectory.TagCaption);
+        if (string.IsNullOrWhiteSpace(description) && string.IsNullOrWhiteSpace(descriptionSubIfd) &&
+            !string.IsNullOrWhiteSpace(descriptionIptc))
+            toReturn.Summary = descriptionIptc;
+
 
         //Add a trailing . to the summary if it doesn't end with ! ? .
         if (!string.IsNullOrWhiteSpace(toReturn.Summary) && !toReturn.Summary.EndsWith(".") &&

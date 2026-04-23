@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -132,6 +133,113 @@ public partial class PhotoListFileItem
         }
     }
 
+    private static async Task<PhotoListFileMetadata> GetMetadataFromXmpSidecarAsync(FileInfo file,
+        PhotoListFileMetadata toReturn)
+    {
+        try
+        {
+            await using var stream = File.OpenRead(file.FullName);
+            var xmp = XmpMetaFactory.Parse(stream);
+
+            const string exifNs = "http://ns.adobe.com/exif/1.0/";
+            const string xmpNs = "http://ns.adobe.com/xap/1.0/";
+
+            // PhotoCreatedBy: dc:creator
+            toReturn.PhotoCreatedBy =
+                XmpArrayItemValue(xmp, XmpConstants.NsDC, "creator", 1) ?? string.Empty;
+
+            // Title: dc:title
+            toReturn.Title = XmpArrayItemValue(xmp, XmpConstants.NsDC, "title", 1);
+            if (string.IsNullOrWhiteSpace(toReturn.Title))
+                toReturn.Title = Path.GetFileNameWithoutExtension(file.Name);
+
+            // Summary: dc:description
+            toReturn.Summary =
+                XmpArrayItemValue(xmp, XmpConstants.NsDC, "description", 1) ?? string.Empty;
+
+            // License: dc:rights
+            toReturn.License =
+                XmpArrayItemValue(xmp, XmpConstants.NsDC, "rights", 1) ?? string.Empty;
+
+            // Rating: xmp:Rating
+            try
+            {
+                if (xmp.DoesPropertyExist(xmpNs, "Rating"))
+                {
+                    var rating = xmp.GetPropertyInteger(xmpNs, "Rating");
+                    if (rating is > 0 and <= 5) toReturn.Rating = rating;
+                }
+            }
+            catch { /* property missing or not an integer */ }
+
+            // Tags: dc:subject
+            var tags = new List<string>();
+            var subjectCount = xmp.CountArrayItems(XmpConstants.NsDC, "subject");
+            for (var i = 1; i <= subjectCount; i++)
+            {
+                var item = xmp.GetArrayItem(XmpConstants.NsDC, "subject", i);
+                if (!string.IsNullOrWhiteSpace(item?.Value))
+                    tags.Add(item.Value.Trim());
+            }
+
+            toReturn.Tags = tags.Count > 0 ? string.Join(", ", tags) : string.Empty;
+
+            // Dates: exif:DateTimeOriginal → xmp:CreateDate
+            var dateStr = XmpPropertyValue(xmp, exifNs, "DateTimeOriginal")
+                          ?? XmpPropertyValue(xmp, xmpNs, "CreateDate");
+            if (!string.IsNullOrWhiteSpace(dateStr))
+            {
+                if (DateTimeOffset.TryParse(dateStr, CultureInfo.InvariantCulture,
+                        DateTimeStyles.AllowWhiteSpaces, out var dto))
+                {
+                    toReturn.PhotoCreatedOn = dto.DateTime;
+                    if (dto.Offset != TimeSpan.Zero)
+                        toReturn.PhotoCreatedOnUtc = dto.UtcDateTime;
+                }
+                else if (DateTime.TryParse(dateStr, CultureInfo.InvariantCulture,
+                             DateTimeStyles.AllowWhiteSpaces, out var dt))
+                {
+                    toReturn.PhotoCreatedOn = dt;
+                }
+            }
+
+            //toReturn.PhotoCreatedOn ??= DateTime.Now;
+
+            // Location: exif:GPSLatitude, exif:GPSLongitude
+            var latStr = XmpPropertyValue(xmp, exifNs, "GPSLatitude");
+            var lonStr = XmpPropertyValue(xmp, exifNs, "GPSLongitude");
+
+            if (!string.IsNullOrWhiteSpace(latStr))
+                toReturn.Latitude = ParseXmpGpsCoordinate(latStr);
+            if (!string.IsNullOrWhiteSpace(lonStr))
+                toReturn.Longitude = ParseXmpGpsCoordinate(lonStr);
+
+            // Elevation: exif:GPSAltitude (stored as rational, e.g. "1234/10")
+            var altStr = XmpPropertyValue(xmp, exifNs, "GPSAltitude");
+            if (!string.IsNullOrWhiteSpace(altStr))
+            {
+                var altMeters = ParseXmpRational(altStr);
+                if (altMeters != null)
+                {
+                    var altRef = XmpPropertyValue(xmp, exifNs, "GPSAltitudeRef");
+                    if (altRef == "1") altMeters = -altMeters;
+                    toReturn.Elevation = altMeters.Value.MetersToFeet();
+                }
+            }
+
+            // PhotoDirection: exif:GPSImgDirection
+            var dirStr = XmpPropertyValue(xmp, exifNs, "GPSImgDirection");
+            if (!string.IsNullOrWhiteSpace(dirStr))
+                toReturn.PhotoDirection = ParseXmpRational(dirStr);
+        }
+        catch
+        {
+            // Return whatever we managed to fill before the failure.
+        }
+
+        return toReturn;
+    }
+
     private static Rotation GetExifRotation(byte[] imageBytes)
     {
         try
@@ -173,6 +281,9 @@ public partial class PhotoListFileItem
         var toReturn = new PhotoListFileMetadata();
 
         if (!file.Exists) return toReturn;
+
+        if (file.Extension.Equals(".xmp", StringComparison.OrdinalIgnoreCase))
+            return await GetMetadataFromXmpSidecarAsync(file, toReturn);
 
         try
         {
@@ -373,6 +484,75 @@ public partial class PhotoListFileItem
         }).ConfigureAwait(false);
     }
 
+    /// <summary>
+    ///     Parses an XMP GPS coordinate string such as "47,37.37N" or "122,19,38.5W"
+    ///     into a signed decimal-degrees value.
+    /// </summary>
+    private static double? ParseXmpGpsCoordinate(string value)
+    {
+        try
+        {
+            value = value.Trim();
+            if (string.IsNullOrEmpty(value)) return null;
+
+            var direction = char.ToUpperInvariant(value[^1]);
+            var numPart = value[..^1];
+            var parts = numPart.Split(',');
+
+            double degrees;
+
+            if (parts.Length == 2)
+            {
+                // degrees,minutes.fraction
+                degrees = double.Parse(parts[0], CultureInfo.InvariantCulture)
+                          + double.Parse(parts[1], CultureInfo.InvariantCulture) / 60.0;
+            }
+            else if (parts.Length == 3)
+            {
+                // degrees,minutes,seconds.fraction
+                degrees = double.Parse(parts[0], CultureInfo.InvariantCulture)
+                          + double.Parse(parts[1], CultureInfo.InvariantCulture) / 60.0
+                          + double.Parse(parts[2], CultureInfo.InvariantCulture) / 3600.0;
+            }
+            else
+            {
+                return null;
+            }
+
+            if (direction is 'S' or 'W') degrees = -degrees;
+
+            return degrees;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    ///     Parses a rational value string (e.g. "1234/10") or plain number into a double.
+    /// </summary>
+    private static double? ParseXmpRational(string value)
+    {
+        try
+        {
+            value = value.Trim();
+            if (value.Contains('/'))
+            {
+                var parts = value.Split('/');
+                if (parts.Length == 2)
+                    return double.Parse(parts[0], CultureInfo.InvariantCulture)
+                           / double.Parse(parts[1], CultureInfo.InvariantCulture);
+            }
+
+            return double.Parse(value, CultureInfo.InvariantCulture);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     public async Task RefreshMetadata()
     {
         Metadata = await GetMetadataAsync(PhotoFile);
@@ -393,6 +573,40 @@ public partial class PhotoListFileItem
         encoder.Save(fs);
 
         return new FileInfo(tempPath);
+    }
+
+    /// <summary>
+    ///     Safely retrieves a simple XMP property value, returning null if missing.
+    /// </summary>
+    private static string? XmpPropertyValue(IXmpMeta xmp, string schemaNs, string propName)
+    {
+        try
+        {
+            return xmp.DoesPropertyExist(schemaNs, propName)
+                ? xmp.GetProperty(schemaNs, propName)?.Value
+                : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    ///     Safely retrieves an XMP array item value, returning null if missing.
+    /// </summary>
+    private static string? XmpArrayItemValue(IXmpMeta xmp, string schemaNs, string arrayName, int index)
+    {
+        try
+        {
+            return xmp.DoesArrayItemExist(schemaNs, arrayName, index)
+                ? xmp.GetArrayItem(schemaNs, arrayName, index)?.Value
+                : null;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     /// <summary>

@@ -21,6 +21,7 @@ using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.AppMessages;
 using PointlessWaymarks.WpfCommon.FileBasedGeoTagger;
 using PointlessWaymarks.WpfCommon.PhotoPreview;
+using PointlessWaymarks.WpfCommon.StarRating;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
 using Serilog;
@@ -37,7 +38,7 @@ public partial class PhotoListContext : IDropTarget
     private PhotoPreviewWindow? _previewWindow;
     private PhotoListGroupListItem? _previouslySelectedItem;
     public ICollectionView? FilteredItems { get; set; }
-    public int FilterMinimumRating { get; set; }
+    public StarRatingContext FilterMinimumRatingEntry { get; set; } = StarRatingContext.CreateInstance();
     public bool FilterNoRatingOnly { get; set; }
     public required ObservableCollection<PhotoListGroupListItem> Items { get; set; }
     public PhotoListGroupListItem? SelectedItem { get; set; }
@@ -128,8 +129,6 @@ public partial class PhotoListContext : IDropTarget
             cancellationToken,
             StatusContext.ProgressTracker());
 
-        var updateTime = DateTime.Now;
-
         foreach (var loopSelected in toProcess)
         {
             processedCount++;
@@ -216,14 +215,23 @@ public partial class PhotoListContext : IDropTarget
         factoryReturn.FilteredItems = CollectionViewSource.GetDefaultView(factoryReturn.Items);
         factoryReturn.FilteredItems.Filter = o =>
             o is PhotoListGroupListItem item &&
-            item.Rating >= factoryReturn.FilterMinimumRating &&
-            (!factoryReturn.FilterNoRatingOnly || item.Rating == 0);
+            item.RatingEntry.UserValue >= factoryReturn.FilterMinimumRatingEntry.UserValue &&
+            (!factoryReturn.FilterNoRatingOnly || item.RatingEntry.UserValue == 0);
 
         await ThreadSwitcher.ResumeBackgroundAsync();
 
+        factoryReturn.FilterMinimumRatingEntry.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(StarRatingContext.UserValue))
+            {
+                factoryReturn.FilteredItems?.Refresh();
+                factoryReturn.EnsureSelectedItemVisible();
+            }
+        };
+
         factoryReturn.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName is nameof(FilterMinimumRating) or nameof(FilterNoRatingOnly))
+            if (e.PropertyName is nameof(FilterNoRatingOnly))
             {
                 factoryReturn.FilteredItems?.Refresh();
                 factoryReturn.EnsureSelectedItemVisible();
@@ -234,11 +242,11 @@ public partial class PhotoListContext : IDropTarget
         {
             if (args.NewItems != null)
                 foreach (PhotoListGroupListItem newItem in args.NewItems)
-                    newItem.PropertyChanged += factoryReturn.OnItemRatingChanged;
+                    newItem.RatingEntry.PropertyChanged += factoryReturn.OnItemRatingChanged;
 
             if (args.OldItems != null)
                 foreach (PhotoListGroupListItem oldItem in args.OldItems)
-                    oldItem.PropertyChanged -= factoryReturn.OnItemRatingChanged;
+                    oldItem.RatingEntry.PropertyChanged -= factoryReturn.OnItemRatingChanged;
 
             factoryReturn.FilteredItems?.Refresh();
             factoryReturn.EnsureSelectedItemVisible();
@@ -516,8 +524,15 @@ public partial class PhotoListContext : IDropTarget
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
         var filesFromSelected = SelectedItems.SelectMany(g => g.Items).ToList();
+
+        List<string>? gpxFiles = null;
+        var settings = PhotoMetadataBasicsGuiSettingTools.ReadSettings();
+        if (!string.IsNullOrWhiteSpace(settings.DefaultGpxDirectory) && Directory.Exists(settings.DefaultGpxDirectory))
+            gpxFiles = Directory.GetFiles(settings.DefaultGpxDirectory, "*.gpx").ToList();
+
         var window =
-            await FileBasedGeoTaggerWindow.CreateInstance(filesFromSelected.Select(x => x.PhotoFile.FullName).ToList());
+            await FileBasedGeoTaggerWindow.CreateInstance(filesFromSelected.Select(x => x.PhotoFile.FullName).ToList(),
+                initialGpxFiles: gpxFiles);
 
         window.CloseAfterWrite = true;
 
@@ -556,7 +571,7 @@ public partial class PhotoListContext : IDropTarget
             return;
         }
 
-        _previewWindow = await PhotoPreviewWindow.CreateInstance();
+        _previewWindow = await PhotoPreviewWindow.CreateInstance(false);
         await _previewWindow.PositionWindowAndShowOnUiThread();
 
         SendPreviewRequest();
@@ -616,7 +631,7 @@ public partial class PhotoListContext : IDropTarget
 
     private void OnItemRatingChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(PhotoListGroupListItem.Rating))
+        if (e.PropertyName == nameof(StarRatingContext.UserValue))
             StatusContext.RunNonBlockingTask(async () =>
             {
                 await ThreadSwitcher.ResumeForegroundAsync();
@@ -641,7 +656,7 @@ public partial class PhotoListContext : IDropTarget
         {
             var candidate = visible[(currentIndex + i) % visible.Count];
 
-            if (_previewFilterUnratedOnly && candidate.Rating > 0) continue;
+            if (_previewFilterUnratedOnly && candidate.RatingEntry.UserValue > 0) continue;
 
             await ThreadSwitcher.ResumeForegroundAsync();
             SelectedItem = candidate;
@@ -665,7 +680,7 @@ public partial class PhotoListContext : IDropTarget
         {
             var candidate = visible[(currentIndex - i + visible.Count) % visible.Count];
 
-            if (_previewFilterUnratedOnly && candidate.Rating > 0) continue;
+            if (_previewFilterUnratedOnly && candidate.RatingEntry.UserValue > 0) continue;
 
             await ThreadSwitcher.ResumeForegroundAsync();
             SelectedItem = candidate;
@@ -684,7 +699,7 @@ public partial class PhotoListContext : IDropTarget
 
         if (string.Equals(primaryFile.FullName, data.FullFilePath, StringComparison.OrdinalIgnoreCase))
         {
-            SelectedItem.Rating = data.Rating;
+            SelectedItem.RatingEntry.UserValue = data.Rating;
             await ThreadSwitcher.ResumeForegroundAsync();
             FilteredItems?.Refresh();
             EnsureSelectedItemVisible();
@@ -807,10 +822,14 @@ public partial class PhotoListContext : IDropTarget
     public void SendPreviewRequest()
     {
         var primaryFile = GetCurrentPrimaryFile();
-        if (primaryFile == null) return;
+        if (primaryFile == null)
+        {
+            WeakReferenceMessenger.Default.Send(new PhotoPreviewClearMessage());
+            return;
+        }
 
         var title = SelectedItem?.TitleEntryContext.UserValue.TrimNullToEmpty() ?? primaryFile.Name;
-        var rating = SelectedItem?.Rating ?? 0;
+        var rating = SelectedItem?.RatingEntry.UserValue ?? 0;
 
         var upcomingPaths = new List<string>();
 
@@ -825,7 +844,7 @@ public partial class PhotoListContext : IDropTarget
             {
                 var candidate = visible[(currentIndex + i) % visible.Count];
 
-                if (_previewFilterUnratedOnly && candidate.Rating > 0) continue;
+                if (_previewFilterUnratedOnly && candidate.RatingEntry.UserValue > 0) continue;
 
                 var candidateFile = GetPrimaryFileForGroup(candidate);
                 if (candidateFile != null)
@@ -841,7 +860,7 @@ public partial class PhotoListContext : IDropTarget
             {
                 var candidate = visible[(currentIndex - i + visible.Count) % visible.Count];
 
-                if (_previewFilterUnratedOnly && candidate.Rating > 0) continue;
+                if (_previewFilterUnratedOnly && candidate.RatingEntry.UserValue > 0) continue;
 
                 var candidateFile = GetPrimaryFileForGroup(candidate);
                 if (candidateFile != null)
@@ -855,6 +874,25 @@ public partial class PhotoListContext : IDropTarget
         WeakReferenceMessenger.Default.Send(
             new PhotoPreviewRequestMessage(new PhotoPreviewRequestData(primaryFile.FullName, title, rating,
                 upcomingPaths.Count > 0 ? upcomingPaths : null)));
+    }
+
+    [NonBlockingCommand]
+    [StopAndWarnIfFirstParameterIsNull]
+    public async Task ShowFileInExplorer(PhotoListGroupListItem? item)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var file = item!.SelectedItem?.PhotoFile
+                   ?? item.Items.FirstOrDefault(x => x.IsPrimaryPhoto)?.PhotoFile
+                   ?? item.Items.FirstOrDefault()?.PhotoFile;
+
+        if (file == null)
+        {
+            await StatusContext.ToastWarning("No file found to show in Explorer.");
+            return;
+        }
+
+        await ProcessHelpers.OpenExplorerWindowForFile(file.FullName);
     }
 
     [BlockingCommand]

@@ -2189,7 +2189,29 @@
                             </b:EventTrigger>
                         </b:Interaction.Triggers>
                     </TextBox>
-                    <WrapPanel Margin="0,6,0,0" Orientation="Horizontal">
+                    <TextBox
+                        Margin="0,3,0,0"
+                        Style="{StaticResource ReadOnlyTextBoxStyle}"
+                        Text="{Binding DbEntry.Comments, Mode=OneWay}"
+                        TextWrapping="Wrap">
+                        <TextBox.InputBindings>
+                            <MouseBinding
+                                Command="{Binding DataContext.ItemActions.EditCommand, RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}}}"
+                                CommandParameter="{Binding DataContext.DbEntry, RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}}}"
+                                Gesture="Shift+LeftDoubleClick" />
+                        </TextBox.InputBindings>
+                        <b:Interaction.Behaviors>
+                            <wpfBehavior:ReadOnlyTextBoxClickKeyboardAndDragPass />
+                        </b:Interaction.Behaviors>
+                        <b:Interaction.Triggers>
+                            <b:EventTrigger EventName="SelectionChanged">
+                                <wpfBehavior:EventToCommand Command="{Binding SelectedTextTracker.SelectedTextChangedCommand}"
+                                                            PassEventArgsToCommand="True" />
+                            </b:EventTrigger>
+                        </b:Interaction.Triggers>
+                    </TextBox>
+                    <ContentPresenter Content="{StaticResource ContentListTagsDisplay}" />
+                    <WrapPanel Margin="0,4,0,0" Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center" TextWrapping="Wrap">
                             <Hyperlink Command="{Binding ItemActions.ViewOnSiteCommand}"
                                        CommandParameter="{Binding DbEntry}">
@@ -2224,8 +2246,8 @@
                             HTML
                         </Button>
                     </WrapPanel>
-                    <WrapPanel Margin="0,6,0,0">
-                        <TextBlock FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,6,0">Add Image Snapshot:</TextBlock>
+                    <WrapPanel Margin="0,2,0,0">
+                        <TextBlock FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,4,0">Add Image Snapshot:</TextBlock>
                         <Button
                             Width="160"
                             Height="20"

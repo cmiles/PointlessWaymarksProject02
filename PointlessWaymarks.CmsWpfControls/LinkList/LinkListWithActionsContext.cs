@@ -95,7 +95,7 @@ public partial class LinkListWithActionsContext
             cancellationToken.ThrowIfCancellationRequested();
 
             StatusContext.Progress($" Link Image {++counter} of {frozenSelected.Count}");
-            await ListContext.LinkItemActions.LinkSnapshotImage(loopSelected.DbEntry);
+            await ListContext.LinkItemActions.LinkSnapshotImage(loopSelected.DbEntry, cancellationToken);
         }
 
         await StatusContext.ToastSuccess("Finished Link Snapshot");

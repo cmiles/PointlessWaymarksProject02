@@ -1085,6 +1085,10 @@ a.tag-list-link {
         min-width: 600px;
         width: 600px;
     }
+
+    .compact-content-text-content-title-link {
+        font-weight: bold;
+    }
 }
 
 @media screen and (min-width: 1200px) {
@@ -1191,6 +1195,10 @@ a.tag-list-link {
 
     .compact-content-list-container {
         max-width: 1200px;
+    }
+
+    .compact-content-text-content-title-link {
+        font-weight: bold;
     }
 
     .search-input {

@@ -25,7 +25,7 @@
                 <Button Command="{Binding SaveDestinationFolderCommand}" Padding="12,4"
                         Margin="0,0,12,0">Save</Button>
                 <CheckBox IsChecked="{Binding OverwriteExistingFiles}" VerticalAlignment="Center"
-                          Content="Overwrite existing files on import" />
+                          Content="Overwrite existing files on import" Margin="0,0,12,0" />
             </StackPanel>
         </StackPanel>
 
@@ -50,6 +50,8 @@
                                HorizontalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
                     <TextBlock Text="Destination/Working/YYYY/YYYY-MM-DD/" FontSize="12" FontFamily="Consolas"
                                HorizontalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                    <CheckBox IsChecked="{Binding MoveWorkingFilesOnImport}" HorizontalAlignment="Center"
+                              Content="Move files (instead of copy)" Margin="0,8,0,0" />
                 </StackPanel>
             </Border>
 
@@ -66,6 +68,8 @@
                                HorizontalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
                     <TextBlock Text="Destination/YYYY/YYYY-MM-DD/" FontSize="12" FontFamily="Consolas"
                                HorizontalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                    <CheckBox IsChecked="{Binding MoveFinishedFilesOnImport}" HorizontalAlignment="Center"
+                              Content="Move files (instead of copy)" Margin="0,8,0,0" />
                 </StackPanel>
             </Border>
         </Grid>

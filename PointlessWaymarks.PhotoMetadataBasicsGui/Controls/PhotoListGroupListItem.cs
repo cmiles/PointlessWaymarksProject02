@@ -17,6 +17,7 @@ using PointlessWaymarks.WpfCommon.FileBasedGeoTagger;
 using PointlessWaymarks.WpfCommon.FileMetadataDisplay;
 using PointlessWaymarks.WpfCommon.LocationPicker;
 using PointlessWaymarks.WpfCommon.Status;
+using PointlessWaymarks.WpfCommon.StarRating;
 using PointlessWaymarks.WpfCommon.StringDataEntry;
 using PointlessWaymarks.WpfCommon.Utility;
 
@@ -40,7 +41,7 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
     public required StringDataEntryContext LicenseEntry { get; set; }
     public required ConversionDataEntryContext<double?> LongitudeEntry { get; set; }
     public required StringDataEntryContext PhotoCreatedByEntry { get; set; }
-    public int Rating { get; set; }
+    public required StarRatingContext RatingEntry { get; set; }
     public PhotoListFileItem? SelectedItem { get; set; }
     public List<PhotoListFileItem> SelectedItems { get; set; } = [];
     public required StatusControlContext StatusContext { get; set; }
@@ -195,6 +196,10 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         elevationEntry.Title = "Elevation (feet)";
         elevationEntry.HelpText = "Elevation in Feet";
 
+        var ratingEntry = StarRatingContext.CreateInstance();
+        ratingEntry.Title = "Rating";
+        ratingEntry.HelpText = "Photo rating (0–5 stars)";
+
         var factoryReturn = new PhotoListGroupListItem
         {
             Items = new ObservableCollection<PhotoListFileItem>(items),
@@ -206,7 +211,8 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
             LicenseEntry = licenseEntry,
             LatitudeEntry = latitudeEntry,
             LongitudeEntry = longitudeEntry,
-            ElevationEntry = elevationEntry
+            ElevationEntry = elevationEntry,
+            RatingEntry = ratingEntry
         };
 
         factoryReturn.BuildCommands();
@@ -214,6 +220,12 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         factoryReturn.DesignateBestGuessPrimary();
 
         factoryReturn.OverwriteAllEntriesWithCurrentMetadata();
+
+        factoryReturn.RatingEntry.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(StarRatingContext.UserValue))
+                factoryReturn.StatusContext.RunFireAndForgetNonBlockingTask(factoryReturn.WriteRatingToFiles);
+        };
 
         PropertyScanners.SubscribeToChildHasChangesAndHasValidationIssues(factoryReturn,
             factoryReturn.CheckForChangesAndValidationIssues);
@@ -236,7 +248,7 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         var primaryCandidate = Items
             .OrderByDescending(i => RawExtensions.Contains(i.PhotoFile.Extension))
             .ThenByDescending(i => i.PhotoFile.Name.Contains("DxO_DeepPRIME", StringComparison.OrdinalIgnoreCase))
-            .ThenBy(i => Path.GetFileNameWithoutExtension(i.PhotoFile.Name as string).Length)
+            .ThenBy(i => Path.GetFileNameWithoutExtension(i.PhotoFile.Name).Length)
             .ThenByDescending(i => i.PhotoFile.LastWriteTimeUtc)
             .FirstOrDefault();
 
@@ -270,8 +282,14 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
+        List<string>? gpxFiles = null;
+        var settings = PhotoMetadataBasicsGuiSettingTools.ReadSettings();
+        if (!string.IsNullOrWhiteSpace(settings.DefaultGpxDirectory) && Directory.Exists(settings.DefaultGpxDirectory))
+            gpxFiles = Directory.GetFiles(settings.DefaultGpxDirectory, "*.gpx").ToList();
+
         var window =
-            await FileBasedGeoTaggerWindow.CreateInstance(toProcess.Select(x => x.PhotoFile.FullName).ToList());
+            await FileBasedGeoTaggerWindow.CreateInstance(toProcess.Select(x => x.PhotoFile.FullName).ToList(),
+                initialGpxFiles: gpxFiles);
 
         window.CloseAfterWrite = true;
 
@@ -390,7 +408,8 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         LongitudeEntry.UserText = composite.Longitude?.ToString("F6") ?? string.Empty;
         ElevationEntry.ReferenceValue = composite.Elevation;
         ElevationEntry.UserText = composite.Elevation?.ToString("N0") ?? string.Empty;
-        Rating = composite.Rating;
+        RatingEntry.ReferenceValue = composite.Rating;
+        RatingEntry.UserValue = composite.Rating;
 
         SetDefaultCreatedByAndLicenseIfPossible();
     }
@@ -402,7 +421,9 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         ResetStringEntry(SummaryEntryContext, composite.Summary);
         ResetStringEntry(PhotoCreatedByEntry, composite.PhotoCreatedBy);
         ResetStringEntry(LicenseEntry, composite.License);
-        Rating = composite.Rating;
+        var ratingHadChanges = RatingEntry.HasChanges;
+        RatingEntry.ReferenceValue = composite.Rating;
+        if (!ratingHadChanges) RatingEntry.UserValue = composite.Rating;
         ResetTagsEntry(TagEntryContext, composite.Tags);
 
         ResetConversionEntry(LatitudeEntry, composite.Latitude, "F6");
@@ -636,7 +657,33 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         LongitudeEntry.UserText = composite.Longitude?.ToString("F6") ?? string.Empty;
         ElevationEntry.ReferenceValue = composite.Elevation;
         ElevationEntry.UserText = composite.Elevation?.ToString("N0") ?? string.Empty;
-        Rating = composite.Rating;
+        RatingEntry.ReferenceValue = composite.Rating;
+        RatingEntry.UserValue = composite.Rating;
+    }
+
+    public async Task WriteRatingToFiles()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var exifToolCheckResult =
+            await FileLocationTools.FindDownloadUpdateExifTool(null, StatusContext.ProgressTracker());
+
+        if (!exifToolCheckResult.Success || exifToolCheckResult.ExifToolExe is null) return;
+
+        var supportedExt = FileMetadataTools.ExifToolWriteSupportedExtensions;
+        var filesToProcess = Items
+            .Select(i => i.PhotoFile)
+            .Where(f => supportedExt.Contains(f.Extension.ToUpperInvariant()))
+            .ToList();
+
+        if (filesToProcess.Count == 0) return;
+
+        var request = new ExifToolWriteRequest { Rating = RatingEntry.UserValue };
+
+        await ExifToolWriter.WriteMetadataAsync(
+            exifToolCheckResult.ExifToolExe, request, filesToProcess, StatusContext.ProgressTracker());
+
+        foreach (var item in Items) await item.RefreshMetadata();
     }
 
     [BlockingCommand]

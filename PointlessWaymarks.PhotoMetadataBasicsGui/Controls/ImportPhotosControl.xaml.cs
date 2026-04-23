@@ -12,6 +12,6 @@ public partial class ImportPhotosControl
     private void LogTextBox_OnTextChanged(object sender, TextChangedEventArgs e)
     {
         if (sender is TextBox textBox)
-            textBox.ScrollToEnd();
+            textBox.ScrollToHome();
     }
 }
