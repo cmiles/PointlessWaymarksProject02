@@ -43,9 +43,14 @@
                     dd:DragDrop.IsDropTarget="True"
                     dd:DragDrop.DropHandler="{Binding WorkingFilesDropHandler}">
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <TextBlock Text="📂" FontSize="48" HorizontalAlignment="Center" />
-                    <TextBlock Text="Working Files" FontSize="18" FontWeight="SemiBold"
-                               HorizontalAlignment="Center" Margin="0,8,0,4" />
+                    <Button Command="{Binding OpenWorkingFilesFolderCommand}" HorizontalAlignment="Center"
+                            Background="Transparent" BorderThickness="2" Cursor="Hand" Padding="24,0,24,0" ToolTip="Open Folder">
+                        <StackPanel>
+                            <TextBlock Text="📂" FontSize="48" HorizontalAlignment="Center" />
+                            <TextBlock Text="Working Files" FontSize="18" FontWeight="SemiBold"
+                                       HorizontalAlignment="Center" Margin="0,8,0,4" />
+                        </StackPanel>
+                    </Button>
                     <TextBlock Text="Drag photos here to import to" FontSize="12"
                                HorizontalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
                     <TextBlock Text="Destination/Working/YYYY/YYYY-MM-DD/" FontSize="12" FontFamily="Consolas"
@@ -61,9 +66,14 @@
                     dd:DragDrop.IsDropTarget="True"
                     dd:DragDrop.DropHandler="{Binding FinishedPhotosDropHandler}">
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <TextBlock Text="📷" FontSize="48" HorizontalAlignment="Center" />
-                    <TextBlock Text="Finished Photos" FontSize="18" FontWeight="SemiBold"
-                               HorizontalAlignment="Center" Margin="0,8,0,4" />
+                    <Button Command="{Binding OpenFinishedFilesFolderCommand}" HorizontalAlignment="Center"
+                            Background="Transparent" BorderThickness="2" Cursor="Hand" Padding="24,0,24,0" ToolTip="Open Folder">
+                        <StackPanel>
+                            <TextBlock Text="📷" FontSize="48" HorizontalAlignment="Center" />
+                            <TextBlock Text="Finished Photos" FontSize="18" FontWeight="SemiBold"
+                                       HorizontalAlignment="Center" Margin="0,8,0,4" />
+                        </StackPanel>
+                    </Button>
                     <TextBlock Text="Drag photos here to import to" FontSize="12"
                                HorizontalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
                     <TextBlock Text="Destination/YYYY/YYYY-MM-DD/" FontSize="12" FontFamily="Consolas"
@@ -75,11 +85,13 @@
         </Grid>
 
         <!-- Row 2: Log Header -->
-        <DockPanel Grid.Row="2" Margin="0,0,0,4">
+        <StackPanel Orientation="Horizontal" Grid.Row="2" Margin="0,0,0,4">
             <TextBlock Text="Import Log" FontWeight="SemiBold" VerticalAlignment="Center" />
-            <Button Command="{Binding ClearLogCommand}" HorizontalAlignment="Right" Padding="8,2"
+            <Button Command="{Binding ClearLogCommand}" Margin="12,0,0,0" Padding="8,2"
                     Content="Clear" />
-        </DockPanel>
+            <Button Command="{Binding OpenLastImportDirectoryCommand}" Margin="4,0,0,0"  Padding="8,2"
+                     Content="Open Last Directory" IsEnabled="{Binding LastImportDirectory, Converter={StaticResource NullOrWhiteSpaceStringToFalse}}"/>
+        </StackPanel>
 
         <!-- Row 3: Log Output -->
         <TextBox Grid.Row="3" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"

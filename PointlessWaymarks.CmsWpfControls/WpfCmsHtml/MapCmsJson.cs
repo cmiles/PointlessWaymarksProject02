@@ -53,10 +53,14 @@ public static class MapCmsJson
                             <img src="https://[[VirtualDomain]]/{Path.GetFileName(smallImageFile)}"/>
                             """;
 
+        var summaryIsInTitle = summary.Length <= title.Length * 1.2
+                               && title.ContainsFuzzy(summary, 0.8, SimMetricType.JaroWinkler);
+        var titleIsInSummary = title.Length <= summary.Length * 1.2
+                               && summary.ContainsFuzzy(title, 0.8, SimMetricType.JaroWinkler);
+
         if (!string.IsNullOrWhiteSpace(summary)
             && title.GetSimilarity(summary, SimMetricType.JaroWinkler) < .9 &&
-            !(title.ContainsFuzzy(summary, 0.8, SimMetricType.JaroWinkler)
-              || summary.ContainsFuzzy(title, 0.8, SimMetricType.JaroWinkler)))
+            !(summaryIsInTitle || titleIsInSummary))
             description += $" <p>{summary}</p>";
 
         return (description, smallImageFile);

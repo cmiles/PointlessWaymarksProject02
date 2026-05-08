@@ -240,13 +240,15 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
     private void DesignateBestGuessPrimary()
     {
         // Pick a primary photo:
-        //  1. Prefer raw file types over processed image formats
-        //  2. Prefer DxO_DeepPRIME processed files
-        //  3. Prefer the "base" filename (shortest name without extension) — e.g.
+        //  1. Prefer .dng files
+        //  2. Prefer raw file types over processed image formats
+        //  3. Prefer DxO_DeepPRIME processed files
+        //  4. Prefer the "base" filename (shortest name without extension) — e.g.
         //     "2026 Jan Photo.orf" over "2026 Jan Photo 01.orf"
-        //  4. Fall back to most recent write time
+        //  5. Fall back to most recent write time
         var primaryCandidate = Items
-            .OrderByDescending(i => RawExtensions.Contains(i.PhotoFile.Extension))
+            .OrderByDescending(i => i.PhotoFile.Extension.Equals(".dng", StringComparison.OrdinalIgnoreCase))
+            .ThenByDescending(i => RawExtensions.Contains(i.PhotoFile.Extension))
             .ThenByDescending(i => i.PhotoFile.Name.Contains("DxO_DeepPRIME", StringComparison.OrdinalIgnoreCase))
             .ThenBy(i => Path.GetFileNameWithoutExtension(i.PhotoFile.Name).Length)
             .ThenByDescending(i => i.PhotoFile.LastWriteTimeUtc)
@@ -515,16 +517,25 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
 
         StatusContext.Progress($"Renaming files in {baseDirectoryInfo.FullName}...");
 
-        // 1) Group files by filename without extension.
+        // Strip a trailing "-DxO_…" segment so that e.g. "Photo DxO_DeepPRIME" and "Photo"
+        // are treated as the same group during renaming.
+        static string GetGroupKey(string fileName)
+        {
+            var nameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
+            var dxoIndex = nameWithoutExt.LastIndexOf("-DxO_", StringComparison.OrdinalIgnoreCase);
+            return dxoIndex > 0 ? nameWithoutExt[..dxoIndex] : nameWithoutExt;
+        }
+
+        // 1) Group files by filename without extension (DxO suffix stripped for grouping).
         var grouped = Items
-            .GroupBy(i => Path.GetFileNameWithoutExtension(i.PhotoFile.Name), StringComparer.OrdinalIgnoreCase)
+            .GroupBy(i => GetGroupKey(i.PhotoFile.Name), StringComparer.OrdinalIgnoreCase)
             .OrderBy(g => g.Key, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
         StatusContext.Progress("Calculated filename groups.");
 
         // 2) Assign new base names: primary group gets baseName; others get baseName-01, -02, ...
-        var primaryGroupKey = Path.GetFileNameWithoutExtension(primaryPhoto.PhotoFile.Name);
+        var primaryGroupKey = GetGroupKey(primaryPhoto.PhotoFile.Name);
         var newBaseNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             [primaryGroupKey] = baseName
@@ -545,7 +556,7 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         var targetPaths = Items
             .Select(i =>
             {
-                var oldBase = Path.GetFileNameWithoutExtension(i.PhotoFile.Name);
+                var oldBase = GetGroupKey(i.PhotoFile.Name);
                 var newBase = newBaseNames[oldBase];
                 return Path.Combine(baseDirectoryInfo.FullName, newBase + i.PhotoFile.Extension);
             })
@@ -570,7 +581,7 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         foreach (var item in Items)
         {
             var oldPath = item.PhotoFile.FullName;
-            var oldBase = Path.GetFileNameWithoutExtension(item.PhotoFile.Name);
+            var oldBase = GetGroupKey(item.PhotoFile.Name);
             var newBase = newBaseNames[oldBase];
             var newPath = Path.Combine(baseDirectoryInfo.FullName, newBase + item.PhotoFile.Extension);
 

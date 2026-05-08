@@ -1,4 +1,3 @@
-using DocumentFormat.OpenXml.Wordprocessing;
 using HtmlTags;
 using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentHtml.PhotoHtml;
@@ -11,6 +10,43 @@ namespace PointlessWaymarks.CmsData.CommonHtml;
 
 public static class Tags
 {
+    public static async Task<HtmlTag> CoreLinksCollapsibleDiv(IProgress<string>? progress = null)
+    {
+        var db = Db.Context().Result;
+        var items = db.MenuLinks.OrderBy(x => x.MenuOrder).ToList();
+        if (!items.Any()) return HtmlTag.Empty();
+
+        // Create container for toggle and menu
+        var menuContainer = new HtmlTag("div").AddClass("menu-container");
+
+        // Add checkbox for toggle
+        menuContainer.Children.Add(new HtmlTag("input")
+            .Attr("type", "checkbox")
+            .Attr("id", "menu-toggle")
+            .AddClass("menu-toggle"));
+
+        // Add label for toggle
+        menuContainer.Children.Add(new HtmlTag("label")
+            .Attr("for", "menu-toggle")
+            .AddClass("menu-toggle-label"));
+
+        // Create the existing menu
+        var coreLinksDiv = new HtmlTag("nav").AddClass("core-links-container");
+        foreach (var loopItems in items)
+        {
+            var html = ContentProcessing.ProcessContent(
+                await BracketCodeCommon.ProcessCodesForSite(loopItems.LinkTag ?? string.Empty, progress)
+                    .ConfigureAwait(false),
+                ContentFormatEnum.MarkdigMarkdown01);
+
+            var coreLinkContainer = new DivTag().AddClass("core-links-item").Text(html).Encoded(false);
+            coreLinksDiv.Children.Add(coreLinkContainer);
+        }
+
+        menuContainer.Children.Add(coreLinksDiv);
+        return menuContainer;
+    }
+
     public static async Task<HtmlTag> CoreLinksDiv(IProgress<string>? progress = null)
     {
         var db = Db.Context().Result;
@@ -33,43 +69,6 @@ public static class Tags
         }
 
         return coreLinksDiv;
-    }
-
-    public static async Task<HtmlTag> CoreLinksCollapsibleDiv(IProgress<string>? progress = null)
-    {
-        var db = Db.Context().Result;
-        var items = db.MenuLinks.OrderBy(x => x.MenuOrder).ToList();
-        if (!items.Any()) return HtmlTag.Empty();
-
-        // Create container for toggle and menu
-        var menuContainer = new HtmlTag("div").AddClass("menu-container");
-        
-        // Add checkbox for toggle
-        menuContainer.Children.Add(new HtmlTag("input")
-            .Attr("type", "checkbox")
-            .Attr("id", "menu-toggle")
-            .AddClass("menu-toggle"));
-        
-        // Add label for toggle
-        menuContainer.Children.Add(new HtmlTag("label")
-            .Attr("for", "menu-toggle")
-            .AddClass("menu-toggle-label"));
-
-        // Create the existing menu
-        var coreLinksDiv = new HtmlTag("nav").AddClass("core-links-container");
-        foreach (var loopItems in items)
-        {
-            var html = ContentProcessing.ProcessContent(
-                await BracketCodeCommon.ProcessCodesForSite(loopItems.LinkTag ?? string.Empty, progress)
-                    .ConfigureAwait(false),
-                ContentFormatEnum.MarkdigMarkdown01);
-
-            var coreLinkContainer = new DivTag().AddClass("core-links-item").Text(html).Encoded(false);
-            coreLinksDiv.Children.Add(coreLinkContainer);
-        }
-        
-        menuContainer.Children.Add(coreLinksDiv);
-        return menuContainer;
     }
 
     /// <summary>
@@ -240,7 +239,8 @@ public static class Tags
         return divTag;
     }
 
-    public static HtmlTag InfoLinkDownloadDivTag(string url, string linkText, string className, string? downloadAttributeValue)
+    public static HtmlTag InfoLinkDownloadDivTag(string url, string linkText, string className,
+        string? downloadAttributeValue)
     {
         if (string.IsNullOrWhiteSpace(linkText) || string.IsNullOrWhiteSpace(url)) return HtmlTag.Empty();
         var divTag = new HtmlTag("div");
@@ -312,7 +312,8 @@ public static class Tags
         return metaString;
     }
 
-    public static string PhotoCaptionText(PhotoContent dbEntry, bool includeTitle = true, bool includePhotoDetails = false)
+    public static string PhotoCaptionText(PhotoContent dbEntry, bool includeTitle = true,
+        bool includePhotoDetails = false)
     {
         var summaryStringList = new List<string>();
 
@@ -324,8 +325,19 @@ public static class Tags
         {
             if (summaryHasValue)
             {
-                var summaryIsInTitle = dbEntry.Title.ContainsFuzzy(dbEntry.Summary, 0.8, SimMetricType.JaroWinkler);
-                var titleIsInSummary = dbEntry.Summary.ContainsFuzzy(dbEntry.Title, 0.8, SimMetricType.JaroWinkler);
+                var titleNormalized = dbEntry.Title.TrimNullToEmpty();
+                var summaryNormalized = dbEntry.Summary.TrimNullToEmpty();
+
+                // ContainsFuzzy slides a window of the shorter string's length across the longer string,
+                // so a short title will always appear to "contain" a long summary by matching a substring.
+                // Guard: containment is only meaningful when the supposed container is not shorter than
+                // what it's supposed to contain (allowing a small 20% tolerance for fuzzy length variation).
+                var summaryIsInTitle = summaryNormalized.Length <= titleNormalized.Length * 1.2
+                                       && titleNormalized.ContainsFuzzy(summaryNormalized, 0.8,
+                                           SimMetricType.JaroWinkler);
+                var titleIsInSummary = titleNormalized.Length <= summaryNormalized.Length * 1.2
+                                       && summaryNormalized.ContainsFuzzy(titleNormalized, 0.8,
+                                           SimMetricType.JaroWinkler);
 
                 if (titleIsInSummary) titleSummaryString = dbEntry.Summary.TrimNullToEmpty();
                 else if (summaryIsInTitle) titleSummaryString = dbEntry.Title.TrimNullToEmpty();
@@ -358,7 +370,8 @@ public static class Tags
         return string.Join(" ", summaryStringList);
     }
 
-    public static HtmlTag PhotoFigCaptionTag(PhotoContent dbEntry, bool includeTitle = true, bool includePhotoDetails = false)
+    public static HtmlTag PhotoFigCaptionTag(PhotoContent dbEntry, bool includeTitle = true,
+        bool includePhotoDetails = false)
     {
         if (string.IsNullOrWhiteSpace(dbEntry.Summary)) return HtmlTag.Empty();
 
@@ -550,22 +563,21 @@ public static class Tags
         return outerContainer;
     }
 
-    public static async Task<HtmlTag> PostBodyDiv(IBodyContent dbEntry, IProgress<string>? progress = null, string? contentBefore = null, string? contentAfter = null)
+    public static async Task<HtmlTag> PostBodyDiv(IBodyContent dbEntry, IProgress<string>? progress = null,
+        string? contentBefore = null, string? contentAfter = null)
     {
-        if (string.IsNullOrWhiteSpace(dbEntry.BodyContent) && string.IsNullOrWhiteSpace(contentBefore) && string.IsNullOrWhiteSpace(contentAfter)) return HtmlTag.Empty();
+        if (string.IsNullOrWhiteSpace(dbEntry.BodyContent) && string.IsNullOrWhiteSpace(contentBefore) &&
+            string.IsNullOrWhiteSpace(contentAfter)) return HtmlTag.Empty();
 
         var bodyContainer = new HtmlTag("div").AddClass("post-body-container");
 
         var bodyContent = string.Empty;
 
-        if (!string.IsNullOrWhiteSpace(contentBefore))
-        {
-            bodyContent = contentBefore;
-        }
+        if (!string.IsNullOrWhiteSpace(contentBefore)) bodyContent = contentBefore;
 
         if (!string.IsNullOrWhiteSpace(dbEntry.BodyContent))
         {
-            if(!string.IsNullOrWhiteSpace(contentBefore)) bodyContent += Environment.NewLine;
+            if (!string.IsNullOrWhiteSpace(contentBefore)) bodyContent += Environment.NewLine;
             bodyContent += dbEntry.BodyContent;
         }
 

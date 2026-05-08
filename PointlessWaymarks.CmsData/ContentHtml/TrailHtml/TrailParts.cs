@@ -51,8 +51,13 @@ public static class TrailParts
         var detailsBlock = new StringBuilder();
         detailsBlock.AppendLine();
 
-        var summaryIsInTitle = dbContent.Title.ContainsFuzzy(dbContent.Summary, 0.8, SimMetricType.JaroWinkler);
-        var titleIsInSummary = dbContent.Summary.ContainsFuzzy(dbContent.Title, 0.8, SimMetricType.JaroWinkler);
+        var titleNormalized = dbContent.Title.TrimNullToEmpty();
+        var summaryNormalized = dbContent.Summary.TrimNullToEmpty();
+
+        var summaryIsInTitle = summaryNormalized.Length <= titleNormalized.Length * 1.2
+                               && titleNormalized.ContainsFuzzy(summaryNormalized, 0.8, SimMetricType.JaroWinkler);
+        var titleIsInSummary = titleNormalized.Length <= summaryNormalized.Length * 1.2
+                               && summaryNormalized.ContainsFuzzy(titleNormalized, 0.8, SimMetricType.JaroWinkler);
 
         if (!summaryIsInTitle || !titleIsInSummary)
         {

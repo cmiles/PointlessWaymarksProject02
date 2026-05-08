@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <PackageReference Include="Metalama.Framework" Version="2026.0.21" />
+    <PackageReference Include="Metalama.Framework" Version="2026.0.22" />
     <PackageReference Include="NetTopologySuite.IO.GeoJSON" Version="4.0.0" />
     <PackageReference Include="TagLibSharp" Version="2.3.0" />
   </ItemGroup>

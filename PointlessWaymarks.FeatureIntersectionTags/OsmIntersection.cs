@@ -17,7 +17,7 @@ public static class OsmIntersection
     private static readonly List<OverpassServer> OverpassServers =
     [
         new() { Url = "https://overpass-api.de/api/interpreter" },
-        new() { Url = "https://maps.mail.ru/osm/tools/overpass/api/interpreter" },
+        new() { Url = "https://overpass.kumi.systems/api/interpreter" },
         new() { Url = "https://overpass.private.coffee/api/interpreter" }
     ];
 

@@ -24,13 +24,14 @@ public partial class ImportPhotosContext
     public required StringDataEntryContext DestinationFolderEntry { get; set; }
     public required ImportDropHandler FinishedPhotosDropHandler { get; set; }
     public string ImportLog { get; set; } = string.Empty;
+    public string LastImportDirectory { get; set; } = string.Empty;
     public bool MoveFinishedFilesOnImport { get; set; }
     public bool MoveWorkingFilesOnImport { get; set; }
     public bool OverwriteExistingFiles { get; set; }
     public required StatusControlContext StatusContext { get; set; }
     public required ImportDropHandler WorkingFilesDropHandler { get; set; }
 
-    private void AppendLog(string message)
+    private void AppendLog(string message, string? directory = null)
     {
         var timestamp = DateTime.Now.ToString("HH:mm:ss");
         var entry = $"[{timestamp}] {message}";
@@ -38,6 +39,8 @@ public partial class ImportPhotosContext
             ? entry
             : $"{entry}{Environment.NewLine}{ImportLog}";
         StatusContext.Progress(message);
+        if (!string.IsNullOrWhiteSpace(directory))
+            LastImportDirectory = directory;
     }
 
     [BlockingCommand]
@@ -287,11 +290,68 @@ public partial class ImportPhotosContext
 
         var summary =
             $"{operationLabel} import complete: {importedCount} imported, {overwrittenCount} overwritten, {skippedCount} skipped, {errorCount} error(s).";
-        AppendLog(summary);
+        AppendLog(summary, destinationRoot);
 
         if (errors.Count > 0)
             await StatusContext.ShowMessageWithOkButton("Import Errors",
                 string.Join(Environment.NewLine, errors));
+    }
+
+    [NonBlockingCommand]
+    public async Task OpenFinishedFilesFolder()
+    {
+        var destinationRoot = DestinationFolderEntry.UserValue.TrimNullToEmpty();
+        if (string.IsNullOrWhiteSpace(destinationRoot))
+        {
+            await StatusContext.ToastWarning("No destination folder set.");
+            return;
+        }
+
+        if (!Directory.Exists(destinationRoot))
+        {
+            await StatusContext.ToastWarning("Destination folder does not exist.");
+            return;
+        }
+
+        await ProcessHelpers.OpenExplorerWindowForDirectory(destinationRoot);
+    }
+
+    [NonBlockingCommand]
+    public async Task OpenLastImportDirectory()
+    {
+        if (string.IsNullOrWhiteSpace(LastImportDirectory))
+        {
+            await StatusContext.ToastWarning("No import directory recorded yet.");
+            return;
+        }
+
+        if (!Directory.Exists(LastImportDirectory))
+        {
+            await StatusContext.ToastWarning($"Last import directory no longer exists: {LastImportDirectory}");
+            return;
+        }
+
+        await ProcessHelpers.OpenExplorerWindowForDirectory(LastImportDirectory);
+    }
+
+    [NonBlockingCommand]
+    public async Task OpenWorkingFilesFolder()
+    {
+        var destinationRoot = DestinationFolderEntry.UserValue.TrimNullToEmpty();
+        if (string.IsNullOrWhiteSpace(destinationRoot))
+        {
+            await StatusContext.ToastWarning("No destination folder set.");
+            return;
+        }
+
+        var workingFolder = Path.Combine(destinationRoot, "Working");
+        if (!Directory.Exists(workingFolder))
+        {
+            await StatusContext.ToastWarning("Working files folder does not exist yet.");
+            return;
+        }
+
+        await ProcessHelpers.OpenExplorerWindowForDirectory(workingFolder);
     }
 
     [BlockingCommand]
