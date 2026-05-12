@@ -21,9 +21,13 @@
             <stringDataEntry:StringDataEntryControl DataContext="{Binding DestinationFolderEntry}" />
             <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                 <Button Command="{Binding BrowseForDestinationFolderCommand}" Margin="0,0,6,0"
-                        Padding="12,4">Browse...</Button>
+                        Padding="12,4">
+                    Browse...
+                </Button>
                 <Button Command="{Binding SaveDestinationFolderCommand}" Padding="12,4"
-                        Margin="0,0,12,0">Save</Button>
+                        Margin="0,0,12,0">
+                    Save
+                </Button>
                 <CheckBox IsChecked="{Binding OverwriteExistingFiles}" VerticalAlignment="Center"
                           Content="Overwrite existing files on import" Margin="0,0,12,0" />
             </StackPanel>
@@ -44,7 +48,8 @@
                     dd:DragDrop.DropHandler="{Binding WorkingFilesDropHandler}">
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                     <Button Command="{Binding OpenWorkingFilesFolderCommand}" HorizontalAlignment="Center"
-                            Background="Transparent" BorderThickness="2" Cursor="Hand" Padding="24,0,24,0" ToolTip="Open Folder">
+                            Background="Transparent" BorderThickness="2" Cursor="Hand" Padding="24,0,24,0"
+                            ToolTip="Open Folder">
                         <StackPanel>
                             <TextBlock Text="📂" FontSize="48" HorizontalAlignment="Center" />
                             <TextBlock Text="Working Files" FontSize="18" FontWeight="SemiBold"
@@ -52,11 +57,17 @@
                         </StackPanel>
                     </Button>
                     <TextBlock Text="Drag photos here to import to" FontSize="12"
-                               HorizontalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                               HorizontalAlignment="Center"
+                               Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
                     <TextBlock Text="Destination/Working/YYYY/YYYY-MM-DD/" FontSize="12" FontFamily="Consolas"
-                               HorizontalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                               HorizontalAlignment="Center"
+                               Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
                     <CheckBox IsChecked="{Binding MoveWorkingFilesOnImport}" HorizontalAlignment="Center"
                               Content="Move files (instead of copy)" Margin="0,8,0,0" />
+                    <CheckBox IsChecked="{Binding OpenWorkingFilesAfterImport}" HorizontalAlignment="Center"
+                              Content="Open files after import" Margin="0,4,0,0"
+                              IsEnabled="{Binding PhotoListContext, Converter={StaticResource NullOrWhiteSpaceStringToFalse}}">
+                    </CheckBox>
                 </StackPanel>
             </Border>
 
@@ -67,7 +78,8 @@
                     dd:DragDrop.DropHandler="{Binding FinishedPhotosDropHandler}">
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                     <Button Command="{Binding OpenFinishedFilesFolderCommand}" HorizontalAlignment="Center"
-                            Background="Transparent" BorderThickness="2" Cursor="Hand" Padding="24,0,24,0" ToolTip="Open Folder">
+                            Background="Transparent" BorderThickness="2" Cursor="Hand" Padding="24,0,24,0"
+                            ToolTip="Open Folder">
                         <StackPanel>
                             <TextBlock Text="📷" FontSize="48" HorizontalAlignment="Center" />
                             <TextBlock Text="Finished Photos" FontSize="18" FontWeight="SemiBold"
@@ -75,11 +87,17 @@
                         </StackPanel>
                     </Button>
                     <TextBlock Text="Drag photos here to import to" FontSize="12"
-                               HorizontalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                               HorizontalAlignment="Center"
+                               Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
                     <TextBlock Text="Destination/YYYY/YYYY-MM-DD/" FontSize="12" FontFamily="Consolas"
-                               HorizontalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                               HorizontalAlignment="Center"
+                               Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
                     <CheckBox IsChecked="{Binding MoveFinishedFilesOnImport}" HorizontalAlignment="Center"
                               Content="Move files (instead of copy)" Margin="0,8,0,0" />
+                    <CheckBox IsChecked="{Binding OpenFinishedFilesAfterImport}" HorizontalAlignment="Center"
+                              Content="Open files after import" Margin="0,4,0,0"
+                              IsEnabled="{Binding PhotoListContext, Converter={StaticResource NullOrWhiteSpaceStringToFalse}}">
+                    </CheckBox>
                 </StackPanel>
             </Border>
         </Grid>
@@ -89,8 +107,9 @@
             <TextBlock Text="Import Log" FontWeight="SemiBold" VerticalAlignment="Center" />
             <Button Command="{Binding ClearLogCommand}" Margin="12,0,0,0" Padding="8,2"
                     Content="Clear" />
-            <Button Command="{Binding OpenLastImportDirectoryCommand}" Margin="4,0,0,0"  Padding="8,2"
-                     Content="Open Last Directory" IsEnabled="{Binding LastImportDirectory, Converter={StaticResource NullOrWhiteSpaceStringToFalse}}"/>
+            <Button Command="{Binding OpenLastImportDirectoryCommand}" Margin="4,0,0,0" Padding="8,2"
+                    Content="Open Last Directory"
+                    IsEnabled="{Binding LastImportDirectory, Converter={StaticResource NullOrWhiteSpaceStringToFalse}}" />
         </StackPanel>
 
         <!-- Row 3: Log Output -->

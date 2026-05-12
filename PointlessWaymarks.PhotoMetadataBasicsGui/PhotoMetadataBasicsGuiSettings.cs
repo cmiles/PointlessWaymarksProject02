@@ -17,6 +17,10 @@ public partial class PhotoMetadataBasicsGuiSettings
 
     public bool MoveWorkingFilesOnImport { get; set; }
 
+    public bool OpenFinishedFilesAfterImport { get; set; }
+
+    public bool OpenWorkingFilesAfterImport { get; set; }
+
     public bool OverwriteOnImport { get; set; }
 
     public string ProgramUpdateDirectory { get; set; } =

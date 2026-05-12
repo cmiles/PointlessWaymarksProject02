@@ -95,7 +95,7 @@ public partial class MainWindow
     public async Task Setup()
     {
         PhotoTabContext = await PhotoListContext.CreateInstance(StatusContext);
-        ImportPhotosTabContext = await ImportPhotosContext.CreateInstance(StatusContext);
+        ImportPhotosTabContext = await ImportPhotosContext.CreateInstance(StatusContext, PhotoTabContext);
         AppSettingsTabContext = await AppSettingsContext.CreateInstance(StatusContext);
     }
 }

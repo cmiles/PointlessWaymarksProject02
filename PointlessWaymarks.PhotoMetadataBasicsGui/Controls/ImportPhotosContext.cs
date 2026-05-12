@@ -27,7 +27,10 @@ public partial class ImportPhotosContext
     public string LastImportDirectory { get; set; } = string.Empty;
     public bool MoveFinishedFilesOnImport { get; set; }
     public bool MoveWorkingFilesOnImport { get; set; }
+    public bool OpenFinishedFilesAfterImport { get; set; }
+    public bool OpenWorkingFilesAfterImport { get; set; }
     public bool OverwriteExistingFiles { get; set; }
+    public PhotoListContext? PhotoListContext { get; set; }
     public required StatusControlContext StatusContext { get; set; }
     public required ImportDropHandler WorkingFilesDropHandler { get; set; }
 
@@ -68,7 +71,8 @@ public partial class ImportPhotosContext
         await Task.CompletedTask;
     }
 
-    public static Task<ImportPhotosContext> CreateInstance(StatusControlContext? statusContext)
+    public static Task<ImportPhotosContext> CreateInstance(StatusControlContext? statusContext,
+        PhotoListContext? photoListContext = null)
     {
         try
         {
@@ -88,7 +92,10 @@ public partial class ImportPhotosContext
                 FinishedPhotosDropHandler = null!,
                 MoveWorkingFilesOnImport = settings.MoveWorkingFilesOnImport,
                 MoveFinishedFilesOnImport = settings.MoveFinishedFilesOnImport,
-                OverwriteExistingFiles = settings.OverwriteOnImport
+                OpenWorkingFilesAfterImport = settings.OpenWorkingFilesAfterImport,
+                OpenFinishedFilesAfterImport = settings.OpenFinishedFilesAfterImport,
+                OverwriteExistingFiles = settings.OverwriteOnImport,
+                PhotoListContext = photoListContext
             };
 
             context.WorkingFilesDropHandler = new ImportDropHandler(context, true);
@@ -116,6 +123,20 @@ public partial class ImportPhotosContext
                 {
                     var current = PhotoMetadataBasicsGuiSettingTools.ReadSettings();
                     current.MoveFinishedFilesOnImport = context.MoveFinishedFilesOnImport;
+                    await PhotoMetadataBasicsGuiSettingTools.WriteSettings(current);
+                }
+
+                if (e.PropertyName == nameof(OpenWorkingFilesAfterImport))
+                {
+                    var current = PhotoMetadataBasicsGuiSettingTools.ReadSettings();
+                    current.OpenWorkingFilesAfterImport = context.OpenWorkingFilesAfterImport;
+                    await PhotoMetadataBasicsGuiSettingTools.WriteSettings(current);
+                }
+
+                if (e.PropertyName == nameof(OpenFinishedFilesAfterImport))
+                {
+                    var current = PhotoMetadataBasicsGuiSettingTools.ReadSettings();
+                    current.OpenFinishedFilesAfterImport = context.OpenFinishedFilesAfterImport;
                     await PhotoMetadataBasicsGuiSettingTools.WriteSettings(current);
                 }
             };
@@ -204,6 +225,7 @@ public partial class ImportPhotosContext
         var errorCount = 0;
         var errors = new List<string>();
         var processed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var importedDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         AppendLog($"{operationLabel} importing {files.Count} file(s) as {label}...");
 
@@ -266,6 +288,8 @@ public partial class ImportPhotosContext
                             File.Move(companion.FullName, targetPath);
                         else
                             File.Copy(companion.FullName, targetPath);
+
+                        importedDirectories.Add(Path.GetFullPath(targetFolder));
                         AppendLog($"[Overwrite/{operationLabel}] {companion.Name} -> {targetPath}");
                         overwrittenCount++;
                     }
@@ -275,6 +299,8 @@ public partial class ImportPhotosContext
                             File.Move(companion.FullName, targetPath);
                         else
                             File.Copy(companion.FullName, targetPath);
+
+                        importedDirectories.Add(Path.GetFullPath(targetFolder));
                         AppendLog($"[{label}/{operationLabel}] {companion.Name} -> {targetPath}");
                         importedCount++;
                     }
@@ -295,6 +321,13 @@ public partial class ImportPhotosContext
         if (errors.Count > 0)
             await StatusContext.ShowMessageWithOkButton("Import Errors",
                 string.Join(Environment.NewLine, errors));
+
+        var openFilesAfterImport = isWorkingFiles ? OpenWorkingFilesAfterImport : OpenFinishedFilesAfterImport;
+        if (openFilesAfterImport && PhotoListContext != null && importedDirectories.Count > 0)
+        {
+            AppendLog($"Opening imported {label.ToLowerInvariant()} directories in the photo list...");
+            await PhotoListContext.ProcessDroppedDirectoriesToFileGroups(importedDirectories.ToList());
+        }
     }
 
     [NonBlockingCommand]

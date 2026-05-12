@@ -706,7 +706,7 @@ public partial class PhotoListContext : IDropTarget
         }
     }
 
-    private async Task ProcessDroppedDirectoriesToFileGroups(List<string> directories)
+    public async Task ProcessDroppedDirectoriesToFileGroups(List<string> directories)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
