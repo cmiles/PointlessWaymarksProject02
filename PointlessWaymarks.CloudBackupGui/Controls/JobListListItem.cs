@@ -180,6 +180,8 @@ public partial class JobListListItem
         JobActivity ??= new JobDailyActivityList { JobId = DbJob.Id };
         await JobActivity.Update();
 
+        await ThreadSwitcher.ResumeForegroundAsync();
+        
         JobActivitySeries =
         [
             new ColumnSeries<double>
