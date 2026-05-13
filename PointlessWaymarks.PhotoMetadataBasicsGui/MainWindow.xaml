@@ -13,7 +13,8 @@
         Closing="MainWindow_OnClosing"
         Title="{Binding InfoTitle}" Height="450" Width="800" d:DataContext="{d:DesignInstance local:MainWindow}">
     <Grid>
-        <TabControl Margin="2" ItemContainerStyle="{StaticResource UnderlineOnSelectTabItemStyle}">
+        <TabControl Margin="2" ItemContainerStyle="{StaticResource UnderlineOnSelectTabItemStyle}"
+                    SelectedIndex="{Binding SelectedMainTabIndex, Mode=TwoWay}">
             <TabItem Header="Photos">
                 <controls:PhotoListControl DataContext="{Binding PhotoTabContext}" />
             </TabItem>

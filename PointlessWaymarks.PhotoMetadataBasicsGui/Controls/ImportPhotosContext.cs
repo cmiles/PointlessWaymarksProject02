@@ -7,6 +7,7 @@ using Microsoft.VisualBasic.FileIO;
 using Microsoft.Win32;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
+using PointlessWaymarks.PhotoMetadataBasicsGui;
 using PointlessWaymarks.SpatialTools;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.Status;
@@ -326,6 +327,7 @@ public partial class ImportPhotosContext
         if (openFilesAfterImport && PhotoListContext != null && importedDirectories.Count > 0)
         {
             AppendLog($"Opening imported {label.ToLowerInvariant()} directories in the photo list...");
+            MainWindowEvents.RequestMainTabChange.Raise(MainWindowTab.Photos);
             await PhotoListContext.ProcessDroppedDirectoriesToFileGroups(importedDirectories.ToList());
         }
     }

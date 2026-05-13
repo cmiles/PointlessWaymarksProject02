@@ -2,6 +2,7 @@ using System.ComponentModel;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.PhotoMetadataBasicsGui.Controls;
+using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.MarkdownDisplay;
 using PointlessWaymarks.WpfCommon.ProgramUpdateMessage;
 using PointlessWaymarks.WpfCommon.Status;
@@ -52,7 +53,6 @@ public partial class MainWindow
 
     public AppSettingsContext? AppSettingsTabContext { get; set; }
     public HelpDisplayContext HelpTabContext { get; set; }
-    public ImportPhotosContext? ImportPhotosTabContext { get; set; }
 
     public string HelpText =>
         $"""
@@ -63,8 +63,11 @@ public partial class MainWindow
          {HelpMarkdown.CombinedAboutToolsAndPackages}
          """;
 
+    public ImportPhotosContext? ImportPhotosTabContext { get; set; }
+
     public string InfoTitle { get; set; }
     public PhotoListContext? PhotoTabContext { get; set; }
+    public int SelectedMainTabIndex { get; set; }
     public StatusControlContext StatusContext { get; set; }
     public ProgramUpdateMessageContext UpdateMessageContext { get; set; }
 
@@ -89,11 +92,20 @@ public partial class MainWindow
 
     private void MainWindow_OnClosing(object? sender, CancelEventArgs e)
     {
+        MainWindowEvents.RequestMainTabChange.RemoveHandler(RequestMainTabChangeOnRequested);
         Log.CloseAndFlush();
+    }
+
+    private async void RequestMainTabChangeOnRequested(object? sender, MainWindowTabChangeRequestedEventArgs e)
+    {
+        await ThreadSwitcher.ResumeForegroundAsync();
+        SelectedMainTabIndex = (int)e.RequestedTab;
     }
 
     public async Task Setup()
     {
+        MainWindowEvents.RequestMainTabChange.AddHandler(RequestMainTabChangeOnRequested);
+
         PhotoTabContext = await PhotoListContext.CreateInstance(StatusContext);
         ImportPhotosTabContext = await ImportPhotosContext.CreateInstance(StatusContext, PhotoTabContext);
         AppSettingsTabContext = await AppSettingsContext.CreateInstance(StatusContext);
