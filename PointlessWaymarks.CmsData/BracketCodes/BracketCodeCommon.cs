@@ -242,6 +242,7 @@ public static partial class BracketCodeCommon
         // 2024/3/20 - The Gallery Bracket Code surrounds regular bracket codes and must be processed
         //first!
         input = await GalleryBracketCodePictures.ProcessToGallery(input, progress).ConfigureAwait(false);
+        input = await PictureBlockBracketCode.Process(input, progress).ConfigureAwait(false);
 
         input = await BracketCodeFileUrl.Process(input, progress).ConfigureAwait(false);
         input = await BracketCodeFileDownloads.Process(input, progress).ConfigureAwait(false);
