@@ -23,7 +23,6 @@
         <featureIntersectResultBrowser:FeatureIntersectResultBrowserControl DataContext="{Binding ResultBrowserContext}" />
         <status:StatusControl DataContext="{Binding StatusContext}" />
         <windowScreenShot:WindowScreenShotControl
-            Width="40"
             Margin="2"
             HorizontalAlignment="Left"
             VerticalAlignment="Bottom" />

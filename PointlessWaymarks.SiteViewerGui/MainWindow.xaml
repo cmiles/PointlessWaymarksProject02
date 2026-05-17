@@ -59,8 +59,6 @@
             VerticalAlignment="Top"
             DataContext="{Binding UpdateMessageContext}" />
         <windowScreenShot:WindowScreenShotControl
-            Width="26"
-            Height="26"
             Margin="2"
             HorizontalAlignment="Left"
             VerticalAlignment="Bottom" />

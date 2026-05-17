@@ -186,14 +186,14 @@
             </Grid.ColumnDefinitions>
             <Button
                 Width="120"
-                Padding="8,0,8,0"
+                Padding="8,4,8,4"
                 Command="{Binding NewDatabaseCommand}">
                 Create New
             </Button>
             <Button
                 Grid.Column="1"
                 Width="120"
-                Padding="8,0,8,0"
+                Padding="8,4,8,4"
                 Command="{Binding ChooseCurrentDbCommand}">
                 Choose Existing
             </Button>
@@ -241,6 +241,7 @@
                         TextAlignment="Right" />
                     <columnSort:ColumnSortControl
                         Grid.Column="2"
+                        ButtonHeight="32"
                         Margin="18,0,0,0"
                         DataContext="{Binding ListSort}" />
                 </Grid>
@@ -265,7 +266,7 @@
                                     CommandParameter="{Binding DbJob}"
                                     Gesture="Shift+LeftDoubleClick" />
                             </Border.InputBindings>
-                            <Grid Height="280">
+                            <Grid Height="320">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
