@@ -90,6 +90,7 @@ Note Content is like a simplified Post - no title and slug to edit or maintain a
 
         newEntry.ContentId = DbEntry.ContentId;
         newEntry.CreatedOn = DbEntry.CreatedOn;
+        if(!string.IsNullOrWhiteSpace(DbEntry.Slug)) newEntry.Slug = DbEntry.Slug;
 
         if (DbEntry.LastUpdatedOn is not null) newEntry.LastUpdatedOn = DbEntry.LastUpdatedOn;
         if (DbEntry.LastUpdatedBy is not null) newEntry.LastUpdatedBy = DbEntry.LastUpdatedBy;
