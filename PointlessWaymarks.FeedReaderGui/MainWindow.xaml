@@ -35,7 +35,7 @@
             </TabItem>
         </TabControl>
         <Menu
-            Margin="400,2,4,0"
+            Margin="440,-7,4,0"
             HorizontalAlignment="Left"
             VerticalAlignment="Top">
             <MenuItem
