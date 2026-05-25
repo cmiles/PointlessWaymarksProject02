@@ -31,17 +31,19 @@ public partial class GeoJsonListWithActionsContext
                 ItemName = "Map Code to Clipboard",
                 ItemCommand = ListContext.BracketCodeToClipboardSelectedCommand
             },
-
             new ContextMenuItemData
             {
                 ItemName = "Text Code to Clipboard", ItemCommand = TextBracketCodesToClipboardForSelectedCommand
             },
-
             new ContextMenuItemData
             {
                 ItemName = "Image Code to Clipboard", ItemCommand = ImageBracketCodesToClipboardForSelectedCommand
             },
-
+            new ContextMenuItemData
+            {
+                ItemName = "Picture Block to Clipboard",
+                ItemCommand = ListContext.PictureBlockBracketCodeToClipboardSelectedCommand
+            },
             new ContextMenuItemData
             {
                 ItemName = "Picture Gallery to Clipboard",

@@ -31,29 +31,29 @@ public partial class TrailListWithActionsContext
                 ItemName = "Text Code to Clipboard",
                 ItemCommand = ListContext.BracketCodeToClipboardSelectedCommand
             },
-
             new ContextMenuItemData
             {
                 ItemName = "Image Code to Clipboard", ItemCommand = ImageBracketCodesToClipboardForSelectedCommand
             },
-
             new ContextMenuItemData
             {
                 ItemName = "Stats Code to Clipboard", ItemCommand = TextStatsBracketCodesToClipboardForSelectedCommand
             },
-
             new ContextMenuItemData
             {
                 ItemName = "Extended Stats Code to Clipboard",
                 ItemCommand = TextStatsExtendedBracketCodesToClipboardForSelectedCommand
             },
-
+            new ContextMenuItemData
+            {
+                ItemName = "Picture Block to Clipboard",
+                ItemCommand = ListContext.PictureBlockBracketCodeToClipboardSelectedCommand
+            },
             new ContextMenuItemData
             {
                 ItemName = "Picture Gallery to Clipboard",
                 ItemCommand = ListContext.PictureGalleryBracketCodeToClipboardSelectedCommand
             },
-
             new ContextMenuItemData
                 { ItemName = "Extract New Links", ItemCommand = ListContext.ExtractNewLinksSelectedCommand },
             new ContextMenuItemData { ItemName = "Open URL", ItemCommand = ListContext.ViewOnSiteCommand },

@@ -34,18 +34,20 @@ public partial class PostListWithActionsContext
                 ItemName = "Text Code to Clipboard",
                 ItemCommand = ListContext.BracketCodeToClipboardSelectedCommand
             },
-
             new ContextMenuItemData
             {
                 ItemName = "Image Code to Clipboard", ItemCommand = ImageBracketCodesToClipboardForSelectedCommand
             },
-
+            new ContextMenuItemData
+            {
+                ItemName = "Picture Block to Clipboard",
+                ItemCommand = ListContext.PictureBlockBracketCodeToClipboardSelectedCommand
+            },
             new ContextMenuItemData
             {
                 ItemName = "Picture Gallery to Clipboard",
                 ItemCommand = ListContext.PictureGalleryBracketCodeToClipboardSelectedCommand
             },
-
             new ContextMenuItemData { ItemName = "Email Html to Clipboard", ItemCommand = EmailHtmlToClipboardCommand },
             new ContextMenuItemData
                 { ItemName = "Extract New Links", ItemCommand = ListContext.ExtractNewLinksSelectedCommand },
@@ -58,7 +60,8 @@ public partial class PostListWithActionsContext
             },
             new ContextMenuItemData
             {
-                ItemName = "View Selected Pictures", ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
+                ItemName = "View Selected Pictures",
+                ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
             },
             new ContextMenuItemData { ItemName = "Refresh Data", ItemCommand = RefreshDataCommand }
         ];
@@ -76,28 +79,6 @@ public partial class PostListWithActionsContext
     public async Task BracketCodesToClipboardForSelected()
     {
         await PostActions.DefaultBracketCodesToClipboard(SelectedListItemsContent(), StatusContext);
-
-    }
-
-    public List<PostContent> SelectedListItemsContent()
-    {
-        return ListContext.ListSelection.SelectedItems.Where(x => x is PostListListItem).Cast<PostListListItem>()
-            .Select(x => x.DbEntry).ToList();
-    }
-
-    [BlockingCommand]
-    [StopAndWarnIfNoSelectedListItems]
-    public async Task ImageBracketCodesToClipboardForSelected()
-    {
-        var finalString = SelectedListItems().Aggregate(string.Empty,
-            (current, loopSelected) =>
-                current + $"{BracketCodePostImageLink.Create(loopSelected.DbEntry)}{Environment.NewLine}");
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
     }
 
     public static async Task<PostListWithActionsContext> CreateInstance(StatusControlContext? statusContext,
@@ -130,6 +111,21 @@ public partial class PostListWithActionsContext
     }
 
     [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task ImageBracketCodesToClipboardForSelected()
+    {
+        var finalString = SelectedListItems().Aggregate(string.Empty,
+            (current, loopSelected) =>
+                current + $"{BracketCodePostImageLink.Create(loopSelected.DbEntry)}{Environment.NewLine}");
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        Clipboard.SetText(finalString);
+
+        await StatusContext.ToastSuccess($"To Clipboard {finalString}");
+    }
+
+    [BlockingCommand]
     private async Task RefreshData()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -141,5 +137,11 @@ public partial class PostListWithActionsContext
     {
         return ListContext.ListSelection.SelectedItems.Where(x => x is PostListListItem).Cast<PostListListItem>()
             .ToList();
+    }
+
+    public List<PostContent> SelectedListItemsContent()
+    {
+        return ListContext.ListSelection.SelectedItems.Where(x => x is PostListListItem).Cast<PostListListItem>()
+            .Select(x => x.DbEntry).ToList();
     }
 }

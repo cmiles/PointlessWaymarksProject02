@@ -43,19 +43,21 @@ public partial class VideoListWithActionsContext
                 ItemName = "Embed Code to Clipboard",
                 ItemCommand = ListContext.BracketCodeToClipboardSelectedCommand
             },
-
             new ContextMenuItemData
             {
                 ItemName = "Image Code to Clipboard",
                 ItemCommand = ImageBracketCodesToClipboardForSelectedCommand
             },
-
             new ContextMenuItemData
             {
                 ItemName = "Text Code to Clipboard",
                 ItemCommand = TextBracketCodesToClipboardForSelectedCommand
             },
-
+            new ContextMenuItemData
+            {
+                ItemName = "Picture Block to Clipboard",
+                ItemCommand = ListContext.PictureBlockBracketCodeToClipboardSelectedCommand
+            },
             new ContextMenuItemData
             {
                 ItemName = "Picture Gallery to Clipboard",
@@ -73,7 +75,6 @@ public partial class VideoListWithActionsContext
             {
                 ItemName = "Map Selected Items", ItemCommand = ListContext.SpatialItemsToContentMapWindowSelectedCommand
             },
-
             new ContextMenuItemData { ItemName = "Refresh Data", ItemCommand = RefreshDataCommand }
         ];
 

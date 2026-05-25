@@ -67,6 +67,11 @@ public partial class AllContentListWithActionsContext
             },
             new ContextMenuItemData
             {
+                ItemName = "Picture Block to Clipboard",
+                ItemCommand = ListContext.PictureGalleryBracketCodeToClipboardSelectedCommand
+            },
+            new ContextMenuItemData
+            {
                 ItemName = "Picture Gallery to Clipboard",
                 ItemCommand = ListContext.PictureGalleryBracketCodeToClipboardSelectedCommand
             },
@@ -81,18 +86,13 @@ public partial class AllContentListWithActionsContext
             },
             new ContextMenuItemData
             {
-                ItemName = "View Selected Pictures and Videos", ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
+                ItemName = "View Selected Pictures and Videos",
+                ItemCommand = ListContext.PicturesAndVideosViewWindowSelectedCommand
             },
             new ContextMenuItemData { ItemName = "Refresh Data", ItemCommand = RefreshDataCommand }
         ];
 
         await ListContext.LoadData();
-    }
-
-    [NonBlockingCommand]
-    private async Task WordPressImportWindow()
-    {
-        await (await WordPressXmlImportWindow.CreateInstance()).PositionWindowAndShowOnUiThread();
     }
 
     [BlockingCommand]
@@ -101,5 +101,11 @@ public partial class AllContentListWithActionsContext
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         await ListContext.LoadData();
+    }
+
+    [NonBlockingCommand]
+    private async Task WordPressImportWindow()
+    {
+        await (await WordPressXmlImportWindow.CreateInstance()).PositionWindowAndShowOnUiThread();
     }
 }

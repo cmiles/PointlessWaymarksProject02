@@ -1018,7 +1018,7 @@
                         </Border.Resources>
                         <WrapPanel Style="{StaticResource InTemplateContentMenuWrapPanelStyle}">
                             <TextBlock>Bracket Codes</TextBlock>
-                            <Button Content="Map Bracket Code"
+                            <Button Content="Map Code"
                                     Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <Button Content="Link Bracket Code"
@@ -1155,10 +1155,10 @@
                         </Border.Resources>
                         <WrapPanel Style="{StaticResource InTemplateContentMenuWrapPanelStyle}">
                             <TextBlock>Bracket Codes</TextBlock>
-                            <Button Content="Map Bracket Code"
+                            <Button Content="Link Code"
                                     Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
-                            <Button Content="Image Bracket Code"
+                            <Button Content="Image Code"
                                     Command="{Binding ItemActions.ImageBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <Button Content="Embed Code"
@@ -1279,10 +1279,10 @@
                         </Border.Resources>
                         <WrapPanel Style="{StaticResource InTemplateContentMenuWrapPanelStyle}">
                             <TextBlock>Bracket Codes</TextBlock>
-                            <Button Content="Image Bracket Code"
+                            <Button Content="Image Code"
                                     Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
-                            <Button Content="Link Bracket Code"
+                            <Button Content="Link Code"
                                     Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <TextBlock>Program Actions</TextBlock>
@@ -1442,7 +1442,7 @@
                         </Border.Resources>
                         <WrapPanel Style="{StaticResource InTemplateContentMenuWrapPanelStyle}">
                             <TextBlock>Bracket Codes</TextBlock>
-                            <Button Content="Map Bracket Code"
+                            <Button Content="Link Code"
                                     Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <TextBlock>Program Actions</TextBlock>
@@ -1671,10 +1671,10 @@
                         </Border.Resources>
                         <WrapPanel Style="{StaticResource InTemplateContentMenuWrapPanelStyle}">
                             <TextBlock>Bracket Codes</TextBlock>
-                            <Button Content="Map Bracket Code"
+                            <Button Content="Image Code"
                                     Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
-                            <Button Content="Image w/Details Bracket Code"
+                            <Button Content="Image w/Details Code"
                                     Command="{Binding ItemActions.ImageWithDetailsBracketCodesToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <Button Content="Text Code"
@@ -1863,7 +1863,7 @@
                         </Border.Resources>
                         <WrapPanel Style="{StaticResource InTemplateContentMenuWrapPanelStyle}">
                             <TextBlock>Bracket Codes</TextBlock>
-                            <Button Content="Map Bracket Code"
+                            <Button Content="Link Code"
                                     Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <TextBlock>Program Actions</TextBlock>
@@ -1967,10 +1967,10 @@
                         </Border.Resources>
                         <WrapPanel Style="{StaticResource InTemplateContentMenuWrapPanelStyle}">
                             <TextBlock>Bracket Codes</TextBlock>
-                            <Button Content="Map Bracket Code"
+                            <Button Content="Map Code"
                                     Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
-                            <Button Content="Image Bracket Code"
+                            <Button Content="Image Code"
                                     Command="{Binding ItemActions.ImageBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <Button Content="Text Stats Code"
@@ -2082,13 +2082,13 @@
                         </Border.Resources>
                         <WrapPanel Style="{StaticResource InTemplateContentMenuWrapPanelStyle}">
                             <TextBlock>Bracket Codes</TextBlock>
-                            <Button Content="Embed Bracket Code"
+                            <Button Content="Embed Code"
                                     Command="{Binding ItemActions.DefaultBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
-                            <Button Content="Text Bracket Code"
+                            <Button Content="Link Code"
                                     Command="{Binding ItemActions.TextBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
-                            <Button Content="Image Bracket Code"
+                            <Button Content="Image Code"
                                     Command="{Binding ItemActions.ImageBracketCodeToClipboardCommand}"
                                     CommandParameter="{Binding DbEntry}" />
                             <TextBlock>Program Actions</TextBlock>

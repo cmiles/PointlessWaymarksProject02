@@ -31,43 +31,41 @@ public partial class PointListWithActionsContext
                 ItemName = "Map Code to Clipboard",
                 ItemCommand = ListContext.BracketCodeToClipboardSelectedCommand
             },
-
             new ContextMenuItemData
             {
                 ItemName = "Text Code to Clipboard",
                 ItemCommand = TextBracketCodesToClipboardForSelectedCommand
             },
-
             new ContextMenuItemData
             {
                 ItemName = "Point Details Code to Clipboard",
                 ItemCommand = PointDetailsBracketCodesToClipboardForSelectedCommand
             },
-
             new ContextMenuItemData
             {
                 ItemName = "Image Code to Clipboard",
                 ItemCommand = ImageBracketCodesToClipboardForSelectedCommand
             },
-
             new ContextMenuItemData
             {
                 ItemName = "External Directions Code to Clipboard",
                 ItemCommand = ExternalDirectionsBracketCodesToClipboardForSelectedCommand
             },
-
             new ContextMenuItemData
             {
                 ItemName = "Google Maps Point Code to Clipboard",
                 ItemCommand = GoogleMapsBracketCodesToClipboardForSelectedCommand
             },
-
+            new ContextMenuItemData
+            {
+                ItemName = "Picture Block to Clipboard",
+                ItemCommand = ListContext.PictureBlockBracketCodeToClipboardSelectedCommand
+            },
             new ContextMenuItemData
             {
                 ItemName = "Picture Gallery to Clipboard",
                 ItemCommand = ListContext.PictureGalleryBracketCodeToClipboardSelectedCommand
             },
-
             new ContextMenuItemData
             {
                 ItemName = "Add Intersection Tags - With OSM", ItemCommand = AddIntersectionTagsWithOsmToSelectedCommand
@@ -88,7 +86,6 @@ public partial class PointListWithActionsContext
             {
                 ItemName = "Selected Points to Clipboard - GeoJson", ItemCommand = GeoJsonToClipboardForSelectedCommand
             },
-
             new ContextMenuItemData
             {
                 ItemName = "Selected Points Coordinates to Clipboard - Text",

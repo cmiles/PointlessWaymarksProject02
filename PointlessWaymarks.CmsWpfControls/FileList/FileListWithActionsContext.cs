@@ -40,36 +40,35 @@ public partial class FileListWithActionsContext : IListSelectionWithContext<File
                 ItemName = "Text Code to Clipboard",
                 ItemCommand = FilePageLinkCodesToClipboardForSelectedCommand
             },
-
             new ContextMenuItemData
             {
                 ItemName = "Image Code to Clipboard",
                 ItemCommand = ListContext.BracketCodeToClipboardSelectedCommand
             },
-
             new ContextMenuItemData
             {
                 ItemName = "Download Code to Clipboard",
                 ItemCommand = FileDownloadLinkCodesToClipboardForSelectedCommand
             },
-
             new ContextMenuItemData
             {
                 ItemName = "Embed Code to Clipboard",
                 ItemCommand = FileEmbedCodesToClipboardForSelectedCommand
             },
-
             new ContextMenuItemData
             {
                 ItemName = "URL Code to Clipboard", ItemCommand = FileUrlLinkCodesToClipboardForSelectedCommand
             },
-
+            new ContextMenuItemData
+            {
+                ItemName = "Picture Block to Clipboard",
+                ItemCommand = ListContext.PictureBlockBracketCodeToClipboardSelectedCommand
+            },
             new ContextMenuItemData
             {
                 ItemName = "Picture Gallery to Clipboard",
                 ItemCommand = ListContext.PictureGalleryBracketCodeToClipboardSelectedCommand
             },
-
             new ContextMenuItemData { ItemName = "Export Files", ItemCommand = ExportFilesCommand },
             new ContextMenuItemData { ItemName = "View Files", ItemCommand = ViewSelectedFilesCommand },
             new ContextMenuItemData { ItemName = "Open URL", ItemCommand = ListContext.ViewOnSiteCommand },

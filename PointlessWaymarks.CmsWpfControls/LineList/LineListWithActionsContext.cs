@@ -59,6 +59,11 @@ public partial class LineListWithActionsContext
             },
             new ContextMenuItemData
             {
+                ItemName = "Picture Block to Clipboard",
+                ItemCommand = ListContext.PictureBlockBracketCodeToClipboardSelectedCommand
+            },
+            new ContextMenuItemData
+            {
                 ItemName = "Picture Gallery to Clipboard",
                 ItemCommand = ListContext.PictureGalleryBracketCodeToClipboardSelectedCommand
             },
