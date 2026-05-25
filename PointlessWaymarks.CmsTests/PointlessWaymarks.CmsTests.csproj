@@ -5,8 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Metalama.Framework" Version="2026.0.22" />
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3912.50" />
+    <PackageReference Include="Metalama.Framework" Version="2026.0.23" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3967.48" />
       <PackageReference Include="NUnit" Version="4.6.0" />
       <PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />
       <PackageReference Include="NUnit.Analyzers" Version="4.13.0">
