@@ -51,6 +51,9 @@ public partial class PhotoListContext : IDropTarget
         dropInfo.Effects = files.Count > 0 ? DragDropEffects.Copy : DragDropEffects.None;
     }
 
+    public List<PhotoListGroupListItem> CurrentFilteredListItems => FilteredItems?.Cast<PhotoListGroupListItem>().ToList()
+                                                                    ?? [];
+
     public void Drop(IDropInfo dropInfo)
     {
         var directories = DragAndDropFilesHelper.DroppedDirectories(dropInfo);
@@ -200,6 +203,13 @@ public partial class PhotoListContext : IDropTarget
         await AddFeatureIntersectTags(SelectedItems, cancellationToken);
     }
 
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task AddFeatureIntersectTagsForAll(CancellationToken cancellationToken)
+    {
+        await AddFeatureIntersectTags(CurrentFilteredListItems, cancellationToken);
+    }
+
     public static async Task<PhotoListContext> CreateInstance(StatusControlContext? statusContext)
     {
         await ThreadSwitcher.ResumeForegroundAsync();
@@ -313,31 +323,21 @@ public partial class PhotoListContext : IDropTarget
     }
 
     [BlockingCommand]
-    public async Task DeleteFilteredOutGroups()
+    public async Task DeleteGroupsWithNoRating()
     {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (FilteredItems == null) return;
-
-        var visibleSet = FilteredItems.Cast<PhotoListGroupListItem>().ToHashSet();
-        var hiddenGroups = Items.Where(x => !visibleSet.Contains(x)).ToList();
-
-        if (hiddenGroups.Count == 0)
-        {
-            await StatusContext.ToastWarning("No filtered-out groups to delete.");
-            return;
-        }
-
-        var totalFiles = hiddenGroups.Sum(g => g.Items.Count);
+        var unratedGroups = CurrentFilteredListItems.Where(x => x.RatingEntry.UserValue < 1).ToList();
         var errors = new List<string>();
 
-        foreach (var group in hiddenGroups)
+        var fileDeleteCount = 0;
+        
+        foreach (var group in unratedGroups)
         {
             foreach (var fileItem in group.Items.ToList())
                 try
                 {
                     FileSystem.DeleteFile(fileItem.PhotoFile.FullName, UIOption.OnlyErrorDialogs,
                         RecycleOption.SendToRecycleBin);
+                    fileDeleteCount++;
                 }
                 catch (Exception ex)
                 {
@@ -354,7 +354,53 @@ public partial class PhotoListContext : IDropTarget
                 string.Join(Environment.NewLine, errors));
         else
             await StatusContext.ToastSuccess(
-                $"Deleted {totalFiles} file(s) from {hiddenGroups.Count} filtered-out group(s).");
+                $"Deleted {fileDeleteCount} file(s) from {unratedGroups.Count} filtered-out group(s).");
+    }
+
+    [BlockingCommand]
+    public async Task DeleteFilteredOutGroups()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (FilteredItems == null) return;
+
+        var visibleSet = FilteredItems.Cast<PhotoListGroupListItem>().ToHashSet();
+        var hiddenGroups = Items.Where(x => !visibleSet.Contains(x)).ToList();
+
+        if (hiddenGroups.Count == 0)
+        {
+            await StatusContext.ToastWarning("No filtered-out groups to delete.");
+            return;
+        }
+
+        var fileDeleteCount = 0;
+        var errors = new List<string>();
+
+        foreach (var group in hiddenGroups)
+        {
+            foreach (var fileItem in group.Items.ToList())
+                try
+                {
+                    FileSystem.DeleteFile(fileItem.PhotoFile.FullName, UIOption.OnlyErrorDialogs,
+                        RecycleOption.SendToRecycleBin);
+                    fileDeleteCount++;
+                }
+                catch (Exception ex)
+                {
+                    errors.Add($"{fileItem.PhotoFile.Name}: {ex.Message}");
+                }
+
+            await ThreadSwitcher.ResumeForegroundAsync();
+            Items.Remove(group);
+            await ThreadSwitcher.ResumeBackgroundAsync();
+        }
+
+        if (errors.Count > 0)
+            await StatusContext.ShowMessageWithOkButton("Delete Errors",
+                string.Join(Environment.NewLine, errors));
+        else
+            await StatusContext.ToastSuccess(
+                $"Deleted {fileDeleteCount} file(s) from {hiddenGroups.Count} filtered-out group(s).");
     }
 
     [BlockingCommand]
@@ -520,10 +566,26 @@ public partial class PhotoListContext : IDropTarget
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
+    public async Task GeoTagAllItemsItems(CancellationToken cancellationToken)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        await GeoTagItems(CurrentFilteredListItems.SelectMany(g => g.Items).ToList(), cancellationToken);
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
     public async Task GeoTagSelectedItems(CancellationToken cancellationToken)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
         var filesFromSelected = SelectedItems.SelectMany(g => g.Items).ToList();
+
+        await GeoTagItems(filesFromSelected, cancellationToken);
+    }
+
+    public async Task GeoTagItems(List<PhotoListFileItem> toTag, CancellationToken cancellationToken)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
 
         List<string>? gpxFiles = null;
         var settings = PhotoMetadataBasicsGuiSettingTools.ReadSettings();
@@ -531,7 +593,7 @@ public partial class PhotoListContext : IDropTarget
             gpxFiles = Directory.GetFiles(settings.DefaultGpxDirectory, "*.gpx").ToList();
 
         var window =
-            await FileBasedGeoTaggerWindow.CreateInstance(filesFromSelected.Select(x => x.PhotoFile.FullName).ToList(),
+            await FileBasedGeoTaggerWindow.CreateInstance(toTag.Select(x => x.PhotoFile.FullName).ToList(),
                 initialGpxFiles: gpxFiles);
 
         window.CloseAfterWrite = true;
@@ -767,7 +829,7 @@ public partial class PhotoListContext : IDropTarget
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        var frozenItems = Items.ToList();
+        var frozenItems = CurrentFilteredListItems.ToList();
 
         foreach (var loopSelected in frozenItems) Items.Remove(loopSelected);
     }
@@ -795,7 +857,7 @@ public partial class PhotoListContext : IDropTarget
     [BlockingCommand]
     public async Task RenameFilesAllItems(CancellationToken cancellationToken)
     {
-        var toRename = Items.ToList();
+        var toRename = CurrentFilteredListItems.ToList();
 
         foreach (var loopSelected in toRename) await loopSelected.RenameFiles();
     }
@@ -922,7 +984,7 @@ public partial class PhotoListContext : IDropTarget
     [BlockingCommand]
     public async Task WriteMetadataAllItems(CancellationToken cancellationToken)
     {
-        var toWrite = Items.ToList();
+        var toWrite = CurrentFilteredListItems.ToList();
 
         foreach (var loopSelected in toWrite) await loopSelected.WriteMetadata();
     }
