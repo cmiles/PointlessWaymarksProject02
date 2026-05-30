@@ -27,7 +27,7 @@
         <PackageReference Include="Jot" Version="2.1.17" />
         <PackageReference Include="Metalama.Framework" Version="2026.0.23" />
         <PackageReference Include="Metalama.Patterns.Observability" Version="2026.0.23" />
-        <PackageReference Include="Microsoft.Playwright" Version="1.59.0" />
+        <PackageReference Include="Microsoft.Playwright" Version="1.60.0" />
         <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3967.48" />
     </ItemGroup>
 

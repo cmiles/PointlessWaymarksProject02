@@ -32,7 +32,7 @@
 
     <ItemGroup>
         <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
-        <PackageReference Include="CronExpressionDescriptor" Version="2.45.0" />
+        <PackageReference Include="CronExpressionDescriptor" Version="2.48.0" />
         <PackageReference Include="Cronos" Version="0.13.0" />
         <PackageReference Include="DiffPlex.Wpf" Version="1.9.1" />
         <PackageReference Include="FilterDataGrid" Version="1.2.9" />
