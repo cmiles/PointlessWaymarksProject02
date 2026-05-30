@@ -185,7 +185,6 @@ public partial class FeedEditorContext : IHasChanges, IHasValidationIssues,
             "A feed behind Basic Auth can be read by enabling Use Basic Auth - the username and password you enter below will be encrypted in your database, but the password is stored on your computer and an attacker with access to your profile could decrypt this information! This will be secure enough for many uses but it is up to you whether this makes sense for your use.";
         userUseBasicAuthEntry.ReferenceValue = feedItem.UseBasicAuth;
         userUseBasicAuthEntry.UserValue = feedItem.UseBasicAuth;
-        userUrlEntry.BindingDelay = 200;
 
         var basicAuth = await FeedReaderEncryption.DecryptBasicAuthCredentials(feedItem.BasicAuthUsername,
             feedItem.BasicAuthPassword, feedQueries.DbFileFullName);
@@ -196,7 +195,7 @@ public partial class FeedEditorContext : IHasChanges, IHasValidationIssues,
             "Basic Auth Username - this will be encrypted in your database, but the password is stored on your computer and an attacker with access to your profile could decrypt this information! This will be secure enough for many uses but it is up to you whether this makes sense for your use.";
         userBasicAuthUsernameEntry.ReferenceValue = basicAuth.username;
         userBasicAuthUsernameEntry.UserValue = basicAuth.username;
-        userUrlEntry.BindingDelay = 800;
+        userBasicAuthUsernameEntry.BindingDelay = 800;
 
         var userBasicAuthPasswordEntry = StringDataEntryContext.CreateInstance();
         userBasicAuthPasswordEntry.Title = "Basic Auth - Password";
@@ -204,7 +203,7 @@ public partial class FeedEditorContext : IHasChanges, IHasValidationIssues,
             "Basic Auth Password - this will be encrypted in your database, but the password is stored on your computer and an attacker with access to your profile could decrypt this information! This will be secure enough for many uses but it is up to you whether this makes sense for your use.";
         userBasicAuthPasswordEntry.ReferenceValue = basicAuth.password;
         userBasicAuthPasswordEntry.UserValue = basicAuth.password;
-        userUrlEntry.BindingDelay = 800;
+        userBasicAuthPasswordEntry.BindingDelay = 800;
 
         var newContext = new FeedEditorContext
         {
