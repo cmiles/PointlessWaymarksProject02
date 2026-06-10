@@ -314,7 +314,7 @@ public static class MapCmsJson
                     if (!line.Attributes.Exists("title")) line.Attributes.Add("title", string.Empty);
 
                     line.Attributes["title"] =
-                        $"""<a href="http://[[VirtualDomain]]/LocalPreview?{WebUtility.UrlEncode(UserSettingsSingleton.CurrentSettings().LinePageUrl(mapLine))}">{(string.IsNullOrWhiteSpace(mapLine.Title) ? "Preview" : mapLine.Title)}</a> <a href="http://[[VirtualDomain]]/LocalEdit?{WebUtility.UrlEncode(mapLine.ContentId.ToString())}">Edit</a>""";
+                        $"""<a href="https://[[VirtualDomain]]/LocalPreview?{WebUtility.UrlEncode(UserSettingsSingleton.CurrentSettings().LinePageUrl(mapLine))}">{(string.IsNullOrWhiteSpace(mapLine.Title) ? "Preview" : mapLine.Title)}</a> <a href="https://[[VirtualDomain]]/LocalEdit?{WebUtility.UrlEncode(mapLine.ContentId.ToString())}">Edit</a>""";
 
                     geoJsonList.Add(lineFeatureCollection);
                     boundsKeeper.Add(new Point(mapLine.InitialViewBoundsMaxLongitude,
@@ -350,7 +350,7 @@ public static class MapCmsJson
                     {
                         {
                             "title",
-                            $"""<a href="http://[[VirtualDomain]]/LocalPreview?{WebUtility.UrlEncode(UserSettingsSingleton.CurrentSettings().PointPageUrl(loopElements))}">{(string.IsNullOrWhiteSpace(loopElements.Title) ? "Preview" : loopElements.Title)}</a> <a href="http://[[VirtualDomain]]/LocalEdit?{WebUtility.UrlEncode(loopElements.ContentId.ToString())}">Edit</a>"""
+                            $"""<a href="https://[[VirtualDomain]]/LocalPreview?{WebUtility.UrlEncode(UserSettingsSingleton.CurrentSettings().PointPageUrl(loopElements))}">{(string.IsNullOrWhiteSpace(loopElements.Title) ? "Preview" : loopElements.Title)}</a> <a href="https://[[VirtualDomain]]/LocalEdit?{WebUtility.UrlEncode(loopElements.ContentId.ToString())}">Edit</a>"""
                         },
                         { "description", descriptionAndImage.description },
                         { "mapLabel", loopElements.MapLabel ?? "(No Label?)" },
@@ -415,7 +415,7 @@ public static class MapCmsJson
                     {
                         {
                             "title",
-                            $"""<a href="http://[[VirtualDomain]]/LocalPreview?{WebUtility.UrlEncode(contentInformation.Item1)}">{(string.IsNullOrWhiteSpace(contentAsContentCommon.Title) ? "Preview" : contentAsContentCommon.Title)}</a> <a href="http://[[VirtualDomain]]/LocalEdit?{WebUtility.UrlEncode(contentAsContentCommon.ContentId.ToString())}">Edit</a>"""
+                            $"""<a href="https://[[VirtualDomain]]/LocalPreview?{WebUtility.UrlEncode(contentInformation.Item1)}">{(string.IsNullOrWhiteSpace(contentAsContentCommon.Title) ? "Preview" : contentAsContentCommon.Title)}</a> <a href="https://[[VirtualDomain]]/LocalEdit?{WebUtility.UrlEncode(contentAsContentCommon.ContentId.ToString())}">Edit</a>"""
                         },
                         { "description", descriptionAndImage.description },
                         { "displayId", contentAsContentCommon.ContentId },
@@ -447,8 +447,8 @@ public static class MapCmsJson
                         {
                             {
                                 "title",
-                                $"""<a href="http://[[VirtualDomain]]/LocalPreview?{WebUtility.UrlEncode(UserSettingsSingleton.CurrentSettings()
-                                    .PhotoPageUrl(loopPhoto))}">{(string.IsNullOrWhiteSpace(loopPhoto.Title) ? "Preview" : loopPhoto.Title)}</a> <a href="http://[[VirtualDomain]]/LocalEdit?{WebUtility.UrlEncode(loopPhoto.ContentId.ToString())}">Edit</a>"""
+                                $"""<a href="https://[[VirtualDomain]]/LocalPreview?{WebUtility.UrlEncode(UserSettingsSingleton.CurrentSettings()
+                                    .PhotoPageUrl(loopPhoto))}">{(string.IsNullOrWhiteSpace(loopPhoto.Title) ? "Preview" : loopPhoto.Title)}</a> <a href="https://[[VirtualDomain]]/LocalEdit?{WebUtility.UrlEncode(loopPhoto.ContentId.ToString())}">Edit</a>"""
                             },
                             { "description", descriptionAndImage.description },
                             { "displayId", loopPhoto.ContentId }
