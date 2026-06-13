@@ -216,6 +216,12 @@
                             IsChecked="{Binding EditorSettings.ShowRelatedContent, UpdateSourceTrigger=PropertyChanged}">
                             Show Related Content
                         </CheckBox>
+                        <CheckBox
+                            Name="ShowRelatedContentDailyPhotoPagesOnlyCheckBox"
+                            Margin="6,0,0,0"
+                            IsChecked="{Binding EditorSettings.ShowRelatedContentDailyPhotoPagesOnly, UpdateSourceTrigger=PropertyChanged}">
+                            Show Related Content - Only Show Daily Photo Pages
+                        </CheckBox>
                         <wpf:MarkdownViewer Markdown="{Binding HelpMarkdownShowRelatedContent}">
                             <b:Interaction.Behaviors>
                                 <behaviors:IgnoreMouseWheelBehavior />
