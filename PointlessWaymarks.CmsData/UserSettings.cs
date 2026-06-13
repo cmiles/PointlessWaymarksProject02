@@ -59,6 +59,7 @@ public partial class UserSettings
     public Guid SettingsId { get; set; }
     public bool ShowPreviousNextContent { get; set; } = true;
     public bool ShowRelatedContent { get; set; } = true;
+    public bool ShowRelatedContentDailyPhotoPagesOnly { get; set; } = true;
     public string SiteAuthors { get; set; } = string.Empty;
     public string SiteDirectionAttribute { get; set; } = string.Empty;
     public string SiteDomainName { get; set; } = string.Empty;

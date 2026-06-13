@@ -54,7 +54,8 @@ public static class BodyContentReferences
     public static async Task<HtmlTag> CompactContentTag(IContentCommon content, DateTime? generationVersion,
         IProgress<string>? progress = null)
     {
-        if (!UserSettingsSingleton.CurrentSettings().ShowRelatedContent) return HtmlTag.Empty();
+        if (!UserSettingsSingleton.CurrentSettings().ShowRelatedContent &&
+            !UserSettingsSingleton.CurrentSettings().ShowRelatedContentDailyPhotoPagesOnly) return HtmlTag.Empty();
 
         var toSearch = string.Empty;
 
@@ -62,7 +63,11 @@ public static class BodyContentReferences
 
         if (content is IUpdateNotes updateContent) toSearch += updateContent.UpdateNotes;
 
-        return await CompactContentTag(content.ContentId, toSearch, generationVersion, progress).ConfigureAwait(false);
+        return UserSettingsSingleton.CurrentSettings().ShowRelatedContentDailyPhotoPagesOnly
+            ? await CompactContentDailyPhotosOnlyTag(content.ContentId, toSearch, generationVersion, progress)
+                .ConfigureAwait(false)
+            : await CompactContentTag(content.ContentId, toSearch, generationVersion, progress)
+                .ConfigureAwait(false);
     }
 
     private static async Task<HtmlTag> CompactContentTag(Guid toCheckFor, string? bodyContentToCheckIn,
@@ -111,6 +116,65 @@ public static class BodyContentReferences
                 .ConfigureAwait(false));
         contentCommonList.AddRange(
             await BracketCodePosts.DbContentFromBracketCodes(bodyContentToCheckIn, progress).ConfigureAwait(false));
+
+        var transformedList = new List<(DateTime sortDateTime, HtmlTag tagContent)>();
+
+        if (contentCommonList.Any())
+        {
+            contentCommonList = contentCommonList.GroupBy(x => x.ContentId).Select(x => x.First()).ToList();
+
+            foreach (var loopContent in contentCommonList)
+            {
+                var toAdd = CompactContentDiv(loopContent);
+                if (!toAdd.IsEmpty())
+                    transformedList.Add((loopContent.LastUpdatedOn ?? loopContent.CreatedOn, toAdd));
+            }
+        }
+
+        var photoContent = await BracketCodePhotos.DbContentFromBracketCodes(bodyContentToCheckIn, progress)
+            .ConfigureAwait(false);
+        photoContent.AddRange(await BracketCodePhotosWithDetails
+            .DbContentFromBracketCodes(bodyContentToCheckIn, progress).ConfigureAwait(false));
+        photoContent.AddRange(await BracketCodePhotoLinks.DbContentFromBracketCodes(bodyContentToCheckIn, progress)
+            .ConfigureAwait(false));
+
+        //If the object itself is a photo add it to the list
+        photoContent.AddIfNotNull(await db.PhotoContents.SingleOrDefaultAsync(x => x.ContentId == toCheckFor)
+            .ConfigureAwait(false));
+
+        if (photoContent.Any())
+        {
+            var dates = photoContent.Select(x => x.PhotoCreatedOn.Date).Distinct().ToList();
+
+            foreach (var loopDates in dates)
+            {
+                var toAdd = await DailyPhotoPageGenerators.DailyPhotoGallery(loopDates, null).ConfigureAwait(false);
+                if (toAdd != null)
+                    transformedList.Add((loopDates, DailyPhotosPageParts.DailyPhotosPageRelatedContentDiv(toAdd)));
+            }
+        }
+
+        var relatedTags = transformedList.OrderByDescending(x => x.sortDateTime).Select(x => x.tagContent).ToList();
+
+        if (!relatedTags.Any()) return HtmlTag.Empty();
+
+        var relatedPostsList =
+            new DivTag().AddClasses("related-posts-list-container", "compact-content-list-container");
+
+        relatedPostsList.Children.Add(new DivTag().Text("Related:")
+            .AddClasses("compact-content-label-tag", "compact-content-list-label"));
+
+        foreach (var loopPost in relatedTags) relatedPostsList.Children.Add(loopPost);
+
+        return relatedPostsList;
+    }
+
+    private static async Task<HtmlTag> CompactContentDailyPhotosOnlyTag(Guid toCheckFor, string? bodyContentToCheckIn,
+        DateTime? generationVersion, IProgress<string>? progress = null)
+    {
+        var contentCommonList = new List<IContentCommon>();
+
+        var db = await Db.Context().ConfigureAwait(false);
 
         var transformedList = new List<(DateTime sortDateTime, HtmlTag tagContent)>();
 
