@@ -129,7 +129,7 @@ public static class ContentList
             var titleNormalized = content.Title.TrimNullToEmpty();
             var summaryNormalized = content.Summary.TrimNullToEmpty();
             var summaryIsInTitle = summaryNormalized.Length <= titleNormalized.Length * 1.2
-                                   && titleNormalized.ContainsFuzzy(summaryNormalized, 0.8, SimMetricType.JaroWinkler);
+                                   && titleNormalized.ContainsFuzzy(summaryNormalized, 0.5, SimMetricType.JaroWinkler);
             if (!summaryIsInTitle) summaryLines.Add(content.Summary);
         }
 

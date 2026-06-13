@@ -54,9 +54,9 @@ public static class MapCmsJson
                             """;
 
         var summaryIsInTitle = summary.Length <= title.Length * 1.2
-                               && title.ContainsFuzzy(summary, 0.8, SimMetricType.JaroWinkler);
+                               && title.ContainsFuzzy(summary, 0.5, SimMetricType.JaroWinkler);
         var titleIsInSummary = title.Length <= summary.Length * 1.2
-                               && summary.ContainsFuzzy(title, 0.8, SimMetricType.JaroWinkler);
+                               && summary.ContainsFuzzy(title, 0.5, SimMetricType.JaroWinkler);
 
         if (!string.IsNullOrWhiteSpace(summary)
             && title.GetSimilarity(summary, SimMetricType.JaroWinkler) < .9 &&

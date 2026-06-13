@@ -68,7 +68,7 @@ public static class ContentGalleryPageGenerators
 
         if (!string.IsNullOrWhiteSpace(content.Summary))
         {
-            var summaryIsInTitle = content.Title.ContainsFuzzy(content.Summary, 0.8, SimMetricType.JaroWinkler);
+            var summaryIsInTitle = content.Title.ContainsFuzzy(content.Summary, 0.5, SimMetricType.JaroWinkler);
             if (!summaryIsInTitle) summaryLines.Add(content.Summary);
         }
 

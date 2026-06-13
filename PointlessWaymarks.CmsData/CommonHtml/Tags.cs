@@ -333,11 +333,12 @@ public static class Tags
                 // Guard: containment is only meaningful when the supposed container is not shorter than
                 // what it's supposed to contain (allowing a small 20% tolerance for fuzzy length variation).
                 var summaryIsInTitle = summaryNormalized.Length <= titleNormalized.Length * 1.2
-                                       && titleNormalized.ContainsFuzzy(summaryNormalized, 0.8,
-                                           SimMetricType.JaroWinkler);
+                                       && (titleNormalized.ContainsFuzzy(summaryNormalized, 0.5,
+                                           SimMetricType.JaroWinkler) || summaryNormalized.Contains(titleNormalized, StringComparison.OrdinalIgnoreCase)
+                                           );
                 var titleIsInSummary = titleNormalized.Length <= summaryNormalized.Length * 1.2
-                                       && summaryNormalized.ContainsFuzzy(titleNormalized, 0.8,
-                                           SimMetricType.JaroWinkler);
+                                       && (summaryNormalized.ContainsFuzzy(titleNormalized, 0.5,
+                                           SimMetricType.JaroWinkler) || summaryNormalized.Contains(titleNormalized, StringComparison.OrdinalIgnoreCase));
 
                 if (titleIsInSummary) titleSummaryString = dbEntry.Summary.TrimNullToEmpty();
                 else if (summaryIsInTitle) titleSummaryString = dbEntry.Title.TrimNullToEmpty();

@@ -37,8 +37,8 @@ public static class LineData
 
         if (!string.IsNullOrWhiteSpace(summary)
             && title.GetSimilarity(summary, SimMetricType.JaroWinkler) < .9 &&
-            !(title.ContainsFuzzy(summary, 0.8, SimMetricType.JaroWinkler)
-              || summary.ContainsFuzzy(title, 0.8, SimMetricType.JaroWinkler)))
+            !(title.ContainsFuzzy(summary, 0.5, SimMetricType.JaroWinkler)
+              || summary.ContainsFuzzy(title, 0.5, SimMetricType.JaroWinkler)))
             description += $" <p>{summary}</p>";
 
         return description;
