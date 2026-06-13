@@ -30,7 +30,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Metalama.Framework" Version="2026.0.23" />
+        <PackageReference Include="Metalama.Framework" Version="2026.1.18" />
     </ItemGroup>
 
     <ItemGroup>
