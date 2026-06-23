@@ -369,6 +369,10 @@ a.info-list-link-item {
     width: 100vw;
 }
 
+.created-and-updated-content {
+    text-align: center;
+}
+
 .footer-container {
     display: flex;
     flex-direction: column;
