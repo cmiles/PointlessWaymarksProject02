@@ -634,7 +634,7 @@ public static class Tags
         var relatedPostsContainer =
             new DivTag().AddClasses("post-related-posts-container", "compact-content-list-container");
         relatedPostsContainer.Children.Add(new DivTag()
-            .Text($"Posts {(hasPreviousPosts ? "Before" : "")}" +
+            .Text($"Main Feed {(hasPreviousPosts ? "Before" : "")}" +
                   $"{(hasBothEarlierAndLaterPosts ? "/" : "")}{(hasLaterPosts ? "After" : "")}:")
             .AddClasses("post-related-posts-label-tag", "compact-content-list-label"));
 

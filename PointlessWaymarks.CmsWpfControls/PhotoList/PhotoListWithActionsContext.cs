@@ -95,6 +95,7 @@ public partial class PhotoListWithActionsContext
                 ItemName = "View Intersection Tags",
                 ItemCommand = ShowIntersectionTagsForSelectedCommand
             },
+            new ContextMenuItemData { ItemName = "Write Metadata to Media Library File", ItemCommand = WriteMetadataToMediaLibraryForSelectedCommand },
             new ContextMenuItemData { ItemName = "Export Files", ItemCommand = ExportFilesCommand },
             new ContextMenuItemData { ItemName = "Open URL", ItemCommand = ListContext.ViewOnSiteCommand },
             new ContextMenuItemData { ItemName = "Delete", ItemCommand = ListContext.DeleteSelectedCommand },
@@ -269,6 +270,14 @@ public partial class PhotoListWithActionsContext
 
             await StatusContext.ShowMessageWithOkButton("Feature Intersection Errors", bodyBuilder.ToString());
         }
+    }
+
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task WriteMetadataToMediaLibraryForSelected(CancellationToken cancellationToken)
+    {
+        await PhotoActions.WriteMetadataToMediaLibrary(SelectedListItemsContent(), StatusContext, cancellationToken);
     }
 
     [BlockingCommand]

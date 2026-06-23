@@ -51,11 +51,12 @@ public static class BodyContentReferences
         return relatedPostContainerDiv;
     }
 
-    public static async Task<HtmlTag> CompactContentTag(IContentCommon content, DateTime? generationVersion,
-        IProgress<string>? progress = null)
+    public static async Task<HtmlTag> CompactContentTag(IContentCommon content, DateTime? generationVersion, bool showDailyPhotoPageRegardlessOfSettings = false, IProgress<string>? progress = null)
     {
-        if (!UserSettingsSingleton.CurrentSettings().ShowRelatedContent &&
-            !UserSettingsSingleton.CurrentSettings().ShowRelatedContentDailyPhotoPagesOnly) return HtmlTag.Empty();
+        var showDailyPhotoPages = UserSettingsSingleton.CurrentSettings().ShowRelatedContentDailyPhotoPagesOnly ||
+                                  showDailyPhotoPageRegardlessOfSettings;
+        
+        if (!UserSettingsSingleton.CurrentSettings().ShowRelatedContent && !showDailyPhotoPages) return HtmlTag.Empty();
 
         var toSearch = string.Empty;
 
@@ -63,7 +64,7 @@ public static class BodyContentReferences
 
         if (content is IUpdateNotes updateContent) toSearch += updateContent.UpdateNotes;
 
-        return UserSettingsSingleton.CurrentSettings().ShowRelatedContentDailyPhotoPagesOnly
+        return showDailyPhotoPages
             ? await CompactContentDailyPhotosOnlyTag(content.ContentId, toSearch, generationVersion, progress)
                 .ConfigureAwait(false)
             : await CompactContentTag(content.ContentId, toSearch, generationVersion, progress)

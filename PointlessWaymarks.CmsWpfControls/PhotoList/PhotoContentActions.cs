@@ -181,6 +181,13 @@ public partial class PhotoContentActions : IContentActions<PhotoContent>
 
     [BlockingCommand]
     [StopAndWarnIfFirstParameterIsNull]
+    public async Task WriteMetadataToMediaLibrary(PhotoContent? content)
+    {
+        await PhotoActions.WriteMetadataToMediaLibrary(content!.AsList(), StatusContext, CancellationToken.None);
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task AddIntersectionTagsWithOsm(PhotoContent? content)
     {
         await PhotoActions.AddIntersectionTags(content!.AsList(), StatusContext, true, CancellationToken.None);

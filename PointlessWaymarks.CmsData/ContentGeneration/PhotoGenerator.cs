@@ -376,6 +376,7 @@ public static class PhotoGenerator
             toSave.Tags = SlugTagTools.TagListCleanupToSpacedString(toSave.Tags);
             await FileManagement.WriteSelectedPhotoContentFileToMediaArchive(selectedFile).ConfigureAwait(false);
             await Db.SavePhotoContent(toSave).ConfigureAwait(false);
+            await WritePhotoMetadataToMediaArchiveFile(toSave, progress);
             await WritePhotoFromMediaArchiveToLocalSite(toSave, overwriteExistingFiles, progress).ConfigureAwait(false);
             await GenerateHtml(toSave, generationVersion, progress).ConfigureAwait(false);
             await Export.WritePhotoContentData(toSave).ConfigureAwait(false);
@@ -458,6 +459,27 @@ public static class PhotoGenerator
             return GenerationReturn.Error(photoFileValidation.Explanation, photoContent.ContentId);
 
         return GenerationReturn.Success("Photo Content Validation Successful");
+    }
+
+    public static async Task WritePhotoMetadataToMediaArchiveFile(PhotoContent photoContent,
+        IProgress<string>? progress = null)
+    {
+        if (string.IsNullOrWhiteSpace(photoContent.OriginalFileName)) return;
+
+        var userSettings = UserSettingsSingleton.CurrentSettings();
+
+        var exifTool = await FileLocationTools.FindDownloadUpdateExifTool(null, progress);
+
+        if (!exifTool.Success || exifTool.ExifToolExe is null || !exifTool.ExifToolExe.Exists)
+        {
+            return;
+        }
+
+        var sourceFile = new FileInfo(Path.Combine(userSettings.LocalMediaArchivePhotoDirectory().FullName,
+            photoContent.OriginalFileName));
+
+        await MediaLibraryPictureExifWriter.WriteToPhotoFilesAsync(exifTool.ExifToolExe, photoContent, [sourceFile],
+            progress);
     }
 
     public static async Task WritePhotoFromMediaArchiveToLocalSite(PhotoContent photoContent,

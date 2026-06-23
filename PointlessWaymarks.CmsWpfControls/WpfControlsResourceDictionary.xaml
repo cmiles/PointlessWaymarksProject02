@@ -1699,6 +1699,9 @@
                             <Button Content="View History"
                                     Command="{Binding ItemActions.ViewHistoryCommand}"
                                     CommandParameter="{Binding DbEntry}" />
+                            <Button Content="Metadata to Media Lib"
+                                    Command="{Binding ItemActions.WriteMetadataToMediaLibraryCommand}"
+                                    CommandParameter="{Binding DbEntry}" />
                             <TextBlock>View</TextBlock>
                             <Button Content="Metadata"
                                     Command="{Binding ItemActions.ReportPhotoMetadataCommand}"

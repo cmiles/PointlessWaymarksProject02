@@ -34,7 +34,7 @@
       title="<#=
                 $"RSS Feed for {UserSettingsSingleton.CurrentSettings().SiteName} - Photos".HtmlEncode() #>"
       href="<#=
-                UserSettingsSingleton.CurrentSettings().PhotoRssUrl() #>" />
+                UserSettingsSingleton.CurrentSettings().PhotosRssUrl() #>" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 

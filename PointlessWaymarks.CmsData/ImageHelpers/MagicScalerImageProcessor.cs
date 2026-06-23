@@ -18,7 +18,19 @@ public class MagicScalerImageProcessor : IPictureResizer
         if (newFileInfo.Exists) newFileInfo.Delete();
 
         var settings = new ProcessImageSettings
-            { Width = width, EncoderOptions = new JpegEncoderOptions(quality, ChromaSubsampleMode.Default) };
+        {
+            Width = width,
+            EncoderOptions = new JpegEncoderOptions(quality, ChromaSubsampleMode.Default),
+            MetadataNames = [
+                // Explicit MQL paths for exact Exif IFD0 preservation
+                "/app1/ifd/{ushort=315}",   // Artist
+                "/app1/ifd/{ushort=33432}", // Copyright
+        
+                // High-level Windows policies as a catch-all for other metadata formats (XMP/IPTC/XPAuthor)
+                "System.Author",
+                "System.Copyright"
+            ]
+        };
 
         await using var outStream = new FileStream(newFileInfo.FullName, FileMode.Create);
         var results = MagicImageProcessor.ProcessImage(toResize.FullNameWithLongFilePrefix(), outStream, settings);
@@ -48,7 +60,10 @@ public class MagicScalerImageProcessor : IPictureResizer
 
         if (newFileInfo is null) return null;
         var settings = new ProcessImageSettings
-            { EncoderOptions = new JpegEncoderOptions(100, ChromaSubsampleMode.Default) };
+        {
+            EncoderOptions = new JpegEncoderOptions(100, ChromaSubsampleMode.Default),
+            MetadataNames = ["System.Photo.Artist", "System.Photo.Copyright", "System.Author"]
+        };
 
         await using var outStream = new FileStream(newFileInfo.FullName, FileMode.Create);
         var results = MagicImageProcessor.ProcessImage(toConvert.FullNameWithLongFilePrefix(), outStream, settings);

@@ -1,4 +1,4 @@
-﻿<#@ template language="C#" #>
+<#@ template language="C#" #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="PointlessWaymarks.CmsData.CommonHtml" #>
@@ -37,7 +37,7 @@
       title="<#=
                 $"RSS Feed for {UserSettingsSingleton.CurrentSettings().SiteName} - Photos".HtmlEncode() #>"
       href="<#=
-                UserSettingsSingleton.CurrentSettings().PhotoRssUrl() #>" />
+                UserSettingsSingleton.CurrentSettings().PhotosRssUrl() #>" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
