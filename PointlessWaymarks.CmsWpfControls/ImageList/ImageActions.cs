@@ -5,7 +5,6 @@ using Ookii.Dialogs.Wpf;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.BracketCodes;
 using PointlessWaymarks.CmsData.ContentGeneration;
-using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.CmsWpfControls.FeatureIntersectResultBrowser;
@@ -244,7 +243,7 @@ public static class ImageActions
 
             File.Copy(fileToExport.FullName, destinationFileName!.FullName);
             exportedCount++;
-            
+
             lastFile = destinationFileName.FullName;
         }
 
@@ -254,7 +253,9 @@ public static class ImageActions
             await ProcessHelpers.OpenExplorerWindowForFile(lastFile);
         }
         else
+        {
             await statusContext.ToastWarning("No files to export?");
+        }
     }
 
     public static async Task ReportImageMetadata(List<ImageContent> contents, StatusControlContext statusContext)
@@ -413,5 +414,60 @@ public static class ImageActions
         var finalString = string.Join(Environment.NewLine, codeList);
 
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
+    }
+
+    public static async Task WriteMetadataToMediaLibrary(List<ImageContent> contents,
+        StatusControlContext statusContext, CancellationToken cancellationToken)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var exifToolExe = await FileLocationTools.FindDownloadUpdateExifTool();
+
+        if (!exifToolExe.Success || exifToolExe.ExifToolExe is null || !exifToolExe.ExifToolExe.Exists)
+        {
+            await statusContext.ToastError("ExifTool executable not found or failed to download.");
+            if (!string.IsNullOrWhiteSpace(exifToolExe.Message))
+                await statusContext.ShowMessageWithOkButton("ExifTool Error", exifToolExe.Message);
+            return;
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var errorMessages = new List<string>();
+
+        var counter = 0;
+        foreach (var loopContent in contents)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                statusContext.Progress($"Processing {loopContent.Title} - {++counter} of {contents.Count}...");
+                var mediaFile = UserSettingsSingleton.CurrentSettings().LocalMediaArchiveImageContentFile(loopContent);
+                if (mediaFile is not { Exists: true })
+                {
+                    errorMessages.Add($"Media file not found for {loopContent.Title}.");
+                    continue;
+                }
+
+                await MediaLibraryPictureExifWriter.WriteToImageFilesAsync(exifToolExe.ExifToolExe, loopContent,
+                    [mediaFile],
+                    statusContext.ProgressTracker());
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"Error writing metadata for {loopContent.Title}");
+                errorMessages.Add($"Error writing metadata for {loopContent.Title}: {ex.Message}");
+            }
+        }
+
+        if (errorMessages.Any())
+        {
+            var errorReport = string.Join(Environment.NewLine, errorMessages);
+            await statusContext.ShowMessageWithOkButton("Metadata Write Errors", errorReport);
+        }
+        else
+        {
+            await statusContext.ToastSuccess("Metadata successfully written to all selected media files.");
+        }
     }
 }

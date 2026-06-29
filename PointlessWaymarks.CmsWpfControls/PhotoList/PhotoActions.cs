@@ -480,7 +480,8 @@ public static class PhotoActions
                     continue;
                 }
 
-                await MediaLibraryPictureExifWriter.WriteToPhotoFilesAsync(exifToolExe.ExifToolExe, loopContent, [mediaFile],
+                await MediaLibraryPictureExifWriter.WriteToPhotoFilesAsync(exifToolExe.ExifToolExe, loopContent,
+                    [mediaFile],
                     statusContext.ProgressTracker());
             }
             catch (Exception ex)

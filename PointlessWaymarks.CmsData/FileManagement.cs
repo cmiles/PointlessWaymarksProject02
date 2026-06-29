@@ -1,6 +1,3 @@
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -11,6 +8,10 @@ using PointlessWaymarks.CmsData.ImageHelpers;
 using PointlessWaymarks.CommonTools;
 using Polly;
 using Serilog;
+using System.Diagnostics;
+using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace PointlessWaymarks.CmsData;
 
@@ -157,6 +158,23 @@ public static class FileManagement
 
         var contentFile = new FileInfo(Path.Combine(fileContentDirectory.FullName, dbContent.OriginalFileName));
 
+        if (archiveFile.Exists)
+        {
+            await ImageGenerator.WriteImageMetadataToMediaArchiveFile(dbContent);
+        }
+        
+        if (archiveFile.Exists && contentFile.Exists)
+        {
+            var archiveMd5 = archiveFile.CalculateMD5();
+            var contentMd5 = contentFile.CalculateMD5();
+
+            if (!archiveMd5.Equals(contentMd5))
+            {
+                contentFile.Delete();
+                await archiveFile.CopyToAndLogAsync(contentFile.FullName).ConfigureAwait(false);
+            }
+        }
+
         if (!archiveFile.Exists && !contentFile.Exists)
             return GenerationReturn.Error(
                 $"Neither {archiveFile.FullName} nor {contentFile.FullName} exists - " +
@@ -206,6 +224,23 @@ public static class FileManagement
 
         var contentFile = new FileInfo(Path.Combine(fileContentDirectory.FullName, dbContent.OriginalFileName));
 
+        if (archiveFile.Exists)
+        {
+            await PhotoGenerator.WritePhotoMetadataToMediaArchiveFile(dbContent);
+        }
+        
+        if (archiveFile.Exists && contentFile.Exists)
+        {
+            var archiveMd5 = archiveFile.CalculateMD5();
+            var contentMd5 = contentFile.CalculateMD5();
+
+            if (!archiveMd5.Equals(contentMd5))
+            {
+                contentFile.Delete();
+                await archiveFile.CopyToAndLogAsync(contentFile.FullName).ConfigureAwait(false);
+            }
+        }
+        
         if (!archiveFile.Exists && !contentFile.Exists)
             return GenerationReturn.Error(
                 $"Neither {archiveFile.FullName} nor {contentFile.FullName} exists - " +
@@ -217,7 +252,7 @@ public static class FileManagement
 
         if (!archiveFile.Exists && contentFile.Exists)
             await contentFile.CopyToAndLogAsync(archiveFile.FullName).ConfigureAwait(false);
-
+        
         archiveFile.Refresh();
         contentFile.Refresh();
 

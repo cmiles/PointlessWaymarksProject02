@@ -466,20 +466,27 @@ public static class PhotoGenerator
     {
         if (string.IsNullOrWhiteSpace(photoContent.OriginalFileName)) return;
 
-        var userSettings = UserSettingsSingleton.CurrentSettings();
-
-        var exifTool = await FileLocationTools.FindDownloadUpdateExifTool(null, progress);
-
-        if (!exifTool.Success || exifTool.ExifToolExe is null || !exifTool.ExifToolExe.Exists)
+        try
         {
-            return;
+            var userSettings = UserSettingsSingleton.CurrentSettings();
+
+            var exifTool = await FileLocationTools.FindDownloadUpdateExifTool(null, progress);
+
+            if (!exifTool.Success || exifTool.ExifToolExe is null || !exifTool.ExifToolExe.Exists)
+            {
+                return;
+            }
+
+            var sourceFile = new FileInfo(Path.Combine(userSettings.LocalMediaArchivePhotoDirectory().FullName,
+                photoContent.OriginalFileName));
+
+            await MediaLibraryPictureExifWriter.WriteToPhotoFilesAsync(exifTool.ExifToolExe, photoContent, [sourceFile],
+                progress);
         }
-
-        var sourceFile = new FileInfo(Path.Combine(userSettings.LocalMediaArchivePhotoDirectory().FullName,
-            photoContent.OriginalFileName));
-
-        await MediaLibraryPictureExifWriter.WriteToPhotoFilesAsync(exifTool.ExifToolExe, photoContent, [sourceFile],
-            progress);
+        catch (Exception e)
+        {
+            Log.Error(e, "PhotoGenerator.WritePhotoMetadataToMediaArchiveFile - silent error with writing Metadata.");
+        }
     }
 
     public static async Task WritePhotoFromMediaArchiveToLocalSite(PhotoContent photoContent,
@@ -495,7 +502,18 @@ public static class PhotoGenerator
         var targetFile = new FileInfo(Path.Combine(userSettings.LocalSitePhotoContentDirectory(photoContent).FullName,
             photoContent.OriginalFileName));
 
-        if (targetFile.Exists && forcedResizeOverwriteExistingFiles)
+        var sourceAndTargetMd5Mismatch = false;
+        
+        if (sourceFile.Exists && targetFile.Exists)
+        {
+            var sourceMd5 = sourceFile.CalculateMD5();
+            var targetMd5 = targetFile.CalculateMD5();
+
+            sourceAndTargetMd5Mismatch = sourceMd5.Equals(targetMd5);
+        }
+
+
+        if (targetFile.Exists && (forcedResizeOverwriteExistingFiles || sourceAndTargetMd5Mismatch))
         {
             targetFile.Delete();
             targetFile.Refresh();

@@ -95,7 +95,6 @@ public partial class PhotoListWithActionsContext
                 ItemName = "View Intersection Tags",
                 ItemCommand = ShowIntersectionTagsForSelectedCommand
             },
-            new ContextMenuItemData { ItemName = "Write Metadata to Media Library File", ItemCommand = WriteMetadataToMediaLibraryForSelectedCommand },
             new ContextMenuItemData { ItemName = "Export Files", ItemCommand = ExportFilesCommand },
             new ContextMenuItemData { ItemName = "Open URL", ItemCommand = ListContext.ViewOnSiteCommand },
             new ContextMenuItemData { ItemName = "Delete", ItemCommand = ListContext.DeleteSelectedCommand },

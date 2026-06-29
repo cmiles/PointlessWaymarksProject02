@@ -469,4 +469,11 @@ public partial class ImageListWithActionsContext
             await loopSelected.ItemActions.ViewFile(loopSelected.DbEntry);
         }
     }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task WriteMetadataToMediaLibraryForSelected(CancellationToken cancellationToken)
+    {
+        await ImageActions.WriteMetadataToMediaLibrary(SelectedListItemsContent(), StatusContext, cancellationToken);
+    }
 }

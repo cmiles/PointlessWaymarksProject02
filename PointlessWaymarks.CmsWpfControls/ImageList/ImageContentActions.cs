@@ -341,4 +341,11 @@ public partial class ImageContentActions : IContentActions<ImageContent>
         var ps = new ProcessStartInfo(url) { UseShellExecute = true, Verb = "open" };
         Process.Start(ps);
     }
+
+    [BlockingCommand]
+    [StopAndWarnIfFirstParameterIsNull]
+    public async Task WriteMetadataToMediaLibrary(ImageContent? content)
+    {
+        await ImageActions.WriteMetadataToMediaLibrary(content!.AsList(), StatusContext, CancellationToken.None);
+    }
 }

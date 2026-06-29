@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 using MetadataExtractor.Formats.Iptc;
@@ -11,6 +10,8 @@ using PointlessWaymarks.CmsData.ImageHelpers;
 using PointlessWaymarks.CmsData.Json;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.SpatialTools;
+using Serilog;
+using System.Text.RegularExpressions;
 using XmpCore;
 
 namespace PointlessWaymarks.CmsData.ContentGeneration;
@@ -167,6 +168,7 @@ public static class ImageGenerator
             toSave.OriginalFileName = selectedFile.Name;
             await FileManagement.WriteSelectedImageContentFileToMediaArchive(selectedFile).ConfigureAwait(false);
             await Db.SaveImageContent(toSave).ConfigureAwait(false);
+            await WriteImageMetadataToMediaArchiveFile(toSave, progress);
             await WriteImageFromMediaArchiveToLocalSite(toSave, overwriteExistingFiles, progress).ConfigureAwait(false);
             await GenerateHtml(toSave, generationVersion, progress).ConfigureAwait(false);
             await Export.WriteImageContentData(toSave).ConfigureAwait(false);
@@ -184,6 +186,34 @@ public static class ImageGenerator
             DataNotificationUpdateType.LocalContent, [toSave.ContentId]);
 
         return (GenerationReturn.Success($"Saved and Generated Content And Html for {toSave.Title}"), toSave);
+    }
+
+    public static async Task WriteImageMetadataToMediaArchiveFile(ImageContent imageContent,
+        IProgress<string>? progress = null)
+    {
+        if (string.IsNullOrWhiteSpace(imageContent.OriginalFileName)) return;
+        try
+        {
+            var userSettings = UserSettingsSingleton.CurrentSettings();
+
+            var exifTool = await FileLocationTools.FindDownloadUpdateExifTool(null, progress);
+
+            if (!exifTool.Success || exifTool.ExifToolExe is null || !exifTool.ExifToolExe.Exists)
+            {
+                return;
+            }
+
+            var sourceFile = new FileInfo(Path.Combine(userSettings.LocalMediaArchiveImageDirectory().FullName,
+                imageContent.OriginalFileName));
+
+            await MediaLibraryPictureExifWriter.WriteToImageFilesAsync(exifTool.ExifToolExe, imageContent, [sourceFile],
+                progress);
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "PhotoGenerator.WritePhotoMetadataToMediaArchiveFile - silent error with writing Metadata.");
+
+        }
     }
 
     public static async Task<GenerationReturn> Validate(ImageContent? imageContent, FileInfo? selectedFile)
@@ -248,7 +278,17 @@ public static class ImageGenerator
         var targetFile = new FileInfo(Path.Combine(
             userSettings.LocalSiteImageContentDirectory(imageContent).FullName, imageContent.OriginalFileName));
 
-        if (targetFile.Exists && forcedResizeOverwriteExistingFiles)
+        var sourceAndTargetMd5Mismatch = false;
+
+        if (sourceFile.Exists && targetFile.Exists)
+        {
+            var sourceMd5 = sourceFile.CalculateMD5();
+            var targetMd5 = targetFile.CalculateMD5();
+
+            sourceAndTargetMd5Mismatch = sourceMd5.Equals(targetMd5);
+        }
+
+        if (targetFile.Exists && (forcedResizeOverwriteExistingFiles || sourceAndTargetMd5Mismatch))
         {
             targetFile.Delete();
             targetFile.Refresh();
