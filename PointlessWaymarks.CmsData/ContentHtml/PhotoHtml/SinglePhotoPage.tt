@@ -65,16 +65,15 @@
                 PhotoParts.PhotoDetailsDiv(DbEntry).ToString() #>
         <#= Tags.TagList(DbEntry).ToString() #>
         <#= Tags.PictureSizeList(DbEntry.ShowPhotoSizes, PictureInformation).ToString() #>
+        <#= Tags.CreatedByAndUpdatedOnDiv(DbEntry).ToString() #>
         <#=
                 BodyContentReferences.CompactContentTag(DbEntry, GenerationVersion, true).Result #>
         <#=
                 Tags.PreviousAndNextPhotoDiv(PreviousPhoto, NextPhoto) #>
         <#=
-                Tags.CreatedByAndUpdatedOnDiv(DbEntry).ToString() #>
-        <#=
                 Tags.PreviousAndNextContentDiv(PreviousPosts, LaterPosts) #>
-        <#=
-                    Tags.UpdateNotesDiv(DbEntry).Result.ToString() #>
+        <#= Tags.UpdateNotesDiv(DbEntry).Result.ToString() #>
+
     </div>
     <#= HorizontalRule.StandardRule() #>
     <#= Footer.StandardFooterDiv().Result #>

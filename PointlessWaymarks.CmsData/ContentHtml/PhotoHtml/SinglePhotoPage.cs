@@ -263,51 +263,51 @@ namespace PointlessWaymarks.CmsData.ContentHtml.PhotoHtml
             
             #line default
             #line hidden
-            this.Write("\n        ");
+            this.Write("\r\n        ");
             
-            #line 1 "E:\Code\pwp-03\PointlessWaymarks.CmsData\ContentHtml\PhotoHtml\SinglePhotoPage.tt"
+            #line 2 "E:\Code\pwp-03\PointlessWaymarks.CmsData\ContentHtml\PhotoHtml\SinglePhotoPage.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(Tags.CreatedByAndUpdatedOnDiv(DbEntry).ToString()));
+            
+            #line default
+            #line hidden
+            this.Write("\r\n        ");
+            
+            #line 3 "E:\Code\pwp-03\PointlessWaymarks.CmsData\ContentHtml\PhotoHtml\SinglePhotoPage.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(BodyContentReferences.CompactContentTag(DbEntry, GenerationVersion, true).Result));
             
             #line default
             #line hidden
             this.Write("\n        ");
             
-            #line 1 "E:\Code\pwp-03\PointlessWaymarks.CmsData\ContentHtml\PhotoHtml\SinglePhotoPage.tt"
+            #line 3 "E:\Code\pwp-03\PointlessWaymarks.CmsData\ContentHtml\PhotoHtml\SinglePhotoPage.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Tags.PreviousAndNextPhotoDiv(PreviousPhoto, NextPhoto)));
             
             #line default
             #line hidden
             this.Write("\n        ");
             
-            #line 1 "E:\Code\pwp-03\PointlessWaymarks.CmsData\ContentHtml\PhotoHtml\SinglePhotoPage.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(Tags.CreatedByAndUpdatedOnDiv(DbEntry).ToString()));
-            
-            #line default
-            #line hidden
-            this.Write("\n        ");
-            
-            #line 1 "E:\Code\pwp-03\PointlessWaymarks.CmsData\ContentHtml\PhotoHtml\SinglePhotoPage.tt"
+            #line 3 "E:\Code\pwp-03\PointlessWaymarks.CmsData\ContentHtml\PhotoHtml\SinglePhotoPage.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Tags.PreviousAndNextContentDiv(PreviousPosts, LaterPosts)));
             
             #line default
             #line hidden
-            this.Write("\n        ");
+            this.Write("\r\n        ");
             
-            #line 1 "E:\Code\pwp-03\PointlessWaymarks.CmsData\ContentHtml\PhotoHtml\SinglePhotoPage.tt"
+            #line 4 "E:\Code\pwp-03\PointlessWaymarks.CmsData\ContentHtml\PhotoHtml\SinglePhotoPage.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Tags.UpdateNotesDiv(DbEntry).Result.ToString()));
             
             #line default
             #line hidden
-            this.Write("\n    </div>\n    ");
+            this.Write("\n\n    </div>\n    ");
             
-            #line 1 "E:\Code\pwp-03\PointlessWaymarks.CmsData\ContentHtml\PhotoHtml\SinglePhotoPage.tt"
+            #line 4 "E:\Code\pwp-03\PointlessWaymarks.CmsData\ContentHtml\PhotoHtml\SinglePhotoPage.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(HorizontalRule.StandardRule()));
             
             #line default
             #line hidden
             this.Write("\n    ");
             
-            #line 1 "E:\Code\pwp-03\PointlessWaymarks.CmsData\ContentHtml\PhotoHtml\SinglePhotoPage.tt"
+            #line 4 "E:\Code\pwp-03\PointlessWaymarks.CmsData\ContentHtml\PhotoHtml\SinglePhotoPage.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Footer.StandardFooterDiv().Result));
             
             #line default
