@@ -55,8 +55,9 @@ public class PreviewServer
                         StringComparison.OrdinalIgnoreCase);
                 await context.Response.WriteAsync(moddedFile);
             }
-            else if (possiblePath.Value.EndsWith(".html", StringComparison.OrdinalIgnoreCase) ||
-                     possiblePath.Value.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+            else if ((possiblePath.Value.EndsWith(".html", StringComparison.OrdinalIgnoreCase) ||
+                     possiblePath.Value.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) &&
+                     !possiblePath.Value.Contains("/.well-known/"))
             {
                 var rawFile = new StringBuilder();
 
