@@ -167,7 +167,14 @@ public static class ImageGenerator
             toSave.Tags = SlugTagTools.TagListCleanupToSpacedString(toSave.Tags);
             toSave.OriginalFileName = selectedFile.Name;
             await FileManagement.WriteSelectedImageContentFileToMediaArchive(selectedFile).ConfigureAwait(false);
-            await Db.SaveImageContent(toSave).ConfigureAwait(false);
+            var possibleComparison = await Db.SaveImageContent(toSave).ConfigureAwait(false);
+            
+            if (possibleComparison is null || possibleComparison.Differences.Any(x =>
+                    x.PropertyName.Equals(nameof(toSave.CreatedBy))))
+            {
+                overwriteExistingFiles = true;
+            }
+            
             await WriteImageMetadataToMediaArchiveFile(toSave, progress);
             await WriteImageFromMediaArchiveToLocalSite(toSave, overwriteExistingFiles, progress).ConfigureAwait(false);
             await GenerateHtml(toSave, generationVersion, progress).ConfigureAwait(false);

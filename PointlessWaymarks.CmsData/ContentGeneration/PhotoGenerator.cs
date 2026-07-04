@@ -375,7 +375,15 @@ public static class PhotoGenerator
             Db.DefaultPropertyCleanup(toSave);
             toSave.Tags = SlugTagTools.TagListCleanupToSpacedString(toSave.Tags);
             await FileManagement.WriteSelectedPhotoContentFileToMediaArchive(selectedFile).ConfigureAwait(false);
-            await Db.SavePhotoContent(toSave).ConfigureAwait(false);
+            var possibleComparison = await Db.SavePhotoContent(toSave).ConfigureAwait(false);
+
+            if (possibleComparison is null || possibleComparison.Differences.Any(x =>
+                    x.PropertyName.Equals(nameof(toSave.License)) ||
+                    x.PropertyName.Equals(nameof(toSave.PhotoCreatedBy))))
+            {
+                overwriteExistingFiles = true;
+            }
+
             await WritePhotoMetadataToMediaArchiveFile(toSave, progress);
             await WritePhotoFromMediaArchiveToLocalSite(toSave, overwriteExistingFiles, progress).ConfigureAwait(false);
             await GenerateHtml(toSave, generationVersion, progress).ConfigureAwait(false);

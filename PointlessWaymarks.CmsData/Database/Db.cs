@@ -1,5 +1,4 @@
-using System.Collections.Concurrent;
-using System.Text.Json;
+using KellermanSoftware.CompareNetObjects;
 using Microsoft.EntityFrameworkCore;
 using Omu.ValueInjecter;
 using PointlessWaymarks.CmsData.BracketCodes;
@@ -9,6 +8,8 @@ using PointlessWaymarks.CmsData.Spatial;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.SpatialTools;
 using SQLitePCL;
+using System.Collections.Concurrent;
+using System.Text.Json;
 
 namespace PointlessWaymarks.CmsData.Database;
 
@@ -2503,9 +2504,9 @@ public static class Db
             [toSave.ContentId]);
     }
 
-    public static async Task SaveImageContent(ImageContent? toSave)
+    public static async Task<ComparisonResult?> SaveImageContent(ImageContent? toSave)
     {
-        if (toSave == null) return;
+        if (toSave == null) return null;
 
         var context = await Context().ConfigureAwait(false);
 
@@ -2513,7 +2514,10 @@ public static class Db
             .ConfigureAwait(false);
 
         var isUpdate = toHistoric.Any();
-
+        
+        var compareLogic = new CompareLogic(new ComparisonConfig { MaxDifferences = 100, CompareChildren = false });
+        var comparisonResult = compareLogic.Compare(toHistoric.FirstOrDefault(), toSave);
+        
         foreach (var loopToHistoric in toHistoric)
         {
             var newHistoric = new HistoricImageContent();
@@ -2540,6 +2544,8 @@ public static class Db
         DataNotifications.PublishDataNotification("Db", DataNotificationContentType.Image,
             isUpdate ? DataNotificationUpdateType.Update : DataNotificationUpdateType.New,
             [toSave.ContentId]);
+
+        return comparisonResult;
     }
 
     public static async Task SaveLineContent(LineContent? toSave)
@@ -2804,9 +2810,9 @@ public static class Db
             [toSave.ContentId]);
     }
 
-    public static async Task SavePhotoContent(PhotoContent? toSave)
+    public static async Task<ComparisonResult?> SavePhotoContent(PhotoContent? toSave)
     {
-        if (toSave == null) return;
+        if (toSave == null) return null;
 
         var context = await Context().ConfigureAwait(false);
 
@@ -2815,6 +2821,9 @@ public static class Db
 
         var isUpdate = toHistoric.Any();
 
+        var compareLogic = new CompareLogic(new ComparisonConfig { MaxDifferences = 100, CompareChildren = false });
+        var comparisonResult = compareLogic.Compare(toHistoric.FirstOrDefault(), toSave);
+        
         foreach (var loopToHistoric in toHistoric)
         {
             var newHistoric = new HistoricPhotoContent();
@@ -2841,6 +2850,8 @@ public static class Db
         DataNotifications.PublishDataNotification("Db", DataNotificationContentType.Photo,
             isUpdate ? DataNotificationUpdateType.Update : DataNotificationUpdateType.New,
             [toSave.ContentId]);
+
+        return comparisonResult;
     }
 
     public static async Task<PointContentDto?> SavePointContent(PointContentDto? toSaveDto)
