@@ -3,6 +3,7 @@ using System.Web;
 using System.Xml.Linq;
 using PointlessWaymarks.CmsData.CommonHtml;
 using PointlessWaymarks.CmsData.Database.Models;
+using PointlessWaymarks.CommonTools;
 
 namespace PointlessWaymarks.CmsData.Rss;
 
@@ -10,7 +11,6 @@ public static class RssBuilder
 {
     public static XDocument RssDocument(string channelTitle, List<XElement> items)
     {
-        var rssBuilder = new StringBuilder();
         var settings = UserSettingsSingleton.CurrentSettings();
 
         var rssElement = new XElement("rss", new XAttribute("version", "2.0"));
@@ -34,7 +34,7 @@ public static class RssBuilder
     public static string RssFileString(string channelTitle, List<XElement> items)
     {
         var rssDoc = RssDocument(channelTitle, items);
-        using var stringWriter = new StringWriter();
+        using var stringWriter = new Utf8StringWriterNoBom();
         rssDoc.Save(stringWriter);
 
         return stringWriter.ToString();

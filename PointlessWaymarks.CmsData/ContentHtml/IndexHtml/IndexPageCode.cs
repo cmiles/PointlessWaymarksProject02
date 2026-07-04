@@ -235,9 +235,10 @@ public partial class IndexPage
 
         if (htmlFileInfo.Exists)
         {
-            if (await FileManagement.FileAndHtmlStringIgnoringContentAndGenerationVersionAreEqual(htmlFileInfo, htmlString))
+            if (await FileManagement.FileAndHtmlStringIgnoringContentAndGenerationVersionAreEqual(htmlFileInfo,
+                    htmlString))
                 return;
-            
+
             htmlFileInfo.Delete();
             htmlFileInfo.Refresh();
         }
@@ -410,7 +411,7 @@ public partial class IndexPage
                     content = $"<p>{HttpUtility.HtmlEncode(post.DbEntry.Summary)}</p>" +
                               $"<p>Read more at <a href=\"{post.PageUrl}\">{UserSettingsSingleton.CurrentSettings().SiteName}</a></p>";
 
-                items.Add(RssBuilder.RssItemString(post.DbEntry.Title, $"{post.PageUrl}", 
+                items.Add(RssBuilder.RssItemString(post.DbEntry.Title, $"{post.PageUrl}",
                     Tags.CreatedByAndUpdatedByNameList(post.DbEntry), content,
                     post.DbEntry.CreatedOn, post.DbEntry.ContentId.ToString()));
             }
@@ -435,7 +436,7 @@ public partial class IndexPage
                     content = $"<p>{HttpUtility.HtmlEncode(post.DbEntry.Summary)}</p>" +
                               $"<p>Read more at <a href=\"{post.PageUrl}\">{UserSettingsSingleton.CurrentSettings().SiteName}</a></p>";
 
-                items.Add(RssBuilder.RssItemString(post.DbEntry.Title, $"{post.PageUrl}", 
+                items.Add(RssBuilder.RssItemString(post.DbEntry.Title, $"{post.PageUrl}",
                     Tags.CreatedByAndUpdatedByNameList(post.DbEntry), content,
                     post.DbEntry.CreatedOn, post.DbEntry.ContentId.ToString()));
             }
@@ -485,7 +486,7 @@ public partial class IndexPage
                     content = $"<p>{HttpUtility.HtmlEncode(post.DbEntry.Summary)}</p>" +
                               $"<p>Read more at <a href=\"{post.PageUrl}\">{UserSettingsSingleton.CurrentSettings().SiteName}</a></p>";
 
-                items.Add(RssBuilder.RssItemString(post.DbEntry.Title, $"{post.PageUrl}", 
+                items.Add(RssBuilder.RssItemString(post.DbEntry.Title, $"{post.PageUrl}",
                     Tags.CreatedByAndUpdatedByNameList(post.DbEntry), content,
                     post.DbEntry.CreatedOn, post.DbEntry.ContentId.ToString()));
             }
@@ -499,8 +500,10 @@ public partial class IndexPage
             localIndexFile.Refresh();
         }
 
+        var rssString = RssBuilder.RssFileString($"{UserSettingsSingleton.CurrentSettings().SiteName}",
+            items);
+
         await FileManagement.WriteAllTextToFileAndLog(localIndexFile.FullName,
-            RssBuilder.RssFileString($"{UserSettingsSingleton.CurrentSettings().SiteName}",
-                items)).ConfigureAwait(false);
+            rssString).ConfigureAwait(false);
     }
 }
