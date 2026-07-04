@@ -29,6 +29,7 @@ public partial class FeedListContext : IStandardListWithContext<FeedListListItem
     public FeedListListItem? SelectedItem { get; set; }
     public List<FeedListListItem> SelectedItems { get; set; } = [];
     public string UserAddFeedInput { get; set; } = string.Empty;
+    public bool UserFilterForErrors { get; set; }
     public string UserFilterText { get; set; } = string.Empty;
 
     public FeedListListItem? SelectedListItem()
@@ -229,7 +230,15 @@ public partial class FeedListContext : IStandardListWithContext<FeedListListItem
 
         if (string.IsNullOrWhiteSpace(UserFilterText))
         {
-            ((CollectionView)CollectionViewSource.GetDefaultView(Items)).Filter = _ => true;
+            if (UserFilterForErrors)
+                ((CollectionView)CollectionViewSource.GetDefaultView(Items)).Filter = o =>
+                {
+                    if (o is not FeedListListItem toFilter) return false;
+                    return toFilter.LastUpdateFailed;
+                };
+            else
+                ((CollectionView)CollectionViewSource.GetDefaultView(Items)).Filter = _ => true;
+
             return;
         }
 
@@ -239,10 +248,17 @@ public partial class FeedListContext : IStandardListWithContext<FeedListListItem
         {
             if (o is not FeedListListItem toFilter) return false;
 
-            return toFilter.DbReaderFeed.Name.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase)
-                   || toFilter.DbReaderFeed.Tags.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase)
-                   || toFilter.DbReaderFeed.Note.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase)
-                   || toFilter.DbReaderFeed.Url.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase);
+            if (UserFilterForErrors)
+                return (toFilter.DbReaderFeed.Name.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase)
+                        || toFilter.DbReaderFeed.Tags.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase)
+                        || toFilter.DbReaderFeed.Note.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase)
+                        || toFilter.DbReaderFeed.Url.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase))
+                       && toFilter.LastUpdateFailed;
+            else
+                return toFilter.DbReaderFeed.Name.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase)
+                       || toFilter.DbReaderFeed.Tags.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase)
+                       || toFilter.DbReaderFeed.Note.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase)
+                       || toFilter.DbReaderFeed.Url.Contains(cleanedFilterText, StringComparison.OrdinalIgnoreCase);
         };
     }
 
@@ -388,7 +404,7 @@ public partial class FeedListContext : IStandardListWithContext<FeedListListItem
     {
         if (string.IsNullOrWhiteSpace(e.PropertyName)) return;
 
-        if (e.PropertyName == nameof(UserFilterText))
+        if (e.PropertyName.Equals(nameof(UserFilterText)) || e.PropertyName.Equals(nameof(UserFilterForErrors)))
             StatusContext.RunFireAndForgetNonBlockingTask(FilterList);
     }
 
@@ -411,11 +427,13 @@ public partial class FeedListContext : IStandardListWithContext<FeedListListItem
                 await UpdateFeedListItems(interProcessUpdateNotification.ContentIds);
             if (interProcessUpdateNotification.UpdateType is DataNotificationUpdateType.New)
                 await AddNewFeeds();
+
+            await UpdateFeedSuccess(interProcessUpdateNotification.ContentIds);
         }
 
         if (interProcessUpdateNotification.ContentType == DataNotificationContentType.FeedItem)
             StatusContext.RunFireAndForgetNonBlockingTask(async () =>
-                await UpdateReadCount(interProcessUpdateNotification.ContentIds));
+                await UpdateReadCountAndFeedSucess(interProcessUpdateNotification.ContentIds));
     }
 
     [NonBlockingCommand]
@@ -530,7 +548,26 @@ public partial class FeedListContext : IStandardListWithContext<FeedListListItem
         }
     }
 
-    public async Task UpdateReadCount(List<Guid> changedItemGuid)
+    public async Task UpdateFeedSuccess(List<Guid> changedItemGuid)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        foreach (var loopFeedId in changedItemGuid)
+        {
+            var item = Items.SingleOrDefault(x => x.DbReaderFeed.PersistentId == loopFeedId);
+
+            if (item == null) return;
+
+            if (item.DbReaderFeed.LastFailedUpdate == null)
+                item.LastUpdateFailed = item.DbReaderFeed.LastSuccessfulUpdate == null;
+            else if (item.DbReaderFeed.LastSuccessfulUpdate == null)
+                item.LastUpdateFailed = true;
+            else
+                item.LastUpdateFailed = item.DbReaderFeed.LastSuccessfulUpdate < item.DbReaderFeed.LastFailedUpdate;
+        }
+    }
+
+    public async Task UpdateReadCountAndFeedSucess(List<Guid> changedItemGuid)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -551,7 +588,21 @@ public partial class FeedListContext : IStandardListWithContext<FeedListListItem
 
             item.ItemsCount = totalItems;
             item.UnreadItemsCount = unReadItems;
+
+            if (item.DbReaderFeed.LastFailedUpdate == null)
+                item.LastUpdateFailed = item.DbReaderFeed.LastSuccessfulUpdate == null;
+            else if (item.DbReaderFeed.LastSuccessfulUpdate == null)
+                item.LastUpdateFailed = true;
+            else
+                item.LastUpdateFailed = item.DbReaderFeed.LastSuccessfulUpdate < item.DbReaderFeed.LastFailedUpdate;
         }
+    }
+
+    [NonBlockingCommand]
+    [StopAndWarnIfFirstParameterIsNull]
+    public async Task UrlsForItem(FeedListListItem? selectedItem)
+    {
+        ProcessHelpers.OpenUrlInExternalBrowser(selectedItem.DbReaderFeed.Url);
     }
 
     [NonBlockingCommand]

@@ -427,6 +427,14 @@ public class FeedQueries
                 returnErrors.Add($"{loopFeed.Url} - {e.Message}");
                 Log.ForContext(nameof(loopFeed), loopFeed.SafeObjectDump())
                     .Error(e, "Error Updating Feed {feedUrl}", loopFeed.Url);
+                
+                loopFeed.LastFailedUpdate = DateTime.Now;
+                loopFeed.LastResponse = $"{loopFeed.Url} - {e}";
+                await db.SaveChangesAsync();
+                
+                DataNotifications.PublishDataNotification(LogTools.GetCaller(), DataNotificationContentType.Feed,
+                    DataNotificationUpdateType.Update, loopFeed.PersistentId.AsList());
+                
                 continue;
             }
 
@@ -439,12 +447,24 @@ public class FeedQueries
                 returnErrors.Add($"{loopFeed.Url} - {e.Message}");
                 Log.ForContext(nameof(loopFeed), loopFeed.SafeObjectDump())
                     .Error(e, "Error Updating Feed Items for {feedUrl}", loopFeed.Url);
+                
+                loopFeed.LastFailedUpdate = DateTime.Now;
+                loopFeed.LastResponse = $"{loopFeed.Url} - {e}";
+                await db.SaveChangesAsync();
+                
+                DataNotifications.PublishDataNotification(LogTools.GetCaller(), DataNotificationContentType.Feed,
+                    DataNotificationUpdateType.Update, loopFeed.PersistentId.AsList());
+                
                 continue;
             }
 
+            loopFeed.LastResponse = currentFeed.OriginalDocument;
             loopFeed.LastSuccessfulUpdate = DateTime.Now;
             await db.SaveChangesAsync();
 
+            DataNotifications.PublishDataNotification(LogTools.GetCaller(), DataNotificationContentType.Feed,
+                DataNotificationUpdateType.Update, loopFeed.PersistentId.AsList());
+            
             progress.Report($"Feed {loopFeed.Name} - Found {currentFeedItems.Count} Feed Items to Process");
 
             var feedItemCounter = 0;

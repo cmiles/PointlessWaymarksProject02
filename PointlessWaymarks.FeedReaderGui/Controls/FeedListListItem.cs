@@ -9,4 +9,5 @@ public partial class FeedListListItem
     public int UnreadItemsCount { get; set; }
     public int ItemsCount { get; set; }
     public required ReaderFeed DbReaderFeed { get; set; }
+    public bool LastUpdateFailed { get; set; }
 }

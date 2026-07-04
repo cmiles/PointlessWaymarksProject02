@@ -61,7 +61,6 @@ public partial class FeedEditorContext : IHasChanges, IHasValidationIssues,
     public required StringDataEntryContext UserNoteEntry { get; init; }
     public required StringDataEntryContext UserTagsEntry { get; init; }
     public required StringDataEntryContext UserUrlEntry { get; init; }
-
     public required BoolDataEntryContext UserUseBasicAuthEntry { get; set; }
 
     public void CheckForChangesAndValidationIssues()

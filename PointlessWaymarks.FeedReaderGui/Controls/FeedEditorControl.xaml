@@ -17,77 +17,93 @@
         <TabItem Header="Editor">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <StackPanel CanHorizontallyScroll="False" Orientation="Vertical">
-                    <StackPanel.Resources>
-                        <Style x:Key="EntryStyle" TargetType="Control">
-                            <Setter Property="Margin" Value="0,8,8,0" />
-                        </Style>
-                        <Style
-                            x:Key="EntryListStyle"
-                            BasedOn="{StaticResource UiComponentGroupBoxStyle}"
-                            TargetType="GroupBox">
-                            <Setter Property="Margin" Value="6,12,8,0" />
-                        </Style>
-                    </StackPanel.Resources>
-                    <stringDataEntry:StringDataEntryControl DataContext="{Binding UserNameEntry}" Style="{StaticResource EntryStyle}" />
-                    <stringDataEntry:StringDataEntryMultiLineControl DataContext="{Binding UserNoteEntry}" Style="{StaticResource EntryStyle}" />
-                    <stringDataEntry:StringDataEntryMultiLineControl DataContext="{Binding UserTagsEntry}" Style="{StaticResource EntryStyle}" />
-                    <conversionDataEntry:ConversionDataEntryControl
-                        ValueTextBoxWidth="60"
-                        HorizontalAlignment="Left"
-                        DataContext="{Binding UserAutoMarkAfterDaysEntry}"
-                        Style="{StaticResource EntryStyle}" />
-                    <conversionDataEntry:ConversionDataEntryControl
-                        ValueTextBoxWidth="60"
-                        HorizontalAlignment="Left"
-                        DataContext="{Binding UserAutoMarkReadMoreThanItemsEntry}"
-                        Style="{StaticResource EntryStyle}" />
-                    <boolDataEntry:BoolDataEntryControl Margin="6,18,8,0" DataContext="{Binding UserUseBasicAuthEntry}" />
-                    <stringDataEntry:StringDataEntryControl DataContext="{Binding UserBasicAuthUsernameEntry}" Style="{StaticResource EntryStyle}" />
-                    <stringDataEntry:StringDataEntryControl DataContext="{Binding UserBasicAuthPasswordEntry}" Style="{StaticResource EntryStyle}" />
-                    <StackPanel Margin="24,24,16,8" Orientation="Vertical">
-                        <TextBlock Text="{Binding DbReaderFeedItem.FeedLastUpdatedDate, StringFormat='Feed Last Updated On: {0}', TargetNullValue='Feed Last Updated On: Unknown'}" TextWrapping="Wrap" />
-                        <TextBlock Text="{Binding DbReaderFeedItem.LastSuccessfulUpdate, StringFormat='Pointless Waymarks Last Successful Update: {0}', TargetNullValue='Pointless Waymarks Last Successful Update: Never'}" TextWrapping="Wrap" />
-                        <TextBlock Text="{Binding DbReaderFeedItem.CreatedOn, StringFormat='Pointless Waymarks Feed Entry Created On: {0}'}" TextWrapping="Wrap" />
-                        <TextBlock>
-                            <TextBlock.Text>
-                                <MultiBinding StringFormat="Current - Read {0}, Unread {1}, Kept {2}">
-                                    <Binding Path="DbReadFeedItems" />
-                                    <Binding Path="DbUnReadFeedItems" />
-                                    <Binding Path="DbKeptUnReadFeedItems" />
-                                </MultiBinding>
-                            </TextBlock.Text>
-                        </TextBlock>
-                    </StackPanel>
-                    <stringDataEntry:StringDataEntryMultiLineControl DataContext="{Binding UserUrlEntry}" Style="{StaticResource EntryStyle}" />
-                </StackPanel>
-                <GroupBox Grid.Row="1" Margin="4,12,6,4">
-                    <GroupBox.Header>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock VerticalAlignment="Center" FontWeight="DemiBold">URL Parse Result</TextBlock>
-                            <Button
-                                Margin="8,0,0,0"
-                                VerticalAlignment="Center"
-                                Command="{Binding UpdateUrlCheckCommand}">
-                                Refresh
-                            </Button>
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <StackPanel CanHorizontallyScroll="False" Orientation="Vertical">
+                            <StackPanel.Resources>
+                                <Style x:Key="EntryStyle" TargetType="Control">
+                                    <Setter Property="Margin" Value="0,8,8,0" />
+                                </Style>
+                            </StackPanel.Resources>
+                            <stringDataEntry:StringDataEntryControl DataContext="{Binding UserNameEntry}"
+                                                                    Style="{StaticResource EntryStyle}" />
+                            <stringDataEntry:StringDataEntryMultiLineControl DataContext="{Binding UserNoteEntry}"
+                                                                             Style="{StaticResource EntryStyle}" />
+                            <stringDataEntry:StringDataEntryMultiLineControl DataContext="{Binding UserTagsEntry}"
+                                                                             Style="{StaticResource EntryStyle}" />
+                            <conversionDataEntry:ConversionDataEntryControl
+                                ValueTextBoxWidth="60"
+                                HorizontalAlignment="Left"
+                                DataContext="{Binding UserAutoMarkAfterDaysEntry}"
+                                Style="{StaticResource EntryStyle}" />
+                            <conversionDataEntry:ConversionDataEntryControl
+                                ValueTextBoxWidth="60"
+                                HorizontalAlignment="Left"
+                                DataContext="{Binding UserAutoMarkReadMoreThanItemsEntry}"
+                                Style="{StaticResource EntryStyle}" />
+                            <boolDataEntry:BoolDataEntryControl Margin="6,18,8,0"
+                                                                DataContext="{Binding UserUseBasicAuthEntry}" />
+                            <stringDataEntry:StringDataEntryControl DataContext="{Binding UserBasicAuthUsernameEntry}"
+                                                                    Style="{StaticResource EntryStyle}" />
+                            <stringDataEntry:StringDataEntryControl DataContext="{Binding UserBasicAuthPasswordEntry}"
+                                                                    Style="{StaticResource EntryStyle}" />
+                            <StackPanel Margin="24,24,16,8" Orientation="Vertical">
+                                <TextBlock
+                                    Text="{Binding DbReaderFeedItem.FeedLastUpdatedDate, StringFormat='Feed Last Updated On: {0}', TargetNullValue='Feed Last Updated On: Unknown'}"
+                                    TextWrapping="Wrap" />
+                                <TextBlock
+                                    Text="{Binding DbReaderFeedItem.LastSuccessfulUpdate, StringFormat='Pointless Waymarks Last Successful Update: {0}', TargetNullValue='Pointless Waymarks Last Successful Update: Never'}"
+                                    TextWrapping="Wrap" />
+                                <TextBlock
+                                    Text="{Binding DbReaderFeedItem.CreatedOn, StringFormat='Pointless Waymarks Feed Entry Created On: {0}'}"
+                                    TextWrapping="Wrap" />
+                                <TextBlock>
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="Current - Read {0}, Unread {1}, Kept {2}">
+                                            <Binding Path="DbReadFeedItems" />
+                                            <Binding Path="DbUnReadFeedItems" />
+                                            <Binding Path="DbKeptUnReadFeedItems" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </StackPanel>
+                            <stringDataEntry:StringDataEntryMultiLineControl DataContext="{Binding UserUrlEntry}"
+                                                                             Style="{StaticResource EntryStyle}" />
                         </StackPanel>
-                    </GroupBox.Header>
-                    <Grid Margin="4">
-                        <TextBox
-                            VerticalAlignment="Stretch"
-                            AcceptsReturn="True"
-                            Style="{StaticResource ReadOnlyTextBoxStyle}"
-                            Text="{Binding UrlCheckMessage}"
-                            TextWrapping="Wrap"
-                            VerticalScrollBarVisibility="Visible" />
+                        <GroupBox Grid.Row="1" Margin="4,12,6,4">
+                            <GroupBox.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock VerticalAlignment="Center" FontWeight="DemiBold">URL Parse Result</TextBlock>
+                                    <Button
+                                        Margin="8,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Command="{Binding UpdateUrlCheckCommand}">
+                                        Refresh
+                                    </Button>
+                                </StackPanel>
+                            </GroupBox.Header>
+                            <Grid Margin="4">
+                                <TextBox
+                                    VerticalAlignment="Stretch"
+                                    AcceptsReturn="True"
+                                    Style="{StaticResource ReadOnlyTextBoxStyle}"
+                                    Text="{Binding UrlCheckMessage}"
+                                    TextWrapping="Wrap"
+                                    VerticalScrollBarVisibility="Visible" />
+                            </Grid>
+                        </GroupBox>
                     </Grid>
-                </GroupBox>
-                <Border Grid.Row="2" Style="{StaticResource ActionPanelBorderStyle}">
+
+                </ScrollViewer>
+
+                <Border Grid.Row="1" Style="{StaticResource ActionPanelBorderStyle}">
                     <WrapPanel HorizontalAlignment="Center" Orientation="Horizontal">
                         <Button
                             Command="{Binding SaveAndCloseCommand}"
@@ -99,6 +115,13 @@
                             Style="{StaticResource ActionPanelButtonStyle}" />
                     </WrapPanel>
                 </Border>
+            </Grid>
+        </TabItem>
+        <TabItem Header="Last Response">
+            <Grid>
+                <TextBox Style="{StaticResource ReadOnlyTextBoxStyle}" AcceptsReturn="True" TextWrapping="Wrap"
+                         HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible"
+                         Text="{Binding DbReaderFeedItem.LastResponse}" />
             </Grid>
         </TabItem>
         <TabItem Header="Help and Notes">

@@ -1,4 +1,3 @@
-
 using Metalama.Patterns.Observability;
 
 namespace PointlessWaymarks.FeedReaderData.Models;
@@ -13,7 +12,9 @@ public partial class ReaderFeed
     public DateTime CreatedOn { get; set; } = DateTime.Now;
     public DateTime? FeedLastUpdatedDate { get; set; }
     public int Id { get; set; }
+    public string LastResponse { get; set; } = string.Empty;
     public DateTime? LastSuccessfulUpdate { get; set; }
+    public DateTime? LastFailedUpdate { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Note { get; set; } = string.Empty;
     public Guid PersistentId { get; set; } = Guid.NewGuid();

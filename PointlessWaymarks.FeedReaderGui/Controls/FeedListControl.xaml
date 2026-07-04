@@ -31,6 +31,7 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <GroupBox
                 Width="200"
@@ -41,8 +42,12 @@
                 Style="{StaticResource UiComponentGroupBoxStyle}">
                 <TextBox Text="{Binding UserFilterText, Delay=400, UpdateSourceTrigger=PropertyChanged}" />
             </GroupBox>
+            <CheckBox Grid.Column="1" VerticalAlignment="Center" Margin="2,12, 0,4"
+                      IsChecked="{Binding UserFilterForErrors}">
+                Only Last Update Failed
+            </CheckBox>
             <Expander
-                Grid.Column="1"
+                Grid.Column="2"
                 Width="150"
                 Margin="6,6,4,0"
                 Padding="8,4,12,4"
@@ -55,7 +60,7 @@
                 <columnSort:ColumnSortControl Margin="4,2,4,12" DataContext="{Binding ListSort}" />
             </Expander>
             <StackPanel
-                Grid.Column="2"
+                Grid.Column="3"
                 Margin="2,3,0,0"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
@@ -105,13 +110,17 @@
                         <MenuItem Command="{Binding MarkAllUnReadForSelectedItemCommand}" Header="Mark All Unread" />
                         <MenuItem Command="{Binding ArchiveSelectedFeedCommand}" Header="Archive Feed" />
                         <Separator />
-                        <MenuItem Command="{Binding MarkdownLinksForSelectedItemsCommand}" Header="Markdown to Clipboard" />
+                        <MenuItem Command="{Binding MarkdownLinksForSelectedItemsCommand}"
+                                  Header="Markdown to Clipboard" />
                         <MenuItem Command="{Binding UrlsForSelectedItemsCommand}" Header="URLs to Clipboard" />
                         <MenuItem Command="{Binding NamesForSelectedItemsCommand}" Header="Titles to Clipboard" />
-                        <MenuItem Command="{Binding TitleAndUrlForSelectedItemsCommand}" Header="Titles and URLs to Clipboard" />
+                        <MenuItem Command="{Binding TitleAndUrlForSelectedItemsCommand}"
+                                  Header="Titles and URLs to Clipboard" />
                         <Separator />
-                        <MenuItem Command="{Binding ViewReadFeedItemsForSelectedItemCommand}" Header="View Marked Read Feed Items" />
-                        <MenuItem Command="{Binding ViewUnreadFeedItemsForSelectedItemCommand}" Header="View Feed Items" />
+                        <MenuItem Command="{Binding ViewReadFeedItemsForSelectedItemCommand}"
+                                  Header="View Marked Read Feed Items" />
+                        <MenuItem Command="{Binding ViewUnreadFeedItemsForSelectedItemCommand}"
+                                  Header="View Feed Items" />
                     </ContextMenu>
                 </ListBox.ContextMenu>
                 <ListBox.InputBindings>
@@ -121,7 +130,9 @@
                     <DataTemplate DataType="{x:Type local:FeedListListItem}">
                         <StackPanel Margin="4,12,4,4">
                             <StackPanel.InputBindings>
-                                <MouseBinding Command="{Binding Data.FeedEditorForSelectedItemCommand, Source={StaticResource proxy}}" Gesture="Shift+LeftDoubleClick" />
+                                <MouseBinding
+                                    Command="{Binding Data.FeedEditorForSelectedItemCommand, Source={StaticResource proxy}}"
+                                    Gesture="Shift+LeftDoubleClick" />
                             </StackPanel.InputBindings>
                             <TextBlock FontWeight="Bold" TextTrimming="CharacterEllipsis">
                                 <TextBlock.Text>
@@ -131,7 +142,9 @@
                                     </MultiBinding>
                                 </TextBlock.Text>
                                 <TextBlock.InputBindings>
-                                    <MouseBinding Command="{Binding Data.FeedEditorForSelectedItemCommand, Source={StaticResource proxy}}" Gesture="Shift+LeftDoubleClick" />
+                                    <MouseBinding
+                                        Command="{Binding Data.FeedEditorForSelectedItemCommand, Source={StaticResource proxy}}"
+                                        Gesture="Shift+LeftDoubleClick" />
                                 </TextBlock.InputBindings>
                             </TextBlock>
                             <TextBlock Margin="8,0,4,0" TextWrapping="Wrap">
@@ -142,7 +155,11 @@
                                     </MultiBinding>
                                 </TextBlock.Text>
                                 <TextBlock.InputBindings>
-                                    <MouseBinding Command="{Binding Data.FeedEditorForSelectedItemCommand, Source={StaticResource proxy}}" Gesture="Shift+LeftDoubleClick" />
+                                    <MouseBinding
+                                        Command="{Binding Data.FeedEditorForSelectedItemCommand, Source={StaticResource proxy}}"
+                                        Gesture="Shift+LeftDoubleClick" />
+                                    <MouseBinding Command="{Binding Data.UrlsForItemCommand, Source={StaticResource proxy}}"
+                                                  CommandParameter="{Binding }" Gesture="LeftDoubleClick" />
                                 </TextBlock.InputBindings>
                             </TextBlock>
                             <TextBlock
@@ -151,7 +168,9 @@
                                 TextWrapping="Wrap"
                                 Visibility="{Binding DbReaderFeed.Note, Converter={StaticResource NullOrWhiteSpaceStringToCollapsed}}">
                                 <TextBlock.InputBindings>
-                                    <MouseBinding Command="{Binding Data.FeedEditorForSelectedItemCommand, Source={StaticResource proxy}}" Gesture="Shift+LeftDoubleClick" />
+                                    <MouseBinding
+                                        Command="{Binding Data.FeedEditorForSelectedItemCommand, Source={StaticResource proxy}}"
+                                        Gesture="Shift+LeftDoubleClick" />
                                 </TextBlock.InputBindings>
                             </TextBlock>
                             <TextBlock
@@ -160,15 +179,25 @@
                                 TextWrapping="Wrap"
                                 Visibility="{Binding DbReaderFeed.Tags, Converter={StaticResource NullOrWhiteSpaceStringToCollapsed}}">
                                 <TextBlock.InputBindings>
-                                    <MouseBinding Command="{Binding Data.FeedEditorForSelectedItemCommand, Source={StaticResource proxy}}" Gesture="Shift+LeftDoubleClick" />
+                                    <MouseBinding
+                                        Command="{Binding Data.FeedEditorForSelectedItemCommand, Source={StaticResource proxy}}"
+                                        Gesture="Shift+LeftDoubleClick" />
                                 </TextBlock.InputBindings>
                             </TextBlock>
-                            <TextBlock
-                                Margin="20,0,0,0"
-                                Text="{Binding DbReaderFeed.LastSuccessfulUpdate}"
-                                TextWrapping="Wrap">
+                            <TextBlock Margin="16,0,4,0" TextWrapping="Wrap">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}Error: {0} - Last Success {1} - Last Failure {2}">
+                                        <Binding Path="LastUpdateFailed" />
+                                        <Binding Path="DbReaderFeed.LastSuccessfulUpdate" FallbackValue="(Never)"
+                                                 TargetNullValue="(Never)" />
+                                        <Binding Path="DbReaderFeed.LastFailedUpdate" FallbackValue="(Never)"
+                                                 TargetNullValue="(Never)" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
                                 <TextBlock.InputBindings>
-                                    <MouseBinding Command="{Binding Data.FeedEditorForSelectedItemCommand, Source={StaticResource proxy}}" Gesture="Shift+LeftDoubleClick" />
+                                    <MouseBinding
+                                        Command="{Binding Data.FeedEditorForSelectedItemCommand, Source={StaticResource proxy}}"
+                                        Gesture="Shift+LeftDoubleClick" />
                                 </TextBlock.InputBindings>
                             </TextBlock>
                         </StackPanel>
