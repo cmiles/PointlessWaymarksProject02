@@ -18,35 +18,44 @@
     mc:Ignorable="d">
     <Grid Margin="4">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <StackPanel Margin="2" Orientation="Vertical">
-            <stringDataEntry:StringDataEntryControl DataContext="{Binding NameEntry}" />
-            <stringDataEntry:StringDataEntryControl DataContext="{Binding DescriptionEntry}" />
-            <conversionDataEntry:ConversionDataEntryControl DataContext="{Binding DeleteRunsAfterMonthsEntry}">
-                <b:Interaction.Behaviors>
-                    <behaviors:DataEntryControlTextBoxWidthBindingBehavior HorizontalAlignmentBinding="Left" WidthBinding="100" />
-                </b:Interaction.Behaviors>
-            </conversionDataEntry:ConversionDataEntryControl>
-            <stringDataEntry:StringDataEntryControl DataContext="{Binding ScheduleEntry}" />
-            <TextBox
-                Margin="16,6,4,2"
-                Style="{StaticResource ReadOnlyTextBoxStyle}"
-                Text="{Binding CronDescription, StringFormat='Description: {0}'}" />
-            <TextBox
-                Margin="16,2,4,2"
-                Style="{StaticResource ReadOnlyTextBoxStyle}"
-                Text="{Binding CronNextRun, StringFormat='Next Run: {0:g}'}" />
-            <boolDataEntry:BoolDataEntryControl Margin="6,10,4,0" DataContext="{Binding EnabledEntry}" />
-            <boolDataEntry:BoolDataEntryControl Margin="6,10,4,0" DataContext="{Binding AllowSimultaneousRunsEntry}" />
-        </StackPanel>
-        <powerShellEditor:PowerShellEditorControl
-            Grid.Row="1"
-            Margin="2,4,6,12"
-            DataContext="{Binding ScriptEntry}" />
-        <Border Grid.Row="2" Style="{StaticResource ActionPanelBorderStyle}">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <StackPanel Margin="2" Orientation="Vertical">
+                    <stringDataEntry:StringDataEntryControl DataContext="{Binding NameEntry}" />
+                    <stringDataEntry:StringDataEntryControl DataContext="{Binding DescriptionEntry}" />
+                    <conversionDataEntry:ConversionDataEntryControl DataContext="{Binding DeleteRunsAfterMonthsEntry}">
+                        <b:Interaction.Behaviors>
+                            <behaviors:DataEntryControlTextBoxWidthBindingBehavior HorizontalAlignmentBinding="Left"
+                                    WidthBinding="100" />
+                        </b:Interaction.Behaviors>
+                    </conversionDataEntry:ConversionDataEntryControl>
+                    <stringDataEntry:StringDataEntryControl DataContext="{Binding ScheduleEntry}" />
+                    <TextBox
+                        Margin="16,6,4,2"
+                        Style="{StaticResource ReadOnlyTextBoxStyle}"
+                        Text="{Binding CronDescription, StringFormat='Description: {0}'}" />
+                    <TextBox
+                        Margin="16,2,4,2"
+                        Style="{StaticResource ReadOnlyTextBoxStyle}"
+                        Text="{Binding CronNextRun, StringFormat='Next Run: {0:g}'}" />
+                    <boolDataEntry:BoolDataEntryControl Margin="6,10,4,0" DataContext="{Binding EnabledEntry}" />
+                    <boolDataEntry:BoolDataEntryControl Margin="6,10,4,0"
+                                                        DataContext="{Binding AllowSimultaneousRunsEntry}" />
+                </StackPanel>
+                <powerShellEditor:PowerShellEditorControl
+                    Grid.Row="1"
+                    Margin="2,4,6,12"
+                    DataContext="{Binding ScriptEntry}" />
+            </Grid>
+        </ScrollViewer>
+        <Border Grid.Row="1" Style="{StaticResource ActionPanelBorderStyle}">
             <WrapPanel HorizontalAlignment="Center" Orientation="Horizontal">
                 <Button Command="{Binding ScriptToClipboardCommand}" Style="{StaticResource ActionPanelButtonStyle}">Script to Clipboard</Button>
                 <Button Command="{Binding SaveAndCloseCommand}" Style="{StaticResource ActionPanelButtonStyle}">Save and Close</Button>
@@ -55,7 +64,7 @@
         </Border>
         <status:StatusControl
             Grid.Row="0"
-            Grid.RowSpan="3"
+            Grid.RowSpan="2"
             d:IsHidden="true"
             DataContext="{Binding StatusContext}" />
     </Grid>

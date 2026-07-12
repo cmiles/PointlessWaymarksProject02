@@ -52,6 +52,15 @@
     <File Path="README-Fossil.md" />
     <File Path="README.md" />
   </Folder>
+  <Project Path="LiveCharts2/src/LiveChartsCore/LiveChartsCore.csproj">
+    <BuildType Solution="LamaDebug|*" Project="Debug" />
+  </Project>
+  <Project Path="LiveCharts2/src/skiasharp/LiveChartsCore.SkiaSharp.WPF/LiveChartsCore.SkiaSharpView.WPF.csproj">
+    <BuildType Solution="LamaDebug|*" Project="Release" />
+  </Project>
+  <Project Path="LiveCharts2/src/skiasharp/LiveChartsCore.SkiaSharp/LiveChartsCore.SkiaSharpView.csproj">
+    <BuildType Solution="LamaDebug|*" Project="Debug" />
+  </Project>
   <Project Path="PointlessWaymarks.CloudBackupData/PointlessWaymarks.CloudBackupData.csproj">
     <Platform Project="x64" />
   </Project>

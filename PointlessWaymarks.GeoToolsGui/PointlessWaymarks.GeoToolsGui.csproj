@@ -15,7 +15,7 @@
         <PackageReference Include="Dirkster.NumericUpDownLib" Version="3.4.0" />
         <PackageReference Include="Jot" Version="2.1.17" />
         <PackageReference Include="Metalama.Framework" Version="2026.1.19" />
-        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4022.49" />
+        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4078.44" />
         <PackageReference Include="Microsoft.Web.WebView2.DevToolsProtocolExtension" Version="1.0.2901" />
     </ItemGroup>
 
