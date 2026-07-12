@@ -1,0 +1,58 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+
+    <TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
+
+    <UseWPF>true</UseWPF>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Images\livecharts.png" />
+    <None Remove="Quicksand-Regular.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ViewModelsSamples\ViewModelsSamples.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(UseNuGetForSamples)">
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="$(LiveChartsVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="!$(UseNuGetForSamples)">
+    <ProjectReference Include="..\..\src\skiasharp\LiveChartsCore.SkiaSharp.WPF\LiveChartsCore.SkiaSharpView.WPF.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Images\livecharts.png" />
+  </ItemGroup>
+
+  <!--
+  HA-views tests crash with 0xC0000005 in OpenTK.Platform.Windows.Wgl.DXOpenDeviceNV
+  on the GHA windows-2025 runner (Azure VM has no real GPU; the WGL_NV_DX_interop2
+  probe segfaults). Factos 0.8.0 sent AllTestsCompleted before the native crash
+  surfaced, hiding the failure; 0.8.1 correctly reports the disconnect.
+
+  The test passes on real hardware, so we keep TEST_HA_VIEWS on for local runs
+  (CI is unset there) and skip it on GitHub Actions (CI=true is auto-set).
+  Run wpf-net10 locally before merging to validate hardware-accelerated paths.
+  -->
+  <PropertyGroup Condition="$(TestBuildTargetFramework) == 'net10.0-windows' and '$(CI)' != 'true'">
+    <DefineConstants>$(DefineConstants);TEST_HA_VIEWS</DefineConstants>
+  </PropertyGroup>
+
+  <!--
+  The next examples are not included in net462 because they use features not available in .Net framework
+  -->
+  <ItemGroup Condition="$(TargetFramework) == 'net462'">
+    <Page Remove="General\Scrollable\View.xaml" />
+    <Compile Remove="General\Scrollable\View.xaml.cs" />
+
+    <Page Remove="General\VisualElements\View.xaml" />
+    <Compile Remove="General\VisualElements\View.xaml.cs" />
+  </ItemGroup>
+
+</Project>

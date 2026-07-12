@@ -1,0 +1,18 @@
+﻿<UserControl x:Class="WPFSample.VisualTest.Tabs.View"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+             xmlns:bars="clr-namespace:WPFSample.Bars.AutoUpdate"
+             xmlns:lines="clr-namespace:WPFSample.Lines.AutoUpdate"
+             xmlns:scatter="clr-namespace:WPFSample.Scatter.AutoUpdate">
+    <TabControl x:Name="tabs" x:FieldModifier="public">
+        <TabItem Header="tab 1">
+            <bars:View/>
+        </TabItem>
+        <TabItem Header="tab 2">
+            <lines:View/>
+        </TabItem>
+        <TabItem Header="tab 3">
+            <scatter:View/>
+        </TabItem>
+    </TabControl>
+</UserControl>

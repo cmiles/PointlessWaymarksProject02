@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <UseWPF>true</UseWPF>
+
+    <TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
+
+    <AssemblyName>LiveChartsCore.SkiaSharpView.WPF</AssemblyName>
+    <RootNamespace>LiveChartsCore.SkiaSharpView.WPF</RootNamespace>
+    <PathToPackAssets>../../../</PathToPackAssets>
+  </PropertyGroup>
+
+  <PropertyGroup>
+     <!-- https://github.com/Live-Charts/LiveCharts2/issues/1772, we should also warn the user about this, but there should be no issue. -->
+    <NoWarn>$(NoWarn);NU1701</NoWarn>
+  </PropertyGroup>
+
+  <Import Project="../../../nuget.props" />
+  <PropertyGroup>
+    <Description>
+      $(Description) This package includes all the required code and dependencies for rendering charts in WPF with SkiaSharp.
+    </Description>
+  </PropertyGroup>
+
+  <Import Project="../../../build/SharedLinks.Build.props" />
+  <Import Project="../../../build/XamlSharedLinks.Build.props" />
+
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);WPF_LVC;XAML_LVC</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp.Views.WPF" Version="4.148.0" />
+    <PackageReference Include="SkiaSharp.HarfBuzz" Version="4.148.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../LiveChartsCore.SkiaSharp/LiveChartsCore.SkiaSharpView.csproj" />
+    <ProjectReference Include="..\..\LiveChartsCore\LiveChartsCore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../generators/LiveChartsGenerators/LiveChartsGenerators.csproj">
+      <OutputItemType>Analyzer</OutputItemType>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+
+</Project>

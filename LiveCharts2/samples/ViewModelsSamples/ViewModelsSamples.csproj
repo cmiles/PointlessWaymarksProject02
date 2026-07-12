@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- https://github.com/CommunityToolkit/dotnet/issues/1139 -->
+    <LangVersion>preview</LangVersion>
+    <TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\skiasharp\LiveChartsCore.SkiaSharp\LiveChartsCore.SkiaSharpView.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LiveChartsGenerators" Version="$(LiveChartsCodeGenVersion)">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- Map asset for the CustomMap sample. Embedded so every platform
+       sample picks it up automatically without per-platform asset wiring. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Maps\CustomMap\mexico-states.geojson" />
+  </ItemGroup>
+
+  <!--
+  The next examples are not included in net462 because they use features not available in .Nfet framework
+  -->
+  <ItemGroup Condition="$(TargetFramework) == 'net462'">
+    <Compile Remove="General\Scrollable\ViewModel.cs" />
+    <Compile Remove="General\VisualElements\ViewModel.cs" />
+    <Compile Remove="General\VisualElements\AbsoluteVisual.cs" />
+    <Compile Remove="General\VisualElements\ContainerVisual.cs" />
+    <Compile Remove="General\VisualElements\CustomVisual.cs" />
+    <Compile Remove="General\VisualElements\PointerDownAwareVisual.cs" />
+    <Compile Remove="General\VisualElements\RectangleVisual.cs" />
+    <Compile Remove="General\VisualElements\ScaledRectangleVisual.cs" />
+    <Compile Remove="General\VisualElements\StackedVisual.cs" />
+    <Compile Remove="General\VisualElements\SvgVisual.cs" />
+    <Compile Remove="General\VisualElements\TableVisual.cs" />
+    <Compile Remove="General\VisualElements\ThemedVisual.cs" />
+  </ItemGroup>
+
+</Project>

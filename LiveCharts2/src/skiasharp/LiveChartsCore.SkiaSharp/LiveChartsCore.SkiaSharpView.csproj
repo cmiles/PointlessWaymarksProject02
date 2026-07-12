@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
+
+    <AssemblyName>LiveChartsCore.SkiaSharpView</AssemblyName>
+    <RootNamespace>LiveChartsCore.SkiaSharpView</RootNamespace>
+    <PathToPackAssets>../../../</PathToPackAssets>
+  </PropertyGroup>
+
+  <Import Project="../../../nuget.props" />
+  <PropertyGroup>
+    <Description>
+      $(Description) This package renders charts using SkiaSharp, this is enough if you only need to render images otherwise you probably need another package that is compatible with your UI framework.
+    </Description>
+  </PropertyGroup>
+
+  <Import Project="../_Shared/_Shared.projitems" Label="Shared" />
+  <Import Project="./../../../build/RenderSettings.Build.props" />
+
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);SKIA_IMAGE_LVC;</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" Version="4.148.0" />
+    <PackageReference Include="SkiaSharp.HarfBuzz" Version="4.148.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../LiveChartsCore/LiveChartsCore.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net462'">
+    <DefineConstants>$(DefineConstants);STRONG_NAMED_ASSEMBLIES</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../generators/LiveChartsGenerators/LiveChartsGenerators.csproj">
+      <OutputItemType>Analyzer</OutputItemType>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="Microsoft.SourceLink.GitHub" Version="10.0.300" />
+  </ItemGroup>
+
+</Project>
