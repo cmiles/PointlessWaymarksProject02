@@ -32,13 +32,13 @@
 
     <ItemGroup>
         <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
-        <PackageReference Include="CronExpressionDescriptor" Version="2.50.0" />
+        <PackageReference Include="CronExpressionDescriptor" Version="2.51.0" />
         <PackageReference Include="Cronos" Version="0.13.0" />
         <PackageReference Include="DiffPlex.Wpf" Version="1.9.1" />
         <PackageReference Include="FilterDataGrid" Version="1.2.9" />
         <PackageReference Include="Jot" Version="2.1.17" />
-        <PackageReference Include="Metalama.Framework" Version="2026.1.19" />
-        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4078.44" />
+        <PackageReference Include="Metalama.Framework" Version="2026.1.24" />
+        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4129.50" />
         <PackageReference Include="ValueInjecter" Version="3.2.0" />
     </ItemGroup>
 

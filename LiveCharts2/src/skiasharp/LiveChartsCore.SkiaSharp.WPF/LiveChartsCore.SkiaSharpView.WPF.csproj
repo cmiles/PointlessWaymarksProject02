@@ -30,8 +30,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SkiaSharp.Views.WPF" Version="4.148.0" />
-    <PackageReference Include="SkiaSharp.HarfBuzz" Version="4.148.0" />
+    <PackageReference Include="SkiaSharp.Views.WPF" Version="4.151.1" />
+    <PackageReference Include="SkiaSharp.HarfBuzz" Version="4.151.1" />
   </ItemGroup>
 
   <ItemGroup>

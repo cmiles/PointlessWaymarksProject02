@@ -25,8 +25,8 @@
 
     <ItemGroup>
         <PackageReference Include="Jot" Version="2.1.17" />
-        <PackageReference Include="Metalama.Framework" Version="2026.1.19" />
-        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4078.44" />
+        <PackageReference Include="Metalama.Framework" Version="2026.1.24" />
+        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4129.50" />
     </ItemGroup>
 
     <ItemGroup>
