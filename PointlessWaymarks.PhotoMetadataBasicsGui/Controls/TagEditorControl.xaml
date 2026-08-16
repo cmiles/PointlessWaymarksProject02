@@ -41,6 +41,7 @@
         </StackPanel>
         <TextBox
             Grid.Row="1"
+            Padding="4"
             Name="TagsTextBox"
             Style="{StaticResource DataEntryTextBoxMultiLineStyle}"
             Text="{Binding Tags, UpdateSourceTrigger=PropertyChanged, Delay=250}" />
