@@ -133,13 +133,13 @@ public static class PhotoGenerator
                 var stateCounty =
                     await StateCountyService.GetStateCounty(toReturn.Latitude.Value,
                         toReturn.Longitude.Value);
-                if (!string.IsNullOrWhiteSpace(stateCounty.state))
+                if (!string.IsNullOrWhiteSpace(stateCounty.State))
                 {
-                    tags.Add(stateCounty.state);
+                    tags.Add(stateCounty.State);
                     tags.Add("United States");
                 }
 
-                if (!string.IsNullOrWhiteSpace(stateCounty.county)) tags.Add(stateCounty.county);
+                if (!string.IsNullOrWhiteSpace(stateCounty.County)) tags.Add(stateCounty.County);
             }
             catch (Exception e)
             {

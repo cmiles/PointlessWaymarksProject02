@@ -411,129 +411,188 @@ public static class Intersection
             return toCheck;
         }
 
-        var geoJsonFiles = padUsDirectoryInfo.EnumerateFiles("*.geojson", SearchOption.TopDirectoryOnly).ToList();
-
-        var regionsFile = geoJsonFiles
-            .Where(x => x.Name.EndsWith("Regions.geojson", StringComparison.OrdinalIgnoreCase)).ToList();
-
-        if (regionsFile.Count != 1)
-        {
-            progress?.Report(
-                $"Couldn't find a single Region file matching *Regions.geojson in {padUsDirectoryInfo.FullName}");
-            return toCheck;
-        }
-
-        var regionFiles = geoJsonFiles.Where(x =>
-                Regex.IsMatch(x.Name, ".*[0-9]{1,2}.geojson", RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture))
-            .ToList();
-
-        if (!regionsFile.Any())
-        {
-            progress?.Report(
-                $"Couldn't find data for and of the DOI Regions matching *##.geojson in {padUsDirectoryInfo.FullName}");
-            return toCheck;
-        }
-
-        //Get the region file information and create a list of Region and IntersectResults (this is
-        //to allow just checking the IntersectResults against intersecting Regions)
-
-        var doiRegionsFile = regionsFile.First();
-
-        var doiRegionFeatures = GeoJsonTools.DeserializeFileToFeatureCollection(doiRegionsFile.FullName)!;
-
-        var regionIntersections = new List<(string? region, IntersectResult feature)>();
+        //Get the distinct list of two letter State Codes that are relevant to each of the Features
+        //being checked using the offline State/County data - this is used to limit the PAD-US State
+        //Data (which is organized by State) that must be loaded and searched.
+        var stateCodesByCheck = new List<(string stateCode, IntersectResult feature)>();
 
         cancellationToken.ThrowIfCancellationRequested();
 
         foreach (var loopCheck in toCheck)
-        foreach (var loopDoiRegion in doiRegionFeatures)
-            if (loopCheck.Features.Any(x => x.Geometry.Intersects(loopDoiRegion.Geometry)))
-                regionIntersections.Add((loopDoiRegion.Attributes["REG_NUM"]?.ToString(), loopCheck));
+        {
+            cancellationToken.ThrowIfCancellationRequested();
 
+            var stateCounties = StateCountyService.GetStateCountyOffline(loopCheck.Features);
 
-        //Group by region and loop thru each region
+            foreach (var loopStateCode in stateCounties
+                         .Select(x => x.StateCode)
+                         .Where(x => !string.IsNullOrWhiteSpace(x))
+                         .Distinct(StringComparer.OrdinalIgnoreCase))
+                stateCodesByCheck.Add((loopStateCode, loopCheck));
+        }
+
+        if (!stateCodesByCheck.Any())
+        {
+            progress?.Report(
+                $"Couldn't determine any US State Codes for the Features being checked against the PAD-US data in {padUsDirectoryInfo.FullName}");
+            return toCheck;
+        }
+
+        //Group by State Code so each State's data is only located, loaded and searched once. Cache
+        //the Features read from each Shapefile for the duration of this method run so that a
+        //Shapefile relevant to more than one grouping is only read from disk a single time.
+        var stateCodeGroups = stateCodesByCheck.GroupBy(x => x.stateCode, StringComparer.OrdinalIgnoreCase).ToList();
+
+        var shapefileFeatureCache = new Dictionary<string, List<IFeature>>(StringComparer.OrdinalIgnoreCase);
 
         var counter = 0;
 
-        var regionIntersectionsGroupedByRegion = regionIntersections.GroupBy(x => x.region).ToList();
-
-        foreach (var loopDoiRegionGroup in regionIntersectionsGroupedByRegion)
+        foreach (var loopStateGroup in stateCodeGroups)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             counter++;
 
-            //Get the Region File and extract the Features
-            var regionFile = regionFiles.FirstOrDefault(x =>
-                x.Name.EndsWith($"{loopDoiRegionGroup.Key}.geojson", StringComparison.OrdinalIgnoreCase));
+            var stateCode = loopStateGroup.Key;
 
-            if (regionFile == null)
+            progress?.Report(
+                $"Processing PAD-US State Data for {stateCode} - {counter} of {stateCodeGroups.Count}");
+
+            //Find directories matching PADUS[Digit]_[Digit]_State_[StateCode]_GDB_KMZ
+            var stateDirectoryRegex = new Regex(
+                $"^PADUS[0-9]+_[0-9]+_State_{Regex.Escape(stateCode)}_GDB_KMZ$",
+                RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture);
+
+            var stateDirectories = padUsDirectoryInfo
+                .EnumerateDirectories("*", SearchOption.TopDirectoryOnly)
+                .Where(x => stateDirectoryRegex.IsMatch(x.Name))
+                .ToList();
+
+            if (!stateDirectories.Any())
             {
-                progress?.Report($"A region file for Region {loopDoiRegionGroup.Key} was not found");
+                progress?.Report(
+                    $"  No PAD-US State directory matching PADUS#_#_State_{stateCode}_GDB_KMZ found in {padUsDirectoryInfo.FullName}");
                 continue;
             }
 
-            progress?.Report(
-                $"Processing PAD-US DOI Region File - {regionFile.Name} - {counter} of {regionIntersectionsGroupedByRegion.Count}");
+            //Pull together all the IntersectResults Objects for this State to loop thru
+            var stateResults = loopStateGroup.Select(x => x.feature).ToList();
 
-            var regionFeatures = GeoJsonTools.DeserializeFileToFeatureCollection(regionFile.FullName)!.ToList();
-
-            var referenceFeatureCounter = 0;
-            progress?.Report(
-                $" Processing {regionFeatures.Count} Reference Features against {toCheck.Count} Submitted Features");
-
-            //Pull together all the IntersectResults Objects to loop thru
-            var regionResults = loopDoiRegionGroup.Select(x => x.feature).ToList();
-
-            //Outer loop is the Region's features, inner loop are the features to check for Intersection
-            foreach (var loopRegionFeature in regionFeatures)
+            foreach (var loopStateDirectory in stateDirectories)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (++referenceFeatureCounter % 5000 == 0)
-                    progress?.Report(
-                        $" Processing {regionFile.Name} - Feature {referenceFeatureCounter} of {regionFeatures.Count}");
+                //Determine the Shapefile to use - if there is a single .shp use it, if there are
+                //multiple prefer a tl_20??_us_state.shp file.
+                var shapeFiles = loopStateDirectory
+                    .EnumerateFiles("*.shp", SearchOption.TopDirectoryOnly).ToList();
 
-                foreach (var loopCheck in regionResults)
+                FileInfo? shapeFile;
+
+                if (shapeFiles.Count == 0)
+                {
+                    progress?.Report($"  No .shp file found in {loopStateDirectory.FullName}");
+                    continue;
+                }
+
+                if (shapeFiles.Count == 1)
+                {
+                    shapeFile = shapeFiles.Single();
+                }
+                else
+                {
+                    shapeFile = shapeFiles.FirstOrDefault(x =>
+                        Regex.IsMatch(x.Name, @"^tl_20[0-9]{2}_us_state\.shp$",
+                            RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture));
+
+                    if (shapeFile == null)
+                    {
+                        progress?.Report(
+                            $"  Multiple .shp files found in {loopStateDirectory.FullName} but none matched tl_20??_us_state.shp - skipping");
+                        continue;
+                    }
+                }
+
+                //Read the Shapefile Features - caching the results for the duration of this run so
+                //repeated use of a Shapefile does not re-read it from disk.
+                if (!shapefileFeatureCache.TryGetValue(shapeFile.FullName, out var shapeFeatures))
+                {
+                    try
+                    {
+                        shapeFeatures = NetTopologySuite.IO.Esri.Shapefile
+                            .ReadAllFeatures(shapeFile.FullName).Cast<IFeature>().ToList();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Error reading PAD-US Shapefile {ShapefilePath}", shapeFile.FullName);
+                        progress?.Report($"  Error reading Shapefile {shapeFile.FullName} - {ex.Message}");
+                        shapeFeatures = [];
+                    }
+
+                    shapefileFeatureCache[shapeFile.FullName] = shapeFeatures;
+                }
+
+                if (shapeFeatures.Count == 0) continue;
+
+                var referenceFeatureCounter = 0;
+                progress?.Report(
+                    $" Processing {shapeFeatures.Count} Reference Features from {shapeFile.Name} against {stateResults.Count} Submitted Features");
+
+                //Outer loop is the Shapefile's features, inner loop are the features to check for Intersection
+                foreach (var loopShapeFeature in shapeFeatures)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    if (loopCheck.Features.Any(x => x.Geometry.Intersects(loopRegionFeature.Geometry)))
+                    if (loopShapeFeature?.Geometry == null || loopShapeFeature.Geometry.IsEmpty) continue;
+
+                    if (++referenceFeatureCounter % 5000 == 0)
+                        progress?.Report(
+                            $" Processing {shapeFile.Name} - Feature {referenceFeatureCounter} of {shapeFeatures.Count}");
+
+                    foreach (var loopCheck in stateResults)
                     {
-                        // Get a list of tags that would be added
-                        var tagsToAdd = new List<string>();
+                        cancellationToken.ThrowIfCancellationRequested();
 
-                        // Check each attribute and collect the tags
-                        foreach (var loopAttribute in attributesForTags)
-                            if (loopRegionFeature.Attributes.GetNames().Any(a => a == loopAttribute))
-                            {
-                                var tagValue = (loopRegionFeature.Attributes[loopAttribute]?.ToString() ?? string.Empty)
-                                    .Trim();
-                                if (!string.IsNullOrWhiteSpace(tagValue) &&
-                                    !loopCheck.Tags.Any(x => x.Equals(tagValue, StringComparison.OrdinalIgnoreCase)))
-                                    tagsToAdd.Add(tagValue);
-                            }
-
-                        // If we don't have any new tags to add, continue to next feature
-                        if (!tagsToAdd.Any())
-                            continue;
-
-                        // Create IntersectWithFeature object and add it to the list
-                        var intersectWithFeature = new IntersectWithFeature
+                        if (loopCheck.Features.Any(x => x.Geometry.Intersects(loopShapeFeature.Geometry)))
                         {
-                            Feature = loopRegionFeature,
-                            Source = regionFile.Name,
-                            Tags = tagsToAdd
-                        };
-                        loopCheck.IntersectsWith.Add(intersectWithFeature);
+                            // Get a list of tags that would be added
+                            var tagsToAdd = new List<string>();
 
-                        // Add the source if it's not already there
-                        if (!loopCheck.Sources.Any(x => regionFile.Name.Equals(x, StringComparison.OrdinalIgnoreCase)))
-                            loopCheck.Sources.Add(regionFile.Name);
+                            // Check each attribute and collect the tags
+                            foreach (var loopAttribute in attributesForTags)
+                                if (loopShapeFeature.Attributes.GetNames().Any(a => a == loopAttribute))
+                                {
+                                    var tagValue =
+                                        (loopShapeFeature.Attributes[loopAttribute]?.ToString() ?? string.Empty)
+                                        .Trim();
+                                    if (!string.IsNullOrWhiteSpace(tagValue) &&
+                                        !loopCheck.Tags.Any(x =>
+                                            x.Equals(tagValue, StringComparison.OrdinalIgnoreCase)))
+                                        tagsToAdd.Add(tagValue);
+                                }
 
-                        // Add all the new tags
-                        foreach (var tag in tagsToAdd)
-                            loopCheck.Tags.Add(tag);
+                            // If we don't have any new tags to add, continue to next feature
+                            if (!tagsToAdd.Any())
+                                continue;
+
+                            // Create IntersectWithFeature object and add it to the list
+                            var intersectWithFeature = new IntersectWithFeature
+                            {
+                                Feature = loopShapeFeature,
+                                Source = shapeFile.Name,
+                                Tags = tagsToAdd
+                            };
+                            loopCheck.IntersectsWith.Add(intersectWithFeature);
+
+                            // Add the source if it's not already there
+                            if (!loopCheck.Sources.Any(x =>
+                                    shapeFile.Name.Equals(x, StringComparison.OrdinalIgnoreCase)))
+                                loopCheck.Sources.Add(shapeFile.Name);
+
+                            // Add all the new tags
+                            foreach (var tag in tagsToAdd)
+                                loopCheck.Tags.Add(tag);
+                        }
                     }
                 }
             }

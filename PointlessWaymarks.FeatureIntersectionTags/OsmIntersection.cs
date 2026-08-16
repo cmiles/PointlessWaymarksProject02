@@ -256,9 +256,11 @@ public static class OsmIntersection
                     $"All OSM Overpass servers failed for 'is_in' query. Server list: {string.Join(", ", OverpassServers)}");
             }
 
+            OverpassServer? usedServer = null;
             foreach (var serverTry in availableServers)
                 try
                 {
+                    usedServer = serverTry;
                     await OsmOverpassRateLimiter.WaitForRateLimitAsync(settings.RateLimitOsmOverpass,
                         cancellationToken);
                     var response = await OsmHttpClient.PostAsync(serverTry.Url, content, cancellationToken);
@@ -305,6 +307,7 @@ public static class OsmIntersection
             catch (Exception ex)
             {
                 Log.ForContext("query", query)
+                    .ForContext("server", usedServer?.Url)
                     .ForContext("jsonString", jsonString)
                     .Error(ex, "Failed to deserialize OSM Overpass API response. Raw response logged for analysis.");
                 throw new InvalidOperationException(
@@ -425,9 +428,11 @@ public static class OsmIntersection
                     $"All OSM Overpass servers failed for 'intersect' query. Server list: {string.Join(", ", OverpassServers)}");
             }
 
+            OverpassServer? usedServer = null;
             foreach (var serverTry in availableServers)
                 try
                 {
+                    usedServer = serverTry;
                     await OsmOverpassRateLimiter.WaitForRateLimitAsync(settings.RateLimitOsmOverpass,
                         cancellationToken);
                     var response = await OsmHttpClient.PostAsync(serverTry.Url, content, cancellationToken);
@@ -473,6 +478,7 @@ public static class OsmIntersection
             catch (Exception e)
             {
                 Log.ForContext("query", query)
+                    .ForContext("server", usedServer?.Url)
                     .ForContext("intersectResultDescription", intersectResult.Description)
                     .ForContext("json", jsonString).ForContext("query", query)
                     .Error(e, $"OSM Json Deserialization Error - {e.Message}");

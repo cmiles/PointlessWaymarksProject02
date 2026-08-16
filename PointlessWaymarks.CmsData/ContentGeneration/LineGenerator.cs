@@ -34,23 +34,27 @@ public static class LineGenerator
 
         var tagList = new List<string>();
 
+        Feature? lineFeature = null;
+
         if (trackInformation.Track.Any())
         {
-            var stateCounty =
-                await StateCountyService.GetStateCounty(trackInformation.Track.First().Y,
-                    trackInformation.Track.First().X);
-            tagList = [stateCounty.state, stateCounty.county];
+            // ReSharper disable once CoVariantArrayConversion
+            lineFeature = new Feature(new LineString(trackInformation.Track.ToArray()),
+                new AttributesTable());
+
+            var stateCounties = StateCountyService.GetStateCountyOffline([lineFeature]);
+            foreach (var stateCounty in stateCounties)
+            {
+                if (!string.IsNullOrWhiteSpace(stateCounty.State)) tagList.Add(stateCounty.State);
+                if (!string.IsNullOrWhiteSpace(stateCounty.County)) tagList.Add(stateCounty.County);
+            }
         }
 
-        if (trackInformation.Track.Any() && UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagOnImportTypes.Contains(Db.ContentTypeDisplayStringForLine, StringComparer.InvariantCultureIgnoreCase) &&
+        if (lineFeature != null && UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagOnImportTypes.Contains(Db.ContentTypeDisplayStringForLine, StringComparer.InvariantCultureIgnoreCase) &&
             !string.IsNullOrWhiteSpace(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile) &&
             !skipFeatureIntersectTagging)
             try
             {
-                // ReSharper disable once CoVariantArrayConversion
-                var lineFeature = new Feature(new LineString(trackInformation.Track.ToArray()),
-                    new AttributesTable());
-
                 tagList.AddRange(await lineFeature.IntersectionTags(
                     UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile,
                     CancellationToken.None, progress));
@@ -135,23 +139,27 @@ public static class LineGenerator
 
         var tagList = new List<string>();
 
+        Feature? lineFeature = null;
+
         if (trackInformation.Track.Any())
         {
-            var stateCounty =
-                await StateCountyService.GetStateCounty(trackInformation.Track.First().Y,
-                    trackInformation.Track.First().X);
-            tagList = [stateCounty.state, stateCounty.county];
+            // ReSharper disable once CoVariantArrayConversion
+            lineFeature = new Feature(new LineString(trackInformation.Track.ToArray()),
+                new AttributesTable());
+
+            var stateCounties = StateCountyService.GetStateCountyOffline([lineFeature]);
+            foreach (var stateCounty in stateCounties)
+            {
+                if (!string.IsNullOrWhiteSpace(stateCounty.State)) tagList.Add(stateCounty.State);
+                if (!string.IsNullOrWhiteSpace(stateCounty.County)) tagList.Add(stateCounty.County);
+            }
         }
 
-        if (trackInformation.Track.Any() && UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagOnImportTypes.Contains(Db.ContentTypeDisplayStringForLine, StringComparer.InvariantCultureIgnoreCase) &&
+        if (lineFeature != null && UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagOnImportTypes.Contains(Db.ContentTypeDisplayStringForLine, StringComparer.InvariantCultureIgnoreCase) &&
             !string.IsNullOrWhiteSpace(UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile) &&
             !skipFeatureIntersectTagging)
             try
             {
-                // ReSharper disable once CoVariantArrayConversion
-                var lineFeature = new Feature(new LineString(trackInformation.Track.ToArray()),
-                    new AttributesTable());
-
                 tagList.AddRange(await lineFeature.IntersectionTags(
                     UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagSettingsFile,
                     CancellationToken.None, progress));

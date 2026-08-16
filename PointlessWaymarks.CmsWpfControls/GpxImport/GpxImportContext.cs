@@ -373,7 +373,7 @@ public partial class GpxImportContext : IWebViewMessenger
 
         var stateCounty =
             await StateCountyService.GetStateCounty(newPoint.Latitude, newPoint.Longitude);
-        List<string> tagList = [stateCounty.state, stateCounty.county];
+        List<string> tagList = [stateCounty.State, stateCounty.County];
 
         try
         {
