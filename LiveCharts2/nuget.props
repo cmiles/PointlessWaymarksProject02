@@ -4,7 +4,6 @@
     <Authors>$(LiveChartsAuthors)</Authors>
     <PackageIcon>icon.png</PackageIcon>
     <RepositoryUrl>https://github.com/beto-rodriguez/LiveCharts2</RepositoryUrl>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
     <!-- Deterministic build -->
     <Deterministic>true</Deterministic>
@@ -16,9 +15,6 @@
 
     <!-- Custom output folder -->
     <PackageOutputPath>$(SolutionDir)nukpg</PackageOutputPath>
-
-    <!-- Track source generated files -->
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
 
     <IsPackable>true</IsPackable>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -34,10 +30,6 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <DocumentationFile>bin/$(Configuration)/$(TargetFramework)/$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-  </ItemGroup>
 
   <ItemGroup>
     <None Include="$(PathToPackAssets)icon.png" Pack="true" PackagePath="\" />
