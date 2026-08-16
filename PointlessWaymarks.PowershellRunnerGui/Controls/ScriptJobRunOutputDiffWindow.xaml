@@ -23,7 +23,6 @@
         <windowScreenShot:WindowScreenShotControl
             Grid.Row="0"
             Grid.Column="0"
-            Width="40"
             Margin="2,2,2,6"
             HorizontalAlignment="Left"
             VerticalAlignment="Bottom" />

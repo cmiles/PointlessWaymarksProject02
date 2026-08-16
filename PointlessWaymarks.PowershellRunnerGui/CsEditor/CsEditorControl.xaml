@@ -49,7 +49,10 @@
                     Visibility="{Binding HasValidationIssues, Converter={StaticResource BooleanToVisibility}}" />
             </StackPanel>
         </StackPanel>
-        <TextBox Grid.Row="1" SpellCheck.IsEnabled="False" x:Name="CsCodeEditor" Text="{Binding UserValue}"
+        <TextBox Grid.Row="1" SpellCheck.IsEnabled="False"
+                 TextWrapping="Wrap"
+                 HorizontalScrollBarVisibility="Disabled"
+                 VerticalScrollBarVisibility="Visible" x:Name="CsCodeEditor" Text="{Binding UserValue}"
                  AcceptsReturn="True" AcceptsTab="True" />
     </Grid>
 </UserControl>
