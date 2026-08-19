@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PointlessWaymarks.SiteViewerMaui.ViewModels"
+             x:Class="PointlessWaymarks.SiteViewerMaui.Views.ViewerPage"
+             x:DataType="vm:ViewerViewModel"
+             Title="{Binding Title}">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Padding="8,6">
+            <HorizontalStackLayout Grid.Column="0" Spacing="6" HorizontalOptions="Start">
+                <Button Text="◀" Command="{Binding BackCommand}" />
+                <Button Text="▶" Command="{Binding ForwardCommand}" />
+                <Button Text="⌂" Command="{Binding HomeCommand}" />
+                <Button Text="⟳" Command="{Binding RefreshCommand}" />
+            </HorizontalStackLayout>
+            <ActivityIndicator Grid.Column="1"
+                               WidthRequest="22"
+                               HeightRequest="22"
+                               Margin="0,0,8,0"
+                               VerticalOptions="Center"
+                               HorizontalOptions="End"
+                               IsRunning="{Binding IsResourceLoading}"
+                               InputTransparent="True" />
+        </Grid>
+
+        <Label Grid.Row="1" Padding="10,0,10,6" FontSize="12" TextColor="Gray"
+               LineBreakMode="TailTruncation"
+               Text="{Binding CurrentAddress}" />
+
+        <Grid Grid.Row="2">
+            <WebView x:Name="Web" />
+            <ProgressBar x:Name="LoadingBar"
+                         VerticalOptions="Start"
+                         HeightRequest="3"
+                         IsVisible="{Binding IsLoading}"
+                         Progress="{Binding LoadProgress}"
+                         InputTransparent="True" />
+        </Grid>
+
+    </Grid>
+
+</ContentPage>

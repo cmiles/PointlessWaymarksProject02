@@ -1,0 +1,17 @@
+<Project>
+    <!--
+        This project is a self-contained .NET MAUI (Android) app. The repository root
+        Directory.Build.props pins net10.0-windows / win-x64 / x64 for the desktop projects,
+        which is not valid for a MAUI Android target. MSBuild only imports the *nearest*
+        Directory.Build.props, so this file intentionally does NOT import the root one and
+        instead sets the shared properties this project needs.
+    -->
+    <PropertyGroup>
+        <LangVersion>13.0</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <PropertyGroup>
+        <DebugType>embedded</DebugType>
+    </PropertyGroup>
+</Project>

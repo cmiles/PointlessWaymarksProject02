@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.S3" Version="4.0.102.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
+    <PackageReference Include="NUnit" Version="4.6.1" />
+    <PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />
+    <PackageReference Include="NUnit.Analyzers" Version="4.14.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!--
+    This project cannot reference the net10.0-android SiteViewerMaui project directly, so the
+    self-contained *pure* logic (no MAUI dependencies) is link-compiled here and exercised on a
+    normal desktop TFM. MAUI/SecureStorage/FileSystem-dependent code is verified via the documented
+    manual emulator smoke test instead.
+  -->
+  <ItemGroup>
+    <Compile Include="..\PointlessWaymarks.SiteViewerMaui\S3\IS3AccountInformation.cs" Link="S3\IS3AccountInformation.cs" />
+    <Compile Include="..\PointlessWaymarks.SiteViewerMaui\S3\S3AccountInformation.cs" Link="S3\S3AccountInformation.cs" />
+    <Compile Include="..\PointlessWaymarks.SiteViewerMaui\S3\S3Providers.cs" Link="S3\S3Providers.cs" />
+    <Compile Include="..\PointlessWaymarks.SiteViewerMaui\S3\S3Tools.cs" Link="S3\S3Tools.cs" />
+    <Compile Include="..\PointlessWaymarks.SiteViewerMaui\Models\CloudViewerProfile.cs" Link="Models\CloudViewerProfile.cs" />
+    <Compile Include="..\PointlessWaymarks.SiteViewerMaui\Models\ConnectionValidation.cs" Link="Models\ConnectionValidation.cs" />
+    <Compile Include="..\PointlessWaymarks.SiteViewerMaui\Models\ConnectionSettingsImport.cs" Link="Models\ConnectionSettingsImport.cs" />
+    <Compile Include="..\PointlessWaymarks.SiteViewerMaui\Tools\ObfuscationTools.cs" Link="Tools\ObfuscationTools.cs" />
+    <Compile Include="..\PointlessWaymarks.SiteViewerMaui\Services\S3ContentService.cs" Link="Services\S3ContentService.cs" />
+    <Compile Include="..\PointlessWaymarks.SiteViewerMaui\Services\ViewerNavigation.cs" Link="Services\ViewerNavigation.cs" />
+  </ItemGroup>
+
+</Project>

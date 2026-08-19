@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PointlessWaymarks.SiteViewerMaui.ViewModels"
+             x:Class="PointlessWaymarks.SiteViewerMaui.Views.ConnectionEditPage"
+             x:DataType="vm:ConnectionEditViewModel"
+             Title="{Binding Title}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+
+            <Label Text="Name" />
+            <Entry Text="{Binding Name}" Placeholder="A name for this connection" />
+
+            <Label Text="Site Domain" />
+            <Entry Text="{Binding SiteDomain}" Placeholder="example.com (no protocol)"
+                   Keyboard="Url" />
+
+            <Label Text="Provider" />
+            <Picker ItemsSource="{Binding ProviderChoices}"
+                    SelectedItem="{Binding Provider}" />
+
+            <Label Text="Region" IsVisible="{Binding IsAmazon}" />
+            <Entry Text="{Binding Region}" Placeholder="e.g. us-east-1"
+                   IsVisible="{Binding IsAmazon}" />
+
+            <Label Text="Service URL" IsVisible="{Binding IsServiceUrlProvider}" />
+            <Entry Text="{Binding ServiceUrl}"
+                   Placeholder="e.g. https://account.r2.cloudflarestorage.com"
+                   Keyboard="Url"
+                   IsVisible="{Binding IsServiceUrlProvider}" />
+
+            <Label Text="Bucket" />
+            <Entry Text="{Binding Bucket}" Placeholder="Bucket name" />
+
+            <Label Text="Access Key" />
+            <Entry Text="{Binding AccessKey}" Placeholder="S3 Access Key" />
+
+            <Label Text="Secret" />
+            <Entry Text="{Binding Secret}" Placeholder="S3 Secret" IsPassword="True" />
+
+            <Button Text="Load From File"
+                    Command="{Binding LoadFromFileCommand}"
+                    Margin="0,16,0,0" />
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,8,0,0">
+                <Button Grid.Column="0" Text="Save" Command="{Binding SaveCommand}" />
+                <Button Grid.Column="1" Text="Cancel" Command="{Binding CancelCommand}" />
+            </Grid>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
