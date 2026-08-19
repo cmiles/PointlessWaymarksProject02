@@ -164,7 +164,8 @@ public static class Combiner
         };
 
         var destRect = new SKRect(0, 0, width, height);
-        canvas.DrawBitmap(image, destRect, paint);
+        using var skImage = SKImage.FromBitmap(image);
+        canvas.DrawImage(skImage, destRect, new SKSamplingOptions(SKFilterMode.Linear), paint);
 
         return sizedImage;
     }
@@ -220,7 +221,8 @@ public static class Combiner
 
                 progress.Report($"Drawing Image {imageCounter + 1} of {images.Count} - Row {r}, Column {c}");
 
-                canvas.DrawBitmap(images[imageCounter++], xOffset, yOffset);
+                using var imageToDraw = SKImage.FromBitmap(images[imageCounter++]);
+                canvas.DrawImage(imageToDraw, xOffset, yOffset, SKSamplingOptions.Default);
 
                 if (imageCounter >= imageCount) break;
             }
@@ -249,7 +251,8 @@ public static class Combiner
         {
             progress.Report($"Drawing Image {++imageCounter} of {images.Count}");
             var yOffset = (height - image.Height) / 2; // Center the image vertically
-            canvas.DrawBitmap(image, xOffset, yOffset);
+            using var imageToDraw = SKImage.FromBitmap(image);
+            canvas.DrawImage(imageToDraw, xOffset, yOffset, SKSamplingOptions.Default);
             xOffset += image.Width;
         }
 
@@ -275,7 +278,8 @@ public static class Combiner
         {
             progress.Report($"Drawing Image {++imageCounter} of {images.Count}");
             var xOffset = (width - image.Width) / 2; // Center the image horizontally
-            canvas.DrawBitmap(image, xOffset, yOffset);
+            using var imageToDraw = SKImage.FromBitmap(image);
+            canvas.DrawImage(imageToDraw, xOffset, yOffset, SKSamplingOptions.Default);
             yOffset += image.Height;
         }
 
@@ -312,6 +316,7 @@ public static class Combiner
 
         await using var inputStream = File.OpenRead(toRotate.FullName);
         using var originalBitmap = SKBitmap.Decode(inputStream);
+        using var originalImage = SKImage.FromBitmap(originalBitmap);
 
         // Rotate the image
         SKBitmap rotatedBitmap;
@@ -323,7 +328,7 @@ public static class Combiner
                 {
                     canvas.Translate(rotatedBitmap.Width, 0);
                     canvas.RotateDegrees(90);
-                    canvas.DrawBitmap(originalBitmap, 0, 0);
+                    canvas.DrawImage(originalImage, 0, 0, SKSamplingOptions.Default);
                 }
 
                 break;
@@ -333,7 +338,7 @@ public static class Combiner
                 {
                     canvas.Translate(rotatedBitmap.Width, rotatedBitmap.Height);
                     canvas.RotateDegrees(180);
-                    canvas.DrawBitmap(originalBitmap, 0, 0);
+                    canvas.DrawImage(originalImage, 0, 0, SKSamplingOptions.Default);
                 }
 
                 break;
@@ -343,7 +348,7 @@ public static class Combiner
                 {
                     canvas.Translate(0, rotatedBitmap.Height);
                     canvas.RotateDegrees(270);
-                    canvas.DrawBitmap(originalBitmap, 0, 0);
+                    canvas.DrawImage(originalImage, 0, 0, SKSamplingOptions.Default);
                 }
 
                 break;

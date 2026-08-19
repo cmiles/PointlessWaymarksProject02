@@ -1823,6 +1823,26 @@ public static class UserSettingsUtilities
 
         return iniResult;
     }
+    
+    public static Task<IniData?> ReadRawSettingsFromString(string stringToRead, IProgress<string>? progress = null)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(stringToRead))
+                return Task.FromResult(new IniData())!;
+
+            progress?.Report($"Reading and deserializing");
+
+            var parser = new IniParser.Parser.IniDataParser();
+            var iniResult = parser.Parse(stringToRead);
+
+            return Task.FromResult(iniResult)!;
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException<IniData?>(exception);
+        }
+    }
 
     public static string RssIndexFeedUrl(this UserSettings settings)
     {
