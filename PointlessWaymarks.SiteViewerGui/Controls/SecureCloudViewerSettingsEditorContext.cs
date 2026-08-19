@@ -1,7 +1,6 @@
 using System.IO;
 using Amazon;
 using Ookii.Dialogs.Wpf;
-using PointlessWaymarks.CmsData.S3;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.CommonTools.S3;
 using PointlessWaymarks.LlamaAspects;
@@ -39,7 +38,7 @@ public partial class SecureCloudViewerSettingsEditorContext
         "Settings must be given a name to identify these settings.";
 
     public static string HelpMarkdownS3Information =>
-        "Cloud S3 Storage from Amazon, Cloudflare or Wasabi where the site is stored. You will need to enter the provider and information below and then use the 'Enter S3 Site Credentials' button to enter your secret and access key (these keys are stored in a Password Vault - any attacker with access into your Windows Account can retrieve these - it is recommended that you use Read Only access credentials to limit security risks).";
+        "Cloud S3 Storage from Amazon, Cloudflare or Wasabi where the site is stored. Setting values are encrypted and stored in a JSON file using your encryption key.";
 
     public List<string> RegionChoices { get; set; }
     public string SettingsFullFileName { get; set; }
@@ -61,22 +60,6 @@ public partial class SecureCloudViewerSettingsEditorContext
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         return new SecureCloudViewerSettingsEditorContext(factoryStatusContext, toLoad, settingsFullFileName);
-    }
-
-    [BlockingCommand]
-    public async Task DeleteAwsCredentials()
-    {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        CloudStorageCredentials.RemoveS3SiteCredentials(EditorSettings.CloudViewerSettingsId);
-    }
-
-    [BlockingCommand]
-    public async Task DeleteS3ServiceUrls()
-    {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        CloudStorageCredentials.RemoveS3ServiceUrls(EditorSettings.CloudViewerSettingsId);
     }
 
     [BlockingCommand]
@@ -110,7 +93,7 @@ public partial class SecureCloudViewerSettingsEditorContext
         try
         {
             // Write settings to the existing file
-            await SecureCloudViewerSettings.WriteSettings(EditorSettings, SettingsFullFileName);
+            await SecureCloudViewerSettings.WriteSettings(EditorSettings, SettingsFullFileName, StatusContext);
 
             await StatusContext.ToastSuccess($"Settings saved to {SettingsFullFileName}");
 
@@ -139,10 +122,10 @@ public partial class SecureCloudViewerSettingsEditorContext
         var saveDialog = new VistaSaveFileDialog
         {
             Title = "Save Site Settings As",
-            Filter = "INI files (*.ini)|*.ini|All files (*.*)|*.*",
-            DefaultExt = ".ini",
+            Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
+            DefaultExt = ".json",
             AddExtension = true,
-            FileName = $"{FileAndFolderTools.TryMakeFilenameValid(EditorSettings.CloudViewerSettingsName)}.ini"
+            FileName = $"{FileAndFolderTools.TryMakeFilenameValid(EditorSettings.CloudViewerSettingsName)}.json"
         };
 
         // Set initial directory if current settings file exists
@@ -166,7 +149,7 @@ public partial class SecureCloudViewerSettingsEditorContext
         try
         {
             // Write settings to the selected file
-            await SecureCloudViewerSettings.WriteSettings(EditorSettings, selectedFileName);
+            await SecureCloudViewerSettings.WriteSettings(EditorSettings, selectedFileName, StatusContext);
 
             // Update the settings file name
             SettingsFullFileName = selectedFileName;
@@ -201,28 +184,29 @@ public partial class SecureCloudViewerSettingsEditorContext
 
         if (string.IsNullOrWhiteSpace(EditorSettings.CloudViewerProvider))
         {
-            await StatusContext.ToastError("Site Domain can not be blank");
+            await StatusContext.ToastError("Provider can not be blank");
             return false;
         }
 
-        var (accessKey, secret) = CloudStorageCredentials.GetS3SiteCredentials(EditorSettings.CloudViewerSettingsId);
-
-        if (string.IsNullOrWhiteSpace(accessKey) || string.IsNullOrWhiteSpace(secret))
+        if (string.IsNullOrWhiteSpace(EditorSettings.CloudViewerAccessKey))
         {
-            await StatusContext.ToastError(
-                "Full Valid Cloud Credentials not found - please use the 'Enter S3 Site Credentials' button to enter them");
+            await StatusContext.ToastError("An Access Key is required");
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(EditorSettings.CloudViewerSecret))
+        {
+            await StatusContext.ToastError("A Secret must be provided");
             return false;
         }
 
         if (EditorSettings.CloudViewerProvider == nameof(S3Providers.Amazon))
         {
-            CloudStorageCredentials.RemoveS3ServiceUrls(EditorSettings.CloudViewerSettingsId);
+            EditorSettings.CloudServiceUrl = string.Empty;
         }
         else
         {
-            var serviceUrl = CloudStorageCredentials.GetS3ServiceUrl(EditorSettings.CloudViewerSettingsId);
-
-            if (string.IsNullOrWhiteSpace(serviceUrl))
+            if (string.IsNullOrWhiteSpace(EditorSettings.CloudServiceUrl))
             {
                 await StatusContext.ToastError("Service URL is missing or invalid");
                 return false;
@@ -230,56 +214,5 @@ public partial class SecureCloudViewerSettingsEditorContext
         }
 
         return true;
-    }
-
-    [BlockingCommand]
-    public async Task UserAwsKeyAndSecretEntry()
-    {
-        var newKeyEntry = await StatusContext.ShowStringEntry("Cloud Access Key",
-            "Enter the Cloud Access Key", string.Empty);
-
-        if (!newKeyEntry.Item1)
-        {
-            await StatusContext.ToastWarning("Cloud Credential Entry Cancelled");
-            return;
-        }
-
-        var cleanedKey = newKeyEntry.Item2.TrimNullToEmpty();
-
-        if (string.IsNullOrWhiteSpace(cleanedKey)) return;
-
-        var newSecretEntry = await StatusContext.ShowStringEntry("Cloud Secret Key",
-            "Enter the Secret Key", string.Empty);
-
-        if (!newSecretEntry.Item1) return;
-
-        var cleanedSecret = newSecretEntry.Item2.TrimNullToEmpty();
-
-        if (string.IsNullOrWhiteSpace(cleanedSecret))
-        {
-            await StatusContext.ToastError("Cloud Credential Entry Canceled - secret can not be blank");
-            return;
-        }
-
-        CloudStorageCredentials.SaveS3SiteCredential(cleanedKey, cleanedSecret, EditorSettings.CloudViewerSettingsId);
-
-        if (EditorSettings.CloudViewerProvider != nameof(S3Providers.Amazon))
-        {
-            var serviceUrl = await StatusContext.ShowStringEntry("Service URL",
-                "Enter the S3 service URL. For Cloudflare this will be https://{accountId}.r2.cloudflarestorage.com - other providers, like Wasabi, will have a Service URL based on region (for example s3.ca-central-1.wasabisys.com for Wasabi-Toronto)",
-                string.Empty);
-
-            if (!serviceUrl.Item1) return;
-
-            var cleanedServiceUrl = serviceUrl.Item2.TrimNullToEmpty();
-
-            if (string.IsNullOrWhiteSpace(cleanedServiceUrl))
-            {
-                await StatusContext.ToastError("Cloud Credential Entry Canceled - Service URL can not be blank");
-                return;
-            }
-
-            CloudStorageCredentials.SaveS3ServiceUrl(cleanedServiceUrl, EditorSettings.CloudViewerSettingsId);
-        }
     }
 }

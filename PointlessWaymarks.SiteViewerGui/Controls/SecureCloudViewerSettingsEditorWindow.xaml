@@ -120,16 +120,35 @@
                         SelectedValue="{Binding Context.EditorSettings.CloudViewerRegion, UpdateSourceTrigger=PropertyChanged}"
                         Visibility="{Binding Context.EditorSettings.CloudViewerProvider, Converter={StaticResource S3ProviderIsAmazonCollapsed}}" />
                 </StackPanel>
-                <StackPanel Orientation="Vertical" Margin="4,12,4,4">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                    </Grid>
-                    <Button Margin="4" Width="240" Command="{Binding Context.UserAwsKeyAndSecretEntryCommand}">Enter S3 Site Credentials</Button>
-                    <Button Margin="4" Width="240" Command="{Binding Context.DeleteAwsCredentialsCommand}">Delete S3 Site Credentials</Button>
-                    <Button Margin="4" Width="240" Command="{Binding Context.DeleteS3ServiceUrlsCommand}">Delete S3 Service URLs</Button>
+                <StackPanel Orientation="Vertical">
+                    <Label Style="{StaticResource DataEntryLabelStyle}"
+                           Target="{Binding ElementName=S3AccessKeyTextBox}">
+                        S3 Access Key
+                    </Label>
+                    <TextBox
+                        Name="S3AccessKeyTextBox"
+                        Style="{StaticResource DataEntryTextBoxSingleLineStyle}"
+                        Text="{Binding Context.EditorSettings.CloudViewerAccessKey, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+                <StackPanel Orientation="Vertical">
+                    <Label Style="{StaticResource DataEntryLabelStyle}"
+                           Target="{Binding ElementName=S3SecretTextBox}">
+                        S3 Secret
+                    </Label>
+                    <TextBox
+                        Name="S3SecretTextBox"
+                        Style="{StaticResource DataEntryTextBoxSingleLineStyle}"
+                        Text="{Binding Context.EditorSettings.CloudViewerSecret, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+                <StackPanel Orientation="Vertical">
+                    <Label Style="{StaticResource DataEntryLabelStyle}"
+                           Target="{Binding ElementName=S3ServiceUrlTextBox}">
+                        Service URL
+                    </Label>
+                    <TextBox
+                        Name="S3ServiceUrlTextBox"
+                        Style="{StaticResource DataEntryTextBoxSingleLineStyle}"
+                        Text="{Binding Context.EditorSettings.CloudServiceUrl, UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>

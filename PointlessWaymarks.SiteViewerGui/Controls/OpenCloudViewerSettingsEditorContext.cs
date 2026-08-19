@@ -122,10 +122,10 @@ public partial class OpenCloudViewerSettingsEditorContext
         var saveDialog = new VistaSaveFileDialog
         {
             Title = "Save Site Settings As",
-            Filter = "INI files (*.ini)|*.ini|All files (*.*)|*.*",
-            DefaultExt = ".ini",
+            Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
+            DefaultExt = ".json",
             AddExtension = true,
-            FileName = $"{FileAndFolderTools.TryMakeFilenameValid(EditorSettings.CloudViewerSettingsName)}.ini"
+            FileName = $"{FileAndFolderTools.TryMakeFilenameValid(EditorSettings.CloudViewerSettingsName)}.json"
         };
 
         // Set initial directory if current settings file exists
@@ -184,7 +184,7 @@ public partial class OpenCloudViewerSettingsEditorContext
 
         if (string.IsNullOrWhiteSpace(EditorSettings.CloudViewerProvider))
         {
-            await StatusContext.ToastError("Site Domain can not be blank");
+            await StatusContext.ToastError("Provider can not be blank");
             return false;
         }
 

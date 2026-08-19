@@ -1,98 +1,98 @@
 using System.IO;
-using IniParser;
+using System.Text.Json;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.S3;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.CommonTools.S3;
 using PointlessWaymarks.LlamaAspects;
+using PointlessWaymarks.WindowsTools;
+using PointlessWaymarks.WpfCommon.Status;
 
 namespace PointlessWaymarks.SiteViewerGui.Controls;
 
 [NotifyPropertyChanged]
 public partial class SecureCloudViewerSettings
 {
-    public string CloudViewerBucket { get; set; } = string.Empty;
+    public const string ObfuscationKeyResourceIdentifier = "PointlessWaymarks-SiteViewer-ObfuscationKey";
 
-    //2025/12/23 - The verbose names are a small hedge against collisions if an unexpected or incorrect .ini
-    //file is saved to - sections or other mechanisms could help and perhaps should be added, this is enough
-    //for now.
+    public string CloudServiceUrl { get; set; } = string.Empty;
+    public string CloudViewerAccessKey { get; set; } = string.Empty;
+    public string CloudViewerBucket { get; set; } = string.Empty;
     public string CloudViewerProvider { get; set; } = string.Empty;
     public string CloudViewerRegion { get; set; } = string.Empty;
+    public string CloudViewerSecret { get; set; } = string.Empty;
     public Guid CloudViewerSettingsId { get; set; } = Guid.NewGuid();
     public string CloudViewerSettingsName { get; set; } = string.Empty;
     public string CloudViewerSiteDomain { get; set; } = string.Empty;
-    public string IniType { get; set; } = "SecureCloudViewer";
+    public string SettingsType { get; set; } = "SecureCloudViewer";
 
-    public static async Task<SecureCloudViewerSettings> ReadFromSettingsFile(FileInfo fileToRead,
-        IProgress<string>? progress = null)
+    public static string GetObfuscationKey()
     {
-        var iniResult = await UserSettingsUtilities.ReadRawSettingsFromFile(fileToRead, progress);
+        return PasswordVaultTools.GetCredentials(ObfuscationKeyResourceIdentifier).password;
+    }
 
-        if (iniResult is null)
-            throw new NullReferenceException($"Trying to read Settings from {fileToRead.FullName} returned null");
+    public static void SaveObfuscationKey(string key)
+    {
+        PasswordVaultTools.SaveCredentials(ObfuscationKeyResourceIdentifier, "SiteViewerObfuscationKey", key);
+    }
 
-        var currentProperties = typeof(SecureCloudViewerSettings).GetProperties().ToList();
+    public static async Task<string> GetOrPromptObfuscationKey(StatusControlContext? statusContext = null)
+    {
+        var existingKey = GetObfuscationKey();
+        if (!string.IsNullOrWhiteSpace(existingKey)) return existingKey;
 
-        var readResult = new SecureCloudViewerSettings();
-
-        foreach (var loopProperties in currentProperties)
+        if (statusContext != null)
         {
-            var propertyExists = iniResult.TryGetKey(loopProperties.Name, out var existingValue);
-
-            if (!propertyExists) continue;
-
-            if (loopProperties.PropertyType == typeof(string))
+            var promptResult = await statusContext.ShowStringEntry("Site Viewer Obfuscation Key",
+                "Please enter an obfuscation/encryption key for your Secure Cloud Viewer settings. This key will be stored in your Windows Password Vault.",
+                string.Empty);
+            if (promptResult.Item1 && !string.IsNullOrWhiteSpace(promptResult.Item2))
             {
-                loopProperties.SetValue(readResult, existingValue.TrimNullToEmpty());
-                continue;
+                var cleanedKey = promptResult.Item2.Trim();
+                SaveObfuscationKey(cleanedKey);
+                return cleanedKey;
             }
-
-            if (loopProperties.PropertyType == typeof(bool))
-            {
-                var valueTranslated = bool.TryParse(existingValue, out var translated);
-
-                if (valueTranslated)
-                    loopProperties.SetValue(readResult, translated);
-
-                continue;
-            }
-
-            if (loopProperties.PropertyType == typeof(double))
-            {
-                var valueTranslated = double.TryParse(existingValue, out var translated);
-
-                if (valueTranslated)
-                    loopProperties.SetValue(readResult, translated);
-
-                continue;
-            }
-
-            if (loopProperties.PropertyType == typeof(int))
-            {
-                var valueTranslated = int.TryParse(existingValue, out var translated);
-
-                if (valueTranslated)
-                    loopProperties.SetValue(readResult, translated);
-
-                continue;
-            }
-
-            if (loopProperties.PropertyType == typeof(Guid))
-            {
-                var valueTranslated = Guid.TryParse(existingValue, out var translated);
-
-                if (valueTranslated)
-                    loopProperties.SetValue(readResult, translated);
-
-                continue;
-            }
-
-            throw new NotSupportedException(
-                $"The use of the type {loopProperties.PropertyType} in User Settings is not supported...");
         }
 
-        return readResult;
+        throw new InvalidOperationException(
+            "An obfuscation key is required to encrypt or decrypt Secure Cloud Viewer settings.");
     }
+
+    public static async Task<SecureCloudViewerSettings> ReadFromSettingsFile(FileInfo fileToRead,
+        IProgress<string>? progress = null, StatusControlContext? statusContext = null)
+    {
+        progress?.Report($"Reading Secure Cloud Settings from {fileToRead.FullName}");
+
+        var fileText = await File.ReadAllTextAsync(fileToRead.FullName);
+
+        var dto = JsonSerializer.Deserialize<EncryptedSecureCloudViewerSettingsDto>(fileText);
+        if (dto is null)
+            throw new NullReferenceException($"Trying to read Settings from {fileToRead.FullName} returned null");
+
+        var key = await GetOrPromptObfuscationKey(statusContext);
+
+        var result = new SecureCloudViewerSettings
+        {
+            SettingsType = dto.SettingsType,
+            CloudViewerSettingsName = dto.CloudViewerSettingsName.Decrypt(key),
+            CloudViewerSiteDomain = dto.CloudViewerSiteDomain.Decrypt(key),
+            CloudViewerProvider = dto.CloudViewerProvider.Decrypt(key),
+            CloudViewerRegion = dto.CloudViewerRegion.Decrypt(key),
+            CloudViewerBucket = dto.CloudViewerBucket.Decrypt(key),
+            CloudViewerAccessKey = dto.CloudViewerAccessKey.Decrypt(key),
+            CloudViewerSecret = dto.CloudViewerSecret.Decrypt(key),
+            CloudServiceUrl = dto.CloudServiceUrl.Decrypt(key)
+        };
+
+        var decryptedId = dto.CloudViewerSettingsId.Decrypt(key);
+        if (Guid.TryParse(decryptedId, out var id))
+        {
+            result.CloudViewerSettingsId = id;
+        }
+
+        return result;
+    }
+
 
     public IS3AccountInformation S3AccountInformation()
     {
@@ -102,9 +102,9 @@ public partial class SecureCloudViewerSettings
         {
             ServiceUrl = cloudProvider == S3Providers.Amazon
                 ? () => S3Tools.AmazonServiceUrlFromBucketRegion(CloudViewerRegion)
-                : () => CloudStorageCredentials.GetS3ServiceUrl(CloudViewerSettingsId),
-            AccessKey = () => CloudStorageCredentials.GetS3SiteCredentials(CloudViewerSettingsId).accessKey,
-            Secret = () => CloudStorageCredentials.GetS3SiteCredentials(CloudViewerSettingsId).secret,
+                : () => CloudServiceUrl,
+            AccessKey = () => CloudViewerAccessKey,
+            Secret = () => CloudViewerSecret,
             BucketName = () => CloudViewerBucket,
             FullFileNameForJsonUploadInformation = () =>
                 Path.Combine(FileLocationTools.TempStorageDirectory().FullName,
@@ -115,32 +115,40 @@ public partial class SecureCloudViewerSettings
         };
     }
 
-    public static async Task WriteSettings(SecureCloudViewerSettings toWrite, string saveAsFullFilename)
+    public static async Task WriteSettings(SecureCloudViewerSettings toWrite, string saveAsFullFilename,
+        StatusControlContext? statusContext = null)
     {
-        var currentFile = new FileInfo(saveAsFullFilename);
+        var key = await GetOrPromptObfuscationKey(statusContext);
 
-        if (!currentFile.Exists)
+        var dto = new EncryptedSecureCloudViewerSettingsDto
         {
-            var fileStream = currentFile.Create();
-            fileStream.Close();
-        }
+            SettingsType = string.IsNullOrWhiteSpace(toWrite.SettingsType) ? "SecureCloudViewer" : toWrite.SettingsType,
+            CloudViewerSettingsId = toWrite.CloudViewerSettingsId.ToString().Encrypt(key),
+            CloudViewerSettingsName = toWrite.CloudViewerSettingsName.Encrypt(key),
+            CloudViewerSiteDomain = toWrite.CloudViewerSiteDomain.Encrypt(key),
+            CloudViewerProvider = toWrite.CloudViewerProvider.Encrypt(key),
+            CloudViewerRegion = toWrite.CloudViewerRegion.Encrypt(key),
+            CloudViewerBucket = toWrite.CloudViewerBucket.Encrypt(key),
+            CloudViewerAccessKey = toWrite.CloudViewerAccessKey.Encrypt(key),
+            CloudViewerSecret = toWrite.CloudViewerSecret.Encrypt(key),
+            CloudServiceUrl = toWrite.CloudServiceUrl.Encrypt(key)
+        };
 
-        var iniResult = (await UserSettingsUtilities.ReadRawSettingsFromFile(currentFile))!;
-
-        var currentProperties = typeof(SecureCloudViewerSettings).GetProperties().ToList();
-
-        foreach (var loopProperties in currentProperties)
-        {
-            var propertyExists = iniResult.TryGetKey(loopProperties.Name, out _);
-
-            if (propertyExists)
-                iniResult.Global[loopProperties.Name] = loopProperties.GetValue(toWrite)?.ToString();
-            else
-                iniResult.Global.AddKey(loopProperties.Name, loopProperties.GetValue(toWrite)?.ToString());
-        }
-
-        var writer = new FileIniDataParser();
-
-        writer.WriteFile(currentFile.FullName, iniResult);
+        var json = JsonSerializer.Serialize(dto, new JsonSerializerOptions { WriteIndented = true });
+        await File.WriteAllTextAsync(saveAsFullFilename, json);
     }
+}
+
+public class EncryptedSecureCloudViewerSettingsDto
+{
+    public string CloudServiceUrl { get; set; } = string.Empty;
+    public string CloudViewerAccessKey { get; set; } = string.Empty;
+    public string CloudViewerBucket { get; set; } = string.Empty;
+    public string CloudViewerProvider { get; set; } = string.Empty;
+    public string CloudViewerRegion { get; set; } = string.Empty;
+    public string CloudViewerSecret { get; set; } = string.Empty;
+    public string CloudViewerSettingsId { get; set; } = string.Empty;
+    public string CloudViewerSettingsName { get; set; } = string.Empty;
+    public string CloudViewerSiteDomain { get; set; } = string.Empty;
+    public string SettingsType { get; set; } = "SecureCloudViewer";
 }

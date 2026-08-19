@@ -247,7 +247,7 @@ public partial class MainWindow
     {
         var settings =
             await SecureCloudViewerSettings.ReadFromSettingsFile(new FileInfo(SettingsFile),
-                StatusContext.ProgressTracker());
+                StatusContext.ProgressTracker(), StatusContext);
 
         LocalFolder = string.Empty;
         SiteUrl = settings.CloudViewerSiteDomain;

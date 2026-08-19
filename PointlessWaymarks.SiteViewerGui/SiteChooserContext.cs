@@ -59,7 +59,7 @@ public partial class SiteChooserContext
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        var filePicker = new VistaOpenFileDialog { Filter = "ini files (*.ini)|*.ini|All files (*.*)|*.*" };
+        var filePicker = new VistaOpenFileDialog { Filter = "Settings Files (*.json;*.ini)|*.json;*.ini|JSON files (*.json)|*.json|INI files (*.ini)|*.ini|All files (*.*)|*.*" };
 
         var result = filePicker.ShowDialog();
 
@@ -268,7 +268,7 @@ public partial class SiteChooserContext
         {
             if (string.IsNullOrWhiteSpace(loopRecent)) continue;
 
-            if (loopRecent.EndsWith(".ini", StringComparison.OrdinalIgnoreCase))
+            if (loopRecent.EndsWith(".ini", StringComparison.OrdinalIgnoreCase) || loopRecent.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
             {
                 var loopFileInfo = new FileInfo(loopRecent);
 
@@ -296,7 +296,7 @@ public partial class SiteChooserContext
                     {
                         var newSettings =
                             await SecureCloudViewerSettings.ReadFromSettingsFile(loopFileInfo,
-                                StatusContext.ProgressTracker());
+                                StatusContext.ProgressTracker(), StatusContext);
 
                         await ThreadSwitcher.ResumeForegroundAsync();
                         Items.Add(new SecureCloudViewerSettingsFileListItem
