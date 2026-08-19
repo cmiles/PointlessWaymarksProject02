@@ -131,6 +131,12 @@
   <Project Path="PointlessWaymarks.SiteViewerGui/PointlessWaymarks.SiteViewerGui.csproj">
     <Platform Project="x64" />
   </Project>
+  <Project Path="PointlessWaymarks.SiteViewerMaui/PointlessWaymarks.SiteViewerMaui.csproj">
+    <Platform Project="AnyCPU" />
+  </Project>
+  <Project Path="PointlessWaymarks.SiteViewerMauiTests/PointlessWaymarks.SiteViewerMauiTests.csproj">
+    <Platform Project="x64" />
+  </Project>
   <Project Path="PointlessWaymarks.UtilitarianImage/PointlessWaymarks.UtilitarianImage.csproj">
     <Platform Project="x64" />
   </Project>
