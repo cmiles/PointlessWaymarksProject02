@@ -299,7 +299,7 @@ public static class UserSettingsUtilities
                 Path.Combine(settings.FfmpegDirectory, "ffmpeg.exe"));
             return possibleFfmpeg.Exists ? possibleFfmpeg.FullName : null;
         }
-        catch (Exception e)
+        catch (Exception)
         {
             return null;
         }
@@ -315,7 +315,7 @@ public static class UserSettingsUtilities
                 Path.Combine(settings.FfmpegDirectory, "ffprobe.exe"));
             return possibleFfprobe.Exists ? possibleFfprobe.FullName : null;
         }
-        catch (Exception e)
+        catch (Exception)
         {
             return null;
         }

@@ -7,8 +7,7 @@ namespace PointlessWaymarks.PowerShellRunnerGui.PowerShellEditor;
 
 public sealed class AvalonEditRenderedStringBindingBehaviour : Behavior<TextEditor>
 {
-    private string _textFromTextEditor
-        ;
+    private string _textFromTextEditor = "";
 
     //[c# - Two Way Binding to AvalonEdit Document Text using MVVM - Stack Overflow](https://stackoverflow.com/questions/18964176/two-way-binding-to-avalonedit-document-text-using-mvvm)
     public static readonly DependencyProperty RenderedTextProperty =

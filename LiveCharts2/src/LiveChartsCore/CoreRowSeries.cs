@@ -30,8 +30,7 @@ namespace LiveChartsCore;
 /// Defines the row series. All per-frame measure logic lives on the
 /// <see cref="HorizontalBarSeries{TModel, TVisual, TLabel, TErrorGeometry}"/>
 /// parent; this class exists for ABI continuity and so user-facing
-/// <see cref="SkiaSharpView.RowSeries{TModel}"/> retains the expected generic
-/// type hierarchy.
+/// RowSeries retains the expected generic type hierarchy.
 /// </summary>
 /// <typeparam name="TModel">The type of the model.</typeparam>
 /// <typeparam name="TVisual">The type of the visual.</typeparam>

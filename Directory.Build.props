@@ -10,4 +10,16 @@
     <PropertyGroup>
         <DebugType>embedded</DebugType>
     </PropertyGroup>
+    <!--
+        When a WPF project (UseWPF) is built, MSBuild generates a throwaway temporary project
+        (its name ends with "_wpftmp") solely to compile the XAML markup. That temporary
+        compilation does not honor Metalama's programmatic diagnostic suppression, so the
+        PropertyChanged events introduced by NotifyPropertyChangedAttribute get flagged with
+        CS0067 ("event is never used") there - even though the aspect already suppresses CS0067
+        for the real project build. Suppress CS0067 ONLY inside these _wpftmp temporary projects.
+        Real project builds are unaffected and still report CS0067 for genuinely unused events.
+    -->
+    <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('_wpftmp'))">
+        <NoWarn>$(NoWarn);CS0067</NoWarn>
+    </PropertyGroup>
 </Project>

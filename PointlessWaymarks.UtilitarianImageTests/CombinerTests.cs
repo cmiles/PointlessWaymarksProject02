@@ -31,15 +31,15 @@ public class CombinerTests
     [Test]
     public void A_FilesExist()
     {
-        Assert.That(UnitTestDirectory.Exists);
-        Assert.That(BlueBottomTestImage.Exists);
-        Assert.That(BlueTopTestImage.Exists);
-        Assert.That(CactusForestDriveTestPdf.Exists);
-        Assert.That(GreenBlueSquareTestImage.Exists);
-        Assert.That(GreenDownLeftOfCenterTestImage.Exists);
-        Assert.That(GreenDownRightOfCenterTestImage.Exists);
-        Assert.That(ReferenceResultARotatedVertical.Exists);
-        Assert.That(ReferenceResultBRotatedHorizontal.Exists);
+        Assert.That(UnitTestDirectory?.Exists ?? false);
+        Assert.That(BlueBottomTestImage?.Exists ?? false);
+        Assert.That(BlueTopTestImage?.Exists ?? false);
+        Assert.That(CactusForestDriveTestPdf?.Exists ?? false);
+        Assert.That(GreenBlueSquareTestImage?.Exists ?? false);
+        Assert.That(GreenDownLeftOfCenterTestImage?.Exists ?? false);
+        Assert.That(GreenDownRightOfCenterTestImage?.Exists ?? false);
+        Assert.That(ReferenceResultARotatedVertical?.Exists ?? false);
+        Assert.That(ReferenceResultBRotatedHorizontal?.Exists ?? false);
     }
 
     [Test]
@@ -47,18 +47,18 @@ public class CombinerTests
     {
         ResetTestFiles();
 
-        var rotate1 = await Combiner.RotateLeft(BlueBottomTestImage.FullName);
-        var rotate2 = await Combiner.Flip(BlueTopTestImage.FullName);
-        var rotate3 = await Combiner.RotateRight(GreenBlueSquareTestImage.FullName);
+        var rotate1 = await Combiner.RotateLeft(BlueBottomTestImage!.FullName);
+        var rotate2 = await Combiner.Flip(BlueTopTestImage!.FullName);
+        var rotate3 = await Combiner.RotateRight(GreenBlueSquareTestImage!.FullName);
 
         await Combiner.CombineImagesVertical(
-            [rotate1.FullName, rotate2.FullName, rotate3.FullName], 3000, 3000,
-            ResultARotatedVertical.FullName, 85, SKColors.Black,
+            [rotate1!.FullName, rotate2!.FullName, rotate3!.FullName], 3000, 3000,
+            ResultARotatedVertical!.FullName, 85, SKColors.Black,
             new ConsoleProgress());
 
         ResultARotatedVertical.Refresh();
 
-        Assert.That(Compare.ImagesAreEqual(ResultARotatedVertical.FullName, ReferenceResultARotatedVertical.FullName));
+        Assert.That(Compare.ImagesAreEqual(ResultARotatedVertical.FullName, ReferenceResultARotatedVertical!.FullName));
     }
 
     [Test]
@@ -66,20 +66,20 @@ public class CombinerTests
     {
         ResetTestFiles();
 
-        var rotate1 = await Combiner.RotateLeft(GreenDownLeftOfCenterTestImage.FullName);
-        var rotate2 = await Combiner.Flip(GreenDownRightOfCenterTestImage.FullName);
+        var rotate1 = await Combiner.RotateLeft(GreenDownLeftOfCenterTestImage!.FullName);
+        var rotate2 = await Combiner.Flip(GreenDownRightOfCenterTestImage!.FullName);
 
         await Combiner.CombineImagesHorizontal(
             [
-                rotate1.FullName, rotate2.FullName,
-                CactusForestDriveTestPdf.FullName
-            ], 3000, 3000, ResultBRotatedHorizontal.FullName,
+                rotate1!.FullName, rotate2!.FullName,
+                CactusForestDriveTestPdf!.FullName
+            ], 3000, 3000, ResultBRotatedHorizontal!.FullName,
             92, SKColors.White, new ConsoleProgress());
 
         ResultBRotatedHorizontal.Refresh();
 
         Assert.That(Compare.ImagesAreEqual(ResultBRotatedHorizontal.FullName,
-            ReferenceResultBRotatedHorizontal.FullName));
+            ReferenceResultBRotatedHorizontal!.FullName));
     }
 
     [Test]
@@ -89,8 +89,8 @@ public class CombinerTests
 
         await Combiner.CombineImagesInGrid(
             [
-                BlueBottomTestImage.FullName, BlueTopTestImage.FullName, GreenBlueSquareTestImage.FullName,
-                GreenDownLeftOfCenterTestImage.FullName, GreenDownRightOfCenterTestImage.FullName
+                BlueBottomTestImage!.FullName, BlueTopTestImage!.FullName, GreenBlueSquareTestImage!.FullName,
+                GreenDownLeftOfCenterTestImage!.FullName, GreenDownRightOfCenterTestImage!.FullName
             ], 3000, 3000, ResultCGridAutoRowsAndColumns.FullName,
             92, SKColors.Blue, new ConsoleProgress());
 
@@ -100,23 +100,23 @@ public class CombinerTests
             ReferenceResultCGridAutoRowsAndColumns.FullName));
     }
 
-    [Test]
-    public async Task D_GridFourColumns()
-    {
-        ResetTestFiles();
+        [Test]
+        public async Task D_GridFourColumns()
+        {
+            ResetTestFiles();
 
-        await Combiner.CombineImagesInGrid(
-            [
-                BlueBottomTestImage.FullName, BlueTopTestImage.FullName, GreenBlueSquareTestImage.FullName,
-                GreenDownLeftOfCenterTestImage.FullName, GreenDownRightOfCenterTestImage.FullName
-            ], 3000, 3000, ResultDGridFourColumns.FullName,
-            92, SKColors.Bisque, new ConsoleProgress(), null, 4);
+            await Combiner.CombineImagesInGrid(
+                [
+                    BlueBottomTestImage!.FullName, BlueTopTestImage!.FullName, GreenBlueSquareTestImage!.FullName,
+                    GreenDownLeftOfCenterTestImage!.FullName, GreenDownRightOfCenterTestImage!.FullName
+                ], 3000, 3000, ResultDGridFourColumns!.FullName,
+                92, SKColors.Bisque, new ConsoleProgress(), null, 4);
 
-        ResultDGridFourColumns.Refresh();
+            ResultDGridFourColumns.Refresh();
 
-        Assert.That(Compare.ImagesAreEqual(ResultDGridFourColumns.FullName,
-            ReferenceResultDGridFourColumns.FullName));
-    }
+            Assert.That(Compare.ImagesAreEqual(ResultDGridFourColumns.FullName,
+                ReferenceResultDGridFourColumns!.FullName));
+        }
 
     [Test]
     public async Task E_GridFiveRow()
@@ -125,10 +125,10 @@ public class CombinerTests
 
         await Combiner.CombineImagesInGrid(
             [
-                BlueBottomTestImage.FullName, BlueTopTestImage.FullName, GreenBlueSquareTestImage.FullName,
-                GreenDownLeftOfCenterTestImage.FullName, GreenDownRightOfCenterTestImage.FullName
+                BlueBottomTestImage!.FullName, BlueTopTestImage!.FullName, GreenBlueSquareTestImage!.FullName,
+                GreenDownLeftOfCenterTestImage!.FullName, GreenDownRightOfCenterTestImage!.FullName
             ], 3000, 3000, ResultEGridFiveRows.FullName,
-            92, SKColors.Bisque, new ConsoleProgress(), 5, null);
+            92, SKColors.Bisque, new ConsoleProgress(), 5);
 
         ResultEGridFiveRows.Refresh();
 
@@ -143,8 +143,8 @@ public class CombinerTests
 
         await Combiner.CombineImagesInGrid(
             [
-                GreenDownLeftOfCenterTestImage.FullName, GreenDownRightOfCenterTestImage.FullName,
-                BlueBottomTestImage.FullName, BlueTopTestImage.FullName, GreenBlueSquareTestImage.FullName
+                GreenDownLeftOfCenterTestImage!.FullName, GreenDownRightOfCenterTestImage!.FullName,
+                BlueBottomTestImage!.FullName, BlueTopTestImage!.FullName, GreenBlueSquareTestImage!.FullName
             ], 3000, 3000, ResultFGridThreeByThreeRows.FullName,
             92, SKColors.Red, new ConsoleProgress(), 3, 3);
 
@@ -156,10 +156,10 @@ public class CombinerTests
 
     public void ResetTestFiles()
     {
-        foreach (var file in Directory.GetFiles(OriginalImageDirectory.FullName))
+        foreach (var file in Directory.GetFiles(OriginalImageDirectory!.FullName))
         {
             if (Path.GetFileName(file).StartsWith("Result-", StringComparison.OrdinalIgnoreCase)) continue;
-            File.Copy(file, Path.Combine(UnitTestDirectory.FullName, Path.GetFileName(file)), true);
+            File.Copy(file, Path.Combine(UnitTestDirectory!.FullName, Path.GetFileName(file)), true);
         }
     }
 

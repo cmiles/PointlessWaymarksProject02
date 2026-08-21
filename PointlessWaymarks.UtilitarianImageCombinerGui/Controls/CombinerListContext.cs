@@ -363,8 +363,8 @@ public partial class CombinerListContext : IDropTarget
             .Where(prop => (SKColor)(prop.GetValue(null) ?? SKColors.Transparent) != SKColors.Transparent)
             .Select(prop => new ColorNameAndSkColor
             {
-                ColorName = prop.Name, SkiaColor = (SKColor)prop.GetValue(null),
-                Color = ((SKColor)prop.GetValue(null)).ToString()
+                ColorName = prop.Name, SkiaColor = (SKColor)prop.GetValue(null)!,
+                Color = ((SKColor)prop.GetValue(null)!).ToString()
             })
             .ToList();
 

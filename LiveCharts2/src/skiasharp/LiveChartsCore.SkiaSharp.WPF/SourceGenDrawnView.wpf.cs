@@ -29,7 +29,9 @@ using LiveChartsCore.SkiaSharpView.WPF;
 
 namespace LiveChartsGeneratedCode;
 
-/// <inheritdoc cref="SourceGenDrawnView" />
+/// <summary>
+/// Defines a drawn view.
+/// </summary>
 public abstract partial class SourceGenDrawnView : UserControl
 {
     /// <summary>
@@ -48,10 +50,10 @@ public abstract partial class SourceGenDrawnView : UserControl
 
     private MotionCanvas MotionCanvas => (MotionCanvas)Content;
 
-    /// <inheritdoc cref="IDrawnView.CoreCanvas" />
+    /// <summary>Gets the core canvas.</summary>
     public CoreMotionCanvas CoreCanvas => MotionCanvas.CanvasCore;
 
-    /// <inheritdoc cref="IDrawnView.ControlSize" />
+    /// <summary>Gets the control size.</summary>
     public LvcSize ControlSize => new() { Width = (float)ActualWidth, Height = (float)ActualHeight };
 
     /// <summary>Whether this control is hosted inside the Visual Studio designer.</summary>

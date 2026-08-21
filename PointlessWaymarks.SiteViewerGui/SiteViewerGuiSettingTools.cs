@@ -34,6 +34,5 @@ public static class SiteViewerGuiSettingTools
         var serializedNewSettings = JsonSerializer.Serialize(settings);
         await using var stream = File.Create(settingsFile.FullName);
         await JsonSerializer.SerializeAsync(stream, serializedNewSettings);
-        await stream.DisposeAsync();
     }
 }

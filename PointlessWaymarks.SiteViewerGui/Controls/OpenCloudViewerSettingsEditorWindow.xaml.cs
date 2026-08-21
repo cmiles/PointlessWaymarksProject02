@@ -8,11 +8,10 @@ namespace PointlessWaymarks.SiteViewerGui.Controls;
 /// <summary>
 ///     Interaction logic for OpenCloudViewerSettingsEditorWindow.xaml
 /// </summary>
-public partial class OpenCloudViewerSettingsEditorWindow : Window
+public partial class OpenCloudViewerSettingsEditorWindow
 {
-    private bool _saveSuccessful;
-
     public EventHandler<OpenCloudViewerSettingsEditorContext>? CloudSettingsSaved;
+    private bool _saveSuccessful;
 
     public OpenCloudViewerSettingsEditorWindow(OpenCloudViewerSettingsEditorContext context,
         StatusControlContext statusContext)

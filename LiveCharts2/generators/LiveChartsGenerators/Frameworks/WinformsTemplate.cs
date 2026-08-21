@@ -62,7 +62,7 @@ public class WinformsTemplate(FrameworkTemplate.Context context) : FrameworkTemp
 
         var docs = property.XmlDocs ?? @"
     /// <summary>
-    ///    Gets or sets the <see cref=""{propertyName}""/> property.
+    ///    Gets or sets the {propertyName} property.
     /// </summary>
 ";
 

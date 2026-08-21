@@ -1,6 +1,5 @@
 using System.IO;
 using System.Text.Json;
-using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.CommonTools.S3;
 using PointlessWaymarks.LlamaAspects;
@@ -19,7 +18,7 @@ public partial class OpenCloudViewerSettings
     public Guid CloudViewerSettingsId { get; set; } = Guid.NewGuid();
     public string CloudViewerSettingsName { get; set; } = string.Empty;
     public string CloudViewerSiteDomain { get; set; } = string.Empty;
-    public string SettingsType { get; set; } = "OpenCloudViewer";
+    public string SettingsType { get; init; } = "OpenCloudViewer";
 
     public static async Task<OpenCloudViewerSettings> ReadFromSettingsFile(FileInfo fileToRead,
         IProgress<string>? progress = null)

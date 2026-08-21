@@ -346,7 +346,6 @@ public abstract class CoreAxis<TTextGeometry, TLineGeometry>
     /// <inheritdoc cref="ICartesianAxis.MeasureStarted"/>
     public event Action<Chart, ICartesianAxis>? MeasureStarted;
 
-    /// <inheritdoc cref="ChartElement.Invalidate(Chart)"/>
     // ---- template method ----------------------------------------------------
 
     /// <summary>
@@ -854,7 +853,7 @@ public abstract class CoreAxis<TTextGeometry, TLineGeometry>
         foreach (var pair in active!.ToArray().Where(pair => !measuredBands.Contains(pair.Key)))
         {
             SetUpdateMode(pair.Value, UpdateMode.UpdateAndRemove);
-            _ = active.Remove(pair.Key);
+            _ = active!.Remove(pair.Key);
         }
     }
 

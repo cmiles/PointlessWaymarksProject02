@@ -185,7 +185,7 @@ public class GpxTrackImport
 
             if (!gpxFile.Tracks.Any(t => t.Segments.SelectMany(y => y.Waypoints).Count() > 1)) continue;
 
-            var tracksList = (await GpxTools.TracksFromGpxFile(loopFile.gpxFileInfo, consoleProgress))
+            var tracksList = (await GpxTools.TracksFromGpxFile(loopFile.gpxFileInfo!, consoleProgress))
                 .Where(x => x.Track.Count > 0).ToList();
 
             var innerLoopCounter = 0;

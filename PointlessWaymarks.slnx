@@ -52,6 +52,9 @@
     <File Path="README-Fossil.md" />
     <File Path="README.md" />
   </Folder>
+  <Project Path="LiveCharts2/generators/LiveChartsGenerators/LiveChartsGenerators.csproj">
+    <BuildType Solution="LamaDebug|*" Project="Debug" />
+  </Project>
   <Project Path="LiveCharts2/src/LiveChartsCore/LiveChartsCore.csproj">
     <BuildType Solution="LamaDebug|*" Project="Debug" />
   </Project>

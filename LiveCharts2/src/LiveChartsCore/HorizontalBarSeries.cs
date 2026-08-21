@@ -39,7 +39,7 @@ namespace LiveChartsCore;
 /// independent of the per-point sizing math: primary axis is X, bars enter from
 /// the pivot at zero width, the soft-delete collapse animates Width -> 0, and
 /// <see cref="GetBounds"/> swaps the X / Y axis roles when delegating to
-/// <see cref="Kernel.Providers.DataFactory.GetCartesianBounds"/>.
+/// GetCartesianBounds.
 /// </summary>
 /// <typeparam name="TModel">The model type.</typeparam>
 /// <typeparam name="TVisual">The visual type.</typeparam>

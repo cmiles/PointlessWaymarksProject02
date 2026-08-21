@@ -244,9 +244,6 @@ public partial class SourceGenMapChart : IGeoMapView
     public event ChartPointsHandler? DataPointerDown;
     /// <inheritdoc cref="IChartView.HoveredPointsChanged" />
     public event ChartPointHoverHandler? HoveredPointsChanged;
-    /// <inheritdoc cref="IChartView.ChartPointPointerDown" />
-    [Obsolete("Use DataPointerDown.")]
-    public event ChartPointHandler? ChartPointPointerDown;
     /// <inheritdoc cref="IChartView.VisualElementsPointerDown"/>
     public event VisualElementsHandler? VisualElementsPointerDown;
 

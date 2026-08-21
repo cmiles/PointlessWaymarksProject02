@@ -278,10 +278,10 @@ public partial class SiteChooserContext
                 {
                     StatusContext.Progress($"Recent Files - getting info from {loopFileInfo.FullName}");
 
-                    var fileType = IniTypeHelper.GetIniType(loopFileInfo);
+                    var fileType = ViewerSettingsTypeHelper.GetViewerSettingsType(loopFileInfo);
 
-                    if (fileType == IniTypeHelper.IniTypes.Unknown) continue;
-                    if (fileType == IniTypeHelper.IniTypes.PointlessWaymarksCms)
+                    if (fileType == ViewerSettingsTypeHelper.ViewerSettingsTypes.Unknown) continue;
+                    if (fileType == ViewerSettingsTypeHelper.ViewerSettingsTypes.PointlessWaymarksCms)
                     {
                         var readResult = await UserSettingsUtilities.ReadFromSettingsFile(
                             new FileInfo(loopFileInfo.FullName),
@@ -292,7 +292,7 @@ public partial class SiteChooserContext
                             { ParsedSettings = readResult, SettingsFile = loopFileInfo });
                         await ThreadSwitcher.ResumeBackgroundAsync();
                     }
-                    else if (fileType == IniTypeHelper.IniTypes.SecureCloudViewer)
+                    else if (fileType == ViewerSettingsTypeHelper.ViewerSettingsTypes.SecureCloudViewer)
                     {
                         var newSettings =
                             await SecureCloudViewerSettings.ReadFromSettingsFile(loopFileInfo,
@@ -303,7 +303,7 @@ public partial class SiteChooserContext
                             { ParsedSettings = newSettings, SettingsFile = loopFileInfo });
                         await ThreadSwitcher.ResumeBackgroundAsync();
                     }
-                    else if (fileType == IniTypeHelper.IniTypes.OpenCloudViewer)
+                    else if (fileType == ViewerSettingsTypeHelper.ViewerSettingsTypes.OpenCloudViewer)
                     {
                         var newSettings =
                             await OpenCloudViewerSettings.ReadFromSettingsFile(loopFileInfo,
@@ -388,17 +388,20 @@ public partial class SiteChooserContext
 
     public List<string> StringsFromItems()
     {
-        return Items.Select(x =>
-        {
-            switch (x)
+        return
+        [
+            .. Items.Select(x =>
             {
-                case SiteSettingsFileListItem asFile:
-                    return asFile.SettingsFile.FullName;
-                case SiteDirectoryListItem asDirectory:
-                    return asDirectory.SiteDirectory.FullName;
-                default:
-                    return string.Empty;
-            }
-        }).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+                switch (x)
+                {
+                    case SiteSettingsFileListItem asFile:
+                        return asFile.SettingsFile.FullName;
+                    case SiteDirectoryListItem asDirectory:
+                        return asDirectory.SiteDirectory.FullName;
+                    default:
+                        return string.Empty;
+                }
+            }).Where(x => !string.IsNullOrWhiteSpace(x))
+        ];
     }
 }

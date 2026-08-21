@@ -95,7 +95,7 @@ public class DatabaseBatchesAndUploadSeries
         var job = await (await CloudBackupContext.CreateInstance()).BackupJobs.SingleAsync();
         var batch = await CloudTransfer.CreateBatchInDatabaseFromCloudAndLocalScan(S3Credentials, job, progress);
         
-        var testBatch = await CloudTransferBatchInformation.CreateInstance(batch.Batch.Id);
+        var testBatch = await CloudTransferBatchInformation.CreateInstance(batch!.Batch.Id);
         
         Assert.Multiple(() =>
         {

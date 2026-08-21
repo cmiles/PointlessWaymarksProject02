@@ -204,11 +204,6 @@ public interface IChartView : IDrawnView
     /// </summary>
     event ChartPointHoverHandler? HoveredPointsChanged;
 
-    /// <summary>
-    /// Occurs when the pointer goes down over a chart point, if there are multiple points, the closest one will be selected.
-    /// </summary>
-    [Obsolete($"Use the {nameof(DataPointerDown)} event instead with a {nameof(FindingStrategy)} that used TakeClosest.")]
-    event ChartPointHandler? ChartPointPointerDown;
 
     /// <summary>
     /// Occurs before the chart is measured, this is the first step before the chart updates.

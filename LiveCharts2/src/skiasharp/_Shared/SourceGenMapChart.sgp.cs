@@ -61,7 +61,7 @@ public partial class SourceGenSKMapChart
 public partial class SourceGenMapChart
 #endif
 {
-    /// <inheritdoc cref="IGeoMapView.SyncContext"/>
+    /// <summary>The sync context.</summary>
     static UIProperty<object>                   syncContext         = new(onChanged: OnSyncContextChanged);
 
     /// <inheritdoc cref="IGeoMapView.ActiveMap"/>
@@ -97,16 +97,16 @@ public partial class SourceGenMapChart
     /// <inheritdoc cref="IGeoMapView.Tooltip"/>
     static UIProperty<IGeoMapTooltip>           tooltip;
 
-    /// <inheritdoc cref="IGeoMapView.TooltipPosition"/>
+    /// <summary>The tooltip position.</summary>
     static UIProperty<TooltipPosition>          tooltipPosition     = new(defaultValue: TooltipPosition.Auto);
 
-    /// <inheritdoc cref="IGeoMapView.TooltipTextPaint"/>
+    /// <summary>The tooltip text paint.</summary>
     static UIProperty<Paint>                    tooltipTextPaint;
 
-    /// <inheritdoc cref="IGeoMapView.TooltipBackgroundPaint"/>
+    /// <summary>The tooltip background paint.</summary>
     static UIProperty<Paint>                    tooltipBackgroundPaint;
 
-    /// <inheritdoc cref="IGeoMapView.TooltipTextSize"/>
+    /// <summary>The tooltip text size.</summary>
     static UIProperty<double>                   tooltipTextSize     = new(defaultValue: 14d);
 
     /// <inheritdoc cref="IGeoMapView.ZoomingSpeed"/>

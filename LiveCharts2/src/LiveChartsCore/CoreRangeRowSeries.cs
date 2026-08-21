@@ -115,7 +115,7 @@ public abstract class CoreRangeRowSeries<TModel, TVisual, TLabel, TErrorGeometry
         return r;
     }
 
-    /// <inheritdoc cref="HorizontalBarSeries{TModel, TVisual, TLabel, TErrorGeometry}.GetBounds(Chart, ICartesianAxis, ICartesianAxis)"/>
+    /// <inheritdoc cref="ICartesianSeries.GetBounds(Chart, ICartesianAxis, ICartesianAxis)"/>
     public override SeriesBounds GetBounds(Chart chart, ICartesianAxis secondaryAxis, ICartesianAxis primaryAxis)
     {
         var sb = base.GetBounds(chart, secondaryAxis, primaryAxis);
@@ -162,7 +162,7 @@ public abstract class CoreRangeRowSeries<TModel, TVisual, TLabel, TErrorGeometry
     /// <summary>
     /// Range row tooltip lists both endpoints — defaults to "{low} → {high}" using
     /// the X axis labeler (the value axis for horizontal bars), so a
-    /// <see cref="SkiaSharpView.DateTimeAxis"/> renders dates and a numeric axis renders
+    /// DateTimeAxis renders dates and a numeric axis renders
     /// numbers. Following the column-series convention, the "primary value" formatter is
     /// <see cref="CartesianSeries{TModel, TVisual, TLabel}.YToolTipLabelFormatter"/> —
     /// even though the row's value axis is X, the formatter name reflects which tooltip
@@ -196,7 +196,7 @@ public abstract class CoreRangeRowSeries<TModel, TVisual, TLabel, TErrorGeometry
     /// <see cref="CartesianSeries{TModel, TVisual, TLabel}.GetSecondaryToolTipText"/>
     /// formats the SecondaryValue through the X axis labeler, which for a row series
     /// produces a garbage interpretation of the entity index — e.g. with a
-    /// <see cref="SkiaSharpView.DateTimeAxis"/> on X every header would render as
+    /// DateTimeAxis on X every header would render as
     /// "Jan 01" because index 0..N is interpreted as Ticks.
     /// </summary>
     /// <inheritdoc cref="ISeries.GetSecondaryToolTipText(ChartPoint)"/>

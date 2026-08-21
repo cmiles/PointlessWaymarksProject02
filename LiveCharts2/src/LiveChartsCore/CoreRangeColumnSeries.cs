@@ -119,7 +119,7 @@ public abstract class CoreRangeColumnSeries<TModel, TVisual, TLabel, TErrorGeome
         return r;
     }
 
-    /// <inheritdoc cref="VerticalBarSeries{TModel, TVisual, TLabel, TErrorGeometry}.GetBounds(Chart, ICartesianAxis, ICartesianAxis)"/>
+    /// <inheritdoc cref="ICartesianSeries.GetBounds(Chart, ICartesianAxis, ICartesianAxis)"/>
     public override SeriesBounds GetBounds(Chart chart, ICartesianAxis secondaryAxis, ICartesianAxis primaryAxis)
     {
         var sb = base.GetBounds(chart, secondaryAxis, primaryAxis);
@@ -170,7 +170,7 @@ public abstract class CoreRangeColumnSeries<TModel, TVisual, TLabel, TErrorGeome
 
     /// <summary>
     /// Range column tooltip lists both endpoints — defaults to "{low} → {high}" using
-    /// the Y axis labeler for each value, so a <see cref="SkiaSharpView.DateTimeAxis"/>
+    /// the Y axis labeler for each value, so a DateTimeAxis
     /// renders dates and a numeric axis renders numbers. Users can override the whole
     /// format via <see cref="CartesianSeries{TModel, TVisual, TLabel}.YToolTipLabelFormatter"/>.
     /// </summary>

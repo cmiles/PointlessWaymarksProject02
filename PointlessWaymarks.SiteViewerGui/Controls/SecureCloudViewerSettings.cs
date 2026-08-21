@@ -1,7 +1,5 @@
 using System.IO;
 using System.Text.Json;
-using PointlessWaymarks.CmsData;
-using PointlessWaymarks.CmsData.S3;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.CommonTools.S3;
 using PointlessWaymarks.LlamaAspects;
@@ -100,10 +98,7 @@ public partial class SecureCloudViewerSettings
         };
 
         var decryptedId = dto.CloudViewerSettingsId.Decrypt(key);
-        if (Guid.TryParse(decryptedId, out var id))
-        {
-            result.CloudViewerSettingsId = id;
-        }
+        if (Guid.TryParse(decryptedId, out var id)) result.CloudViewerSettingsId = id;
 
         return result;
     }
@@ -136,7 +131,8 @@ public partial class SecureCloudViewerSettings
 
     public static void SaveObfuscationKey(string settingsFileName, string key)
     {
-        PasswordVaultTools.SaveCredentials(ObfuscationKeyResourceIdentifier(settingsFileName), "SiteViewerObfuscationKey", key);
+        PasswordVaultTools.SaveCredentials(ObfuscationKeyResourceIdentifier(settingsFileName),
+            "SiteViewerObfuscationKey", key);
     }
 
     public static async Task WriteSettings(SecureCloudViewerSettings toWrite, string saveAsFullFilename,

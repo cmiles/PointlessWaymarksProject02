@@ -130,13 +130,13 @@ public partial class MainWindow
 
         if (CloudViewerMode)
         {
-            var type = IniTypeHelper.GetIniType(new FileInfo(SettingsFile));
+            var type = ViewerSettingsTypeHelper.GetViewerSettingsType(new FileInfo(SettingsFile));
             switch (type)
             {
-                case IniTypeHelper.IniTypes.SecureCloudViewer:
+                case ViewerSettingsTypeHelper.ViewerSettingsTypes.SecureCloudViewer:
                     await LoadSecureCloud();
                     break;
-                case IniTypeHelper.IniTypes.OpenCloudViewer:
+                case ViewerSettingsTypeHelper.ViewerSettingsTypes.OpenCloudViewer:
                     await LoadOpenCloud();
                     break;
             }
@@ -381,10 +381,10 @@ public partial class MainWindow
         if (fileList.Contains(directoryInfo.FullName))
             fileList.Remove(directoryInfo.FullName);
 
-        fileList = new List<string> { directoryInfo.FullName }.Concat(fileList).ToList();
+        fileList = [directoryInfo.FullName, .. fileList];
 
         if (fileList.Count > 10)
-            fileList = fileList.Take(10).ToList();
+            fileList = [.. fileList.Take(10)];
 
         RecentSettingsFilesNames = string.Join("|", fileList);
 
@@ -427,13 +427,13 @@ public partial class MainWindow
         fileList = [UserSettingsUtilities.SettingsFileFullName, .. fileList];
 
         if (fileList.Count > 10)
-            fileList = fileList.Take(10).ToList();
+            fileList = [.. fileList.Take(10)];
 
         RecentSettingsFilesNames = string.Join("|", fileList);
 
-        var fileType = IniTypeHelper.GetIniType(settingsFile);
+        var fileType = ViewerSettingsTypeHelper.GetViewerSettingsType(settingsFile);
 
-        if (fileType == IniTypeHelper.IniTypes.Unknown)
+        if (fileType == ViewerSettingsTypeHelper.ViewerSettingsTypes.Unknown)
         {
             await StatusContext.ToastError($"Error - File {settingsFile.FullName} Not Recognized");
             return;
@@ -441,7 +441,7 @@ public partial class MainWindow
 
         SettingsFile = settingReturn.userInput;
 
-        if (fileType == IniTypeHelper.IniTypes.PointlessWaymarksCms)
+        if (fileType == ViewerSettingsTypeHelper.ViewerSettingsTypes.PointlessWaymarksCms)
         {
             UserSettingsUtilities.SettingsFileFullName = settingReturn.userInput;
 
@@ -452,7 +452,7 @@ public partial class MainWindow
             SiteName = UserSettingsSingleton.CurrentSettings().SiteName;
         }
 
-        if (fileType == IniTypeHelper.IniTypes.SecureCloudViewer || fileType == IniTypeHelper.IniTypes.OpenCloudViewer)
+        if (fileType == ViewerSettingsTypeHelper.ViewerSettingsTypes.SecureCloudViewer || fileType == ViewerSettingsTypeHelper.ViewerSettingsTypes.OpenCloudViewer)
             CloudViewerMode = true;
 
         StatusContext.RunFireAndForgetBlockingTask(LoadData);

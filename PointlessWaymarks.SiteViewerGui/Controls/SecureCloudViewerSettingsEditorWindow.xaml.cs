@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Windows;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.Status;
@@ -10,11 +9,10 @@ namespace PointlessWaymarks.SiteViewerGui.Controls;
 ///     Interaction logic for SecureCloudViewerSettingsEditorWindow.xaml
 /// </summary>
 [NotifyPropertyChanged]
-public partial class SecureCloudViewerSettingsEditorWindow : Window
+public partial class SecureCloudViewerSettingsEditorWindow
 {
-    private bool _saveSuccessful;
-
     public EventHandler<SecureCloudViewerSettingsEditorContext>? CloudSettingsSaved;
+    private bool _saveSuccessful;
 
     public SecureCloudViewerSettingsEditorWindow(SecureCloudViewerSettingsEditorContext context,
         StatusControlContext statusContext)

@@ -21,8 +21,8 @@ public partial class SecureCloudViewerSettingsEditorContext
         StatusContext = statusContext;
         BuildCommands();
 
-        CloudProviderChoices = new List<string> { string.Empty }.Concat(Enum.GetNames(typeof(S3Providers))).ToList();
-        RegionChoices = RegionEndpoint.EnumerableAllRegions.Select(x => x.SystemName).ToList();
+        CloudProviderChoices = [string.Empty, .. Enum.GetNames<S3Providers>()];
+        RegionChoices = [.. RegionEndpoint.EnumerableAllRegions.Select(x => x.SystemName)];
         EditorSettings = toLoad;
         SettingsFullFileName = settingsFullFileName;
     }

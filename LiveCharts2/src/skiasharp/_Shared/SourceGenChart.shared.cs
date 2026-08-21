@@ -91,9 +91,6 @@ public partial class SourceGenChart : IChartView
     /// <inheritdoc cref="IChartView.HoveredPointsChanged" />
     public event ChartPointHoverHandler? HoveredPointsChanged;
 
-    /// <inheritdoc cref="IChartView.ChartPointPointerDown" />
-    [Obsolete($"Use the {nameof(DataPointerDown)} event instead with a {nameof(FindingStrategy)} that used TakeClosest.")]
-    public event ChartPointHandler? ChartPointPointerDown;
 
     /// <inheritdoc cref="IChartView.VisualElementsPointerDown"/>
     public event VisualElementsHandler? VisualElementsPointerDown;
@@ -204,11 +201,6 @@ public partial class SourceGenChart : IChartView
         DataPointerDown?.Invoke(this, points);
         if (DataPointerDownCommand is not null && DataPointerDownCommand.CanExecute(points))
             DataPointerDownCommand.Execute(points);
-
-        ChartPointPointerDown?.Invoke(this, points.FindClosestTo(pointer));
-#pragma warning disable CS0618 // Type or member is obsolete
-        ChartPointPointerDownCommand?.Execute(points.FindClosestTo(pointer));
-#pragma warning restore CS0618 // Type or member is obsolete
     }
 
     void IChartView.OnHoveredPointsChanged(IEnumerable<ChartPoint>? newPoints, IEnumerable<ChartPoint>? oldPoints)

@@ -744,7 +744,7 @@ public class GeoMapChart : Chart
         return new LvcPoint(baseCx * _zoomLevel + tx, baseCy * _zoomLevel + ty);
     }
 
-    private Task TooltipThrottlerUnlocked()
+    private new Task TooltipThrottlerUnlocked()
     {
         return Task.Run(() =>
             View.InvokeOnUIThread(() =>

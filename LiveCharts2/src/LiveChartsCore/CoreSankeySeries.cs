@@ -279,6 +279,9 @@ public abstract class CoreSankeySeries<TModel, TVisual, TLabel>(
         // pass-through -> inside). Compute once per measure.
         var incoming = new Dictionary<TModel, int>(ReferenceComparer<TModel>.Instance);
         var outgoing = new Dictionary<TModel, int>(ReferenceComparer<TModel>.Instance);
+
+        if (Values is null) throw new NullReferenceException();
+
         foreach (var n in Values) { incoming[n] = 0; outgoing[n] = 0; }
         if (Links is not null)
             foreach (var l in Links)

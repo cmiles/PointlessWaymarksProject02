@@ -63,20 +63,6 @@ public class LandAreaGeometry : VectorGeometry, IDrawnElement<SkiaSharpDrawingCo
     }
 
     /// <summary>
-    /// Returns the cached base path, reset and ready for in-place rebuild.
-    /// Caller populates with MoveTo/LineTo. Hot path for animated projections
-    /// (orthographic rotation) — avoids the native alloc + dispose of a fresh
-    /// <see cref="SKPath"/> per land per frame.
-    /// </summary>
-    public SKPath GetOrResetBasePath()
-    {
-        _basePath ??= new SKPath();
-        _basePath.Reset();
-        _pathDirty = false;
-        return _basePath;
-    }
-
-    /// <summary>
     /// Draws the land area using a cached base path with GPU canvas matrix transform.
     /// Zero allocations during zoom/pan — just Save/Concat/DrawPath/Restore.
     /// </summary>
@@ -87,20 +73,21 @@ public class LandAreaGeometry : VectorGeometry, IDrawnElement<SkiaSharpDrawingCo
         // Rebuild base path only when geometry data changes (map load, resize)
         if (_pathDirty || _basePath is null)
         {
-            _basePath?.Dispose();
-            _basePath = new SKPath();
+            using var pathBuilder = new SKPathBuilder();
 
             var isFirst = true;
             foreach (var segment in Commands)
             {
                 if (isFirst)
                 {
-                    _basePath.MoveTo(segment.Xi, segment.Yi);
+                    pathBuilder.MoveTo(segment.Xi, segment.Yi);
                     isFirst = false;
                 }
-                _basePath.LineTo(segment.Xi, segment.Yi);
+                pathBuilder.LineTo(segment.Xi, segment.Yi);
             }
 
+            _basePath?.Dispose();
+            _basePath = pathBuilder.Snapshot();
             _pathDirty = false;
         }
 
@@ -110,7 +97,7 @@ public class LandAreaGeometry : VectorGeometry, IDrawnElement<SkiaSharpDrawingCo
         {
             var state = context.Canvas.Save();
             var matrix = vt.GetMatrix();
-            context.Canvas.Concat(ref matrix);
+            context.Canvas.Concat(in matrix);
             context.Canvas.DrawPath(_basePath, context.ActiveSkiaPaint);
             context.Canvas.RestoreToCount(state);
         }
@@ -120,16 +107,16 @@ public class LandAreaGeometry : VectorGeometry, IDrawnElement<SkiaSharpDrawingCo
         }
     }
 
-    /// <inheritdoc cref="VectorGeometry.OnDrawSegment(SkiaSharpDrawingContext, SKPath, Segment)"/>
-    protected override void OnDrawSegment(SkiaSharpDrawingContext context, SKPath path, Segment segment) =>
+    /// <inheritdoc cref="VectorGeometry.OnDrawSegment(SkiaSharpDrawingContext, SKPathBuilder, Segment)"/>
+    protected override void OnDrawSegment(SkiaSharpDrawingContext context, SKPathBuilder path, Segment segment) =>
         path.LineTo(segment.Xi, segment.Yi);
 
-    /// <inheritdoc cref="VectorGeometry.OnOpen(SkiaSharpDrawingContext, SKPath, Segment)"/>
-    protected override void OnOpen(SkiaSharpDrawingContext context, SKPath path, Segment segment) =>
+    /// <inheritdoc cref="VectorGeometry.OnOpen(SkiaSharpDrawingContext, SKPathBuilder, Segment)"/>
+    protected override void OnOpen(SkiaSharpDrawingContext context, SKPathBuilder path, Segment segment) =>
         path.MoveTo(segment.Xi, segment.Yi);
 
-    /// <inheritdoc cref="VectorGeometry.OnClose(SkiaSharpDrawingContext, SKPath, Segment)"/>
-    protected override void OnClose(SkiaSharpDrawingContext context, SKPath path, Segment segment)
+    /// <inheritdoc cref="VectorGeometry.OnClose(SkiaSharpDrawingContext, SKPathBuilder, Segment)"/>
+    protected override void OnClose(SkiaSharpDrawingContext context, SKPathBuilder path, Segment segment)
     { }
 
     /// <summary>
@@ -146,20 +133,21 @@ public class LandAreaGeometry : VectorGeometry, IDrawnElement<SkiaSharpDrawingCo
 
         if (Commands.Count == 0) return false;
 
-        using var path = new SKPath();
+        using var pathBuilder = new SKPathBuilder();
         var isFirst = true;
 
         foreach (var segment in Commands)
         {
             if (isFirst)
             {
-                path.MoveTo(segment.Xi, segment.Yi);
+                pathBuilder.MoveTo(segment.Xi, segment.Yi);
                 isFirst = false;
             }
-            path.LineTo(segment.Xi, segment.Yi);
+            pathBuilder.LineTo(segment.Xi, segment.Yi);
         }
 
-        path.Close();
+        pathBuilder.Close();
+        using var path = pathBuilder.Snapshot();
         return path.Contains(x, y);
     }
 }

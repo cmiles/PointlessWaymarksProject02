@@ -32,8 +32,8 @@ public class StepLineAreaGeometry : VectorGeometry
 {
     private bool _isFirst = true;
 
-    /// <inheritdoc cref="VectorGeometry.OnDrawSegment(SkiaSharpDrawingContext, SKPath, Segment)"/>
-    protected override void OnDrawSegment(SkiaSharpDrawingContext context, SKPath path, Segment segment)
+    /// <inheritdoc cref="VectorGeometry.OnDrawSegment(SkiaSharpDrawingContext, SKPathBuilder, Segment)"/>
+    protected override void OnDrawSegment(SkiaSharpDrawingContext context, SKPathBuilder path, Segment segment)
     {
         if (_isFirst)
         {
@@ -45,8 +45,8 @@ public class StepLineAreaGeometry : VectorGeometry
         path.LineTo(segment.Xj, segment.Yj);
     }
 
-    /// <inheritdoc cref="VectorGeometry.OnOpen(SkiaSharpDrawingContext, SKPath, Segment)"/>
-    protected override void OnOpen(SkiaSharpDrawingContext context, SKPath path, Segment segment)
+    /// <inheritdoc cref="VectorGeometry.OnOpen(SkiaSharpDrawingContext, SKPathBuilder, Segment)"/>
+    protected override void OnOpen(SkiaSharpDrawingContext context, SKPathBuilder path, Segment segment)
     {
         if (ClosingMethod == LiveChartsCore.Drawing.VectorClosingMethod.NotClosed)
         {
@@ -62,8 +62,8 @@ public class StepLineAreaGeometry : VectorGeometry
         }
     }
 
-    /// <inheritdoc cref="VectorGeometry.OnClose(SkiaSharpDrawingContext, SKPath, Segment)"/>
-    protected override void OnClose(SkiaSharpDrawingContext context, SKPath path, Segment segment)
+    /// <inheritdoc cref="VectorGeometry.OnClose(SkiaSharpDrawingContext, SKPathBuilder, Segment)"/>
+    protected override void OnClose(SkiaSharpDrawingContext context, SKPathBuilder path, Segment segment)
     {
         _isFirst = true;
 

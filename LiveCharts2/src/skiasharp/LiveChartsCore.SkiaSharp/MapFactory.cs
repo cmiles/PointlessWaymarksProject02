@@ -70,8 +70,9 @@ public class MapFactory : IMapFactory
                 _globeCircle = new LandAreaGeometry();
             }
 
-            var circlePath = _globeCircle.GetOrResetBasePath();
-            circlePath.AddCircle(ortho.ScreenCenterX, ortho.ScreenCenterY, ortho.Radius);
+            using var circlePathBuilder = new SKPathBuilder();
+            circlePathBuilder.AddCircle(ortho.ScreenCenterX, ortho.ScreenCenterY, ortho.Radius);
+            _globeCircle.SetBasePath(circlePathBuilder.Snapshot());
             _globeCircle.ViewportTransform = _viewportTransform;
 
             if (context.View.Fill is not null)
@@ -142,21 +143,21 @@ public class MapFactory : IMapFactory
 
                     if (isOrtho && ortho is not null)
                     {
-                        // Reuse the geometry's cached SKPath in place; avoids
-                        // the per-frame native alloc+dispose pair that used to
-                        // dominate paint time during orthographic rotation.
-                        var skPath = shape.GetOrResetBasePath();
-                        var hasGeometry = BuildOrthographicPath(ortho, landData.Coordinates, skPath);
+                        // Build the projected path with a builder, then hand an
+                        // immutable snapshot to the geometry; avoids the obsolete
+                        // mutable-SKPath build API.
+                        using var orthoPathBuilder = new SKPathBuilder();
+                        var hasGeometry = BuildOrthographicPath(ortho, landData.Coordinates, orthoPathBuilder);
                         if (!hasGeometry)
                         {
                             // Entire polygon is on the far side — hide it.
-                            // skPath is already empty (Reset above), no need
-                            // to allocate a new one.
                             stroke?.RemoveGeometryFromPaintTask(context.View.CoreCanvas, shape);
                             fill?.RemoveGeometryFromPaintTask(context.View.CoreCanvas, shape);
                             shape.Commands.Clear();
                             continue;
                         }
+
+                        shape.SetBasePath(orthoPathBuilder.Snapshot());
 
                         stroke?.AddGeometryToPaintTask(context.View.CoreCanvas, shape);
                         fill?.AddGeometryToPaintTask(context.View.CoreCanvas, shape);
@@ -302,7 +303,7 @@ public class MapFactory : IMapFactory
     /// (caller hides the geometry).
     /// </summary>
     private static bool BuildOrthographicPath(
-        OrthographicProjector ortho, LvcPointD[] coordinates, SKPath path)
+        OrthographicProjector ortho, LvcPointD[] coordinates, SKPathBuilder path)
     {
         if (coordinates.Length == 0) return false;
 
@@ -399,14 +400,14 @@ public class MapFactory : IMapFactory
     }
 
     /// <summary>
-    /// Emits <see cref="SKPath.LineTo"/> segments along the visible-disc
+    /// Emits <see cref="SKPath.LineTo(float, float)"/> segments along the visible-disc
     /// boundary (a circle of radius <see cref="OrthographicProjector.Radius"/>
     /// centered on the projector's screen center) from <c>(fromX, fromY)</c>
     /// to <c>(toX, toY)</c>, taking the shorter arc. Both endpoints are
     /// assumed to already lie on the disc boundary.
     /// </summary>
     private static void EmitHorizonArc(
-        OrthographicProjector ortho, SKPath path,
+        OrthographicProjector ortho, SKPathBuilder path,
         float fromX, float fromY, float toX, float toY)
     {
         var cx = ortho.ScreenCenterX;

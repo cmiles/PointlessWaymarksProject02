@@ -5,7 +5,7 @@ namespace PointlessWaymarks.UtilitarianImage;
 
 public static class Combiner
 {
-    public static List<string> SupportedExtensions =
+    public static readonly List<string> SupportedExtensions =
     [
         ".jpg",
         ".jpeg",

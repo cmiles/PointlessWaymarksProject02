@@ -31,7 +31,7 @@ namespace LiveChartsCore.SkiaSharpView.Drawing;
 
 internal static class DrawingTextExtensions
 {
-    internal static readonly PositionedBlob s_newLine = new(SKTextBlob.Create(string.Empty, new()), -1);
+    internal static readonly PositionedBlob s_newLine = new(SKTextBlob.Create(string.Empty, new())!, -1);
     private static readonly Dictionary<string, SKShaper> s_knownShapers = [];
     private static readonly object s_lock = new();
 
@@ -186,7 +186,7 @@ internal static class DrawingTextExtensions
                 isRLT = true;
 
             // is char supported by the typeface?
-            if (suggestedTypeface is null && !currentFont.Typeface.ContainsGlyph(codepoint))
+            if (suggestedTypeface is null && !currentFont.ContainsGlyph(codepoint))
             {
                 suggestedTypeface = SKFontManager.Default.MatchCharacter(codepoint);
 #if DEBUG
@@ -330,7 +330,7 @@ internal static class DrawingTextExtensions
             runBuffer.SetGlyphs(glyphs);
             runBuffer.SetPositions(result.Points);
 
-            return new(builder.Build(), result.Width);
+            return new(builder.Build()!, result.Width);
         }
 
         private static (LvcSize Size, List<float> LineWidths) Measure(

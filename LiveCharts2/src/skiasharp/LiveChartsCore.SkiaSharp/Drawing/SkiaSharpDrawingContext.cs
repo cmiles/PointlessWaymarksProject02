@@ -130,7 +130,9 @@ public class SkiaSharpDrawingContext(
             // 4. Passed BOTH textFont and textPaint, and updated the Y calculation
             Canvas.DrawText(
                 line,
-                new SKPoint(10, 10 + 2 + (textFont.Size + 4f) * i),
+                10f,
+                10 + 2 + (textFont.Size + 4f) * i,
+                SKTextAlign.Left,
                 textFont,
                 textPaint);
         }
@@ -195,7 +197,7 @@ public class SkiaSharpDrawingContext(
         {
             canvasState = Canvas.Save();
             var transform = BuildTransform(element);
-            Canvas.Concat(ref transform);
+            Canvas.Concat(in transform);
         }
 
         if (ActiveLvcPaint is null)

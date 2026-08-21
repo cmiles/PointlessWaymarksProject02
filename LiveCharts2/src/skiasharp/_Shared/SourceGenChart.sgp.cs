@@ -86,8 +86,6 @@ public partial class SourceGenChart
     static UIProperty<ICommand>                   dataPointerDownCommand;
     /// <inheritdoc cref="IChartView.HoveredPointsChanged"/>
     static UIProperty<ICommand>                   hoveredPointsChangedCommand;
-    /// <inheritdoc cref="IChartView.ChartPointPointerDown"/>
-    static UIProperty<ICommand>                   chartPointPointerDownCommand;
     /// <inheritdoc cref="IChartView.VisualElementsPointerDown"/>
     static UIProperty<ICommand>                   visualElementsPointerDownCommand;
 #if MAUI_LVC

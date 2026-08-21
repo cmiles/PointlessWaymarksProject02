@@ -42,7 +42,7 @@ public class DoughnutGeometry : BaseDoughnutGeometry, IDrawnElement<SkiaSharpDra
 
     private void ClassicDraw(SkiaSharpDrawingContext context)
     {
-        using var path = new SKPath();
+        using var pathBuilder = new SKPathBuilder();
         var cx = CenterX;
         var cy = CenterY;
         var wedge = InnerRadius;
@@ -52,21 +52,21 @@ public class DoughnutGeometry : BaseDoughnutGeometry, IDrawnElement<SkiaSharpDra
         const float toRadians = (float)(Math.PI / 180);
         var pushout = PushOut;
 
-        path.MoveTo(
+        pathBuilder.MoveTo(
             (float)(cx + Math.Cos(startAngle * toRadians) * wedge),
             (float)(cy + Math.Sin(startAngle * toRadians) * wedge));
-        path.LineTo(
+        pathBuilder.LineTo(
             (float)(cx + Math.Cos(startAngle * toRadians) * r),
             (float)(cy + Math.Sin(startAngle * toRadians) * r));
-        path.ArcTo(
+        pathBuilder.ArcTo(
             new SKRect { Left = X, Top = Y, Size = new SKSize { Width = Width, Height = Height } },
             startAngle,
             sweepAngle,
             false);
-        path.LineTo(
+        pathBuilder.LineTo(
             (float)(cx + Math.Cos((sweepAngle + startAngle) * toRadians) * wedge),
             (float)(cy + Math.Sin((sweepAngle + startAngle) * toRadians) * wedge));
-        path.ArcTo(
+        pathBuilder.ArcTo(
             new SKPoint { X = wedge, Y = wedge },
             0,
             sweepAngle > 180 ? SKPathArcSize.Large : SKPathArcSize.Small,
@@ -77,7 +77,9 @@ public class DoughnutGeometry : BaseDoughnutGeometry, IDrawnElement<SkiaSharpDra
                 Y = (float)(cy + Math.Sin(startAngle * toRadians) * wedge)
             });
 
-        path.Close();
+        pathBuilder.Close();
+
+        using var path = pathBuilder.Snapshot();
 
         if (pushout > 0)
         {
@@ -96,7 +98,7 @@ public class DoughnutGeometry : BaseDoughnutGeometry, IDrawnElement<SkiaSharpDra
 
     private void RoundedDraw(SkiaSharpDrawingContext context)
     {
-        using var path = new SKPath();
+        using var pathBuilder = new SKPathBuilder();
         var cx = CenterX;
         var cy = CenterY;
         var innerRadius = InnerRadius;
@@ -158,40 +160,42 @@ public class DoughnutGeometry : BaseDoughnutGeometry, IDrawnElement<SkiaSharpDra
         var xjc4 = (float)(cx + Math.Cos(startAngle * toRadians) * (innerRadius + cr));
         var yjc4 = (float)(cy + Math.Sin(startAngle * toRadians) * (innerRadius + cr));
 
-        path.MoveTo(xjc4, yjc4);
+        pathBuilder.MoveTo(xjc4, yjc4);
 
-        path.LineTo(xic1, yic1);
-        path.ArcTo(new SKPoint(px2, py2), new SKPoint(xjc1, yjc1), cr);
+        pathBuilder.LineTo(xic1, yic1);
+        pathBuilder.ArcTo(new SKPoint(px2, py2), new SKPoint(xjc1, yjc1), cr);
 
-        path.ArcTo(
+        pathBuilder.ArcTo(
             new SKRect { Left = X, Top = Y, Size = new SKSize { Width = Width, Height = Height } },
             (float)(a1 / toRadians),
             sweepAngle - 2 * (float)(coa / toRadians),
             false);
 
-        path.ArcTo(new SKPoint(xmc2, ymc2), new SKPoint(xjc2, yjc2), cr);
+        pathBuilder.ArcTo(new SKPoint(xmc2, ymc2), new SKPoint(xjc2, yjc2), cr);
 
-        path.LineTo(xic3, yic3);
+        pathBuilder.LineTo(xic3, yic3);
 
         if (cr < innerRadius)
         {
-            path.ArcTo(new SKPoint(px3, py3), new SKPoint(xjc3, yjc3), cr);
+            pathBuilder.ArcTo(new SKPoint(px3, py3), new SKPoint(xjc3, yjc3), cr);
 
-            path.ArcTo(
+            pathBuilder.ArcTo(
                 new SKPoint { X = innerRadius, Y = innerRadius },
                 0,
                 sweepAngle - 2 * cia / toRadians > 180 ? SKPathArcSize.Large : SKPathArcSize.Small,
                 SKPathDirection.CounterClockwise,
                 new SKPoint { X = xic4, Y = yic4 });
 
-            path.ArcTo(new SKPoint(px1, py1), new SKPoint(xjc4, yjc4), cr);
+            pathBuilder.ArcTo(new SKPoint(px1, py1), new SKPoint(xjc4, yjc4), cr);
         }
         else
         {
-            path.ArcTo(new SKPoint(cx, cy), new SKPoint(xjc4, yjc4), innerRadius);
+            pathBuilder.ArcTo(new SKPoint(cx, cy), new SKPoint(xjc4, yjc4), innerRadius);
         }
 
-        path.Close();
+        pathBuilder.Close();
+
+        using var path = pathBuilder.Snapshot();
 
         if (pushout > 0)
         {

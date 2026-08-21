@@ -66,20 +66,22 @@ public class SankeyChordRibbonGeometry : BaseSankeyChordRibbonGeometry, IDrawnEl
         var targetSweep = _NormalizeSweep(tp1Angle - tp0Angle);
         var sourceCloseSweep = _NormalizeSweep(sp0Angle - sp1Angle);
 
-        var path = _cachedPath ??= new SKPath();
-        path.Reset();
+        using var pathBuilder = new SKPathBuilder();
 
         // Untwisted band: source-top → target-top via cubic; trace the inner
         // arc along the target chord (rounded end); target-bottom →
         // source-bottom via cubic; trace the inner arc back along the source
         // chord (rounded end). Control points coincident at chart center
         // collapse the cubic to a curve through (cx, cy) — d3-chord convention.
-        path.MoveTo(SourceP0X, SourceP0Y);
-        path.CubicTo(cx, cy, cx, cy, TargetP0X, TargetP0Y);
-        path.ArcTo(arcRect, tp0Angle, targetSweep, forceMoveTo: false);
-        path.CubicTo(cx, cy, cx, cy, SourceP1X, SourceP1Y);
-        path.ArcTo(arcRect, sp1Angle, sourceCloseSweep, forceMoveTo: false);
-        path.Close();
+        pathBuilder.MoveTo(SourceP0X, SourceP0Y);
+        pathBuilder.CubicTo(cx, cy, cx, cy, TargetP0X, TargetP0Y);
+        pathBuilder.ArcTo(arcRect, tp0Angle, targetSweep, forceMoveTo: false);
+        pathBuilder.CubicTo(cx, cy, cx, cy, SourceP1X, SourceP1Y);
+        pathBuilder.ArcTo(arcRect, sp1Angle, sourceCloseSweep, forceMoveTo: false);
+        pathBuilder.Close();
+
+        _cachedPath?.Dispose();
+        _cachedPath = pathBuilder.Snapshot();
 
         // Save/restore paint color around the per-instance override so a
         // non-Empty Color doesn't bleed into the next geometry sharing the
@@ -91,12 +93,12 @@ public class SankeyChordRibbonGeometry : BaseSankeyChordRibbonGeometry, IDrawnEl
         if (hasOverride)
             activePaint.Color = new SKColor(c.R, c.G, c.B, c.A);
 
-        context.Canvas.DrawPath(path, activePaint);
+        context.Canvas.DrawPath(_cachedPath, activePaint);
 
         if (hasOverride) activePaint.Color = previousColor;
     }
 
-    /// <inheritdoc cref="DrawnGeometry.OnDisposed()" />
+    /// <inheritdoc />
     internal override void OnDisposed()
     {
         _cachedPath?.Dispose();
