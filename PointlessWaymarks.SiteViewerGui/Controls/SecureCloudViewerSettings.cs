@@ -13,8 +13,6 @@ namespace PointlessWaymarks.SiteViewerGui.Controls;
 [NotifyPropertyChanged]
 public partial class SecureCloudViewerSettings
 {
-    public const string ObfuscationKeyResourceIdentifier = "PointlessWaymarks-SiteViewer-ObfuscationKey";
-
     public string CloudServiceUrl { get; set; } = string.Empty;
     public string CloudViewerAccessKey { get; set; } = string.Empty;
     public string CloudViewerBucket { get; set; } = string.Empty;
@@ -26,36 +24,53 @@ public partial class SecureCloudViewerSettings
     public string CloudViewerSiteDomain { get; set; } = string.Empty;
     public string SettingsType { get; set; } = "SecureCloudViewer";
 
-    public static string GetObfuscationKey()
+    public static string GetObfuscationKey(FileInfo settingsFile)
     {
-        return PasswordVaultTools.GetCredentials(ObfuscationKeyResourceIdentifier).password;
+        return GetObfuscationKey(settingsFile.FullName);
     }
 
-    public static void SaveObfuscationKey(string key)
+    public static string GetObfuscationKey(string settingsFileName)
     {
-        PasswordVaultTools.SaveCredentials(ObfuscationKeyResourceIdentifier, "SiteViewerObfuscationKey", key);
+        return PasswordVaultTools.GetCredentials(ObfuscationKeyResourceIdentifier(settingsFileName)).password;
     }
 
-    public static async Task<string> GetOrPromptObfuscationKey(StatusControlContext? statusContext = null)
+    public static async Task<string> GetOrPromptObfuscationKey(FileInfo settingsFile,
+        StatusControlContext? statusContext = null)
     {
-        var existingKey = GetObfuscationKey();
+        return await GetOrPromptObfuscationKey(settingsFile.FullName, statusContext);
+    }
+
+    public static async Task<string> GetOrPromptObfuscationKey(string settingsFileName,
+        StatusControlContext? statusContext = null)
+    {
+        var existingKey = GetObfuscationKey(settingsFileName);
         if (!string.IsNullOrWhiteSpace(existingKey)) return existingKey;
 
         if (statusContext != null)
         {
             var promptResult = await statusContext.ShowStringEntry("Site Viewer Obfuscation Key",
-                "Please enter an obfuscation/encryption key for your Secure Cloud Viewer settings. This key will be stored in your Windows Password Vault.",
+                $"Please enter an obfuscation/encryption key for your Secure Cloud Viewer settings ({settingsFileName}). This key will be stored in your Windows Password Vault.",
                 string.Empty);
             if (promptResult.Item1 && !string.IsNullOrWhiteSpace(promptResult.Item2))
             {
                 var cleanedKey = promptResult.Item2.Trim();
-                SaveObfuscationKey(cleanedKey);
+                SaveObfuscationKey(settingsFileName, cleanedKey);
                 return cleanedKey;
             }
         }
 
         throw new InvalidOperationException(
             "An obfuscation key is required to encrypt or decrypt Secure Cloud Viewer settings.");
+    }
+
+    public static string ObfuscationKeyResourceIdentifier(FileInfo settingsFile)
+    {
+        return ObfuscationKeyResourceIdentifier(settingsFile.FullName);
+    }
+
+    public static string ObfuscationKeyResourceIdentifier(string settingsFileName)
+    {
+        return $"PointlessWaymarks-SiteViewer-ObfuscationKey-{settingsFileName}";
     }
 
     public static async Task<SecureCloudViewerSettings> ReadFromSettingsFile(FileInfo fileToRead,
@@ -69,7 +84,7 @@ public partial class SecureCloudViewerSettings
         if (dto is null)
             throw new NullReferenceException($"Trying to read Settings from {fileToRead.FullName} returned null");
 
-        var key = await GetOrPromptObfuscationKey(statusContext);
+        var key = await GetOrPromptObfuscationKey(fileToRead, statusContext);
 
         var result = new SecureCloudViewerSettings
         {
@@ -93,7 +108,6 @@ public partial class SecureCloudViewerSettings
         return result;
     }
 
-
     public IS3AccountInformation S3AccountInformation()
     {
         Enum.TryParse(CloudViewerProvider, out S3Providers cloudProvider);
@@ -115,10 +129,20 @@ public partial class SecureCloudViewerSettings
         };
     }
 
+    public static void SaveObfuscationKey(FileInfo settingsFile, string key)
+    {
+        SaveObfuscationKey(settingsFile.FullName, key);
+    }
+
+    public static void SaveObfuscationKey(string settingsFileName, string key)
+    {
+        PasswordVaultTools.SaveCredentials(ObfuscationKeyResourceIdentifier(settingsFileName), "SiteViewerObfuscationKey", key);
+    }
+
     public static async Task WriteSettings(SecureCloudViewerSettings toWrite, string saveAsFullFilename,
         StatusControlContext? statusContext = null)
     {
-        var key = await GetOrPromptObfuscationKey(statusContext);
+        var key = await GetOrPromptObfuscationKey(saveAsFullFilename, statusContext);
 
         var dto = new EncryptedSecureCloudViewerSettingsDto
         {

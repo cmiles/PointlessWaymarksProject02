@@ -44,7 +44,8 @@ public class ConnectionSettingsImportTests
         {
             Assert.That(parsed, Is.True);
             Assert.That(result, Is.Not.Null);
-            Assert.That(result!.Name, Is.EqualTo("GUI Site"));
+            Assert.That(result!.SettingsType, Is.EqualTo("OpenCloudViewer"));
+            Assert.That(result.Name, Is.EqualTo("GUI Site"));
             Assert.That(result.SiteDomain, Is.EqualTo("guisite.com"));
             Assert.That(result.Provider, Is.EqualTo("Wasabi"));
             Assert.That(result.Region, Is.EqualTo("us-east-1"));
@@ -141,44 +142,145 @@ public class ConnectionSettingsImportTests
     }
 
     [Test]
-    public void EncryptedRoundTrip_DecryptsAndDeserializes()
+    public void TryDeserialize_IndividuallyEncryptedSecureCloudViewer_DecryptsSuccessfully()
     {
         const string password = "correct-horse-battery-staple";
 
-        var toWrite = new ConnectionSettingsImport
+        var encryptedJson = $$"""
         {
-            Name = "Encrypted Site",
-            Bucket = "enc-bucket",
-            AccessKey = "enc-key",
-            Secret = "enc-secret"
-        };
+            "SettingsType": "SecureCloudViewer",
+            "CloudViewerSettingsName": "{{ "Encrypted Site".Encrypt(password) }}",
+            "CloudViewerSiteDomain": "{{ "example.com".Encrypt(password) }}",
+            "CloudViewerProvider": "{{ "Amazon".Encrypt(password) }}",
+            "CloudViewerRegion": "{{ "us-east-1".Encrypt(password) }}",
+            "CloudViewerBucket": "{{ "enc-bucket".Encrypt(password) }}",
+            "CloudViewerAccessKey": "{{ "enc-key".Encrypt(password) }}",
+            "CloudViewerSecret": "{{ "enc-secret".Encrypt(password) }}",
+            "CloudServiceUrl": "{{ "https://s3.example.com".Encrypt(password) }}"
+        }
+        """;
 
-        var encrypted = toWrite.Serialize().Encrypt(password);
-
-        var decrypted = encrypted.Decrypt(password);
-        var parsed = ConnectionSettingsImport.TryDeserialize(decrypted, out var result);
+        var parsed = ConnectionSettingsImport.TryDeserialize(encryptedJson, password, out var result);
 
         Assert.Multiple(() =>
         {
             Assert.That(parsed, Is.True);
-            Assert.That(result!.Name, Is.EqualTo("Encrypted Site"));
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result!.SettingsType, Is.EqualTo("SecureCloudViewer"));
+            Assert.That(result.Name, Is.EqualTo("Encrypted Site"));
+            Assert.That(result.SiteDomain, Is.EqualTo("example.com"));
+            Assert.That(result.Provider, Is.EqualTo("Amazon"));
+            Assert.That(result.Region, Is.EqualTo("us-east-1"));
             Assert.That(result.Bucket, Is.EqualTo("enc-bucket"));
             Assert.That(result.AccessKey, Is.EqualTo("enc-key"));
             Assert.That(result.Secret, Is.EqualTo("enc-secret"));
+            Assert.That(result.ServiceUrl, Is.EqualTo("https://s3.example.com"));
         });
     }
 
     [Test]
-    public void Decrypt_WithWrongPassword_DoesNotProduceValidJson()
+    public void TryDeserialize_IndividuallyEncrypted_WrongPassword_ReturnsFalse()
     {
         const string password = "the-right-password";
-        var encrypted = new ConnectionSettingsImport { Bucket = "b" }.Serialize().Encrypt(password);
 
-        // Decrypting with the wrong password either throws or yields garbage - either way it must not
-        // silently produce the original settings. TryDecrypt swallows exceptions to a failure message.
-        var decrypted = encrypted.TryDecrypt("the-wrong-password");
-        var parsed = ConnectionSettingsImport.TryDeserialize(decrypted, out var result);
+        var encryptedJson = $$"""
+        {
+            "SettingsType": "SecureCloudViewer",
+            "CloudViewerBucket": "{{ "enc-bucket".Encrypt(password) }}"
+        }
+        """;
 
-        Assert.That(parsed && result?.Bucket == "b", Is.False);
+        var parsed = ConnectionSettingsImport.TryDeserialize(encryptedJson, "the-wrong-password", out var result);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(parsed, Is.False);
+            Assert.That(result, Is.Null);
+        });
+    }
+
+    [Test]
+    public void TryDeserialize_SecureCloudViewer_WithoutPassword_ReturnsFalse()
+    {
+        const string password = "the-right-password";
+
+        var encryptedJson = $$"""
+        {
+            "SettingsType": "SecureCloudViewer",
+            "CloudViewerBucket": "{{ "enc-bucket".Encrypt(password) }}"
+        }
+        """;
+
+        var parsed = ConnectionSettingsImport.TryDeserialize(encryptedJson, out var result);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(parsed, Is.False);
+            Assert.That(result, Is.Null);
+        });
+    }
+
+    [Test]
+    public void TryDeserialize_IndividuallyEncryptedShortNames_DecryptsSuccessfully()
+    {
+        const string password = "secret-password";
+
+        var encryptedJson = $$"""
+        {
+            "SettingsType": "SecureCloudViewer",
+            "Name": "{{ "My Name".Encrypt(password) }}",
+            "Bucket": "{{ "my-bucket".Encrypt(password) }}"
+        }
+        """;
+
+        var parsed = ConnectionSettingsImport.TryDeserialize(encryptedJson, password, out var result);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(parsed, Is.True);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result!.SettingsType, Is.EqualTo("SecureCloudViewer"));
+            Assert.That(result.Name, Is.EqualTo("My Name"));
+            Assert.That(result.Bucket, Is.EqualTo("my-bucket"));
+            Assert.That(result.AccessKey, Is.Null);
+        });
+    }
+
+    [Test]
+    public void ReadSettingsType_SecureCloudViewer_ReturnsSecureCloudViewer()
+    {
+        const string json = """{ "SettingsType": "SecureCloudViewer", "Name": "test" }""";
+        Assert.That(ConnectionSettingsImport.ReadSettingsType(json), Is.EqualTo("SecureCloudViewer"));
+    }
+
+    [Test]
+    public void ReadSettingsType_OpenCloudViewer_ReturnsOpenCloudViewer()
+    {
+        const string json = """{ "SettingsType": "OpenCloudViewer", "Name": "test" }""";
+        Assert.That(ConnectionSettingsImport.ReadSettingsType(json), Is.EqualTo("OpenCloudViewer"));
+    }
+
+    [Test]
+    public void ReadSettingsType_NoSettingsType_ReturnsNull()
+    {
+        const string json = """{ "Name": "test", "Bucket": "my-bucket" }""";
+        Assert.That(ConnectionSettingsImport.ReadSettingsType(json), Is.Null);
+    }
+
+    [Test]
+    public void ReadSettingsType_InvalidJson_ReturnsNull()
+    {
+        Assert.That(ConnectionSettingsImport.ReadSettingsType("invalid json {"), Is.Null);
+    }
+
+    [Test]
+    public void ReadSettingsType_EmptyOrWhitespace_ReturnsNull()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(ConnectionSettingsImport.ReadSettingsType(""), Is.Null);
+            Assert.That(ConnectionSettingsImport.ReadSettingsType("   "), Is.Null);
+            Assert.That(ConnectionSettingsImport.ReadSettingsType(null), Is.Null);
+        });
     }
 }

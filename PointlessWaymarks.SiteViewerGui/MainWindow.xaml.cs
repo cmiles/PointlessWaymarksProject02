@@ -424,7 +424,7 @@ public partial class MainWindow
         if (fileList.Contains(UserSettingsUtilities.SettingsFileFullName))
             fileList.Remove(UserSettingsUtilities.SettingsFileFullName);
 
-        fileList = new List<string> { UserSettingsUtilities.SettingsFileFullName }.Concat(fileList).ToList();
+        fileList = [UserSettingsUtilities.SettingsFileFullName, .. fileList];
 
         if (fileList.Count > 10)
             fileList = fileList.Take(10).ToList();

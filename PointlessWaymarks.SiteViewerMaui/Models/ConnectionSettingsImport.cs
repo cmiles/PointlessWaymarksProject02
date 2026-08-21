@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using PointlessWaymarks.SiteViewerMaui.Tools;
 
 namespace PointlessWaymarks.SiteViewerMaui.Models;
 
@@ -11,6 +12,8 @@ namespace PointlessWaymarks.SiteViewerMaui.Models;
 /// </summary>
 public class ConnectionSettingsImport
 {
+    public string? SettingsType { get; set; }
+
     public string? Name { get; set; }
     public string? CloudViewerSettingsName { get => Name; set => Name ??= value; }
 
@@ -45,11 +48,45 @@ public class ConnectionSettingsImport
     };
 
     /// <summary>
-    ///     Attempts to deserialize the supplied JSON text into a <see cref="ConnectionSettingsImport" />.
-    ///     Returns false (and a null result) when the text is empty or is not valid connection-settings JSON;
-    ///     it never throws so callers can safely warn the user instead of crashing.
+    ///     Attempts to inspect the <see cref="SettingsType" /> value from the supplied JSON text
+    ///     without attempting decryption. Returns null if the text is empty, is not valid JSON,
+    ///     or does not specify a SettingsType.
     /// </summary>
-    public static bool TryDeserialize(string? json, out ConnectionSettingsImport? result)
+    public static string? ReadSettingsType(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return null;
+
+        try
+        {
+            var deserialized = JsonSerializer.Deserialize<ConnectionSettingsImport>(json, SerializerOptions);
+            return deserialized?.SettingsType;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    ///     Attempts to deserialize the supplied JSON text into a <see cref="ConnectionSettingsImport" />.
+    ///     Returns false (and a null result) when the text is empty, is not valid connection-settings JSON,
+    ///     or fails decryption; it never throws so callers can safely warn the user instead of crashing.
+    ///     If a <paramref name="password" /> is provided, non-null property values (except <see cref="SettingsType" />)
+    ///     are decrypted.
+    /// </summary>
+    public static bool TryDeserialize(string? json, out ConnectionSettingsImport? result, string? password = null)
+    {
+        return TryDeserialize(json, password, out result);
+    }
+
+    /// <summary>
+    ///     Attempts to deserialize the supplied JSON text into a <see cref="ConnectionSettingsImport" />.
+    ///     Returns false (and a null result) when the text is empty, is not valid connection-settings JSON,
+    ///     or fails decryption; it never throws so callers can safely warn the user instead of crashing.
+    ///     If a <paramref name="password" /> is provided, non-null property values (except <see cref="SettingsType" />)
+    ///     are decrypted.
+    /// </summary>
+    public static bool TryDeserialize(string? json, string? password, out ConnectionSettingsImport? result)
     {
         result = null;
 
@@ -57,15 +94,39 @@ public class ConnectionSettingsImport
 
         try
         {
-            result = JsonSerializer.Deserialize<ConnectionSettingsImport>(json, SerializerOptions);
+            var deserialized = JsonSerializer.Deserialize<ConnectionSettingsImport>(json, SerializerOptions);
+            if (deserialized is null) return false;
+
+            if (!string.IsNullOrWhiteSpace(password))
+            {
+                deserialized.Name = DecryptValue(deserialized.Name, password);
+                deserialized.SiteDomain = DecryptValue(deserialized.SiteDomain, password);
+                deserialized.Provider = DecryptValue(deserialized.Provider, password);
+                deserialized.Region = DecryptValue(deserialized.Region, password);
+                deserialized.ServiceUrl = DecryptValue(deserialized.ServiceUrl, password);
+                deserialized.Bucket = DecryptValue(deserialized.Bucket, password);
+                deserialized.AccessKey = DecryptValue(deserialized.AccessKey, password);
+                deserialized.Secret = DecryptValue(deserialized.Secret, password);
+            }
+            else if (string.Equals(deserialized.SettingsType, "SecureCloudViewer", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            result = deserialized;
+            return true;
         }
         catch
         {
             result = null;
             return false;
         }
+    }
 
-        return result is not null;
+    private static string? DecryptValue(string? value, string password)
+    {
+        if (string.IsNullOrEmpty(value)) return value;
+        return value.Decrypt(password);
     }
 
     /// <summary>

@@ -8,9 +8,6 @@ namespace PointlessWaymarks.SiteViewerMaui.ViewModels;
 
 public class ConnectionEditViewModel : ObservableBase, IQueryAttributable
 {
-    private const string PlainJsonChoice = "Plain JSON";
-    private const string EncryptedJsonChoice = "Encrypted (Password)";
-
     private readonly ISecureCredentialStore _credentialStore;
     private readonly ProfileRepository _repository;
 
@@ -178,23 +175,17 @@ public class ConnectionEditViewModel : ObservableBase, IQueryAttributable
                 return;
             }
 
-            var choice = await Shell.Current.DisplayActionSheetAsync(
-                "How is this settings file stored?", "Cancel", null, PlainJsonChoice, EncryptedJsonChoice);
+            ConnectionSettingsImport? imported;
 
-            string jsonText;
-
-            if (choice == EncryptedJsonChoice)
+            if (string.Equals(ConnectionSettingsImport.ReadSettingsType(fileText), "SecureCloudViewer",
+                    StringComparison.OrdinalIgnoreCase))
             {
                 var password = await Shell.Current.DisplayPromptAsync("Password",
                     "Enter the password used to encrypt this file.", "OK", "Cancel");
 
                 if (string.IsNullOrEmpty(password)) return; // cancelled or no password entered
 
-                try
-                {
-                    jsonText = fileText.Trim().Decrypt(password);
-                }
-                catch
+                if (!ConnectionSettingsImport.TryDeserialize(fileText, password, out imported) || imported is null)
                 {
                     await Shell.Current.DisplayAlertAsync("Load Failed",
                         "The file could not be decrypted - the password may be incorrect or the file may not be a valid encrypted settings file.",
@@ -202,20 +193,14 @@ public class ConnectionEditViewModel : ObservableBase, IQueryAttributable
                     return;
                 }
             }
-            else if (choice == PlainJsonChoice)
-            {
-                jsonText = fileText;
-            }
             else
             {
-                return; // Cancel or dismissed
-            }
-
-            if (!ConnectionSettingsImport.TryDeserialize(jsonText, out var imported) || imported is null)
-            {
-                await Shell.Current.DisplayAlertAsync("Load Failed",
-                    "The file did not contain valid connection settings JSON.", "OK");
-                return;
+                if (!ConnectionSettingsImport.TryDeserialize(fileText, out imported) || imported is null)
+                {
+                    await Shell.Current.DisplayAlertAsync("Load Failed",
+                        "The file did not contain valid connection settings JSON.", "OK");
+                    return;
+                }
             }
 
             var applied = ApplyImportedSettings(imported);
