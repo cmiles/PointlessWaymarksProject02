@@ -99,8 +99,8 @@ public partial class MapComponentEditorContext : IHasChanges, IHasValidationIssu
     }
 
     public Envelope? ContentBounds { get; set; }
-    public ContentIdViewerControlContext? ContentId { get; set; }
-    public CreatedAndUpdatedByAndOnDisplayContext? CreatedUpdatedDisplay { get; set; }
+    public ContentIdViewerControlContext ContentId { get; set; } = null!;
+    public CreatedAndUpdatedByAndOnDisplayContext CreatedUpdatedDisplay { get; set; } = null!;
     public DataNotificationsWorkQueue DataNotificationsProcessor { get; set; }
     public List<MapElement> DbElements { get; set; } = [];
     public MapComponent DbEntry { get; set; }
@@ -111,10 +111,10 @@ public partial class MapComponentEditorContext : IHasChanges, IHasValidationIssu
     public ObservableCollection<IMapElementListItem> MapElements { get; set; }
     public Action<Uri, string> MapPreviewNavigationManager { get; set; }
     public StatusControlContext StatusContext { get; set; }
-    public StringDataEntryContext? SummaryEntry { get; set; }
+    public StringDataEntryContext SummaryEntry { get; set; } = null!;
     public bool SuspendMapRefresh { get; set; }
-    public StringDataEntryContext? TitleEntry { get; set; }
-    public UpdateNotesEditorContext? UpdateNotes { get; set; }
+    public StringDataEntryContext TitleEntry { get; set; } = null!;
+    public UpdateNotesEditorContext UpdateNotes { get; set; } = null!;
     public string UserFilterText { get; set; } = string.Empty;
     public string UserGeoContentInput { get; set; } = string.Empty;
 
@@ -410,7 +410,7 @@ public partial class MapComponentEditorContext : IHasChanges, IHasValidationIssu
         if (DbEntry.Id > 0)
         {
             newEntry.LastUpdatedOn = DateTime.Now;
-            newEntry.LastUpdatedBy = CreatedUpdatedDisplay!.UpdatedByEntry.UserValue.TrimNullToEmpty();
+            newEntry.LastUpdatedBy = CreatedUpdatedDisplay.UpdatedByEntry.UserValue.TrimNullToEmpty();
         }
 
         newEntry.Summary = SummaryEntry?.UserValue.TrimNullToEmpty() ?? string.Empty;

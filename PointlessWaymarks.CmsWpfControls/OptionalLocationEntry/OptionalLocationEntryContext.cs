@@ -32,11 +32,11 @@ public partial class OptionalLocationEntryContext : IHasChanges, IHasValidationI
         PropertyChanged += OnPropertyChanged;
     }
 
-    public ConversionDataEntryContext<double?>? ElevationEntry { get; set; }
+    public ConversionDataEntryContext<double?> ElevationEntry { get; set; } = null!;
     public Func<double?>? GetBearing { get; set; }
-    public ConversionDataEntryContext<double?>? LatitudeEntry { get; set; }
-    public ConversionDataEntryContext<double?>? LongitudeEntry { get; set; }
-    public BoolDataEntryContext? ShowLocationEntry { get; set; }
+    public ConversionDataEntryContext<double?> LatitudeEntry { get; set; } = null!;
+    public ConversionDataEntryContext<double?> LongitudeEntry { get; set; } = null!;
+    public BoolDataEntryContext ShowLocationEntry { get; set; } = null!;
     public StatusControlContext StatusContext { get; set; }
     public bool HasChanges { get; set; }
     public bool HasValidationIssues { get; set; }
@@ -65,7 +65,7 @@ public partial class OptionalLocationEntryContext : IHasChanges, IHasValidationI
     /// <returns></returns>
     public async Task<IFeature?> FeatureFromPoint()
     {
-        if (LatitudeEntry!.UserValue == null || LongitudeEntry!.UserValue == null) return null;
+        if (LatitudeEntry.UserValue == null || LongitudeEntry.UserValue == null) return null;
 
         var latitudeValidation =
             await SpatialValueValidations.LatitudeValidation(LatitudeEntry.UserValue.Value);
@@ -74,7 +74,7 @@ public partial class OptionalLocationEntryContext : IHasChanges, IHasValidationI
 
         if (!latitudeValidation.Valid || !longitudeValidation.Valid) return null;
 
-        if (ElevationEntry!.UserValue is null)
+        if (ElevationEntry.UserValue is null)
             return new Feature(
                 new Point(LongitudeEntry.UserValue.Value,
                     LatitudeEntry.UserValue.Value),
@@ -89,7 +89,7 @@ public partial class OptionalLocationEntryContext : IHasChanges, IHasValidationI
     [BlockingCommand]
     public async Task GetElevation()
     {
-        if (LatitudeEntry!.HasValidationIssues || LongitudeEntry!.HasValidationIssues)
+        if (LatitudeEntry.HasValidationIssues || LongitudeEntry.HasValidationIssues)
         {
             await StatusContext.ToastError("Lat Long is not valid");
             return;
@@ -104,7 +104,7 @@ public partial class OptionalLocationEntryContext : IHasChanges, IHasValidationI
         var possibleElevation = await ElevationGuiHelper.GetElevation(LatitudeEntry.UserValue.Value,
             LongitudeEntry.UserValue.Value, StatusContext);
 
-        if (possibleElevation != null) ElevationEntry!.UserText = possibleElevation.Value.MetersToFeet().ToString("N0");
+        if (possibleElevation != null) ElevationEntry.UserText = possibleElevation.Value.MetersToFeet().ToString("N0");
     }
 
     public async Task<List<string>> GetFeatureIntersectTagsWithUiAlerts()
@@ -143,16 +143,16 @@ public partial class OptionalLocationEntryContext : IHasChanges, IHasValidationI
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        var window = await LocationChooserWindow.CreateInstance(LatitudeEntry!.UserValue, LongitudeEntry!.UserValue,
-            ElevationEntry!.UserValue, "Pick Location");
+        var window = await LocationChooserWindow.CreateInstance(LatitudeEntry.UserValue, LongitudeEntry.UserValue,
+            ElevationEntry.UserValue, "Pick Location");
 
         var result = await window.PositionWindowAndShowDialogOnUiThread();
 
         if (!result ?? true) return;
 
-        LatitudeEntry.UserText = window.LocationChooser.LatitudeEntry.UserText;
-        LongitudeEntry.UserText = window.LocationChooser.LongitudeEntry.UserText;
-        ElevationEntry.UserText = window.LocationChooser.ElevationEntry.UserText;
+        LatitudeEntry.UserText = window.LocationChooser!.LatitudeEntry!.UserText;
+        LongitudeEntry.UserText = window.LocationChooser!.LongitudeEntry!.UserText;
+        ElevationEntry.UserText = window.LocationChooser!.ElevationEntry!.UserText;
     }
 
     public async Task LoadData(IOptionalLocation optionalLocationContent)
@@ -209,9 +209,9 @@ public partial class OptionalLocationEntryContext : IHasChanges, IHasValidationI
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (LatitudeEntry!.HasValidationIssues
+        if (LatitudeEntry.HasValidationIssues
             || LatitudeEntry == null
-            || LongitudeEntry!.HasValidationIssues
+            || LongitudeEntry.HasValidationIssues
             || LongitudeEntry == null)
         {
             await StatusContext.ToastError("No Valid Location Data?");
@@ -233,9 +233,9 @@ public partial class OptionalLocationEntryContext : IHasChanges, IHasValidationI
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (LatitudeEntry!.HasValidationIssues
+        if (LatitudeEntry.HasValidationIssues
             || LatitudeEntry == null
-            || LongitudeEntry!.HasValidationIssues
+            || LongitudeEntry.HasValidationIssues
             || LongitudeEntry == null)
         {
             await StatusContext.ToastError("No Valid Location Data?");

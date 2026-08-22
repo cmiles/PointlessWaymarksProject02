@@ -197,7 +197,7 @@ public partial class SavedFeedItemListContext
 
         var db = await ContextDb.GetInstance();
         var currentFeed =
-            await db.Feeds.SingleOrDefaultAsync(x => x.PersistentId == listItem.DbReaderFeed.PersistentId);
+            await db.Feeds.SingleOrDefaultAsync(x => x.PersistentId == listItem.DbReaderFeed!.PersistentId);
 
         if (currentFeed == null)
         {

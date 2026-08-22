@@ -58,7 +58,7 @@ public partial class SitePictureSizesEditorWindow
         }
         catch (Exception ex)
         {
-            StatusContext.ToastError($"Error Closing Window {ex.Message}");
+            await StatusContext.ToastError($"Error Closing Window {ex.Message}");
         }
     }
 

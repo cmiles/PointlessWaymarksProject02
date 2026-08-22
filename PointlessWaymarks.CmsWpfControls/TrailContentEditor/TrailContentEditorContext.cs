@@ -49,29 +49,29 @@ public partial class TrailContentEditorContext : IHasChanges, IHasValidationIssu
         PropertyChanged += OnPropertyChanged;
     }
 
-    public BoolDataEntryContext? BikesEntry { get; set; }
-    public StringDataEntryContext? BikesNoteEntry { get; set; }
-    public BodyContentEditorContext? BodyContent { get; set; }
-    public ContentIdViewerControlContext? ContentId { get; set; }
-    public CreatedAndUpdatedByAndOnDisplayContext? CreatedUpdatedDisplay { get; set; }
+    public BoolDataEntryContext BikesEntry { get; set; } = null!;
+    public StringDataEntryContext BikesNoteEntry { get; set; } = null!;
+    public BodyContentEditorContext BodyContent { get; set; } = null!;
+    public ContentIdViewerControlContext ContentId { get; set; } = null!;
+    public CreatedAndUpdatedByAndOnDisplayContext CreatedUpdatedDisplay { get; set; } = null!;
     public TrailContent DbEntry { get; set; }
-    public BoolDataEntryContext? DogsEntry { get; set; }
-    public StringDataEntryContext? DogsNoteEntry { get; set; }
-    public ContentDropdownDataEntryContext? EndingPointContentIdEntry { get; set; }
-    public BoolDataEntryContext? FeeEntry { get; set; }
-    public StringDataEntryContext? FeeNoteEntry { get; set; }
-    public HelpDisplayContext? HelpContext { get; set; }
-    public ContentDropdownDataEntryContext? LineContentIdEntry { get; set; }
-    public StringDataEntryContext? LocationAreaEntry { get; set; }
-    public ContentSiteFeedAndIsDraftContext? MainSiteFeed { get; set; }
-    public ContentDropdownDataEntryContext? MapComponentIdEntry { get; set; }
-    public OptionalLocationEntryContext? OptionalLocationEntry { get; set; }
-    public StringDataEntryContext? OtherDetailsEntry { get; set; }
-    public BoolDataEntryContext? ShowInSearch { get; set; }
-    public ContentDropdownDataEntryContext? StartingPointContentIdEntry { get; set; }
+    public BoolDataEntryContext DogsEntry { get; set; } = null!;
+    public StringDataEntryContext DogsNoteEntry { get; set; } = null!;
+    public ContentDropdownDataEntryContext EndingPointContentIdEntry { get; set; } = null!;
+    public BoolDataEntryContext FeeEntry { get; set; } = null!;
+    public StringDataEntryContext FeeNoteEntry { get; set; } = null!;
+    public HelpDisplayContext HelpContext { get; set; } = null!;
+    public ContentDropdownDataEntryContext LineContentIdEntry { get; set; } = null!;
+    public StringDataEntryContext LocationAreaEntry { get; set; } = null!;
+    public ContentSiteFeedAndIsDraftContext MainSiteFeed { get; set; } = null!;
+    public ContentDropdownDataEntryContext MapComponentIdEntry { get; set; } = null!;
+    public OptionalLocationEntryContext OptionalLocationEntry { get; set; } = null!;
+    public StringDataEntryContext OtherDetailsEntry { get; set; } = null!;
+    public BoolDataEntryContext ShowInSearch { get; set; } = null!;
+    public ContentDropdownDataEntryContext StartingPointContentIdEntry { get; set; } = null!;
     public StatusControlContext StatusContext { get; set; }
-    public TagsEditorContext? TagEdit { get; set; }
-    public TitleSummarySlugEditorContext? TitleSummarySlugFolder { get; set; }
+    public TagsEditorContext TagEdit { get; set; } = null!;
+    public TitleSummarySlugEditorContext TitleSummarySlugFolder { get; set; } = null!;
 
     public string TrailEditorHelpText =>
         @"
@@ -81,8 +81,8 @@ Trail Content can bring together a Map, Line, Start and End Points and structure
 
 ";
 
-    public StringDataEntryContext? TrailShapeEntry { get; set; }
-    public UpdateNotesEditorContext? UpdateNotes { get; set; }
+    public StringDataEntryContext TrailShapeEntry { get; set; } = null!;
+    public UpdateNotesEditorContext UpdateNotes { get; set; } = null!;
 
     public void CheckForChangesAndValidationIssues()
     {
@@ -98,10 +98,10 @@ Trail Content can bring together a Map, Line, Start and End Points and structure
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        var possibleTags = await OptionalLocationEntry!.GetFeatureIntersectTagsWithUiAlerts();
+        var possibleTags = await OptionalLocationEntry.GetFeatureIntersectTagsWithUiAlerts();
 
         if (possibleTags.Any())
-            TagEdit!.Tags =
+            TagEdit.Tags =
                 $"{TagEdit.Tags}{(string.IsNullOrWhiteSpace(TagEdit.Tags) ? "" : ",")}{string.Join(",", possibleTags)}";
     }
 
@@ -131,38 +131,38 @@ Trail Content can bring together a Map, Line, Start and End Points and structure
         if (DbEntry.Id > 0)
         {
             newEntry.LastUpdatedOn = DateTime.Now;
-            newEntry.LastUpdatedBy = CreatedUpdatedDisplay!.UpdatedByEntry.UserValue.TrimNullToEmpty();
+            newEntry.LastUpdatedBy = CreatedUpdatedDisplay.UpdatedByEntry.UserValue.TrimNullToEmpty();
         }
 
-        newEntry.Folder = TitleSummarySlugFolder!.FolderEntry.UserValue.TrimNullToEmpty();
+        newEntry.Folder = TitleSummarySlugFolder.FolderEntry.UserValue.TrimNullToEmpty();
         newEntry.Slug = TitleSummarySlugFolder.SlugEntry.UserValue.TrimNullToEmpty();
         newEntry.Summary = TitleSummarySlugFolder.SummaryEntry.UserValue.TrimNullToEmpty();
-        newEntry.ShowInMainSiteFeed = MainSiteFeed!.ShowInMainSiteFeedEntry.UserValue;
+        newEntry.ShowInMainSiteFeed = MainSiteFeed.ShowInMainSiteFeedEntry.UserValue;
         newEntry.FeedOn = MainSiteFeed.FeedOnEntry.UserValue;
         newEntry.IsDraft = MainSiteFeed.IsDraftEntry.UserValue;
-        newEntry.ShowInSearch = ShowInSearch!.UserValue;
-        newEntry.Tags = TagEdit!.TagListString();
+        newEntry.ShowInSearch = ShowInSearch.UserValue;
+        newEntry.Tags = TagEdit.TagListString();
         newEntry.Title = TitleSummarySlugFolder.TitleEntry.UserValue.TrimNullToEmpty();
-        newEntry.CreatedBy = CreatedUpdatedDisplay!.CreatedByEntry.UserValue.TrimNullToEmpty();
-        newEntry.UpdateNotes = UpdateNotes!.UserValue.TrimNullToEmpty();
+        newEntry.CreatedBy = CreatedUpdatedDisplay.CreatedByEntry.UserValue.TrimNullToEmpty();
+        newEntry.UpdateNotes = UpdateNotes.UserValue.TrimNullToEmpty();
         newEntry.UpdateNotesFormat = UpdateNotes.UpdateNotesFormat.SelectedContentFormatAsString;
-        newEntry.BodyContent = BodyContent!.UserValue.TrimNullToEmpty();
+        newEntry.BodyContent = BodyContent.UserValue.TrimNullToEmpty();
         newEntry.BodyContentFormat = BodyContent.BodyContentFormat.SelectedContentFormatAsString;
 
-        newEntry.Fees = FeeEntry!.UserValue;
-        newEntry.FeesNote = FeeNoteEntry!.UserValue.TrimNullToEmpty();
-        newEntry.Dogs = DogsEntry!.UserValue;
-        newEntry.DogsNote = DogsNoteEntry!.UserValue.TrimNullToEmpty();
-        newEntry.Bikes = BikesEntry!.UserValue;
-        newEntry.BikesNote = BikesNoteEntry!.UserValue.TrimNullToEmpty();
-        newEntry.OtherDetails = OtherDetailsEntry!.UserValue.TrimNullToEmpty();
-        newEntry.LocationArea = LocationAreaEntry!.UserValue.TrimNullToEmpty();
-        newEntry.TrailShape = TrailShapeEntry!.UserValue.TrimNullToEmpty();
+        newEntry.Fees = FeeEntry.UserValue;
+        newEntry.FeesNote = FeeNoteEntry.UserValue.TrimNullToEmpty();
+        newEntry.Dogs = DogsEntry.UserValue;
+        newEntry.DogsNote = DogsNoteEntry.UserValue.TrimNullToEmpty();
+        newEntry.Bikes = BikesEntry.UserValue;
+        newEntry.BikesNote = BikesNoteEntry.UserValue.TrimNullToEmpty();
+        newEntry.OtherDetails = OtherDetailsEntry.UserValue.TrimNullToEmpty();
+        newEntry.LocationArea = LocationAreaEntry.UserValue.TrimNullToEmpty();
+        newEntry.TrailShape = TrailShapeEntry.UserValue.TrimNullToEmpty();
 
-        newEntry.MapComponentId = MapComponentIdEntry!.UserValue;
-        newEntry.LineContentId = LineContentIdEntry!.UserValue;
-        newEntry.StartingPointContentId = StartingPointContentIdEntry!.UserValue;
-        newEntry.EndingPointContentId = EndingPointContentIdEntry!.UserValue;
+        newEntry.MapComponentId = MapComponentIdEntry.UserValue;
+        newEntry.LineContentId = LineContentIdEntry.UserValue;
+        newEntry.StartingPointContentId = StartingPointContentIdEntry.UserValue;
+        newEntry.EndingPointContentId = EndingPointContentIdEntry.UserValue;
 
         return newEntry;
     }
@@ -171,7 +171,7 @@ Trail Content can bring together a Map, Line, Start and End Points and structure
     public async Task ExtractNewLinks()
     {
         await LinkExtraction.ExtractNewAndShowLinkContentEditors(
-            $"{BodyContent!.UserValue} {UpdateNotes!.UserValue}",
+            $"{BodyContent.UserValue} {UpdateNotes.UserValue}",
             StatusContext.ProgressTracker());
     }
 
@@ -322,8 +322,8 @@ Trail Content can bring together a Map, Line, Start and End Points and structure
             return;
         }
 
-        if (OptionalLocationEntry!.LatitudeEntry!.UserValue == null ||
-            OptionalLocationEntry.LongitudeEntry!.UserValue == null)
+        if (OptionalLocationEntry.LatitudeEntry.UserValue == null ||
+            OptionalLocationEntry.LongitudeEntry.UserValue == null)
         {
             await StatusContext.ToastError("Latitude or Longitude is missing?");
             return;
@@ -347,12 +347,12 @@ Trail Content can bring together a Map, Line, Start and End Points and structure
         newPartialPoint.CreatedOn = frozenNow;
         newPartialPoint.FeedOn = frozenNow;
         newPartialPoint.BodyContent = BracketCodeTrails.Create(DbEntry);
-        newPartialPoint.Title = $"Point From {TitleSummarySlugFolder!.TitleEntry.UserValue}";
-        newPartialPoint.Tags = TagEdit!.TagListString();
+        newPartialPoint.Title = $"Point From {TitleSummarySlugFolder.TitleEntry.UserValue}";
+        newPartialPoint.Tags = TagEdit.TagListString();
         newPartialPoint.Slug = SlugTagTools.CreateSlug(true, newPartialPoint.Title);
         newPartialPoint.Latitude = OptionalLocationEntry.LatitudeEntry.UserValue.Value;
         newPartialPoint.Longitude = OptionalLocationEntry.LongitudeEntry.UserValue.Value;
-        newPartialPoint.Elevation = OptionalLocationEntry.ElevationEntry!.UserValue;
+        newPartialPoint.Elevation = OptionalLocationEntry.ElevationEntry.UserValue;
 
         var pointWindow = await PointContentEditorWindow.CreateInstance(newPartialPoint);
 

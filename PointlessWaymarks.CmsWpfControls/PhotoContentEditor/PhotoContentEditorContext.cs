@@ -11,7 +11,6 @@ using PointlessWaymarks.CmsData.ContentGeneration;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.Database.Models;
 using PointlessWaymarks.CmsData.ImageHelpers;
-using PointlessWaymarks.CmsData.Spatial;
 using PointlessWaymarks.CmsWpfControls.BodyContentEditor;
 using PointlessWaymarks.CmsWpfControls.ContentIdViewer;
 using PointlessWaymarks.CmsWpfControls.ContentSiteFeedAndIsDraft;
@@ -19,7 +18,6 @@ using PointlessWaymarks.CmsWpfControls.CreatedAndUpdatedByAndOnDisplay;
 using PointlessWaymarks.CmsWpfControls.DataEntry;
 using PointlessWaymarks.CmsWpfControls.HelpDisplay;
 using PointlessWaymarks.CmsWpfControls.OptionalLocationEntry;
-using PointlessWaymarks.WpfCommon.Elevation;
 using PointlessWaymarks.CmsWpfControls.TagsEditor;
 using PointlessWaymarks.CmsWpfControls.TitleSummarySlugFolderEditor;
 using PointlessWaymarks.CmsWpfControls.UpdateNotesEditor;
@@ -31,6 +29,7 @@ using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.BoolDataEntry;
 using PointlessWaymarks.WpfCommon.ChangesAndValidation;
 using PointlessWaymarks.WpfCommon.ConversionDataEntry;
+using PointlessWaymarks.WpfCommon.Elevation;
 using PointlessWaymarks.WpfCommon.FileMetadataDisplay;
 using PointlessWaymarks.WpfCommon.MarkdownDisplay;
 using PointlessWaymarks.WpfCommon.Status;
@@ -57,28 +56,28 @@ public partial class PhotoContentEditorContext : IHasChanges, IHasValidationIssu
         PropertyChanged += OnPropertyChanged;
     }
 
-    public StringDataEntryContext? AltTextEntry { get; set; }
-    public StringDataEntryContext? ApertureEntry { get; set; }
-    public BodyContentEditorContext? BodyContent { get; set; }
-    public StringDataEntryContext? CameraMakeEntry { get; set; }
-    public StringDataEntryContext? CameraModelEntry { get; set; }
-    public ContentIdViewerControlContext? ContentId { get; set; }
-    public CreatedAndUpdatedByAndOnDisplayContext? CreatedUpdatedDisplay { get; set; }
+    public StringDataEntryContext AltTextEntry { get; set; } = null!;
+    public StringDataEntryContext ApertureEntry { get; set; } = null!;
+    public BodyContentEditorContext BodyContent { get; set; } = null!;
+    public StringDataEntryContext CameraMakeEntry { get; set; } = null!;
+    public StringDataEntryContext CameraModelEntry { get; set; } = null!;
+    public ContentIdViewerControlContext ContentId { get; set; } = null!;
+    public CreatedAndUpdatedByAndOnDisplayContext CreatedUpdatedDisplay { get; set; } = null!;
     public PhotoContent DbEntry { get; set; }
-    public StringDataEntryContext? FocalLengthEntry { get; set; }
-    public HelpDisplayContext? HelpContext { get; set; }
+    public StringDataEntryContext FocalLengthEntry { get; set; } = null!;
+    public HelpDisplayContext HelpContext { get; set; } = null!;
     public FileInfo? InitialPhoto { get; set; }
-    public ConversionDataEntryContext<int?>? IsoEntry { get; set; }
-    public StringDataEntryContext? LensEntry { get; set; }
-    public StringDataEntryContext? LicenseEntry { get; set; }
+    public ConversionDataEntryContext<int?> IsoEntry { get; set; } = null!;
+    public StringDataEntryContext LensEntry { get; set; } = null!;
+    public StringDataEntryContext LicenseEntry { get; set; } = null!;
     public FileInfo? LoadedFile { get; set; }
-    public ContentSiteFeedAndIsDraftContext? MainSiteFeed { get; set; }
-    public OptionalLocationEntryContext? OptionalLocationEntry { get; set; }
-    public StringDataEntryContext? PhotoCreatedByEntry { get; set; }
-    public ConversionDataEntryContext<DateTime>? PhotoCreatedOnEntry { get; set; }
-    public ConversionDataEntryContext<DateTime?>? PhotoCreatedOnUtcEntry { get; set; }
+    public ContentSiteFeedAndIsDraftContext MainSiteFeed { get; set; } = null!;
+    public OptionalLocationEntryContext OptionalLocationEntry { get; set; } = null!;
+    public StringDataEntryContext PhotoCreatedByEntry { get; set; } = null!;
+    public ConversionDataEntryContext<DateTime> PhotoCreatedOnEntry { get; set; } = null!;
+    public ConversionDataEntryContext<DateTime?> PhotoCreatedOnUtcEntry { get; set; } = null!;
 
-    public ConversionDataEntryContext<double?>? PhotoDirectionEntry { get; set; }
+    public ConversionDataEntryContext<double?> PhotoDirectionEntry { get; set; } = null!;
 
     public string PhotoEditorHelpText =>
         @"
@@ -98,13 +97,13 @@ Photo Content Notes:
     public bool SelectedFileHasValidationIssues { get; set; }
     public bool SelectedFileNameHasInvalidCharacters { get; set; }
     public string SelectedFileValidationMessage { get; set; } = string.Empty;
-    public BoolDataEntryContext? ShowInSearch { get; set; }
-    public BoolDataEntryContext? ShowSizesEntry { get; set; }
-    public StringDataEntryContext? ShutterSpeedEntry { get; set; }
+    public BoolDataEntryContext ShowInSearch { get; set; } = null!;
+    public BoolDataEntryContext ShowSizesEntry { get; set; } = null!;
+    public StringDataEntryContext ShutterSpeedEntry { get; set; } = null!;
     public StatusControlContext StatusContext { get; set; }
-    public TagsEditorContext? TagEdit { get; set; }
-    public TitleSummarySlugEditorContext? TitleSummarySlugFolder { get; set; }
-    public UpdateNotesEditorContext? UpdateNotes { get; set; }
+    public TagsEditorContext TagEdit { get; set; } = null!;
+    public TitleSummarySlugEditorContext TitleSummarySlugFolder { get; set; } = null!;
+    public UpdateNotesEditorContext UpdateNotes { get; set; } = null!;
 
     public void CheckForChangesAndValidationIssues()
     {
@@ -121,10 +120,10 @@ Photo Content Notes:
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        var possibleTags = await OptionalLocationEntry!.GetFeatureIntersectTagsWithUiAlerts();
+        var possibleTags = await OptionalLocationEntry.GetFeatureIntersectTagsWithUiAlerts();
 
         if (possibleTags.Any())
-            TagEdit!.Tags =
+            TagEdit.Tags =
                 $"{TagEdit.Tags}{(string.IsNullOrWhiteSpace(TagEdit.Tags) ? "" : ",")}{string.Join(",", possibleTags)}";
     }
 
@@ -137,7 +136,7 @@ Photo Content Notes:
     [BlockingCommand]
     public async Task AutoRenameSelectedFileBasedOnTitle()
     {
-        await FileHelpers.TryAutoRenameSelectedFile(SelectedFile, TitleSummarySlugFolder!.TitleEntry.UserValue,
+        await FileHelpers.TryAutoRenameSelectedFile(SelectedFile, TitleSummarySlugFolder.TitleEntry.UserValue,
             StatusContext, x => SelectedFile = x);
     }
 
@@ -239,7 +238,7 @@ Photo Content Notes:
         var newContext =
             new PhotoContentEditorContext(factoryStatusContext, PhotoContent.CreateInstance());
         if (initialPhoto is { Exists: true }) newContext.InitialPhoto = initialPhoto;
-        await newContext.LoadData(toLoad, skipMediaDirectoryCheck: skipPhotoMetadataLoad);
+        await newContext.LoadData(toLoad, skipPhotoMetadataLoad);
         return newContext;
     }
 
@@ -256,43 +255,43 @@ Photo Content Notes:
         if (DbEntry.Id > 0)
         {
             newEntry.LastUpdatedOn = DateTime.Now;
-            newEntry.LastUpdatedBy = CreatedUpdatedDisplay!.UpdatedByEntry.UserValue.TrimNullToEmpty();
+            newEntry.LastUpdatedBy = CreatedUpdatedDisplay.UpdatedByEntry.UserValue.TrimNullToEmpty();
         }
 
         newEntry.MainPicture = newEntry.ContentId;
-        newEntry.Aperture = ApertureEntry!.UserValue.TrimNullToEmpty();
-        newEntry.Folder = TitleSummarySlugFolder!.FolderEntry.UserValue.TrimNullToEmpty();
-        newEntry.Iso = IsoEntry!.UserValue;
-        newEntry.Lens = LensEntry!.UserValue.TrimNullToEmpty();
-        newEntry.License = LicenseEntry!.UserValue.TrimNullToEmpty();
+        newEntry.Aperture = ApertureEntry.UserValue.TrimNullToEmpty();
+        newEntry.Folder = TitleSummarySlugFolder.FolderEntry.UserValue.TrimNullToEmpty();
+        newEntry.Iso = IsoEntry.UserValue;
+        newEntry.Lens = LensEntry.UserValue.TrimNullToEmpty();
+        newEntry.License = LicenseEntry.UserValue.TrimNullToEmpty();
         newEntry.Slug = TitleSummarySlugFolder.SlugEntry.UserValue.TrimNullToEmpty();
         newEntry.Summary = TitleSummarySlugFolder.SummaryEntry.UserValue.TrimNullToEmpty();
-        newEntry.ShowInMainSiteFeed = MainSiteFeed!.ShowInMainSiteFeedEntry.UserValue;
+        newEntry.ShowInMainSiteFeed = MainSiteFeed.ShowInMainSiteFeedEntry.UserValue;
         newEntry.FeedOn = MainSiteFeed.FeedOnEntry.UserValue;
         newEntry.IsDraft = MainSiteFeed.IsDraftEntry.UserValue;
-        newEntry.ShowInSearch = ShowInSearch!.UserValue;
-        newEntry.Tags = TagEdit!.TagListString();
+        newEntry.ShowInSearch = ShowInSearch.UserValue;
+        newEntry.Tags = TagEdit.TagListString();
         newEntry.Title = TitleSummarySlugFolder.TitleEntry.UserValue.TrimNullToEmpty();
-        newEntry.AltText = AltTextEntry!.UserValue.TrimNullToEmpty();
-        newEntry.CameraMake = CameraMakeEntry!.UserValue.TrimNullToEmpty();
-        newEntry.CameraModel = CameraModelEntry!.UserValue.TrimNullToEmpty();
-        newEntry.CreatedBy = CreatedUpdatedDisplay!.CreatedByEntry.UserValue.TrimNullToEmpty();
-        newEntry.FocalLength = FocalLengthEntry!.UserValue.TrimNullToEmpty();
-        newEntry.ShutterSpeed = ShutterSpeedEntry!.UserValue.TrimNullToEmpty();
-        newEntry.UpdateNotes = UpdateNotes!.UserValue.TrimNullToEmpty();
+        newEntry.AltText = AltTextEntry.UserValue.TrimNullToEmpty();
+        newEntry.CameraMake = CameraMakeEntry.UserValue.TrimNullToEmpty();
+        newEntry.CameraModel = CameraModelEntry.UserValue.TrimNullToEmpty();
+        newEntry.CreatedBy = CreatedUpdatedDisplay.CreatedByEntry.UserValue.TrimNullToEmpty();
+        newEntry.FocalLength = FocalLengthEntry.UserValue.TrimNullToEmpty();
+        newEntry.ShutterSpeed = ShutterSpeedEntry.UserValue.TrimNullToEmpty();
+        newEntry.UpdateNotes = UpdateNotes.UserValue.TrimNullToEmpty();
         newEntry.UpdateNotesFormat = UpdateNotes.UpdateNotesFormat.SelectedContentFormatAsString;
         newEntry.OriginalFileName = SelectedFile?.Name;
-        newEntry.PhotoCreatedBy = PhotoCreatedByEntry!.UserValue.TrimNullToEmpty();
-        newEntry.PhotoCreatedOn = PhotoCreatedOnEntry!.UserValue;
-        newEntry.PhotoCreatedOnUtc = PhotoCreatedOnUtcEntry!.UserValue;
-        newEntry.BodyContent = BodyContent!.UserValue.TrimNullToEmpty();
+        newEntry.PhotoCreatedBy = PhotoCreatedByEntry.UserValue.TrimNullToEmpty();
+        newEntry.PhotoCreatedOn = PhotoCreatedOnEntry.UserValue;
+        newEntry.PhotoCreatedOnUtc = PhotoCreatedOnUtcEntry.UserValue;
+        newEntry.BodyContent = BodyContent.UserValue.TrimNullToEmpty();
         newEntry.BodyContentFormat = BodyContent.BodyContentFormat.SelectedContentFormatAsString;
-        newEntry.ShowPhotoSizes = ShowSizesEntry!.UserValue;
-        newEntry.PhotoDirection = PhotoDirectionEntry!.UserValue;
-        newEntry.Latitude = OptionalLocationEntry!.LatitudeEntry!.UserValue;
-        newEntry.Longitude = OptionalLocationEntry.LongitudeEntry!.UserValue;
-        newEntry.Elevation = OptionalLocationEntry.ElevationEntry!.UserValue;
-        newEntry.ShowLocation = OptionalLocationEntry.ShowLocationEntry!.UserValue;
+        newEntry.ShowPhotoSizes = ShowSizesEntry.UserValue;
+        newEntry.PhotoDirection = PhotoDirectionEntry.UserValue;
+        newEntry.Latitude = OptionalLocationEntry.LatitudeEntry.UserValue;
+        newEntry.Longitude = OptionalLocationEntry.LongitudeEntry.UserValue;
+        newEntry.Elevation = OptionalLocationEntry.ElevationEntry.UserValue;
+        newEntry.ShowLocation = OptionalLocationEntry.ShowLocationEntry.UserValue;
 
         return newEntry;
     }
@@ -300,7 +299,7 @@ Photo Content Notes:
     [BlockingCommand]
     public async Task ExtractNewLinks()
     {
-        await LinkExtraction.ExtractNewAndShowLinkContentEditors(BodyContent!.UserValue,
+        await LinkExtraction.ExtractNewAndShowLinkContentEditors(BodyContent.UserValue,
             StatusContext.ProgressTracker());
     }
 
@@ -512,24 +511,24 @@ Photo Content Notes:
 
     public async Task PhotoMetadataToCurrentContent(PhotoMetadata metadata)
     {
-        ApertureEntry!.UserValue = metadata.Aperture ?? string.Empty;
-        CameraMakeEntry!.UserValue = metadata.CameraMake ?? string.Empty;
-        CameraModelEntry!.UserValue = metadata.CameraModel ?? string.Empty;
-        FocalLengthEntry!.UserValue = metadata.FocalLength ?? string.Empty;
-        IsoEntry!.UserText = metadata.Iso?.ToString("F0") ?? string.Empty;
-        PhotoDirectionEntry!.UserText = metadata.PhotoDirection?.ToString("N0") ?? string.Empty;
-        OptionalLocationEntry!.LatitudeEntry!.UserText = metadata.Latitude?.ToString("F6") ?? string.Empty;
-        OptionalLocationEntry.LongitudeEntry!.UserText = metadata.Longitude?.ToString("F6") ?? string.Empty;
-        OptionalLocationEntry.ElevationEntry!.UserText = metadata.Elevation?.ToString("N0") ?? string.Empty;
-        LensEntry!.UserValue = metadata.Lens ?? string.Empty;
-        LicenseEntry!.UserValue = metadata.License ?? string.Empty;
-        PhotoCreatedByEntry!.UserValue = metadata.PhotoCreatedBy ?? string.Empty;
-        PhotoCreatedOnEntry!.UserText = metadata.PhotoCreatedOn.ToString("MM/dd/yyyy h:mm:ss tt");
-        PhotoCreatedOnUtcEntry!.UserText =
+        ApertureEntry.UserValue = metadata.Aperture ?? string.Empty;
+        CameraMakeEntry.UserValue = metadata.CameraMake ?? string.Empty;
+        CameraModelEntry.UserValue = metadata.CameraModel ?? string.Empty;
+        FocalLengthEntry.UserValue = metadata.FocalLength ?? string.Empty;
+        IsoEntry.UserText = metadata.Iso?.ToString("F0") ?? string.Empty;
+        PhotoDirectionEntry.UserText = metadata.PhotoDirection?.ToString("N0") ?? string.Empty;
+        OptionalLocationEntry.LatitudeEntry.UserText = metadata.Latitude?.ToString("F6") ?? string.Empty;
+        OptionalLocationEntry.LongitudeEntry.UserText = metadata.Longitude?.ToString("F6") ?? string.Empty;
+        OptionalLocationEntry.ElevationEntry.UserText = metadata.Elevation?.ToString("N0") ?? string.Empty;
+        LensEntry.UserValue = metadata.Lens ?? string.Empty;
+        LicenseEntry.UserValue = metadata.License ?? string.Empty;
+        PhotoCreatedByEntry.UserValue = metadata.PhotoCreatedBy ?? string.Empty;
+        PhotoCreatedOnEntry.UserText = metadata.PhotoCreatedOn.ToString("MM/dd/yyyy h:mm:ss tt");
+        PhotoCreatedOnUtcEntry.UserText =
             metadata.PhotoCreatedOnUtc?.ToString("MM/dd/yyyy h:mm:ss tt") ?? string.Empty;
-        ShutterSpeedEntry!.UserValue = metadata.ShutterSpeed ?? string.Empty;
-        TitleSummarySlugFolder!.SummaryEntry.UserValue = metadata.Summary ?? string.Empty;
-        TagEdit!.Tags = metadata.Tags ?? string.Empty;
+        ShutterSpeedEntry.UserValue = metadata.ShutterSpeed ?? string.Empty;
+        TitleSummarySlugFolder.SummaryEntry.UserValue = metadata.Summary ?? string.Empty;
+        TagEdit.Tags = metadata.Tags ?? string.Empty;
         TitleSummarySlugFolder.TitleEntry.UserValue = metadata.Title ?? string.Empty;
         await TitleSummarySlugFolder.TitleToSlug();
         TitleSummarySlugFolder.FolderEntry.UserValue = metadata.PhotoCreatedOn.Year.ToString("F0");
@@ -546,8 +545,8 @@ Photo Content Notes:
             return;
         }
 
-        if (OptionalLocationEntry!.LatitudeEntry!.UserValue == null ||
-            OptionalLocationEntry.LongitudeEntry!.UserValue == null)
+        if (OptionalLocationEntry.LatitudeEntry.UserValue == null ||
+            OptionalLocationEntry.LongitudeEntry.UserValue == null)
         {
             await StatusContext.ToastError("Latitude or Longitude is missing?");
             return;
@@ -571,12 +570,12 @@ Photo Content Notes:
         newPartialPoint.CreatedOn = frozenNow;
         newPartialPoint.FeedOn = frozenNow;
         newPartialPoint.BodyContent = BracketCodePhotos.Create(DbEntry);
-        newPartialPoint.Title = $"Point From {TitleSummarySlugFolder!.TitleEntry.UserValue}";
-        newPartialPoint.Tags = TagEdit!.TagListString();
+        newPartialPoint.Title = $"Point From {TitleSummarySlugFolder.TitleEntry.UserValue}";
+        newPartialPoint.Tags = TagEdit.TagListString();
         newPartialPoint.Slug = SlugTagTools.CreateSlug(true, newPartialPoint.Title);
         newPartialPoint.Latitude = OptionalLocationEntry.LatitudeEntry.UserValue.Value;
         newPartialPoint.Longitude = OptionalLocationEntry.LongitudeEntry.UserValue.Value;
-        newPartialPoint.Elevation = OptionalLocationEntry.ElevationEntry!.UserValue;
+        newPartialPoint.Elevation = OptionalLocationEntry.ElevationEntry.UserValue;
 
         var pointWindow = await PointContentEditorWindow.CreateInstance(newPartialPoint);
 
@@ -705,7 +704,7 @@ Photo Content Notes:
 
         SelectedFileBitmapSource = await ImageHelpers.InMemoryThumbnailFromFile(SelectedFile, 450, 72);
 
-        TitleSummarySlugFolder?.CheckForChangesToTitleToFunctionStates();
+        TitleSummarySlugFolder.CheckForChangesToTitleToFunctionStates();
     }
 
     [BlockingCommand]
@@ -730,7 +729,8 @@ Photo Content Notes:
     [BlockingCommand]
     public async Task ViewPhotoMetadata()
     {
-        await FileMetadataReport.AllFileMetadataToHtmlDocumentAndOpen(SelectedFile, UserSettingsSingleton.CurrentSettings().FfprobeExe(), StatusContext);
+        await FileMetadataReport.AllFileMetadataToHtmlDocumentAndOpen(SelectedFile,
+            UserSettingsSingleton.CurrentSettings().FfprobeExe(), StatusContext);
     }
 
     [BlockingCommand]

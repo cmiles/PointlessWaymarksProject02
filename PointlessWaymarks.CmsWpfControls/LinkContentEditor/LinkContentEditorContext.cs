@@ -38,19 +38,19 @@ public partial class LinkContentEditorContext : IHasChanges, IHasValidationIssue
         PropertyChanged += OnPropertyChanged;
     }
 
-    public StringDataEntryContext? AuthorEntry { get; set; }
-    public StringDataEntryContext? CommentsEntry { get; set; }
-    public CreatedAndUpdatedByAndOnDisplayContext? CreatedUpdatedDisplay { get; set; }
+    public StringDataEntryContext AuthorEntry { get; set; } = null!;
+    public StringDataEntryContext CommentsEntry { get; set; } = null!;
+    public CreatedAndUpdatedByAndOnDisplayContext CreatedUpdatedDisplay { get; set; } = null!;
     public LinkContent DbEntry { get; set; }
-    public StringDataEntryContext? DescriptionEntry { get; set; }
-    public HelpDisplayContext? HelpContext { get; set; }
-    public ConversionDataEntryContext<DateTime?>? LinkDateTimeEntry { get; set; }
-    public StringDataEntryContext? LinkUrlEntry { get; set; }
-    public BoolDataEntryContext? ShowInLinkRssEntry { get; set; }
-    public StringDataEntryContext? SiteEntry { get; set; }
+    public StringDataEntryContext DescriptionEntry { get; set; } = null!;
+    public HelpDisplayContext HelpContext { get; set; } = null!;
+    public ConversionDataEntryContext<DateTime?> LinkDateTimeEntry { get; set; } = null!;
+    public StringDataEntryContext LinkUrlEntry { get; set; } = null!;
+    public BoolDataEntryContext ShowInLinkRssEntry { get; set; } = null!;
+    public StringDataEntryContext SiteEntry { get; set; } = null!;
     public StatusControlContext StatusContext { get; set; }
-    public TagsEditorContext? TagEdit { get; set; }
-    public StringDataEntryContext? TitleEntry { get; set; }
+    public TagsEditorContext TagEdit { get; set; } = null!;
+    public StringDataEntryContext TitleEntry { get; set; } = null!;
 
 
     public void CheckForChangesAndValidationIssues()
@@ -88,19 +88,19 @@ public partial class LinkContentEditorContext : IHasChanges, IHasValidationIssue
         if (DbEntry.Id > 0)
         {
             newEntry.LastUpdatedOn = DateTime.Now;
-            newEntry.LastUpdatedBy = CreatedUpdatedDisplay!.UpdatedByEntry.UserValue.TrimNullToEmpty();
+            newEntry.LastUpdatedBy = CreatedUpdatedDisplay.UpdatedByEntry.UserValue.TrimNullToEmpty();
         }
 
-        newEntry.Tags = TagEdit!.TagListString();
-        newEntry.CreatedBy = CreatedUpdatedDisplay!.CreatedByEntry.UserValue.TrimNullToEmpty();
-        newEntry.Comments = CommentsEntry!.UserValue.TrimNullToEmpty();
-        newEntry.Url = LinkUrlEntry!.UserValue.TrimNullToEmpty();
-        newEntry.Title = TitleEntry!.UserValue.TrimNullToEmpty();
-        newEntry.Site = SiteEntry!.UserValue.TrimNullToEmpty();
-        newEntry.Author = AuthorEntry!.UserValue.TrimNullToEmpty();
-        newEntry.Description = DescriptionEntry!.UserValue.TrimNullToEmpty();
-        newEntry.LinkDate = LinkDateTimeEntry!.UserValue;
-        newEntry.ShowInLinkRss = ShowInLinkRssEntry!.UserValue;
+        newEntry.Tags = TagEdit.TagListString();
+        newEntry.CreatedBy = CreatedUpdatedDisplay.CreatedByEntry.UserValue.TrimNullToEmpty();
+        newEntry.Comments = CommentsEntry.UserValue.TrimNullToEmpty();
+        newEntry.Url = LinkUrlEntry.UserValue.TrimNullToEmpty();
+        newEntry.Title = TitleEntry.UserValue.TrimNullToEmpty();
+        newEntry.Site = SiteEntry.UserValue.TrimNullToEmpty();
+        newEntry.Author = AuthorEntry.UserValue.TrimNullToEmpty();
+        newEntry.Description = DescriptionEntry.UserValue.TrimNullToEmpty();
+        newEntry.LinkDate = LinkDateTimeEntry.UserValue;
+        newEntry.ShowInLinkRss = ShowInLinkRssEntry.UserValue;
 
         return newEntry;
     }
@@ -109,7 +109,7 @@ public partial class LinkContentEditorContext : IHasChanges, IHasValidationIssue
     public async Task ExtractDataFromLink()
     {
         await ThreadSwitcher.ResumeForegroundAsync();
-        var url = LinkUrlEntry!.UserValue;
+        var url = LinkUrlEntry.UserValue;
         var progress = StatusContext.ProgressTracker();
 
         var (generationReturn, linkMetadata) =
@@ -126,16 +126,16 @@ public partial class LinkContentEditorContext : IHasChanges, IHasValidationIssue
 
         progress.Report("Link metadata extracted successfully");
         if (!string.IsNullOrWhiteSpace(linkMetadata.Title))
-            TitleEntry!.UserValue = linkMetadata.Title.TrimNullToEmpty();
+            TitleEntry.UserValue = linkMetadata.Title.TrimNullToEmpty();
         if (!string.IsNullOrWhiteSpace(linkMetadata.Author))
-            AuthorEntry!.UserValue = linkMetadata.Author.TrimNullToEmpty();
+            AuthorEntry.UserValue = linkMetadata.Author.TrimNullToEmpty();
         if (!string.IsNullOrWhiteSpace(linkMetadata.Description))
-            DescriptionEntry!.UserValue = linkMetadata.Description.TrimNullToEmpty();
+            DescriptionEntry.UserValue = linkMetadata.Description.TrimNullToEmpty();
         if (!string.IsNullOrWhiteSpace(linkMetadata.Site))
-            SiteEntry!.UserValue = linkMetadata.Site.TrimNullToEmpty();
+            SiteEntry.UserValue = linkMetadata.Site.TrimNullToEmpty();
 
         if (linkMetadata.LinkDate != null)
-            LinkDateTimeEntry!.UserText = linkMetadata.LinkDate.Value.ToString("M/d/yyyy h:mm:ss tt");
+            LinkDateTimeEntry.UserText = linkMetadata.LinkDate.Value.ToString("M/d/yyyy h:mm:ss tt");
 
         progress.Report("Ending Metadata Extraction");
     }
@@ -225,7 +225,7 @@ public partial class LinkContentEditorContext : IHasChanges, IHasValidationIssue
 
         try
         {
-            if (string.IsNullOrWhiteSpace(LinkUrlEntry!.UserValue))
+            if (string.IsNullOrWhiteSpace(LinkUrlEntry.UserValue))
             {
                 await StatusContext.ToastWarning("Link is Blank?");
                 return;

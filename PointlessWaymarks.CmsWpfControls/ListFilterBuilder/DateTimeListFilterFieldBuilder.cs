@@ -22,11 +22,11 @@ public partial class DateTimeListFilterFieldBuilder
     public bool ShowDateTimeOneTextWarning { get; set; }
     public bool ShowDateTimeTwoTextWarning { get; set; }
     public bool UserDateTimeOneTextConverts { get; set; }
-    public string UserDateTimeOneTranslation { get; set; }
+    public string UserDateTimeOneTranslation { get; set; } = string.Empty;
     public string UserDateTimeTextOne { get; set; } = string.Empty;
     public string UserDateTimeTextTwo { get; set; } = string.Empty;
     public bool UserDateTimeTwoTextConverts { get; set; }
-    public string UserDateTimeTwoTranslation { get; set; }
+    public string UserDateTimeTwoTranslation { get; set; } = string.Empty;
 
     private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {

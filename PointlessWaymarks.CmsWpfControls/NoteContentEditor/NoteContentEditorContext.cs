@@ -42,13 +42,13 @@ public partial class NoteContentEditorContext : IHasChanges, IHasValidationIssue
         DbEntry = dbEntry;
     }
 
-    public BodyContentEditorContext? BodyContent { get; set; }
-    public ContentIdViewerControlContext? ContentId { get; set; }
-    public CreatedAndUpdatedByAndOnDisplayContext? CreatedUpdatedDisplay { get; set; }
+    public BodyContentEditorContext BodyContent { get; set; } = null!;
+    public ContentIdViewerControlContext ContentId { get; set; } = null!;
+    public CreatedAndUpdatedByAndOnDisplayContext CreatedUpdatedDisplay { get; set; } = null!;
     public NoteContent DbEntry { get; set; }
-    public ContentFolderContext? FolderEntry { get; set; }
-    public HelpDisplayContext? HelpContext { get; set; }
-    public ContentSiteFeedAndIsDraftContext? MainSiteFeed { get; set; }
+    public ContentFolderContext FolderEntry { get; set; } = null!;
+    public HelpDisplayContext HelpContext { get; set; } = null!;
+    public ContentSiteFeedAndIsDraftContext MainSiteFeed { get; set; } = null!;
 
     public string NoteEditorHelpText =>
         @"
@@ -57,11 +57,10 @@ public partial class NoteContentEditorContext : IHasChanges, IHasValidationIssue
 Note Content is like a simplified Post - no title and slug to edit or maintain and no Updates data to maintain. You can always use a Post instead of a note - but you might find it convenient if trying to quickly post a news item or a couple of links to do it as a Note rather than a Post.
 ";
 
-    public BoolDataEntryContext ShowInSearch { get; set; }
-
+    public BoolDataEntryContext ShowInSearch { get; set; } = null!;
     public StatusControlContext StatusContext { get; set; }
-    public StringDataEntryContext? Summary { get; set; }
-    public TagsEditorContext? TagEdit { get; set; }
+    public StringDataEntryContext Summary { get; set; } = null!;
+    public TagsEditorContext TagEdit { get; set; } = null!;
 
     public void CheckForChangesAndValidationIssues()
     {
@@ -98,18 +97,18 @@ Note Content is like a simplified Post - no title and slug to edit or maintain a
         if (DbEntry.Id > 0)
         {
             newEntry.LastUpdatedOn = DateTime.Now;
-            newEntry.LastUpdatedBy = CreatedUpdatedDisplay!.UpdatedByEntry.UserValue.TrimNullToEmpty();
+            newEntry.LastUpdatedBy = CreatedUpdatedDisplay.UpdatedByEntry.UserValue.TrimNullToEmpty();
         }
 
-        newEntry.Folder = FolderEntry!.UserValue.TrimNullToEmpty();
-        newEntry.Summary = Summary!.UserValue.TrimNullToEmpty();
-        newEntry.ShowInMainSiteFeed = MainSiteFeed!.ShowInMainSiteFeedEntry.UserValue;
+        newEntry.Folder = FolderEntry.UserValue.TrimNullToEmpty();
+        newEntry.Summary = Summary.UserValue.TrimNullToEmpty();
+        newEntry.ShowInMainSiteFeed = MainSiteFeed.ShowInMainSiteFeedEntry.UserValue;
         newEntry.FeedOn = MainSiteFeed.FeedOnEntry.UserValue;
         newEntry.IsDraft = MainSiteFeed.IsDraftEntry.UserValue;
         newEntry.ShowInSearch = ShowInSearch.UserValue;
-        newEntry.Tags = TagEdit!.TagListString();
-        newEntry.CreatedBy = CreatedUpdatedDisplay!.CreatedByEntry.UserValue.TrimNullToEmpty();
-        newEntry.BodyContent = BodyContent!.UserValue.TrimNullToEmpty();
+        newEntry.Tags = TagEdit.TagListString();
+        newEntry.CreatedBy = CreatedUpdatedDisplay.CreatedByEntry.UserValue.TrimNullToEmpty();
+        newEntry.BodyContent = BodyContent.UserValue.TrimNullToEmpty();
         newEntry.BodyContentFormat = BodyContent.BodyContentFormat.SelectedContentFormatAsString;
 
         return newEntry;
@@ -118,7 +117,7 @@ Note Content is like a simplified Post - no title and slug to edit or maintain a
     [BlockingCommand]
     public async Task ExtractNewLinks()
     {
-        await LinkExtraction.ExtractNewAndShowLinkContentEditors(BodyContent!.UserValue,
+        await LinkExtraction.ExtractNewAndShowLinkContentEditors(BodyContent.UserValue,
             StatusContext.ProgressTracker());
     }
 

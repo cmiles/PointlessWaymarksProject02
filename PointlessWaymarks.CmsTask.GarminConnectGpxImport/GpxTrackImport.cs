@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using Garmin.Connect;
 using Garmin.Connect.Auth;
-using NetTopologySuite.IO;
 using PointlessWaymarks.CmsData;
 using PointlessWaymarks.CmsData.CommonHtml;
 using PointlessWaymarks.CmsData.ContentGeneration;
@@ -69,7 +68,7 @@ public class GpxTrackImport
                 return;
             }
 
-        //9/25/2022 - I haven't done any research or extensive testing but the assumption here is
+        //9/25/2022 - I haven't done any research or extensive testing, but the assumption here is
         //that for large search ranges that it will be better to only query Garmin Connect for a limited
         //number of days...
         var searchEndDate = DateTime.Now.Date.AddTicks(-1);
@@ -88,7 +87,8 @@ public class GpxTrackImport
                 searchEndDate.Date.AddDays(-(settings.DownloadDaysBack % searchSegmentLength) + 1),
                 searchEndDate.AddDays(1).Date.AddTicks(-1)));
 
-        var garminConnectAuthParameters = new BasicAuthParameters(settings.ConnectUserName, settings.ConnectPassword, new December2024UpdatedStaticUserAgent());
+        var garminConnectAuthParameters = new BasicAuthParameters(settings.ConnectUserName, settings.ConnectPassword,
+            new December2024UpdatedStaticUserAgent());
         var client = new GarminConnectClient(new GarminConnectContext(new HttpClient(), garminConnectAuthParameters));
 
         var fileList = new List<(FileInfo activityFileInfo, FileInfo? gpxFileInfo)>();
@@ -217,14 +217,16 @@ public class GpxTrackImport
                         await CommonContentValidation.ValidateSlugLocalAndDb(newEntry.Slug, newEntry.ContentId);
                 }
 
-                if (UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagOnImportTypes.Contains(Db.ContentTypeDisplayStringForLine, StringComparer.InvariantCultureIgnoreCase) &&
+                if (UserSettingsSingleton.CurrentSettings().FeatureIntersectionTagOnImportTypes
+                        .Contains(Db.ContentTypeDisplayStringForLine, StringComparer.InvariantCultureIgnoreCase) &&
                     !string.IsNullOrWhiteSpace(siteSettings.FeatureIntersectionTagSettingsFile))
                 {
                     var featureToCheck = newEntry.FeatureFromGeoJsonLine();
 
                     if (featureToCheck != null)
                     {
-                        var tagResult = await featureToCheck.IntersectionTags(siteSettings.FeatureIntersectionTagSettingsFile,
+                        var tagResult = await featureToCheck.IntersectionTags(
+                            siteSettings.FeatureIntersectionTagSettingsFile,
                             CancellationToken.None,
                             new ConsoleProgress());
 
@@ -245,15 +247,15 @@ public class GpxTrackImport
                 {
                     Log.Error(
                         "Save Failed! GPX: {gpxFileFullName}, Activity: {activityFileFullName}",
-                        loopFile.gpxFileInfo.FullName, loopFile.activityFileInfo.FullName);
+                        loopFile.gpxFileInfo?.FullName, loopFile.activityFileInfo.FullName);
                     errorList.Add(
-                        $"Save Failed! GPX: {loopFile.gpxFileInfo.FullName}, Activity: {loopFile.activityFileInfo.FullName}");
+                        $"Save Failed! GPX: {loopFile.gpxFileInfo?.FullName}, Activity: {loopFile.activityFileInfo.FullName}");
                     continue;
                 }
 
 
                 Log.Verbose(
-                    $"New Line - {loopFile.gpxFileInfo.FullName} - Track {innerLoopCounter} of {tracksList.Count}");
+                    $"New Line - {loopFile.gpxFileInfo?.FullName} - Track {innerLoopCounter} of {tracksList.Count}");
 
 
                 if (lineContent?.MainPicture != null)

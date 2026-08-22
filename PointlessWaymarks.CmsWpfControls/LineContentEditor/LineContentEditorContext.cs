@@ -70,32 +70,32 @@ public partial class LineContentEditorContext : IHasChanges, IHasValidationIssue
         PropertyChanged += OnPropertyChanged;
     }
 
-    public ActivityTypeContext? ActivityTypeEntry { get; set; }
-    public BodyContentEditorContext? BodyContent { get; set; }
-    public ConversionDataEntryContext<double>? ClimbElevationEntry { get; set; }
-    public ContentIdViewerControlContext? ContentId { get; set; }
-    public CreatedAndUpdatedByAndOnDisplayContext? CreatedUpdatedDisplay { get; set; }
+    public ActivityTypeContext ActivityTypeEntry { get; set; } = null!;
+    public BodyContentEditorContext BodyContent { get; set; } = null!;
+    public ConversionDataEntryContext<double> ClimbElevationEntry { get; set; } = null!;
+    public ContentIdViewerControlContext ContentId { get; set; } = null!;
+    public CreatedAndUpdatedByAndOnDisplayContext CreatedUpdatedDisplay { get; set; } = null!;
     public LineContent DbEntry { get; set; }
-    public ConversionDataEntryContext<double>? DescentElevationEntry { get; set; }
-    public ConversionDataEntryContext<double>? DistanceEntry { get; set; }
-    public HelpDisplayContext? HelpContext { get; set; }
-    public BoolDataEntryContext? IncludeInActivityLogEntry { get; set; }
+    public ConversionDataEntryContext<double> DescentElevationEntry { get; set; } = null!;
+    public ConversionDataEntryContext<double> DistanceEntry { get; set; } = null!;
+    public HelpDisplayContext HelpContext { get; set; } = null!;
+    public BoolDataEntryContext IncludeInActivityLogEntry { get; set; } = null!;
     public WorkQueue<FromWebViewMessage> JsonFromWebView { get; set; }
     public string LineGeoJson { get; set; } = string.Empty;
-    public ContentSiteFeedAndIsDraftContext? MainSiteFeed { get; set; }
+    public ContentSiteFeedAndIsDraftContext MainSiteFeed { get; set; } = null!;
     public Action<Uri, string> MapPreviewNavigationManager { get; set; }
-    public ConversionDataEntryContext<double>? MaximumElevationEntry { get; set; }
-    public ConversionDataEntryContext<double>? MinimumElevationEntry { get; set; }
-    public BoolDataEntryContext? PublicDownloadLinkEntry { get; set; }
-    public ConversionDataEntryContext<DateTime?>? RecordingEndedOnEntry { get; set; }
-    public ConversionDataEntryContext<DateTime?>? RecordingStartedOnEntry { get; set; }
+    public ConversionDataEntryContext<double> MaximumElevationEntry { get; set; } = null!;
+    public ConversionDataEntryContext<double> MinimumElevationEntry { get; set; } = null!;
+    public BoolDataEntryContext PublicDownloadLinkEntry { get; set; } = null!;
+    public ConversionDataEntryContext<DateTime?> RecordingEndedOnEntry { get; set; } = null!;
+    public ConversionDataEntryContext<DateTime?> RecordingStartedOnEntry { get; set; } = null!;
     public bool ReplaceElevationOnImport { get; set; }
-    public BoolDataEntryContext? ShowContentReferencesOnMapEntry { get; set; }
-    public BoolDataEntryContext? ShowInSearch { get; set; }
+    public BoolDataEntryContext ShowContentReferencesOnMapEntry { get; set; } = null!;
+    public BoolDataEntryContext ShowInSearch { get; set; } = null!;
     public StatusControlContext StatusContext { get; set; }
-    public TagsEditorContext? TagEdit { get; set; }
-    public TitleSummarySlugEditorContext? TitleSummarySlugFolder { get; set; }
-    public UpdateNotesEditorContext? UpdateNotes { get; set; }
+    public TagsEditorContext TagEdit { get; set; } = null!;
+    public TitleSummarySlugEditorContext TitleSummarySlugFolder { get; set; } = null!;
+    public UpdateNotesEditorContext UpdateNotes { get; set; } = null!;
     public bool UpdateStatsOnImport { get; set; } = true;
 
     public void CheckForChangesAndValidationIssues()
@@ -145,7 +145,7 @@ public partial class LineContentEditorContext : IHasChanges, IHasValidationIssue
             return;
         }
 
-        TagEdit!.Tags =
+        TagEdit.Tags =
             $"{TagEdit.Tags}{(string.IsNullOrWhiteSpace(TagEdit.Tags) ? "" : ",")}{string.Join(",", possibleTags)}";
     }
 
@@ -177,39 +177,39 @@ public partial class LineContentEditorContext : IHasChanges, IHasValidationIssue
         if (DbEntry.Id > 0)
         {
             newEntry.LastUpdatedOn = DateTime.Now;
-            newEntry.LastUpdatedBy = CreatedUpdatedDisplay!.UpdatedByEntry.UserValue.TrimNullToEmpty();
+            newEntry.LastUpdatedBy = CreatedUpdatedDisplay.UpdatedByEntry.UserValue.TrimNullToEmpty();
         }
 
-        newEntry.Folder = TitleSummarySlugFolder!.FolderEntry.UserValue.TrimNullToEmpty();
+        newEntry.Folder = TitleSummarySlugFolder.FolderEntry.UserValue.TrimNullToEmpty();
         newEntry.Slug = TitleSummarySlugFolder.SlugEntry.UserValue.TrimNullToEmpty();
         newEntry.Summary = TitleSummarySlugFolder.SummaryEntry.UserValue.TrimNullToEmpty();
-        newEntry.ShowInMainSiteFeed = MainSiteFeed!.ShowInMainSiteFeedEntry.UserValue;
+        newEntry.ShowInMainSiteFeed = MainSiteFeed.ShowInMainSiteFeedEntry.UserValue;
         newEntry.FeedOn = MainSiteFeed.FeedOnEntry.UserValue;
         newEntry.IsDraft = MainSiteFeed.IsDraftEntry.UserValue;
-        newEntry.ShowInSearch = ShowInSearch!.UserValue;
-        newEntry.Tags = TagEdit!.TagListString();
+        newEntry.ShowInSearch = ShowInSearch.UserValue;
+        newEntry.Tags = TagEdit.TagListString();
         newEntry.Title = TitleSummarySlugFolder.TitleEntry.UserValue.TrimNullToEmpty();
-        newEntry.CreatedBy = CreatedUpdatedDisplay!.CreatedByEntry.UserValue.TrimNullToEmpty();
-        newEntry.UpdateNotes = UpdateNotes!.UserValue.TrimNullToEmpty();
+        newEntry.CreatedBy = CreatedUpdatedDisplay.CreatedByEntry.UserValue.TrimNullToEmpty();
+        newEntry.UpdateNotes = UpdateNotes.UserValue.TrimNullToEmpty();
         newEntry.UpdateNotesFormat = UpdateNotes.UpdateNotesFormat.SelectedContentFormatAsString;
-        newEntry.BodyContent = BodyContent!.UserValue.TrimNullToEmpty();
+        newEntry.BodyContent = BodyContent.UserValue.TrimNullToEmpty();
         newEntry.BodyContentFormat = BodyContent.BodyContentFormat.SelectedContentFormatAsString;
         newEntry.Line = LineGeoJson;
 
-        newEntry.PublicDownloadLink = PublicDownloadLinkEntry!.UserValue;
+        newEntry.PublicDownloadLink = PublicDownloadLinkEntry.UserValue;
 
-        newEntry.RecordingStartedOn = RecordingStartedOnEntry!.UserValue;
-        newEntry.RecordingEndedOn = RecordingEndedOnEntry!.UserValue;
+        newEntry.RecordingStartedOn = RecordingStartedOnEntry.UserValue;
+        newEntry.RecordingEndedOn = RecordingEndedOnEntry.UserValue;
 
-        newEntry.IncludeInActivityLog = IncludeInActivityLogEntry!.UserValue;
-        newEntry.ActivityType = ActivityTypeEntry!.UserValue;
-        newEntry.ShowContentReferencesOnMap = ShowContentReferencesOnMapEntry!.UserValue;
+        newEntry.IncludeInActivityLog = IncludeInActivityLogEntry.UserValue;
+        newEntry.ActivityType = ActivityTypeEntry.UserValue;
+        newEntry.ShowContentReferencesOnMap = ShowContentReferencesOnMapEntry.UserValue;
 
-        newEntry.LineDistance = DistanceEntry!.UserValue;
-        newEntry.MaximumElevation = MaximumElevationEntry!.UserValue;
-        newEntry.MinimumElevation = MinimumElevationEntry!.UserValue;
-        newEntry.ClimbElevation = ClimbElevationEntry!.UserValue;
-        newEntry.DescentElevation = DescentElevationEntry!.UserValue;
+        newEntry.LineDistance = DistanceEntry.UserValue;
+        newEntry.MaximumElevation = MaximumElevationEntry.UserValue;
+        newEntry.MinimumElevation = MinimumElevationEntry.UserValue;
+        newEntry.ClimbElevation = ClimbElevationEntry.UserValue;
+        newEntry.DescentElevation = DescentElevationEntry.UserValue;
 
         return newEntry;
     }
@@ -218,7 +218,7 @@ public partial class LineContentEditorContext : IHasChanges, IHasValidationIssue
     public async Task ExtractNewLinks()
     {
         await LinkExtraction.ExtractNewAndShowLinkContentEditors(
-            $"{BodyContent!.UserValue} {UpdateNotes!.UserValue}", StatusContext.ProgressTracker());
+            $"{BodyContent.UserValue} {UpdateNotes.UserValue}", StatusContext.ProgressTracker());
     }
 
     [BlockingCommand]
@@ -487,7 +487,7 @@ public partial class LineContentEditorContext : IHasChanges, IHasValidationIssue
             return;
         }
 
-        var photos = (await BracketCodePhotos.DbContentFromBracketCodes(BodyContent!.UserValue)).Cast<object>();
+        var photos = (await BracketCodePhotos.DbContentFromBracketCodes(BodyContent.UserValue)).Cast<object>();
         var photosWithDetails = (await BracketCodePhotosWithDetails.DbContentFromBracketCodes(BodyContent.UserValue))
             .Cast<object>();
         var photoLinks = (await BracketCodePhotoLinks.DbContentFromBracketCodes(BodyContent.UserValue)).Cast<object>();
@@ -586,7 +586,7 @@ public partial class LineContentEditorContext : IHasChanges, IHasValidationIssue
     private async Task UpdateLineFromRoute(GpxTools.GpxRouteInformation routeToImport, bool replaceElevations,
         bool updateStats)
     {
-        if (string.IsNullOrWhiteSpace(TitleSummarySlugFolder!.TitleEntry.UserValue))
+        if (string.IsNullOrWhiteSpace(TitleSummarySlugFolder.TitleEntry.UserValue))
             TitleSummarySlugFolder.TitleEntry.UserValue = routeToImport.Name;
         if (string.IsNullOrWhiteSpace(TitleSummarySlugFolder.SummaryEntry.UserValue))
             TitleSummarySlugFolder.SummaryEntry.UserValue = routeToImport.Description;
@@ -600,7 +600,7 @@ public partial class LineContentEditorContext : IHasChanges, IHasValidationIssue
     private async Task UpdateLineFromTrack(GpxTools.GpxTrackInformation trackToImport, bool replaceElevations,
         bool updateStats)
     {
-        if (string.IsNullOrWhiteSpace(TitleSummarySlugFolder!.TitleEntry.UserValue))
+        if (string.IsNullOrWhiteSpace(TitleSummarySlugFolder.TitleEntry.UserValue))
             TitleSummarySlugFolder.TitleEntry.UserValue = trackToImport.Name;
         if (string.IsNullOrWhiteSpace(TitleSummarySlugFolder.SummaryEntry.UserValue))
             TitleSummarySlugFolder.SummaryEntry.UserValue = trackToImport.Description;
@@ -615,9 +615,9 @@ public partial class LineContentEditorContext : IHasChanges, IHasValidationIssue
         {
             await UpdateStatistics();
 
-            RecordingStartedOnEntry!.UserText =
+            RecordingStartedOnEntry.UserText =
                 trackToImport.StartsOnLocal?.ToString("MM/dd/yyyy h:mm:ss tt") ?? string.Empty;
-            RecordingEndedOnEntry!.UserText =
+            RecordingEndedOnEntry.UserText =
                 trackToImport.EndsOnLocal?.ToString("MM/dd/yyyy h:mm:ss tt") ?? string.Empty;
         }
     }
@@ -637,11 +637,11 @@ public partial class LineContentEditorContext : IHasChanges, IHasValidationIssue
 
         var lineStatistics = DistanceTools.LineStatsInImperialFromCoordinateList(coordinateList);
 
-        DistanceEntry!.UserText = lineStatistics.Length.ToString("F2");
-        MaximumElevationEntry!.UserText = lineStatistics.MaximumElevation.ToString("F0");
-        MinimumElevationEntry!.UserText = lineStatistics.MinimumElevation.ToString("F0");
-        ClimbElevationEntry!.UserText = lineStatistics.ElevationClimb.ToString("F0");
-        DescentElevationEntry!.UserText = lineStatistics.ElevationDescent.ToString("F0");
+        DistanceEntry.UserText = lineStatistics.Length.ToString("F2");
+        MaximumElevationEntry.UserText = lineStatistics.MaximumElevation.ToString("F0");
+        MinimumElevationEntry.UserText = lineStatistics.MinimumElevation.ToString("F0");
+        ClimbElevationEntry.UserText = lineStatistics.ElevationClimb.ToString("F0");
+        DescentElevationEntry.UserText = lineStatistics.ElevationDescent.ToString("F0");
     }
 
     [BlockingCommand]

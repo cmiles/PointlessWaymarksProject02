@@ -57,6 +57,7 @@ public partial class MainWindow
     public CombinerListContext? CombinerTabContext { get; set; }
     public HelpDisplayContext HelpTabContext { get; set; }
 
+    [NotObservable]
     public string HelpText =>
         $"""
          ## Utilitarian Image Combiner

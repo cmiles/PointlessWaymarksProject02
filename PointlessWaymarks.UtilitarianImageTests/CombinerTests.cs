@@ -14,18 +14,18 @@ public class CombinerTests
     public FileInfo? GreenDownLeftOfCenterTestImage { get; set; }
     public FileInfo? GreenDownRightOfCenterTestImage { get; set; }
     public DirectoryInfo? OriginalImageDirectory { get; set; }
-    public FileInfo ReferenceResulEGridFiveRows { get; set; }
-    public FileInfo ReferenceResulFGridThreeByThree { get; set; }
+    public FileInfo? ReferenceResulEGridFiveRows { get; set; }
+    public FileInfo? ReferenceResulFGridThreeByThree { get; set; }
     public FileInfo? ReferenceResultARotatedVertical { get; set; }
     public FileInfo? ReferenceResultBRotatedHorizontal { get; set; }
-    public FileInfo ReferenceResultCGridAutoRowsAndColumns { get; set; }
+    public FileInfo? ReferenceResultCGridAutoRowsAndColumns { get; set; }
     public FileInfo? ReferenceResultDGridFourColumns { get; set; }
     public FileInfo? ResultARotatedVertical { get; set; }
     public FileInfo? ResultBRotatedHorizontal { get; set; }
-    public FileInfo ResultCGridAutoRowsAndColumns { get; set; }
+    public FileInfo? ResultCGridAutoRowsAndColumns { get; set; }
     public FileInfo? ResultDGridFourColumns { get; set; }
-    public FileInfo ResultEGridFiveRows { get; set; }
-    public FileInfo ResultFGridThreeByThreeRows { get; set; }
+    public FileInfo? ResultEGridFiveRows { get; set; }
+    public FileInfo? ResultFGridThreeByThreeRows { get; set; }
     public DirectoryInfo? UnitTestDirectory { get; set; }
 
     [Test]
@@ -91,13 +91,13 @@ public class CombinerTests
             [
                 BlueBottomTestImage!.FullName, BlueTopTestImage!.FullName, GreenBlueSquareTestImage!.FullName,
                 GreenDownLeftOfCenterTestImage!.FullName, GreenDownRightOfCenterTestImage!.FullName
-            ], 3000, 3000, ResultCGridAutoRowsAndColumns.FullName,
+            ], 3000, 3000, ResultCGridAutoRowsAndColumns!.FullName,
             92, SKColors.Blue, new ConsoleProgress());
 
         ResultCGridAutoRowsAndColumns.Refresh();
 
         Assert.That(Compare.ImagesAreEqual(ResultCGridAutoRowsAndColumns.FullName,
-            ReferenceResultCGridAutoRowsAndColumns.FullName));
+            ReferenceResultCGridAutoRowsAndColumns!.FullName));
     }
 
         [Test]
@@ -127,13 +127,13 @@ public class CombinerTests
             [
                 BlueBottomTestImage!.FullName, BlueTopTestImage!.FullName, GreenBlueSquareTestImage!.FullName,
                 GreenDownLeftOfCenterTestImage!.FullName, GreenDownRightOfCenterTestImage!.FullName
-            ], 3000, 3000, ResultEGridFiveRows.FullName,
+            ], 3000, 3000, ResultEGridFiveRows!.FullName,
             92, SKColors.Bisque, new ConsoleProgress(), 5);
 
         ResultEGridFiveRows.Refresh();
 
         Assert.That(Compare.ImagesAreEqual(ResultEGridFiveRows.FullName,
-            ReferenceResulEGridFiveRows.FullName));
+            ReferenceResulEGridFiveRows!.FullName));
     }
 
     [Test]
@@ -145,13 +145,13 @@ public class CombinerTests
             [
                 GreenDownLeftOfCenterTestImage!.FullName, GreenDownRightOfCenterTestImage!.FullName,
                 BlueBottomTestImage!.FullName, BlueTopTestImage!.FullName, GreenBlueSquareTestImage!.FullName
-            ], 3000, 3000, ResultFGridThreeByThreeRows.FullName,
+            ], 3000, 3000, ResultFGridThreeByThreeRows!.FullName,
             92, SKColors.Red, new ConsoleProgress(), 3, 3);
 
         ResultFGridThreeByThreeRows.Refresh();
 
         Assert.That(Compare.ImagesAreEqual(ResultFGridThreeByThreeRows.FullName,
-            ReferenceResulFGridThreeByThree.FullName));
+            ReferenceResulFGridThreeByThree!.FullName));
     }
 
     public void ResetTestFiles()

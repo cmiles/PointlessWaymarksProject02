@@ -64,21 +64,21 @@ public partial class GeoJsonContentEditorContext : IHasChanges, IHasValidationIs
         PropertyChanged += OnPropertyChanged;
     }
 
-    public BodyContentEditorContext? BodyContent { get; set; }
-    public ContentIdViewerControlContext? ContentId { get; set; }
-    public CreatedAndUpdatedByAndOnDisplayContext? CreatedUpdatedDisplay { get; set; }
+    public BodyContentEditorContext BodyContent { get; set; } = null!;
+    public ContentIdViewerControlContext ContentId { get; set; } = null!;
+    public CreatedAndUpdatedByAndOnDisplayContext CreatedUpdatedDisplay { get; set; } = null!;
     public GeoJsonContent DbEntry { get; set; }
     public string GeoJsonText { get; set; } = string.Empty;
-    public HelpDisplayContext? HelpContext { get; set; }
-    public ContentSiteFeedAndIsDraftContext? MainSiteFeed { get; set; }
+    public HelpDisplayContext HelpContext { get; set; } = null!;
+    public ContentSiteFeedAndIsDraftContext MainSiteFeed { get; set; } = null!;
     public Action<Uri, string> MapPreviewNavigationManager { get; set; }
-    public BoolDataEntryContext? PublicDownloadLink { get; set; }
+    public BoolDataEntryContext PublicDownloadLink { get; set; } = null!;
     public EventHandler? RequestContentEditorWindowClose { get; set; }
-    public BoolDataEntryContext ShowInSearch { get; set; }
+    public BoolDataEntryContext ShowInSearch { get; set; } = null!;
     public StatusControlContext StatusContext { get; set; }
-    public TagsEditorContext? TagEdit { get; set; }
-    public TitleSummarySlugEditorContext? TitleSummarySlugFolder { get; set; }
-    public UpdateNotesEditorContext? UpdateNotes { get; set; }
+    public TagsEditorContext TagEdit { get; set; } = null!;
+    public TitleSummarySlugEditorContext TitleSummarySlugFolder { get; set; } = null!;
+    public UpdateNotesEditorContext UpdateNotes { get; set; } = null!;
 
     public void CheckForChangesAndValidationIssues()
     {
@@ -134,7 +134,7 @@ public partial class GeoJsonContentEditorContext : IHasChanges, IHasValidationIs
             return;
         }
 
-        TagEdit!.Tags =
+        TagEdit.Tags =
             $"{TagEdit.Tags}{(string.IsNullOrWhiteSpace(TagEdit.Tags) ? "" : ",")}{string.Join(",", possibleTags)}";
     }
 
@@ -167,26 +167,26 @@ public partial class GeoJsonContentEditorContext : IHasChanges, IHasValidationIs
         if (DbEntry.Id > 0)
         {
             newEntry.LastUpdatedOn = DateTime.Now;
-            newEntry.LastUpdatedBy = CreatedUpdatedDisplay!.UpdatedByEntry.UserValue.TrimNullToEmpty();
+            newEntry.LastUpdatedBy = CreatedUpdatedDisplay.UpdatedByEntry.UserValue.TrimNullToEmpty();
         }
 
-        newEntry.Folder = TitleSummarySlugFolder!.FolderEntry.UserValue.TrimNullToEmpty();
+        newEntry.Folder = TitleSummarySlugFolder.FolderEntry.UserValue.TrimNullToEmpty();
         newEntry.Slug = TitleSummarySlugFolder.SlugEntry.UserValue.TrimNullToEmpty();
         newEntry.Summary = TitleSummarySlugFolder.SummaryEntry.UserValue.TrimNullToEmpty();
-        newEntry.ShowInMainSiteFeed = MainSiteFeed!.ShowInMainSiteFeedEntry.UserValue;
+        newEntry.ShowInMainSiteFeed = MainSiteFeed.ShowInMainSiteFeedEntry.UserValue;
         newEntry.FeedOn = MainSiteFeed.FeedOnEntry.UserValue;
         newEntry.IsDraft = MainSiteFeed.IsDraftEntry.UserValue;
         newEntry.ShowInSearch = ShowInSearch.UserValue;
-        newEntry.Tags = TagEdit!.TagListString();
+        newEntry.Tags = TagEdit.TagListString();
         newEntry.Title = TitleSummarySlugFolder.TitleEntry.UserValue.TrimNullToEmpty();
-        newEntry.CreatedBy = CreatedUpdatedDisplay!.CreatedByEntry.UserValue.TrimNullToEmpty();
-        newEntry.UpdateNotes = UpdateNotes!.UserValue.TrimNullToEmpty();
+        newEntry.CreatedBy = CreatedUpdatedDisplay.CreatedByEntry.UserValue.TrimNullToEmpty();
+        newEntry.UpdateNotes = UpdateNotes.UserValue.TrimNullToEmpty();
         newEntry.UpdateNotesFormat = UpdateNotes.UpdateNotesFormat.SelectedContentFormatAsString;
-        newEntry.BodyContent = BodyContent!.UserValue.TrimNullToEmpty();
+        newEntry.BodyContent = BodyContent.UserValue.TrimNullToEmpty();
         newEntry.BodyContentFormat = BodyContent.BodyContentFormat.SelectedContentFormatAsString;
         newEntry.GeoJson = GeoJsonText;
 
-        newEntry.PublicDownloadLink = PublicDownloadLink!.UserValue;
+        newEntry.PublicDownloadLink = PublicDownloadLink.UserValue;
 
         return newEntry;
     }
@@ -195,7 +195,7 @@ public partial class GeoJsonContentEditorContext : IHasChanges, IHasValidationIs
     public async Task ExtractNewLinks()
     {
         await LinkExtraction.ExtractNewAndShowLinkContentEditors(
-            $"{BodyContent!.UserValue} {UpdateNotes!.UserValue}",
+            $"{BodyContent.UserValue} {UpdateNotes.UserValue}",
             StatusContext.ProgressTracker());
     }
 

@@ -56,11 +56,11 @@ public partial class FileContentEditorContext : IHasChangesExtended, IHasValidat
         PropertyChanged += OnPropertyChanged;
     }
 
-    public BodyContentEditorContext? BodyContent { get; set; }
-    public ContentIdViewerControlContext? ContentId { get; set; }
-    public CreatedAndUpdatedByAndOnDisplayContext? CreatedUpdatedDisplay { get; set; }
+    public BodyContentEditorContext BodyContent { get; set; } = null!;
+    public ContentIdViewerControlContext ContentId { get; set; } = null!;
+    public CreatedAndUpdatedByAndOnDisplayContext CreatedUpdatedDisplay { get; set; } = null!;
     public FileContent DbEntry { get; set; }
-    public BoolDataEntryContext? EmbedFile { get; set; }
+    public BoolDataEntryContext EmbedFile { get; set; } = null!;
 
     public string FileEditorHelpText =>
         @"
@@ -86,25 +86,25 @@ Notes:
 
     public bool FileIsMp4 { get; set; }
     public bool FileIsPdf { get; set; }
-    public HelpDisplayContext? HelpContext { get; set; }
+    public HelpDisplayContext HelpContext { get; set; } = null!;
     public FileInfo? InitialFile { get; set; }
     public FileInfo? LoadedFile { get; set; }
     public ImageContentEditorWindow? MainImageExternalEditorWindow { get; set; }
-    public ContentSiteFeedAndIsDraftContext? MainSiteFeed { get; set; }
-    public OptionalLocationEntryContext? OptionalLocationEntry { get; set; }
+    public ContentSiteFeedAndIsDraftContext MainSiteFeed { get; set; } = null!;
+    public OptionalLocationEntryContext OptionalLocationEntry { get; set; } = null!;
     public string PdfToImagePageToExtract { get; set; } = "1";
-    public BoolDataEntryContext? PublicDownloadLink { get; set; }
+    public BoolDataEntryContext PublicDownloadLink { get; set; } = null!;
     public FileInfo? SelectedFile { get; set; }
     public bool SelectedFileHasPathOrNameChanges { get; set; }
     public bool SelectedFileHasValidationIssues { get; set; }
     public bool SelectedFileNameHasInvalidCharacters { get; set; }
     public string? SelectedFileValidationMessage { get; set; }
-    public BoolDataEntryContext ShowInSearch { get; set; }
+    public BoolDataEntryContext ShowInSearch { get; set; } = null!;
     public StatusControlContext StatusContext { get; set; }
-    public TagsEditorContext? TagEdit { get; set; }
-    public TitleSummarySlugEditorContext? TitleSummarySlugFolder { get; set; }
-    public UpdateNotesEditorContext? UpdateNotes { get; set; }
-    public ConversionDataEntryContext<Guid?>? UserMainPictureEntry { get; set; }
+    public TagsEditorContext TagEdit { get; set; } = null!;
+    public TitleSummarySlugEditorContext TitleSummarySlugFolder { get; set; } = null!;
+    public UpdateNotesEditorContext UpdateNotes { get; set; } = null!;
+    public ConversionDataEntryContext<Guid?> UserMainPictureEntry { get; set; } = null!;
     public IContentCommon? UserMainPictureEntryContent { get; set; }
     public string? UserMainPictureEntrySmallImageUrl { get; set; }
 
@@ -134,10 +134,10 @@ Notes:
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        var possibleTags = await OptionalLocationEntry!.GetFeatureIntersectTagsWithUiAlerts();
+        var possibleTags = await OptionalLocationEntry.GetFeatureIntersectTagsWithUiAlerts();
 
         if (possibleTags.Any())
-            TagEdit!.Tags =
+            TagEdit.Tags =
                 $"{TagEdit.Tags}{(string.IsNullOrWhiteSpace(TagEdit.Tags) ? "" : ",")}{string.Join(",", possibleTags)}";
     }
 
@@ -151,7 +151,7 @@ Notes:
     [BlockingCommand]
     public async Task AutoRenameSelectedFileBasedOnTitle()
     {
-        await FileHelpers.TryAutoRenameSelectedFile(SelectedFile, TitleSummarySlugFolder!.TitleEntry.UserValue,
+        await FileHelpers.TryAutoRenameSelectedFile(SelectedFile, TitleSummarySlugFolder.TitleEntry.UserValue,
             StatusContext, x => SelectedFile = x);
     }
 
@@ -216,7 +216,7 @@ Notes:
         if (UserMainPictureEntry is { HasValidationIssues: false, UserValue: not null })
             return UserMainPictureEntry.UserValue;
 
-        return BracketCodeCommon.PhotoOrImageCodeFirstIdInContent(BodyContent?.UserValue, null).Result;
+        return BracketCodeCommon.PhotoOrImageCodeFirstIdInContent(BodyContent.UserValue, null).Result;
     }
 
     public FileContent CurrentStateToFileContent()
@@ -232,31 +232,31 @@ Notes:
         if (DbEntry.Id > 0)
         {
             newEntry.LastUpdatedOn = DateTime.Now;
-            newEntry.LastUpdatedBy = CreatedUpdatedDisplay!.UpdatedByEntry.UserValue.TrimNullToEmpty();
+            newEntry.LastUpdatedBy = CreatedUpdatedDisplay.UpdatedByEntry.UserValue.TrimNullToEmpty();
         }
 
-        newEntry.Folder = TitleSummarySlugFolder!.FolderEntry.UserValue.TrimNullToEmpty();
+        newEntry.Folder = TitleSummarySlugFolder.FolderEntry.UserValue.TrimNullToEmpty();
         newEntry.Slug = TitleSummarySlugFolder.SlugEntry.UserValue.TrimNullToEmpty();
         newEntry.Summary = TitleSummarySlugFolder.SummaryEntry.UserValue.TrimNullToEmpty();
-        newEntry.ShowInMainSiteFeed = MainSiteFeed!.ShowInMainSiteFeedEntry.UserValue;
+        newEntry.ShowInMainSiteFeed = MainSiteFeed.ShowInMainSiteFeedEntry.UserValue;
         newEntry.FeedOn = MainSiteFeed.FeedOnEntry.UserValue;
         newEntry.IsDraft = MainSiteFeed.IsDraftEntry.UserValue;
         newEntry.ShowInSearch = ShowInSearch.UserValue;
-        newEntry.Tags = TagEdit!.TagListString();
+        newEntry.Tags = TagEdit.TagListString();
         newEntry.Title = TitleSummarySlugFolder.TitleEntry.UserValue.TrimNullToEmpty();
-        newEntry.CreatedBy = CreatedUpdatedDisplay!.CreatedByEntry.UserValue.TrimNullToEmpty();
-        newEntry.UpdateNotes = UpdateNotes!.UserValue.TrimNullToEmpty();
+        newEntry.CreatedBy = CreatedUpdatedDisplay.CreatedByEntry.UserValue.TrimNullToEmpty();
+        newEntry.UpdateNotes = UpdateNotes.UserValue.TrimNullToEmpty();
         newEntry.UpdateNotesFormat = UpdateNotes.UpdateNotesFormat.SelectedContentFormatAsString;
-        newEntry.BodyContent = BodyContent!.UserValue.TrimNullToEmpty();
+        newEntry.BodyContent = BodyContent.UserValue.TrimNullToEmpty();
         newEntry.BodyContentFormat = BodyContent.BodyContentFormat.SelectedContentFormatAsString;
         newEntry.OriginalFileName = SelectedFile?.Name;
-        newEntry.PublicDownloadLink = PublicDownloadLink!.UserValue;
-        newEntry.EmbedFile = EmbedFile!.UserValue;
-        newEntry.UserMainPicture = UserMainPictureEntry!.UserValue;
-        newEntry.Latitude = OptionalLocationEntry!.LatitudeEntry!.UserValue;
-        newEntry.Longitude = OptionalLocationEntry.LongitudeEntry!.UserValue;
-        newEntry.Elevation = OptionalLocationEntry.ElevationEntry!.UserValue;
-        newEntry.ShowLocation = OptionalLocationEntry.ShowLocationEntry!.UserValue;
+        newEntry.PublicDownloadLink = PublicDownloadLink.UserValue;
+        newEntry.EmbedFile = EmbedFile.UserValue;
+        newEntry.UserMainPicture = UserMainPictureEntry.UserValue;
+        newEntry.Latitude = OptionalLocationEntry.LatitudeEntry.UserValue;
+        newEntry.Longitude = OptionalLocationEntry.LongitudeEntry.UserValue;
+        newEntry.Elevation = OptionalLocationEntry.ElevationEntry.UserValue;
+        newEntry.ShowLocation = OptionalLocationEntry.ShowLocationEntry.UserValue;
 
         return newEntry;
     }
@@ -325,7 +325,7 @@ Notes:
     public async Task ExtractNewLinks()
     {
         await LinkExtraction.ExtractNewAndShowLinkContentEditors(
-            $"{BodyContent!.UserValue} {UpdateNotes!.UserValue}",
+            $"{BodyContent.UserValue} {UpdateNotes.UserValue}",
             StatusContext.ProgressTracker());
     }
 
@@ -372,12 +372,12 @@ Notes:
             {
                 if (PublicDownloadLink.UserValue == false)
                 {
-                    EmbedFile!.UserValue = false;
+                    EmbedFile.UserValue = false;
                     EmbedFile.IsEnabled = false;
                 }
                 else
                 {
-                    EmbedFile!.IsEnabled = true;
+                    EmbedFile.IsEnabled = true;
                 }
             }
         };
@@ -599,8 +599,8 @@ Notes:
             return;
         }
 
-        if (OptionalLocationEntry!.LatitudeEntry!.UserValue == null ||
-            OptionalLocationEntry.LongitudeEntry!.UserValue == null)
+        if (OptionalLocationEntry.LatitudeEntry.UserValue == null ||
+            OptionalLocationEntry.LongitudeEntry.UserValue == null)
         {
             await StatusContext.ToastError("Latitude or Longitude is missing?");
             return;
@@ -623,15 +623,15 @@ Notes:
 
         newPartialPoint.CreatedOn = frozenNow;
         newPartialPoint.FeedOn = frozenNow;
-        newPartialPoint.BodyContent = EmbedFile!.UserValue
+        newPartialPoint.BodyContent = EmbedFile.UserValue
             ? BracketCodeFileEmbed.Create(DbEntry)
             : BracketCodeFiles.Create(DbEntry);
-        newPartialPoint.Title = $"Point From {TitleSummarySlugFolder!.TitleEntry.UserValue}";
-        newPartialPoint.Tags = TagEdit!.TagListString();
+        newPartialPoint.Title = $"Point From {TitleSummarySlugFolder.TitleEntry.UserValue}";
+        newPartialPoint.Tags = TagEdit.TagListString();
         newPartialPoint.Slug = SlugTagTools.CreateSlug(true, newPartialPoint.Title);
         newPartialPoint.Latitude = OptionalLocationEntry.LatitudeEntry.UserValue.Value;
         newPartialPoint.Longitude = OptionalLocationEntry.LongitudeEntry.UserValue.Value;
-        newPartialPoint.Elevation = OptionalLocationEntry.ElevationEntry!.UserValue;
+        newPartialPoint.Elevation = OptionalLocationEntry.ElevationEntry.UserValue;
 
         var pointWindow = await PointContentEditorWindow.CreateInstance(newPartialPoint);
 
@@ -681,7 +681,7 @@ Notes:
 
         if (autoSaveResult == null) return;
 
-        UserMainPictureEntry!.UserText = autoSaveResult.Value.ToString();
+        UserMainPictureEntry.UserText = autoSaveResult.Value.ToString();
     }
 
     [BlockingCommand]
@@ -729,7 +729,7 @@ Notes:
 
         if (autosaveReturn.contentId != null)
         {
-            UserMainPictureEntry!.UserText = autosaveReturn.contentId.Value.ToString();
+            UserMainPictureEntry.UserText = autosaveReturn.contentId.Value.ToString();
             return;
         }
 
@@ -790,14 +790,14 @@ Notes:
 
         DetectGuiFileTypes();
 
-        TitleSummarySlugFolder?.CheckForChangesToTitleToFunctionStates();
+        TitleSummarySlugFolder.CheckForChangesToTitleToFunctionStates();
     }
 
     public async Task SetUserMainPicture()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (UserMainPictureEntry!.HasValidationIssues ||
+        if (UserMainPictureEntry.HasValidationIssues ||
             UserMainPictureEntry.UserValue == null)
         {
             UserMainPictureEntrySmallImageUrl = null;
@@ -827,7 +827,7 @@ Notes:
         if (contentId == null || contentId == Guid.Empty) return;
         var context = await Db.Context();
         if (context.ImageContents.Any(x => x.ContentId == contentId))
-            UserMainPictureEntry!.UserText = contentId.Value.ToString();
+            UserMainPictureEntry.UserText = contentId.Value.ToString();
     }
 
     private void UserMainPictureEntryOnPropertyChanged(object? sender, PropertyChangedEventArgs e)

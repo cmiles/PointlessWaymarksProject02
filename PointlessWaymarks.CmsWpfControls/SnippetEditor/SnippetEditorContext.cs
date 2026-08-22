@@ -33,11 +33,11 @@ public partial class SnippetEditorContext : IHasChanges, IHasValidationIssues, I
         PropertyChanged += OnPropertyChanged;
     }
 
-    public StringDataEntryContext? BodyEntry { get; set; }
-    public ContentIdViewerControlContext? ContentId { get; set; }
-    public CreatedAndUpdatedByAndOnDisplayContext? CreatedUpdatedDisplay { get; set; }
+    public StringDataEntryContext BodyEntry { get; set; } = null!;
+    public ContentIdViewerControlContext ContentId { get; set; } = null!;
+    public CreatedAndUpdatedByAndOnDisplayContext CreatedUpdatedDisplay { get; set; } = null!;
     public Snippet DbEntry { get; set; }
-    public HelpDisplayContext? HelpContext { get; set; }
+    public HelpDisplayContext HelpContext { get; set; } = null!;
 
     public string SnippetEditorHelpText =>
         """
@@ -45,8 +45,8 @@ public partial class SnippetEditorContext : IHasChanges, IHasValidationIssues, I
         """;
 
     public StatusControlContext StatusContext { get; set; }
-    public StringDataEntryContext? SummaryEntry { get; set; }
-    public StringDataEntryContext? TitleEntry { get; set; }
+    public StringDataEntryContext SummaryEntry { get; set; } = null!;
+    public StringDataEntryContext TitleEntry { get; set; } = null!;
 
     public void CheckForChangesAndValidationIssues()
     {
@@ -81,13 +81,13 @@ public partial class SnippetEditorContext : IHasChanges, IHasValidationIssues, I
             newEntry.ContentId = DbEntry.ContentId;
             newEntry.CreatedOn = DbEntry.CreatedOn;
             newEntry.LastUpdatedOn = DateTime.Now;
-            newEntry.LastUpdatedBy = CreatedUpdatedDisplay!.UpdatedByEntry.UserValue.TrimNullToEmpty();
+            newEntry.LastUpdatedBy = CreatedUpdatedDisplay.UpdatedByEntry.UserValue.TrimNullToEmpty();
         }
 
         newEntry.Title = TitleEntry.UserValue.TrimNullToEmpty();
         newEntry.Summary = SummaryEntry.UserValue.TrimNullToEmpty();
-        newEntry.CreatedBy = CreatedUpdatedDisplay!.CreatedByEntry.UserValue.TrimNullToEmpty();
-        newEntry.BodyContent = BodyEntry!.UserValue.TrimNullToEmpty();
+        newEntry.CreatedBy = CreatedUpdatedDisplay.CreatedByEntry.UserValue.TrimNullToEmpty();
+        newEntry.BodyContent = BodyEntry.UserValue.TrimNullToEmpty();
 
         return newEntry;
     }
@@ -114,8 +114,8 @@ public partial class SnippetEditorContext : IHasChanges, IHasValidationIssues, I
         SummaryEntry.UserValue = StringTools.NullToEmptyTrim(DbEntry?.Summary);
         SummaryEntry.ValidationFunctions = [CommonContentValidation.ValidateSummary];
 
-        CreatedUpdatedDisplay = await CreatedAndUpdatedByAndOnDisplayContext.CreateInstance(StatusContext, DbEntry);
-        ContentId = await ContentIdViewerControlContext.CreateInstance(StatusContext, DbEntry);
+        CreatedUpdatedDisplay = await CreatedAndUpdatedByAndOnDisplayContext.CreateInstance(StatusContext, DbEntry!);
+        ContentId = await ContentIdViewerControlContext.CreateInstance(StatusContext, DbEntry!);
 
         BodyEntry = StringDataEntryContext.CreateInstance();
 

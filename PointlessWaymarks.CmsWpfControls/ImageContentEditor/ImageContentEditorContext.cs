@@ -54,16 +54,16 @@ public partial class ImageContentEditorContext : IHasChanges, IHasValidationIssu
         PropertyChanged += OnPropertyChanged;
     }
 
-    public StringDataEntryContext? AltTextEntry { get; set; }
-    public BodyContentEditorContext? BodyContent { get; set; }
-    public ContentIdViewerControlContext? ContentId { get; set; }
-    public CreatedAndUpdatedByAndOnDisplayContext? CreatedUpdatedDisplay { get; set; }
+    public StringDataEntryContext AltTextEntry { get; set; } = null!;
+    public BodyContentEditorContext BodyContent { get; set; } = null!;
+    public ContentIdViewerControlContext ContentId { get; set; } = null!;
+    public CreatedAndUpdatedByAndOnDisplayContext CreatedUpdatedDisplay { get; set; } = null!;
     public ImageContent DbEntry { get; set; }
-    public HelpDisplayContext? HelpContext { get; set; }
+    public HelpDisplayContext HelpContext { get; set; } = null!;
     public FileInfo? InitialImage { get; set; }
     public FileInfo? LoadedFile { get; set; }
-    public ContentSiteFeedAndIsDraftContext? MainSiteFeed { get; set; }
-    public OptionalLocationEntryContext? OptionalLocationEntry { get; set; }
+    public ContentSiteFeedAndIsDraftContext MainSiteFeed { get; set; } = null!;
+    public OptionalLocationEntryContext OptionalLocationEntry { get; set; } = null!;
     public bool ResizeSelectedFile { get; set; }
     public EventHandler<EventArgs>? Saved { get; set; }
     public FileInfo? SelectedFile { get; set; }
@@ -72,12 +72,12 @@ public partial class ImageContentEditorContext : IHasChanges, IHasValidationIssu
     public bool SelectedFileHasValidationIssues { get; set; }
     public bool SelectedFileNameHasInvalidCharacters { get; set; }
     public string? SelectedFileValidationMessage { get; set; }
-    public BoolDataEntryContext? ShowInSearch { get; set; }
-    public BoolDataEntryContext? ShowSizes { get; set; }
+    public BoolDataEntryContext ShowInSearch { get; set; } = null!;
+    public BoolDataEntryContext ShowSizes { get; set; } = null!;
     public StatusControlContext StatusContext { get; set; }
-    public TagsEditorContext? TagEdit { get; set; }
-    public TitleSummarySlugEditorContext? TitleSummarySlugFolder { get; set; }
-    public UpdateNotesEditorContext? UpdateNotes { get; set; }
+    public TagsEditorContext TagEdit { get; set; } = null!;
+    public TitleSummarySlugEditorContext TitleSummarySlugFolder { get; set; } = null!;
+    public UpdateNotesEditorContext UpdateNotes { get; set; } = null!;
 
     public void CheckForChangesAndValidationIssues()
     {
@@ -94,10 +94,10 @@ public partial class ImageContentEditorContext : IHasChanges, IHasValidationIssu
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        var possibleTags = await OptionalLocationEntry!.GetFeatureIntersectTagsWithUiAlerts();
+        var possibleTags = await OptionalLocationEntry.GetFeatureIntersectTagsWithUiAlerts();
 
         if (possibleTags.Any())
-            TagEdit!.Tags =
+            TagEdit.Tags =
                 $"{TagEdit.Tags}{(string.IsNullOrWhiteSpace(TagEdit.Tags) ? "" : ",")}{string.Join(",", possibleTags)}";
     }
 
@@ -110,7 +110,7 @@ public partial class ImageContentEditorContext : IHasChanges, IHasValidationIssu
     [BlockingCommand]
     public async Task AutoRenameSelectedFileBasedOnTitle()
     {
-        await FileHelpers.TryAutoRenameSelectedFile(SelectedFile, TitleSummarySlugFolder!.TitleEntry.UserValue,
+        await FileHelpers.TryAutoRenameSelectedFile(SelectedFile, TitleSummarySlugFolder.TitleEntry.UserValue,
             StatusContext, x => SelectedFile = x);
     }
 
@@ -173,31 +173,31 @@ public partial class ImageContentEditorContext : IHasChanges, IHasValidationIssu
         if (DbEntry.Id > 0)
         {
             newEntry.LastUpdatedOn = DateTime.Now;
-            newEntry.LastUpdatedBy = CreatedUpdatedDisplay!.UpdatedByEntry.UserValue.TrimNullToEmpty();
+            newEntry.LastUpdatedBy = CreatedUpdatedDisplay.UpdatedByEntry.UserValue.TrimNullToEmpty();
         }
 
         newEntry.MainPicture = newEntry.ContentId;
-        newEntry.Folder = TitleSummarySlugFolder!.FolderEntry.UserValue.TrimNullToEmpty();
+        newEntry.Folder = TitleSummarySlugFolder.FolderEntry.UserValue.TrimNullToEmpty();
         newEntry.Slug = TitleSummarySlugFolder.SlugEntry.UserValue.TrimNullToEmpty();
         newEntry.Summary = TitleSummarySlugFolder.SummaryEntry.UserValue.TrimNullToEmpty();
-        newEntry.ShowInMainSiteFeed = MainSiteFeed!.ShowInMainSiteFeedEntry.UserValue;
+        newEntry.ShowInMainSiteFeed = MainSiteFeed.ShowInMainSiteFeedEntry.UserValue;
         newEntry.FeedOn = MainSiteFeed.FeedOnEntry.UserValue;
         newEntry.IsDraft = MainSiteFeed.IsDraftEntry.UserValue;
-        newEntry.ShowInSearch = ShowInSearch!.UserValue;
-        newEntry.Tags = TagEdit!.TagListString();
+        newEntry.ShowInSearch = ShowInSearch.UserValue;
+        newEntry.Tags = TagEdit.TagListString();
         newEntry.Title = TitleSummarySlugFolder.TitleEntry.UserValue.TrimNullToEmpty();
-        newEntry.AltText = AltTextEntry!.UserValue.TrimNullToEmpty();
-        newEntry.CreatedBy = CreatedUpdatedDisplay!.CreatedByEntry.UserValue.TrimNullToEmpty();
-        newEntry.UpdateNotes = UpdateNotes!.UserValue.TrimNullToEmpty();
+        newEntry.AltText = AltTextEntry.UserValue.TrimNullToEmpty();
+        newEntry.CreatedBy = CreatedUpdatedDisplay.CreatedByEntry.UserValue.TrimNullToEmpty();
+        newEntry.UpdateNotes = UpdateNotes.UserValue.TrimNullToEmpty();
         newEntry.UpdateNotesFormat = UpdateNotes.UpdateNotesFormat.SelectedContentFormatAsString;
         newEntry.OriginalFileName = SelectedFile?.Name;
-        newEntry.BodyContent = BodyContent!.UserValue.TrimNullToEmpty();
+        newEntry.BodyContent = BodyContent.UserValue.TrimNullToEmpty();
         newEntry.BodyContentFormat = BodyContent.BodyContentFormat.SelectedContentFormatAsString;
-        newEntry.ShowImageSizes = ShowSizes!.UserValue;
-        newEntry.Latitude = OptionalLocationEntry!.LatitudeEntry!.UserValue;
-        newEntry.Longitude = OptionalLocationEntry.LongitudeEntry!.UserValue;
-        newEntry.Elevation = OptionalLocationEntry.ElevationEntry!.UserValue;
-        newEntry.ShowLocation = OptionalLocationEntry.ShowLocationEntry!.UserValue;
+        newEntry.ShowImageSizes = ShowSizes.UserValue;
+        newEntry.Latitude = OptionalLocationEntry.LatitudeEntry.UserValue;
+        newEntry.Longitude = OptionalLocationEntry.LongitudeEntry.UserValue;
+        newEntry.Elevation = OptionalLocationEntry.ElevationEntry.UserValue;
+        newEntry.ShowLocation = OptionalLocationEntry.ShowLocationEntry.UserValue;
 
         return newEntry;
     }
@@ -205,7 +205,7 @@ public partial class ImageContentEditorContext : IHasChanges, IHasValidationIssu
     [BlockingCommand]
     public async Task ExtractNewLinks()
     {
-        await LinkExtraction.ExtractNewAndShowLinkContentEditors(BodyContent!.UserValue,
+        await LinkExtraction.ExtractNewAndShowLinkContentEditors(BodyContent.UserValue,
             StatusContext.ProgressTracker());
     }
 
@@ -361,8 +361,8 @@ public partial class ImageContentEditorContext : IHasChanges, IHasValidationIssu
             return;
         }
 
-        if (OptionalLocationEntry!.LatitudeEntry!.UserValue == null ||
-            OptionalLocationEntry.LongitudeEntry!.UserValue == null)
+        if (OptionalLocationEntry.LatitudeEntry.UserValue == null ||
+            OptionalLocationEntry.LongitudeEntry.UserValue == null)
         {
             await StatusContext.ToastError("Latitude or Longitude is missing?");
             return;
@@ -386,12 +386,12 @@ public partial class ImageContentEditorContext : IHasChanges, IHasValidationIssu
         newPartialPoint.CreatedOn = frozenNow;
         newPartialPoint.FeedOn = frozenNow;
         newPartialPoint.BodyContent = BracketCodeImages.Create(DbEntry);
-        newPartialPoint.Title = $"Point From {TitleSummarySlugFolder!.TitleEntry.UserValue}";
-        newPartialPoint.Tags = TagEdit!.TagListString();
+        newPartialPoint.Title = $"Point From {TitleSummarySlugFolder.TitleEntry.UserValue}";
+        newPartialPoint.Tags = TagEdit.TagListString();
         newPartialPoint.Slug = SlugTagTools.CreateSlug(true, newPartialPoint.Title);
         newPartialPoint.Latitude = OptionalLocationEntry.LatitudeEntry.UserValue.Value;
         newPartialPoint.Longitude = OptionalLocationEntry.LongitudeEntry.UserValue.Value;
-        newPartialPoint.Elevation = OptionalLocationEntry.ElevationEntry!.UserValue;
+        newPartialPoint.Elevation = OptionalLocationEntry.ElevationEntry.UserValue;
 
         var pointWindow = await PointContentEditorWindow.CreateInstance(newPartialPoint);
 

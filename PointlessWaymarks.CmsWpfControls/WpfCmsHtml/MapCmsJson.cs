@@ -300,7 +300,7 @@ public static class MapCmsJson
                         mapGeoJson.InitialViewBoundsMinLatitude));
                     break;
                 case LineContent mapLine:
-                    var lineFeatureCollection = GeoJsonTools.DeserializeStringToFeatureCollection(mapLine.Line)!;
+                    var lineFeatureCollection = GeoJsonTools.DeserializeStringToFeatureCollection(mapLine.Line!)!;
                     var line = lineFeatureCollection[0];
                     line.Attributes.Add("displayId", mapLine.ContentId);
                     if (!line.Attributes.Exists("description")) line.Attributes.Add("description", string.Empty);

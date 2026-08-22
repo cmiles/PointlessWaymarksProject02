@@ -50,7 +50,7 @@ public partial class UpdateNotesEditorContext : IHasChanges, IHasValidationIssue
     public bool HasChanges { get; set; }
     public bool HasValidationIssues { get; set; }
 
-    public string HtmlPreview { get; set; }
+    public string HtmlPreview { get; set; } = string.Empty;
     public StatusControlContext StatusContext { get; set; }
 
     public WorkQueue<ToWebViewRequest> ToWebView { get; set; }
@@ -88,7 +88,7 @@ public partial class UpdateNotesEditorContext : IHasChanges, IHasValidationIssue
 
             if (!setUpdateFormatOk)
             {
-                factoryContext.ToastWarning("Trouble loading Format from Db...");
+                await factoryContext.ToastWarning("Trouble loading Format from Db...");
                 factoryFormatChooserContext.SelectedContentFormat =
                     factoryFormatChooserContext.ContentFormatChoices.First();
             }

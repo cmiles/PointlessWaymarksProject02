@@ -85,30 +85,30 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
         };
     }
 
-    public BodyContentEditorContext? BodyContent { get; set; }
+    public BodyContentEditorContext BodyContent { get; set; } = null!;
     public bool BroadcastLatLongChange { get; set; } = true;
-    public ContentIdViewerControlContext? ContentId { get; set; }
-    public CreatedAndUpdatedByAndOnDisplayContext? CreatedUpdatedDisplay { get; set; }
+    public ContentIdViewerControlContext ContentId { get; set; } = null!;
+    public CreatedAndUpdatedByAndOnDisplayContext CreatedUpdatedDisplay { get; set; } = null!;
     public PointContent DbEntry { get; set; }
     public List<Guid> DisplayedContentGuids { get; set; } = [];
-    public ConversionDataEntryContext<double?>? ElevationEntry { get; set; }
-    public HelpDisplayContext? HelpContext { get; set; }
-    public ConversionDataEntryContext<double>? LatitudeEntry { get; set; }
+    public ConversionDataEntryContext<double?> ElevationEntry { get; set; } = null!;
+    public HelpDisplayContext HelpContext { get; set; } = null!;
+    public ConversionDataEntryContext<double> LatitudeEntry { get; set; } = null!;
     public GeoSearchContext LocationSearchContext { get; set; }
-    public ConversionDataEntryContext<double>? LongitudeEntry { get; set; }
-    public ContentSiteFeedAndIsDraftContext? MainSiteFeed { get; set; }
+    public ConversionDataEntryContext<double> LongitudeEntry { get; set; } = null!;
+    public ContentSiteFeedAndIsDraftContext MainSiteFeed { get; set; } = null!;
     public SpatialBounds? MapBounds { get; set; }
-    public ContentMapIconContext? MapIconEntry { get; set; }
+    public ContentMapIconContext MapIconEntry { get; set; } = null!;
     public string? MapIconSvg { get; set; }
-    public StringDataEntryContext? MapLabelContentEntry { get; set; }
-    public ContentMapMarkerColorContext? MapMarkerColorEntry { get; set; }
+    public StringDataEntryContext MapLabelContentEntry { get; set; } = null!;
+    public ContentMapMarkerColorContext MapMarkerColorEntry { get; set; } = null!;
     public Action<Uri, string> MapPreviewNavigationManager { get; set; }
-    public PointDetailListContext? PointDetails { get; set; }
-    public BoolDataEntryContext? ShowInSearch { get; set; }
+    public PointDetailListContext PointDetails { get; set; } = null!;
+    public BoolDataEntryContext ShowInSearch { get; set; } = null!;
     public StatusControlContext StatusContext { get; set; }
-    public TagsEditorContext? TagEdit { get; set; }
-    public TitleSummarySlugEditorContext? TitleSummarySlugFolder { get; set; }
-    public UpdateNotesEditorContext? UpdateNotes { get; set; }
+    public TagsEditorContext TagEdit { get; set; } = null!;
+    public TitleSummarySlugEditorContext TitleSummarySlugFolder { get; set; } = null!;
+    public UpdateNotesEditorContext UpdateNotes { get; set; } = null!;
 
     public void CheckForChangesAndValidationIssues()
     {
@@ -150,7 +150,7 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
             return;
         }
 
-        TagEdit!.Tags =
+        TagEdit.Tags =
             $"{TagEdit.Tags}{(string.IsNullOrWhiteSpace(TagEdit.Tags) ? "" : ",")}{string.Join(",", possibleTags)}";
     }
 
@@ -160,7 +160,7 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         var centerData =
-            new MapJsonCoordinateDto(LatitudeEntry!.UserValue, LongitudeEntry!.UserValue, "CenterCoordinateRequest");
+            new MapJsonCoordinateDto(LatitudeEntry.UserValue, LongitudeEntry.UserValue, "CenterCoordinateRequest");
 
         var serializedData = JsonSerializer.Serialize(centerData);
 
@@ -223,30 +223,30 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
         if (DbEntry.Id > 0)
         {
             newEntry.LastUpdatedOn = DateTime.Now;
-            newEntry.LastUpdatedBy = CreatedUpdatedDisplay!.UpdatedByEntry.UserValue.TrimNullToEmpty();
+            newEntry.LastUpdatedBy = CreatedUpdatedDisplay.UpdatedByEntry.UserValue.TrimNullToEmpty();
         }
 
-        newEntry.Folder = TitleSummarySlugFolder!.FolderEntry.UserValue.TrimNullToEmpty();
+        newEntry.Folder = TitleSummarySlugFolder.FolderEntry.UserValue.TrimNullToEmpty();
         newEntry.Slug = TitleSummarySlugFolder.SlugEntry.UserValue.TrimNullToEmpty();
         newEntry.Summary = TitleSummarySlugFolder.SummaryEntry.UserValue.TrimNullToEmpty();
-        newEntry.ShowInMainSiteFeed = MainSiteFeed!.ShowInMainSiteFeedEntry.UserValue;
+        newEntry.ShowInMainSiteFeed = MainSiteFeed.ShowInMainSiteFeedEntry.UserValue;
         newEntry.FeedOn = MainSiteFeed.FeedOnEntry.UserValue;
         newEntry.IsDraft = MainSiteFeed.IsDraftEntry.UserValue;
-        newEntry.ShowInSearch = ShowInSearch!.UserValue;
-        newEntry.Tags = TagEdit!.TagListString();
+        newEntry.ShowInSearch = ShowInSearch.UserValue;
+        newEntry.Tags = TagEdit.TagListString();
         newEntry.Title = TitleSummarySlugFolder.TitleEntry.UserValue.TrimNullToEmpty();
-        newEntry.CreatedBy = CreatedUpdatedDisplay!.CreatedByEntry.UserValue.TrimNullToEmpty();
-        newEntry.UpdateNotes = UpdateNotes!.UserValue.TrimNullToEmpty();
+        newEntry.CreatedBy = CreatedUpdatedDisplay.CreatedByEntry.UserValue.TrimNullToEmpty();
+        newEntry.UpdateNotes = UpdateNotes.UserValue.TrimNullToEmpty();
         newEntry.UpdateNotesFormat = UpdateNotes.UpdateNotesFormat.SelectedContentFormatAsString;
-        newEntry.BodyContent = BodyContent!.UserValue.TrimNullToEmpty();
+        newEntry.BodyContent = BodyContent.UserValue.TrimNullToEmpty();
         newEntry.BodyContentFormat = BodyContent.BodyContentFormat.SelectedContentFormatAsString;
-        newEntry.MapLabel = MapLabelContentEntry!.UserValue.TrimNullToEmpty();
-        newEntry.MapIconName = MapIconEntry!.UserValue.TrimNullToEmpty();
-        newEntry.MapMarkerColor = MapMarkerColorEntry!.UserValue.TrimNullToEmpty();
+        newEntry.MapLabel = MapLabelContentEntry.UserValue.TrimNullToEmpty();
+        newEntry.MapIconName = MapIconEntry.UserValue.TrimNullToEmpty();
+        newEntry.MapMarkerColor = MapMarkerColorEntry.UserValue.TrimNullToEmpty();
 
-        newEntry.Latitude = LatitudeEntry!.UserValue;
-        newEntry.Longitude = LongitudeEntry!.UserValue;
-        newEntry.Elevation = ElevationEntry!.UserValue;
+        newEntry.Latitude = LatitudeEntry.UserValue;
+        newEntry.Longitude = LongitudeEntry.UserValue;
+        newEntry.Elevation = ElevationEntry.UserValue;
 
         return newEntry;
     }
@@ -256,7 +256,7 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
         var toReturn = new PointContentDto();
         var currentPoint = CurrentStateToPointContent();
         toReturn.InjectFrom(currentPoint);
-        toReturn.PointDetails = PointDetails!.CurrentStateToPointDetailsList();
+        toReturn.PointDetails = PointDetails.CurrentStateToPointDetailsList();
         toReturn.PointDetails.ForEach(x => x.PointContentId = toReturn.ContentId);
         return toReturn;
     }
@@ -266,16 +266,16 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
     public async Task ExtractNewLinks()
     {
         await LinkExtraction.ExtractNewAndShowLinkContentEditors(
-            $"{BodyContent!.UserValue} {UpdateNotes!.UserValue}",
+            $"{BodyContent.UserValue} {UpdateNotes.UserValue}",
             StatusContext.ProgressTracker());
     }
 
     public Task<IFeature?> FeatureFromPoint()
     {
-        if (LatitudeEntry!.HasValidationIssues || LongitudeEntry!.HasValidationIssues)
+        if (LatitudeEntry.HasValidationIssues || LongitudeEntry.HasValidationIssues)
             return Task.FromResult((IFeature?)null);
 
-        if (ElevationEntry!.UserValue is null)
+        if (ElevationEntry.UserValue is null)
             return Task.FromResult((IFeature?)new Feature(
                 new Point(LongitudeEntry.UserValue, LatitudeEntry.UserValue),
                 new AttributesTable()));
@@ -286,7 +286,7 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
 
     public Task<IFeature?> FeatureFromPointAsCircle(double radiusInFeet)
     {
-        if (LatitudeEntry!.HasValidationIssues || LongitudeEntry!.HasValidationIssues)
+        if (LatitudeEntry.HasValidationIssues || LongitudeEntry.HasValidationIssues)
             return Task.FromResult((IFeature?)null);
 
         var circle = PointTools.CreateCircle(LongitudeEntry.UserValue, LatitudeEntry.UserValue, radiusInFeet);
@@ -297,7 +297,7 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
     [BlockingCommand]
     public async Task GetElevation()
     {
-        if (LatitudeEntry!.HasValidationIssues || LongitudeEntry!.HasValidationIssues)
+        if (LatitudeEntry.HasValidationIssues || LongitudeEntry.HasValidationIssues)
         {
             await StatusContext.ToastError("Lat Long is not valid");
             return;
@@ -306,12 +306,12 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
         var possibleElevation =
             await ElevationGuiHelper.GetElevation(LatitudeEntry.UserValue, LongitudeEntry.UserValue, StatusContext);
 
-        if (possibleElevation != null) ElevationEntry!.UserText = possibleElevation.Value.MetersToFeet().ToString("N0");
+        if (possibleElevation != null) ElevationEntry.UserText = possibleElevation.Value.MetersToFeet().ToString("N0");
     }
 
     private void LatitudeLongitudeChangeBroadcast()
     {
-        if (BroadcastLatLongChange && !LatitudeEntry!.HasValidationIssues && !LongitudeEntry!.HasValidationIssues)
+        if (BroadcastLatLongChange && !LatitudeEntry.HasValidationIssues && !LongitudeEntry.HasValidationIssues)
         {
             var pointLocationData = new MapJsonCoordinateDto(LatitudeEntry.UserValue, LongitudeEntry.UserValue,
                 "MoveUserLocationSelection");
@@ -466,8 +466,8 @@ public partial class PointContentEditorContext : IHasChanges, ICheckForChangesAn
 
             BroadcastLatLongChange = false;
 
-            LatitudeEntry!.UserText = latitude.Value.ToString("F6");
-            LongitudeEntry!.UserText = longitude.Value.ToString("F6");
+            LatitudeEntry.UserText = latitude.Value.ToString("F6");
+            LongitudeEntry.UserText = longitude.Value.ToString("F6");
 
             BroadcastLatLongChange = true;
         }

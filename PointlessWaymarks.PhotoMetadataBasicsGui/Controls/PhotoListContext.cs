@@ -51,6 +51,7 @@ public partial class PhotoListContext : IDropTarget
         dropInfo.Effects = files.Count > 0 ? DragDropEffects.Copy : DragDropEffects.None;
     }
 
+    [NotObservable]
     public List<PhotoListGroupListItem> CurrentFilteredListItems => FilteredItems?.Cast<PhotoListGroupListItem>().ToList()
                                                                     ?? [];
 

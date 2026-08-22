@@ -47,13 +47,13 @@ public partial class PostContentEditorContext : IHasChanges, IHasValidationIssue
         PropertyChanged += OnPropertyChanged;
     }
 
-    public BodyContentEditorContext? BodyContent { get; set; }
-    public ContentIdViewerControlContext? ContentId { get; set; }
-    public CreatedAndUpdatedByAndOnDisplayContext? CreatedUpdatedDisplay { get; set; }
+    public BodyContentEditorContext BodyContent { get; set; } = null!;
+    public ContentIdViewerControlContext ContentId { get; set; } = null!;
+    public CreatedAndUpdatedByAndOnDisplayContext CreatedUpdatedDisplay { get; set; } = null!;
     public PostContent DbEntry { get; set; }
-    public HelpDisplayContext? HelpContext { get; set; }
-    public ContentSiteFeedAndIsDraftContext? MainSiteFeed { get; set; }
-    public OptionalLocationEntryContext? OptionalLocationEntry { get; set; }
+    public HelpDisplayContext HelpContext { get; set; } = null!;
+    public ContentSiteFeedAndIsDraftContext MainSiteFeed { get; set; } = null!;
+    public OptionalLocationEntryContext OptionalLocationEntry { get; set; } = null!;
 
     public string PostEditorHelpText =>
         @"
@@ -67,11 +67,11 @@ If your intent is just to put a single piece of content onto the main page of th
 
 ";
 
-    public BoolDataEntryContext? ShowInSearch { get; set; }
+    public BoolDataEntryContext ShowInSearch { get; set; } = null!;
     public StatusControlContext StatusContext { get; set; }
-    public TagsEditorContext? TagEdit { get; set; }
-    public TitleSummarySlugEditorContext? TitleSummarySlugFolder { get; set; }
-    public UpdateNotesEditorContext? UpdateNotes { get; set; }
+    public TagsEditorContext TagEdit { get; set; } = null!;
+    public TitleSummarySlugEditorContext TitleSummarySlugFolder { get; set; } = null!;
+    public UpdateNotesEditorContext UpdateNotes { get; set; } = null!;
 
     public void CheckForChangesAndValidationIssues()
     {
@@ -87,10 +87,10 @@ If your intent is just to put a single piece of content onto the main page of th
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        var possibleTags = await OptionalLocationEntry!.GetFeatureIntersectTagsWithUiAlerts();
+        var possibleTags = await OptionalLocationEntry.GetFeatureIntersectTagsWithUiAlerts();
 
         if (possibleTags.Any())
-            TagEdit!.Tags =
+            TagEdit.Tags =
                 $"{TagEdit.Tags}{(string.IsNullOrWhiteSpace(TagEdit.Tags) ? "" : ",")}{string.Join(",", possibleTags)}";
     }
 
@@ -120,27 +120,27 @@ If your intent is just to put a single piece of content onto the main page of th
         if (DbEntry.Id > 0)
         {
             newEntry.LastUpdatedOn = DateTime.Now;
-            newEntry.LastUpdatedBy = CreatedUpdatedDisplay!.UpdatedByEntry.UserValue.TrimNullToEmpty();
+            newEntry.LastUpdatedBy = CreatedUpdatedDisplay.UpdatedByEntry.UserValue.TrimNullToEmpty();
         }
 
-        newEntry.Folder = TitleSummarySlugFolder!.FolderEntry.UserValue.TrimNullToEmpty();
+        newEntry.Folder = TitleSummarySlugFolder.FolderEntry.UserValue.TrimNullToEmpty();
         newEntry.Slug = TitleSummarySlugFolder.SlugEntry.UserValue.TrimNullToEmpty();
         newEntry.Summary = TitleSummarySlugFolder.SummaryEntry.UserValue.TrimNullToEmpty();
-        newEntry.ShowInMainSiteFeed = MainSiteFeed!.ShowInMainSiteFeedEntry.UserValue;
+        newEntry.ShowInMainSiteFeed = MainSiteFeed.ShowInMainSiteFeedEntry.UserValue;
         newEntry.FeedOn = MainSiteFeed.FeedOnEntry.UserValue;
         newEntry.IsDraft = MainSiteFeed.IsDraftEntry.UserValue;
-        newEntry.ShowInSearch = ShowInSearch!.UserValue;
-        newEntry.Tags = TagEdit!.TagListString();
+        newEntry.ShowInSearch = ShowInSearch.UserValue;
+        newEntry.Tags = TagEdit.TagListString();
         newEntry.Title = TitleSummarySlugFolder.TitleEntry.UserValue.TrimNullToEmpty();
-        newEntry.CreatedBy = CreatedUpdatedDisplay!.CreatedByEntry.UserValue.TrimNullToEmpty();
-        newEntry.UpdateNotes = UpdateNotes!.UserValue.TrimNullToEmpty();
+        newEntry.CreatedBy = CreatedUpdatedDisplay.CreatedByEntry.UserValue.TrimNullToEmpty();
+        newEntry.UpdateNotes = UpdateNotes.UserValue.TrimNullToEmpty();
         newEntry.UpdateNotesFormat = UpdateNotes.UpdateNotesFormat.SelectedContentFormatAsString;
-        newEntry.BodyContent = BodyContent!.UserValue.TrimNullToEmpty();
+        newEntry.BodyContent = BodyContent.UserValue.TrimNullToEmpty();
         newEntry.BodyContentFormat = BodyContent.BodyContentFormat.SelectedContentFormatAsString;
-        newEntry.Latitude = OptionalLocationEntry!.LatitudeEntry!.UserValue;
-        newEntry.Longitude = OptionalLocationEntry.LongitudeEntry!.UserValue;
-        newEntry.Elevation = OptionalLocationEntry.ElevationEntry!.UserValue;
-        newEntry.ShowLocation = OptionalLocationEntry.ShowLocationEntry!.UserValue;
+        newEntry.Latitude = OptionalLocationEntry.LatitudeEntry.UserValue;
+        newEntry.Longitude = OptionalLocationEntry.LongitudeEntry.UserValue;
+        newEntry.Elevation = OptionalLocationEntry.ElevationEntry.UserValue;
+        newEntry.ShowLocation = OptionalLocationEntry.ShowLocationEntry.UserValue;
 
         return newEntry;
     }
@@ -149,7 +149,7 @@ If your intent is just to put a single piece of content onto the main page of th
     public async Task ExtractNewLinks()
     {
         await LinkExtraction.ExtractNewAndShowLinkContentEditors(
-            $"{BodyContent!.UserValue} {UpdateNotes!.UserValue}",
+            $"{BodyContent.UserValue} {UpdateNotes.UserValue}",
             StatusContext.ProgressTracker());
     }
 
@@ -218,8 +218,8 @@ If your intent is just to put a single piece of content onto the main page of th
             return;
         }
 
-        if (OptionalLocationEntry!.LatitudeEntry!.UserValue == null ||
-            OptionalLocationEntry.LongitudeEntry!.UserValue == null)
+        if (OptionalLocationEntry.LatitudeEntry.UserValue == null ||
+            OptionalLocationEntry.LongitudeEntry.UserValue == null)
         {
             await StatusContext.ToastError("Latitude or Longitude is missing?");
             return;
@@ -243,12 +243,12 @@ If your intent is just to put a single piece of content onto the main page of th
         newPartialPoint.CreatedOn = frozenNow;
         newPartialPoint.FeedOn = frozenNow;
         newPartialPoint.BodyContent = BracketCodePosts.Create(DbEntry);
-        newPartialPoint.Title = $"Point From {TitleSummarySlugFolder!.TitleEntry.UserValue}";
-        newPartialPoint.Tags = TagEdit!.TagListString();
+        newPartialPoint.Title = $"Point From {TitleSummarySlugFolder.TitleEntry.UserValue}";
+        newPartialPoint.Tags = TagEdit.TagListString();
         newPartialPoint.Slug = SlugTagTools.CreateSlug(true, newPartialPoint.Title);
         newPartialPoint.Latitude = OptionalLocationEntry.LatitudeEntry.UserValue.Value;
         newPartialPoint.Longitude = OptionalLocationEntry.LongitudeEntry.UserValue.Value;
-        newPartialPoint.Elevation = OptionalLocationEntry.ElevationEntry!.UserValue;
+        newPartialPoint.Elevation = OptionalLocationEntry.ElevationEntry.UserValue;
 
         var pointWindow = await PointContentEditorWindow.CreateInstance(newPartialPoint);
 

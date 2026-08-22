@@ -602,7 +602,7 @@ public partial class FeedListContext : IStandardListWithContext<FeedListListItem
     [StopAndWarnIfFirstParameterIsNull]
     public async Task UrlsForItem(FeedListListItem? selectedItem)
     {
-        ProcessHelpers.OpenUrlInExternalBrowser(selectedItem.DbReaderFeed.Url);
+        ProcessHelpers.OpenUrlInExternalBrowser(selectedItem!.DbReaderFeed.Url);
     }
 
     [NonBlockingCommand]
