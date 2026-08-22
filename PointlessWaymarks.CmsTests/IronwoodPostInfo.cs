@@ -90,7 +90,7 @@ A significant concentration of ironwood (also known as desert ironwood, Olneya t
     {
         var htmlFile = UserSettingsSingleton.CurrentSettings().LocalSitePostHtmlFile(newContent);
 
-        Assert.That(htmlFile.Exists, "Html File not Found for Html Checks?");
+        Assert.That(htmlFile!.Exists, "Html File not Found for Html Checks?");
 
         var document = IronwoodHtmlHelpers.DocumentFromFile(htmlFile);
 
@@ -125,15 +125,15 @@ A significant concentration of ironwood (also known as desert ironwood, Olneya t
             await PostGenerator.SaveAndGenerateHtml(contentToSave, null, DebugTrackers.DebugProgressTracker());
         Assert.That(generationReturn.HasError, Is.False, $"Unexpected Save Error - {generationReturn.GenerationNote}");
 
-        var contentComparison = CompareContent(contentReference, newContent);
+        var contentComparison = CompareContent(contentReference, newContent!);
         Assert.That(contentComparison.areEqual, contentComparison.comparisonNotes);
 
-        await CheckForExpectedFilesAfterHtmlGeneration(newContent);
+        await CheckForExpectedFilesAfterHtmlGeneration(newContent!);
 
-        JsonTest(newContent);
+        JsonTest(newContent!);
 
-        await HtmlChecks(newContent);
+        await HtmlChecks(newContent!);
 
-        return newContent;
+        return newContent!;
     }
 }

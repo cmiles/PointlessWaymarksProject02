@@ -24,7 +24,7 @@ public class TestSeries02GrandCanyonPoints
 
     public const string TestSummary = "'Testing' in the beautiful Grand Canyon";
 
-    public UserSettings TestSiteSettings;
+    public UserSettings TestSiteSettings = null!;
 
     [OneTimeSetUp]
     public async Task A00_CreateTestSite()
@@ -76,7 +76,7 @@ public class TestSeries02GrandCanyonPoints
 
         Assert.That(elevation, Is.Not.Null, "Elevation returned null");
 
-        var concreteElevation = Math.Round(elevation.Value.MetersToFeet(), 0);
+        var concreteElevation = Math.Round(elevation!.Value.MetersToFeet(), 0);
 
         Assert.That(concreteElevation, Is.EqualTo(GrandCanyonPointInfo.YumaPointContent02.Elevation),
             "Service Elevation does not match");
@@ -119,7 +119,7 @@ public class TestSeries02GrandCanyonPoints
         var pointCountAfterImport = db.PointContents.Count();
 
         var excelFile = new XLWorkbook(testFile.FullName);
-        var excelDataRowCount = excelFile.Worksheets.First().RangeUsed().RowCount() - 1;
+        var excelDataRowCount = excelFile.Worksheets.First().RangeUsed()!.RowCount() - 1;
 
         Assert.That(pointCountBeforeImport + excelDataRowCount, Is.EqualTo(pointCountAfterImport));
     }
@@ -192,7 +192,7 @@ public class TestSeries02GrandCanyonPoints
         var track = (await GpxTools.TracksFromGpxFile(testFile, DebugTrackers.DebugProgressTracker()))
             .First();
 
-        var lineTest = await LineGenerator.NewFromGpxTrack(track, false, true, false, null);
+        var lineTest = await LineGenerator.NewFromGpxTrack(track, false, true, false, null!);
 
         var stats = DistanceTools.LineStatsInMetricFromCoordinateList(track.Track);
 
@@ -231,7 +231,7 @@ public class TestSeries02GrandCanyonPoints
         var piutePoint = await db.PointContents.SingleAsync(x => x.Title == "Piute Point");
         var pointsNearPiutePoint = await db.PointContents.Where(x =>
             Math.Abs(x.Longitude - piutePoint.Longitude) < .1 && Math.Abs(x.Latitude - piutePoint.Latitude) < .1 &&
-            x.Title.EndsWith("Point")).ToListAsync();
+            x.Title!.EndsWith("Point")).ToListAsync();
 
         var pointElements = new List<MapElement>();
 

@@ -88,7 +88,7 @@ public static class IronwoodNoteInfo
     {
         var htmlFile = UserSettingsSingleton.CurrentSettings().LocalSiteNoteHtmlFile(newContent);
 
-        Assert.That(htmlFile.Exists, "Html File not Found for Html Checks?");
+        Assert.That(htmlFile!.Exists, "Html File not Found for Html Checks?");
 
         var document = IronwoodHtmlHelpers.DocumentFromFile(htmlFile);
 
@@ -122,15 +122,15 @@ public static class IronwoodNoteInfo
             await NoteGenerator.SaveAndGenerateHtml(contentToSave, null, DebugTrackers.DebugProgressTracker());
         Assert.That(generationReturn.HasError, Is.False, $"Unexpected Save Error - {generationReturn.GenerationNote}");
 
-        var (areEqual, comparisonNotes) = CompareContent(contentReference, newContent);
+        var (areEqual, comparisonNotes) = CompareContent(contentReference, newContent!);
         Assert.That(areEqual, comparisonNotes);
 
-        await CheckForExpectedFilesAfterHtmlGeneration(newContent);
+        await CheckForExpectedFilesAfterHtmlGeneration(newContent!);
 
-        JsonTest(newContent);
+        JsonTest(newContent!);
 
-        await HtmlChecks(newContent);
+        await HtmlChecks(newContent!);
 
-        return newContent;
+        return newContent!;
     }
 }

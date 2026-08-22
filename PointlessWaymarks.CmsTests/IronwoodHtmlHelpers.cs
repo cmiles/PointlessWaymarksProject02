@@ -15,7 +15,7 @@ public static class IronwoodHtmlHelpers
         var indexDocument = DocumentFromFile(htmlFile);
 
         var generationVersionAttributeString =
-            indexDocument.Head.Attributes.Single(x => x.Name == "data-generationversion").Value;
+            indexDocument.Head!.Attributes.Single(x => x.Name == "data-generationversion").Value;
 
         Assert.That(generationVersionAttributeString, Is.EqualTo(generationVersion.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fffffff")),
             $"Generation Version of HTML Does not match Data for {htmlFile.Name}");
@@ -26,7 +26,7 @@ public static class IronwoodHtmlHelpers
         var indexDocument = DocumentFromFile(htmlFile);
 
         var generationVersionAttributeString =
-            indexDocument.Head.Attributes.Single(x => x.Name == "data-generationversion").Value;
+            indexDocument.Head!.Attributes.Single(x => x.Name == "data-generationversion").Value;
 
         var generationVersionAttribute = DateTime.Parse(generationVersionAttributeString);
 
@@ -44,7 +44,7 @@ public static class IronwoodHtmlHelpers
         var indexDocument = DocumentFromFile(indexFile);
 
         var generationVersionAttributeString =
-            indexDocument.Head.Attributes.Single(x => x.Name == "data-generationversion").Value;
+            indexDocument.Head!.Attributes.Single(x => x.Name == "data-generationversion").Value;
 
         Assert.Multiple(() =>
         {
@@ -71,7 +71,7 @@ public static class IronwoodHtmlHelpers
         Assert.That(document.Title, Is.EqualTo(toCheck.Title));
 
         var contentVersionAttributeString =
-            document.Head.Attributes.Single(x => x.Name == "data-contentversion").Value;
+            document.Head!.Attributes.Single(x => x.Name == "data-contentversion").Value;
 
         Assert.Multiple(async () =>
         {
@@ -110,6 +110,6 @@ public static class IronwoodHtmlHelpers
         var context = BrowsingContext.New(config);
         var parser = context.GetService<IHtmlParser>();
         var source = File.ReadAllText(htmlFile.FullName);
-        return parser.ParseDocument(source);
+        return parser!.ParseDocument(source);
     }
 }

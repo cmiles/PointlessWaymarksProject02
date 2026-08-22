@@ -163,7 +163,7 @@ public static class GrandCanyonPointInfo
     {
         var htmlFile = UserSettingsSingleton.CurrentSettings().LocalSitePointHtmlFile(newContent);
 
-        Assert.That(htmlFile.Exists, "Html File not Found for Html Checks?");
+        Assert.That(htmlFile!.Exists, "Html File not Found for Html Checks?");
 
         var document = IronwoodHtmlHelpers.DocumentFromFile(htmlFile);
 
@@ -193,15 +193,15 @@ public static class GrandCanyonPointInfo
             await PointGenerator.SaveAndGenerateHtml(contentReference, null, DebugTrackers.DebugProgressTracker());
         Assert.That(generationReturn.HasError, Is.False, $"Unexpected Save Error - {generationReturn.GenerationNote}");
 
-        var contentComparison = CompareContent(contentReference, newContent);
+        var contentComparison = CompareContent(contentReference, newContent!);
         Assert.That(contentComparison.areEqual, contentComparison.comparisonNotes);
 
-        await CheckForExpectedFilesAfterHtmlGeneration(newContent);
+        await CheckForExpectedFilesAfterHtmlGeneration(newContent!);
 
-        JsonTest(newContent);
+        JsonTest(newContent!);
 
-        await HtmlChecks(newContent);
+        await HtmlChecks(newContent!);
 
-        return newContent;
+        return newContent!;
     }
 }

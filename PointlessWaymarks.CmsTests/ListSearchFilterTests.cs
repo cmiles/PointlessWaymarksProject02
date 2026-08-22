@@ -320,7 +320,7 @@ public class ListSearchFilterTests
     [TestCase(" == December, 19, 1999 ")]
     public void OperatorTokenList_OneToken(string noOperatorSearch)
     {
-        Assert.That(1, Is.EqualTo(ContentListSearchFunctions.FilterListOperatorDividedTokenList(noOperatorSearch).Count));
+        Assert.That(ContentListSearchFunctions.FilterListOperatorDividedTokenList(noOperatorSearch).Count, Is.EqualTo(1));
     }
 
     [TestCase("1/1    ", "")]
@@ -336,7 +336,7 @@ public class ListSearchFilterTests
     {
         Assert.Multiple(() =>
         {
-            Assert.That(1, Is.EqualTo(ContentListSearchFunctions.FilterListOperatorDividedTokenList(noOperatorSearch).Count));
+            Assert.That(ContentListSearchFunctions.FilterListOperatorDividedTokenList(noOperatorSearch).Count, Is.EqualTo(1));
             Assert.That(
                 operatorString, Is.EqualTo(ContentListSearchFunctions.FilterListOperatorDividedTokenList(noOperatorSearch).First().operatorString));
         });
@@ -351,7 +351,7 @@ public class ListSearchFilterTests
     {
         Assert.Multiple(() =>
         {
-            Assert.That(1, Is.EqualTo(ContentListSearchFunctions.FilterListOperatorDividedTokenList(noOperatorSearch).Count));
+            Assert.That(ContentListSearchFunctions.FilterListOperatorDividedTokenList(noOperatorSearch).Count, Is.EqualTo(1));
             Assert.That(
                 spaceReducedSearch, Is.EqualTo(ContentListSearchFunctions.FilterListOperatorDividedTokenList(noOperatorSearch).First().searchString));
         });
@@ -368,7 +368,7 @@ public class ListSearchFilterTests
     {
         Assert.Multiple(() =>
         {
-            Assert.That(2, Is.EqualTo(ContentListSearchFunctions.FilterListOperatorDividedTokenList(noOperatorSearch).Count));
+            Assert.That(ContentListSearchFunctions.FilterListOperatorDividedTokenList(noOperatorSearch).Count, Is.EqualTo(2));
             Assert.That(
                 secondOperatorString, Is.EqualTo(ContentListSearchFunctions.FilterListOperatorDividedTokenList(noOperatorSearch)[1].operatorString));
         });

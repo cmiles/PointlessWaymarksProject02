@@ -12,7 +12,7 @@ namespace PointlessWaymarks.CmsTests;
 
 public class TestSeries03TrailInfoGuiContextTest
 {
-    private Application _application;
+    private Application _application = null!;
     public const string TestDefaultCreatedBy = "Trail Notes Ghost Writer";
     public const string TestSiteAuthors = "Pointless Waymarks Trail Notes 'Testers'";
     public const string TestSiteEmailTo = "Trail@Notes.Fake";
@@ -22,14 +22,14 @@ public class TestSeries03TrailInfoGuiContextTest
 
     public const string TestSummary = "'Testing' on foot";
 
-    public static UserSettings TestSiteSettings;
+    public static UserSettings TestSiteSettings = null!;
 
     [OneTimeSetUp]
     public async Task A00_CreateTestSite()
     {
         var taskScheduler = new StaTaskScheduler(1);
 
-        Task.Factory.StartNew(x =>
+        _ = Task.Factory.StartNew(_ =>
         {
             _application = new Application();
             var window = new Window
@@ -82,7 +82,7 @@ public class TestSeries03TrailInfoGuiContextTest
         var testFile = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "TestMedia",
             TestFileInfo.TrailInfoGrandviewFilename));
 
-        var newFileContext = await FileContentEditorContext.CreateInstance(null, testFile);
+        var newFileContext = await FileContentEditorContext.CreateInstance(null!, testFile);
 
         Assert.Multiple(() =>
         {
@@ -132,7 +132,7 @@ public class TestSeries03TrailInfoGuiContextTest
         });
 
         //Null detected as blank
-        newFileContext.TitleSummarySlugFolder.TitleEntry.UserValue = null;
+        newFileContext.TitleSummarySlugFolder.TitleEntry.UserValue = null!;
         Assert.Multiple(() =>
         {
             Assert.That(newFileContext.TitleSummarySlugFolder.TitleEntry.HasValidationIssues);
@@ -148,7 +148,7 @@ public class TestSeries03TrailInfoGuiContextTest
         });
 
         //Valid Title
-        newFileContext.TitleSummarySlugFolder.TitleEntry.UserValue = TestFileInfo.GrandviewContent01.Title;
+        newFileContext.TitleSummarySlugFolder.TitleEntry.UserValue = TestFileInfo.GrandviewContent01.Title!;
         Assert.Multiple(() =>
         {
             Assert.That(newFileContext.TitleSummarySlugFolder.TitleEntry.HasValidationIssues, Is.False);
@@ -159,11 +159,11 @@ public class TestSeries03TrailInfoGuiContextTest
             Assert.That(newFileContext.TitleSummarySlugFolder.SlugEntry.HasValidationIssues);
         });
 
-        newFileContext.TitleSummarySlugFolder.TitleToSlug();
+        await newFileContext.TitleSummarySlugFolder.TitleToSlug();
         Assert.That(newFileContext.TitleSummarySlugFolder.SlugEntry.HasValidationIssues, Is.False);
 
         //Lowercase only
-        newFileContext.TitleSummarySlugFolder.SlugEntry.UserValue = TestFileInfo.GrandviewContent01.Slug.ToUpper();
+        newFileContext.TitleSummarySlugFolder.SlugEntry.UserValue = TestFileInfo.GrandviewContent01.Slug!.ToUpper();
         Assert.That(newFileContext.TitleSummarySlugFolder.SlugEntry.HasValidationIssues);
         newFileContext.TitleSummarySlugFolder.SlugEntry.UserValue = TestFileInfo.GrandviewContent01.Slug;
         Assert.That(newFileContext.TitleSummarySlugFolder.SlugEntry.HasValidationIssues, Is.False);
@@ -200,7 +200,7 @@ public class TestSeries03TrailInfoGuiContextTest
         Assert.That(newFileContext.TitleSummarySlugFolder.SlugEntry.HasValidationIssues);
 
         //Valid Slug Entry
-        newFileContext.TitleSummarySlugFolder.TitleToSlug();
+        await newFileContext.TitleSummarySlugFolder.TitleToSlug();
         Assert.Multiple(() =>
         {
             Assert.That(newFileContext.TitleSummarySlugFolder.SlugEntry.HasValidationIssues, Is.False);
@@ -211,7 +211,7 @@ public class TestSeries03TrailInfoGuiContextTest
             Assert.That(newFileContext.TitleSummarySlugFolder.FolderEntry.HasValidationIssues);
         });
 
-        newFileContext.TitleSummarySlugFolder.FolderEntry.UserValue = TestFileInfo.GrandviewContent01.Folder;
+        newFileContext.TitleSummarySlugFolder.FolderEntry.UserValue = TestFileInfo.GrandviewContent01.Folder!;
         Assert.Multiple(() =>
         {
             Assert.That(newFileContext.TitleSummarySlugFolder.FolderEntry.HasValidationIssues, Is.False);
@@ -220,7 +220,7 @@ public class TestSeries03TrailInfoGuiContextTest
 
         //Upper Case permitted
         newFileContext.TitleSummarySlugFolder.FolderEntry.UserValue =
-            TestFileInfo.GrandviewContent01.Slug.ToUpper();
+            TestFileInfo.GrandviewContent01.Slug!.ToUpper();
         Assert.That(newFileContext.TitleSummarySlugFolder.FolderEntry.HasValidationIssues, Is.False);
 
         //Spaces not permitted
@@ -248,7 +248,7 @@ public class TestSeries03TrailInfoGuiContextTest
         Assert.That(newFileContext.TitleSummarySlugFolder.FolderEntry.HasValidationIssues, Is.False);
 
         //Valid Entry for Folder
-        newFileContext.TitleSummarySlugFolder.FolderEntry.UserValue = TestFileInfo.GrandviewContent01.Folder;
+        newFileContext.TitleSummarySlugFolder.FolderEntry.UserValue = TestFileInfo.GrandviewContent01.Folder!;
         Assert.Multiple(() =>
         {
             Assert.That(newFileContext.TitleSummarySlugFolder.FolderEntry.HasValidationIssues, Is.False);
@@ -279,7 +279,7 @@ public class TestSeries03TrailInfoGuiContextTest
         });
 
         //Null not permitted and handled ok
-        newFileContext.TitleSummarySlugFolder.SummaryEntry.UserValue = null;
+        newFileContext.TitleSummarySlugFolder.SummaryEntry.UserValue = null!;
         Assert.Multiple(() =>
         {
             Assert.That(newFileContext.TitleSummarySlugFolder.SummaryEntry.HasValidationIssues);
@@ -326,7 +326,7 @@ public class TestSeries03TrailInfoGuiContextTest
         });
 
         //Null as nothing
-        newFileContext.TagEdit.Tags = null;
+        newFileContext.TagEdit.Tags = null!;
         Assert.Multiple(() =>
         {
             Assert.That(newFileContext.TagEdit.HasValidationIssues);
@@ -458,7 +458,7 @@ public class TestSeries03TrailInfoGuiContextTest
 
         Assert.Multiple(() =>
         {
-            Assert.That(dbContent.OriginalFileName == newFileContext.SelectedFile.Name);
+            Assert.That(dbContent!.OriginalFileName == newFileContext.SelectedFile!.Name);
             Assert.That(dbContent.Title == newFileContext.TitleSummarySlugFolder.TitleEntry.UserValue);
             Assert.That(dbContent.Slug == newFileContext.TitleSummarySlugFolder.SlugEntry.UserValue);
             Assert.That(dbContent.Folder == newFileContext.TitleSummarySlugFolder.FolderEntry.UserValue);

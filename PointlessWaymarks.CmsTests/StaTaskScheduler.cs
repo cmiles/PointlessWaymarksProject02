@@ -69,7 +69,7 @@ public sealed class StaTaskScheduler : TaskScheduler, IDisposable
     protected override IEnumerable<Task> GetScheduledTasks()
     {
         // Serialize the contents of the blocking collection of tasks for the debugger
-        return _tasks.ToArray();
+        return _tasks?.ToArray() ?? Array.Empty<Task>();
     }
 
     /// <summary>Queues a Task to be executed by this scheduler.</summary>
@@ -77,7 +77,7 @@ public sealed class StaTaskScheduler : TaskScheduler, IDisposable
     protected override void QueueTask(Task task)
     {
         // Push it into the blocking collection of tasks
-        _tasks.Add(task);
+        _tasks?.Add(task);
     }
 
     /// <summary>Determines whether a Task may be inlined.</summary>

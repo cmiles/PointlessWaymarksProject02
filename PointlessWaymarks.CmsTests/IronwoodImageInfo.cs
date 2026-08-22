@@ -53,7 +53,7 @@ public static class IronwoodImageInfo
             "Expected Number of Files Does Not Match");
 
         var pictureAssetInformation = PictureAssetProcessing.ProcessPictureDirectory(newContent.ContentId);
-        var pictureAssetDbEntry = (ImageContent)pictureAssetInformation.DbEntry;
+        var pictureAssetDbEntry = (ImageContent)pictureAssetInformation!.DbEntry!;
         Assert.That(pictureAssetDbEntry.ContentId == newContent.ContentId,
             $"Picture Asset appears to have gotten an incorrect DB entry of {pictureAssetDbEntry.ContentId} rather than {newContent.ContentId}");
 
@@ -62,10 +62,10 @@ public static class IronwoodImageInfo
 
         Assert.Multiple(() =>
         {
-            Assert.That(maxSize.size, Is.EqualTo(pictureAssetInformation.LargePicture.Width),
-                    $"Picture Asset Large Width is not the expected Value - Expected {maxSize}, Actual {pictureAssetInformation.LargePicture.Width}");
-            Assert.That(PictureResizing.SrcSetSizeAndQualityList().Min().size, Is.EqualTo(pictureAssetInformation.SmallPicture.Width),
-                $"Picture Asset Small Width is not the expected Value - Expected {minSize}, Actual {pictureAssetInformation.SmallPicture.Width}");
+            Assert.That(maxSize.size, Is.EqualTo(pictureAssetInformation.LargePicture!.Width),
+                    $"Picture Asset Large Width is not the expected Value - Expected {maxSize}, Actual {pictureAssetInformation.LargePicture!.Width}");
+            Assert.That(PictureResizing.SrcSetSizeAndQualityList().Min().size, Is.EqualTo(pictureAssetInformation.SmallPicture!.Width),
+                $"Picture Asset Small Width is not the expected Value - Expected {minSize}, Actual {pictureAssetInformation.SmallPicture!.Width}");
 
             Assert.That(PictureResizing.SrcSetSizeAndQualityList().Count(x => x.size < originalWidth), Is.EqualTo(pictureAssetInformation.SrcsetImages.Count),
                 "Did not find the expected number of SrcSet Images");
@@ -78,10 +78,10 @@ public static class IronwoodImageInfo
         Assert.That(expectedDirectory.Exists, $"Expected directory {expectedDirectory.FullName} does not exist");
 
         var expectedFile = UserSettingsSingleton.CurrentSettings().LocalSiteImageHtmlFile(newContent);
-        Assert.That(expectedFile.Exists, $"Expected html file {expectedFile.FullName} does not exist");
+        Assert.That(expectedFile!.Exists, $"Expected html file {expectedFile.FullName} does not exist");
 
         var expectedOriginalFileInContent =
-            new FileInfo(Path.Combine(expectedDirectory.FullName, newContent.OriginalFileName));
+            new FileInfo(Path.Combine(expectedDirectory.FullName, newContent.OriginalFileName!));
         Assert.That(expectedOriginalFileInContent.Exists,
             $"Expected to find original file in content directory but {expectedOriginalFileInContent.FullName} does not exist");
 
@@ -127,7 +127,7 @@ public static class IronwoodImageInfo
     {
         var htmlFile = UserSettingsSingleton.CurrentSettings().LocalSiteImageHtmlFile(newContent);
 
-        Assert.That(htmlFile.Exists, "Html File not Found for Html Checks?");
+        Assert.That(htmlFile!.Exists, "Html File not Found for Html Checks?");
 
         var document = IronwoodHtmlHelpers.DocumentFromFile(htmlFile);
 
@@ -151,24 +151,24 @@ public static class IronwoodImageInfo
             true, null, DebugTrackers.DebugProgressTracker());
         Assert.That(generationReturn.HasError, Is.False, $"Unexpected Save Error - {generationReturn.GenerationNote}");
 
-        var contentComparison = CompareContent(contentReference, newContent);
+        var contentComparison = CompareContent(contentReference, newContent!);
         Assert.Multiple(() =>
         {
             Assert.That(contentComparison.areEqual, contentComparison.comparisonNotes);
 
-            Assert.That(newContent.MainPicture == newContent.ContentId,
+            Assert.That(newContent!.MainPicture == newContent.ContentId,
                 $"Main Picture - {newContent.MainPicture} - Should be set to Content Id {newContent.ContentId}");
         });
 
-        CheckOriginalFileInContentAndMediaArchiveAfterHtmlGeneration(newContent);
+        CheckOriginalFileInContentAndMediaArchiveAfterHtmlGeneration(newContent!);
 
-        CheckFileCountAndPictureAssetsAfterHtmlGeneration(newContent, width);
+        CheckFileCountAndPictureAssetsAfterHtmlGeneration(newContent!, width);
 
-        JsonTest(newContent);
+        JsonTest(newContent!);
 
-        await HtmlChecks(newContent);
+        await HtmlChecks(newContent!);
 
-        return newContent;
+        return newContent!;
     }
 
     public static void JsonTest(ImageContent newContent)

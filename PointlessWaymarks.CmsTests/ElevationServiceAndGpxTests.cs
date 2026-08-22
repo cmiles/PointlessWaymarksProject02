@@ -68,7 +68,7 @@ public class ElevationServiceAndGpxTests
             Assert.Multiple(() =>
             {
                 Assert.That(result, Is.Not.Null, $"Null result from {loopTests.Name}");
-                Assert.That(Math.Round(result.Value, 0), Is.EqualTo(loopTests.RoundedElevationInMeters), $"{loopTests.Name}");
+                Assert.That(Math.Round(result!.Value, 0), Is.EqualTo(loopTests.RoundedElevationInMeters), $"{loopTests.Name}");
             });
         }
     }
@@ -88,7 +88,7 @@ public class ElevationServiceAndGpxTests
             Assert.Multiple(() =>
             {
                 Assert.That(result, Is.Not.Null, $"Null result from {loopTests.Name}");
-                Assert.That(Math.Round(result.Value, 2), Is.EqualTo(loopTests.RoundedElevationInMeters), $"{loopTests.Name}");
+                Assert.That(Math.Round(result!.Value, 2), Is.EqualTo(loopTests.RoundedElevationInMeters), $"{loopTests.Name}");
             });
         }
     }

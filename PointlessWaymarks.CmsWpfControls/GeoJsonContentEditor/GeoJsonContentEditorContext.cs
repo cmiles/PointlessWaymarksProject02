@@ -121,7 +121,7 @@ public partial class GeoJsonContentEditorContext : IHasChanges, IHasValidationIs
         {
             ContentId = DbEntry.ContentId,
             Description =
-                $"GeoJson Content - {(string.IsNullOrWhiteSpace(TitleSummarySlugFolder?.TitleEntry.Title) ? "No Title" : TitleSummarySlugFolder?.TitleEntry.Title)}"
+                $"GeoJson Content - {(string.IsNullOrWhiteSpace(TitleSummarySlugFolder.TitleEntry.Title) ? "No Title" : TitleSummarySlugFolder.TitleEntry.Title)}"
         };
 
         var possibleTags = (await intersectResult

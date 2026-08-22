@@ -5,7 +5,7 @@ namespace PointlessWaymarks.CmsTests;
 
 public static class DebugTrackers
 {
-    public static void DataNotificationDiagnostic(object sender, TinyMessageReceivedEventArgs e)
+    public static void DataNotificationDiagnostic(object? sender, TinyMessageReceivedEventArgs e)
     {
         Debug.Print(e.Message.ToString());
     }

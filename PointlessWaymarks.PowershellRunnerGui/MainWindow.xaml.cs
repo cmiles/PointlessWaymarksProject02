@@ -70,7 +70,7 @@ public partial class MainWindow
 
     public CustomScriptRunnerContext? ArbitraryRunnerContext { get; set; }
 
-    public CustomScriptRunnerContext CsArbitraryRunnerContext { get; set; }
+    public CustomScriptRunnerContext? CsArbitraryRunnerContext { get; set; }
     public string CurrentDatabase { get; set; } = string.Empty;
     public NotificationCatcher? DataNotificationsProcessor { get; set; }
     public ScriptJobRunListContext? ErrorRunListContext { get; set; }

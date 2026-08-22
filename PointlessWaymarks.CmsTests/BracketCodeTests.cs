@@ -227,7 +227,7 @@ A significant concentration of ironwood (also known as desert ironwood, Olneya t
 ";
         var result = await BracketCodeCommon.PhotoOrImageCodeFirstIdInContent(testString, null);
 
-        Assert.That(result.Value, Is.EqualTo(Guid.Parse("be010d97-a2b1-4c88-97ac-c36ebbd3fad4")));
+        Assert.That(result!.Value, Is.EqualTo(Guid.Parse("be010d97-a2b1-4c88-97ac-c36ebbd3fad4")));
     }
 
     [Test]

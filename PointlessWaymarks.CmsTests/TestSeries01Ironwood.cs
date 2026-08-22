@@ -20,7 +20,7 @@ namespace PointlessWaymarks.CmsTests;
 
 public class TestSeries01Ironwood
 {
-    private Application _application;
+    private Application _application = null!;
     public const string ContributorOneName = "Ironwood Enthusiast";
     public const string TestDefaultCreatedBy = "Ironwood Ghost Writer";
     public const string TestSiteAuthors = "Pointless Waymarks Ironwood 'Testers'";
@@ -41,7 +41,7 @@ public class TestSeries01Ironwood
     public const string UrlFriendsOfIronwood = "https://ironwoodforest.org/";
     public const string UrlProclamationPdf = "https://www.blm.gov/sites/blm.gov/files/documents/ironwood_proc.pdf";
 
-    public static UserSettings TestSiteSettings { get; set; }
+    public static UserSettings TestSiteSettings { get; set; } = null!;
 
     [OneTimeSetUp]
     public async Task A00_CreateTestSite()
@@ -54,7 +54,7 @@ public class TestSeries01Ironwood
 
         var taskScheduler = new StaTaskScheduler(1);
 
-        Task.Factory.StartNew(x =>
+        _ = Task.Factory.StartNew(x =>
         {
             _application = new Application();
             var window = new Window
@@ -118,7 +118,7 @@ public class TestSeries01Ironwood
         Assert.Multiple(() =>
         {
             Assert.That(generationReturn.HasError, Is.False);
-            Assert.That(returnContent.Id, Is.GreaterThan(0));
+            Assert.That(returnContent!.Id, Is.GreaterThan(0));
         });
 
         var duplicateTagValidationFailureResult =
@@ -163,7 +163,7 @@ public class TestSeries01Ironwood
             Assert.That(newContext.TitleSummarySlugFolder.TitleEntry.HasChanges);
             Assert.That(newContext.TitleSummarySlugFolder.TitleEntry.HasValidationIssues);
         });
-        newContext.TitleSummarySlugFolder.TitleEntry.UserValue = IronwoodPhotoInfo.QuarryContent01.Title;
+        newContext.TitleSummarySlugFolder.TitleEntry.UserValue = IronwoodPhotoInfo.QuarryContent01.Title!;
         Assert.That(newContext.TitleSummarySlugFolder.TitleEntry.HasChanges, Is.False);
 
         newContext.TitleSummarySlugFolder.SlugEntry.UserValue += "\\\\";
@@ -173,14 +173,14 @@ public class TestSeries01Ironwood
             Assert.That(newContext.TitleSummarySlugFolder.SlugEntry.HasChanges);
         });
         newContext.TitleSummarySlugFolder.SlugEntry.UserValue =
-            IronwoodPhotoInfo.QuarryContent02_BodyContentUpdateNotesTags.Slug;
+            IronwoodPhotoInfo.QuarryContent02_BodyContentUpdateNotesTags.Slug!;
         Assert.That(newContext.TitleSummarySlugFolder.SlugEntry.HasValidationIssues, Is.False);
 
         newContext.TitleSummarySlugFolder.FolderEntry.UserValue =
             IronwoodPhotoInfo.QuarryContent02_BodyContentUpdateNotesTags.Folder;
         Assert.That(newContext.TitleSummarySlugFolder.FolderEntry.HasValidationIssues, Is.False);
 
-        newContext.TagEdit.Tags = IronwoodPhotoInfo.QuarryContent02_BodyContentUpdateNotesTags.Tags;
+        newContext.TagEdit.Tags = IronwoodPhotoInfo.QuarryContent02_BodyContentUpdateNotesTags.Tags!;
         Assert.Multiple(() =>
         {
             Assert.That(newContext.TagEdit.HasValidationIssues, Is.False);
@@ -192,7 +192,7 @@ public class TestSeries01Ironwood
         Assert.That(newContext.BodyContent.BodyContentHasChanges);
 
         newContext.UpdateNotes.UserValue =
-            IronwoodPhotoInfo.QuarryContent02_BodyContentUpdateNotesTags.UpdateNotes;
+            IronwoodPhotoInfo.QuarryContent02_BodyContentUpdateNotesTags.UpdateNotes!;
         Assert.That(newContext.UpdateNotes.UpdateNotesHasChanges);
 
         await newContext.SaveAndGenerateHtml(true);
@@ -215,7 +215,7 @@ public class TestSeries01Ironwood
 
         var workbook = new XLWorkbook(excelFileExport.FullName);
         var worksheet = workbook.Worksheets.First();
-        var headerRow = worksheet.RangeUsed().Rows(1, 1);
+        var headerRow = worksheet.RangeUsed()!.Rows(1, 1);
 
         var contentIdSheetColumn = headerRow.Cells().First(x => x.Value.ToString() == "ContentId").WorksheetColumn()
             .ColumnNumber();
@@ -236,14 +236,14 @@ public class TestSeries01Ironwood
         var cameraModelSheetColumn = headerRow.Cells().First(x => x.Value.ToString() == "CameraModel")
             .WorksheetColumn().ColumnNumber();
 
-        var idColumn = worksheet.Column(contentIdSheetColumn).Intersection(worksheet.RangeUsed()).AsRange();
+        var idColumn = worksheet.Column(contentIdSheetColumn).Intersection(worksheet.RangeUsed()!).AsRange();
 
         var treeSheetPossibleRow =
-            idColumn.Cells().FirstOrDefault(x => x.Value.ToString() == treePhoto.ContentId.ToString());
+            idColumn!.Cells().FirstOrDefault(x => x.Value.ToString() == treePhoto.ContentId.ToString());
 
         Assert.That(treeSheetPossibleRow, Is.Not.Null, "No Row found for the tree photo in the Excel Import?");
 
-        var treeSheetRow = treeSheetPossibleRow.WorksheetRow().RowNumber();
+        var treeSheetRow = treeSheetPossibleRow!.WorksheetRow()!.RowNumber();
 
         worksheet.Cell(treeSheetRow, slugSheetColumn).Value =
             IronwoodPhotoInfo.IronwoodTreeContent02_SlugTitleSummaryTagsUpdateNotesUpdatedBy.Slug;
@@ -263,8 +263,8 @@ public class TestSeries01Ironwood
         worksheet.Cell(treeSheetRow, updatedBySheetColumn).Value = IronwoodPhotoInfo
             .IronwoodTreeContent02_SlugTitleSummaryTagsUpdateNotesUpdatedBy.LastUpdatedBy;
 
-        var podSheetRow = idColumn.Cells().First(x => x.Value.ToString() == podPhoto.ContentId.ToString())
-            .WorksheetRow().RowNumber();
+        var podSheetRow = idColumn!.Cells().First(x => x.Value.ToString() == podPhoto.ContentId.ToString())
+            .WorksheetRow()!.RowNumber();
 
         worksheet.Cell(podSheetRow, cameraModelSheetColumn).Value =
             IronwoodPhotoInfo.IronwoodPodContent02_CameraModelLensSummary.CameraModel;
@@ -346,11 +346,11 @@ public class TestSeries01Ironwood
         var latestHistoricEntry = db.HistoricPhotoContents.Where(x => x.ContentId == treePhoto.ContentId)
             .OrderByDescending(x => x.ContentVersion).First();
 
-        Assert.That(latestHistoricEntry.Id, Is.EqualTo(latestHistoricEntry.Id),
+        Assert.That(deletedItem.First().Id, Is.EqualTo(latestHistoricEntry.Id),
             "Deleted Item doesn't match the Id of the last historic entry?");
 
         var (generationReturn, _) = await PhotoGenerator.SaveAndGenerateHtml(treePhoto,
-            UserSettingsSingleton.CurrentSettings().LocalMediaArchivePhotoContentFile(treePhoto), true, null,
+            UserSettingsSingleton.CurrentSettings().LocalMediaArchivePhotoContentFile(treePhoto)!, true, null,
             DebugTrackers.DebugProgressTracker());
 
         Assert.That(generationReturn.HasError, Is.False,
@@ -386,7 +386,7 @@ public class TestSeries01Ironwood
         mapFile.LastUpdatedOn = DateTime.Now;
 
         var (generationReturn, _) = await FileGenerator.SaveAndGenerateHtml(mapFile,
-            UserSettingsSingleton.CurrentSettings().LocalMediaArchiveFileContentFile(mapFile), null,
+            UserSettingsSingleton.CurrentSettings().LocalMediaArchiveFileContentFile(mapFile)!, null,
             DebugTrackers.DebugProgressTracker());
 
         Assert.That(generationReturn.HasError, Is.False, generationReturn.GenerationNote);
@@ -410,7 +410,7 @@ public class TestSeries01Ironwood
             await PhotoGenerator.PhotoMetadataFromFile(testFile);
 
         Assert.That(generationReturn.HasError, Is.False, "Video Metadata Generation Failed");
-        newVideo.License = metadata.License;
+        newVideo.License = metadata!.License;
         newVideo.VideoCreatedBy = metadata.PhotoCreatedBy;
         newVideo.VideoCreatedOn = metadata.PhotoCreatedOn.TrimDateTimeToSeconds();
         newVideo.VideoCreatedOnUtc = metadata.PhotoCreatedOnUtc;
@@ -494,7 +494,7 @@ public class TestSeries01Ironwood
 
         var cameraRollDocument = IronwoodHtmlHelpers.DocumentFromFile(cameraRollFile);
 
-        var cameraRollGenerationVersionAttributeString = cameraRollDocument.Head.Attributes
+        var cameraRollGenerationVersionAttributeString = cameraRollDocument.Head!.Attributes
             .Single(x => x.Name == "data-generationversion").Value;
 
         Assert.That(cameraRollGenerationVersionAttributeString,
@@ -607,17 +607,17 @@ public class TestSeries01Ironwood
         Assert.Multiple(() =>
         {
             Assert.That(allPhotos.Count + 1, Is.EqualTo(relatedContentEntries.Count));
-            Assert.That(2, Is.EqualTo(relatedContentEntries.Select(x => x.ContentOne).Distinct().Count()));
+            Assert.That(relatedContentEntries.Select(x => x.ContentOne).Distinct().Count(), Is.EqualTo(2));
         });
         Assert.That(allPhotos.Count + 1, Is.EqualTo(relatedContentEntries.Select(x => x.ContentTwo).Count()));
         Assert.That(
-            1,
-            Is.EqualTo(relatedContentEntries.Select(x => x.ContentTwo).Except(allPhotos.Select(x => x.ContentId))
-                .Count()));
+            relatedContentEntries.Select(x => x.ContentTwo).Except(allPhotos.Select(x => x.ContentId))
+                .Count(),
+            Is.EqualTo(1));
         Assert.That(
-            0,
-            Is.EqualTo(allPhotos.Select(x => x.ContentId).Except(relatedContentEntries.Select(x => x.ContentTwo))
-                .Count()));
+            allPhotos.Select(x => x.ContentId).Except(relatedContentEntries.Select(x => x.ContentTwo))
+                .Count(),
+            Is.EqualTo(0));
 
         var photoContent = UserSettingsSingleton.CurrentSettings().LocalSitePhotoDirectory()
             .GetFiles("*.html", SearchOption.AllDirectories).ToList().Where(x =>
@@ -630,7 +630,7 @@ public class TestSeries01Ironwood
         wikiQuotePost = db.PostContents.Single(x => x.Slug == IronwoodPostInfo.WikiQuotePostContent01.Slug);
 
         wikiQuotePost.BodyContent =
-            wikiQuotePost.BodyContent.Replace(BracketCodePhotos.Create(allPhotos.First()), "");
+            wikiQuotePost.BodyContent!.Replace(BracketCodePhotos.Create(allPhotos.First()), "");
 
         wikiQuotePost.LastUpdatedBy = "Changed Html Test 02";
         wikiQuotePost.LastUpdatedOn = DateTime.Now;
@@ -657,17 +657,17 @@ public class TestSeries01Ironwood
         Assert.Multiple(() =>
         {
             Assert.That(allPhotos.Count - 1 + 1, Is.EqualTo(relatedContentEntries.Count));
-            Assert.That(2, Is.EqualTo(relatedContentEntries.Select(x => x.ContentOne).Distinct().Count()));
+            Assert.That(relatedContentEntries.Select(x => x.ContentOne).Distinct().Count(), Is.EqualTo(2));
         });
         Assert.That(allPhotos.Count - 1 + 1, Is.EqualTo(relatedContentEntries.Select(x => x.ContentTwo).Count()));
         Assert.That(
-            1,
-            Is.EqualTo(relatedContentEntries.Select(x => x.ContentTwo).Except(allPhotos.Select(x => x.ContentId))
-                .Count()));
+            relatedContentEntries.Select(x => x.ContentTwo).Except(allPhotos.Select(x => x.ContentId))
+                .Count(),
+            Is.EqualTo(1));
         Assert.That(
-            1,
-            Is.EqualTo(allPhotos.Select(x => x.ContentId).Except(relatedContentEntries.Select(x => x.ContentTwo))
-                .Count()));
+            allPhotos.Select(x => x.ContentId).Except(relatedContentEntries.Select(x => x.ContentTwo))
+                .Count(),
+            Is.EqualTo(1));
 
         photoContent = UserSettingsSingleton.CurrentSettings().LocalSitePhotoDirectory()
             .GetFiles("*.html", SearchOption.AllDirectories).ToList().Where(x =>
@@ -709,17 +709,17 @@ public class TestSeries01Ironwood
         Assert.Multiple(() =>
         {
             Assert.That(allPhotos.Count - 1 + 1, Is.EqualTo(relatedContentEntries.Count));
-            Assert.That(2, Is.EqualTo(relatedContentEntries.Select(x => x.ContentOne).Distinct().Count()));
+            Assert.That(relatedContentEntries.Select(x => x.ContentOne).Distinct().Count(), Is.EqualTo(2));
         });
         Assert.That(allPhotos.Count - 1 + 1, Is.EqualTo(relatedContentEntries.Select(x => x.ContentTwo).Count()));
         Assert.That(
-            1,
-            Is.EqualTo(relatedContentEntries.Select(x => x.ContentTwo).Except(allPhotos.Select(x => x.ContentId))
-                .Count()));
+            relatedContentEntries.Select(x => x.ContentTwo).Except(allPhotos.Select(x => x.ContentId))
+                .Count(),
+            Is.EqualTo(1));
         Assert.That(
-            1,
-            Is.EqualTo(allPhotos.Select(x => x.ContentId).Except(relatedContentEntries.Select(x => x.ContentTwo))
-                .Count()));
+            allPhotos.Select(x => x.ContentId).Except(relatedContentEntries.Select(x => x.ContentTwo))
+                .Count(),
+            Is.EqualTo(1));
 
         //Todo: Check that the excluded photo is not regenerated
     }
@@ -758,7 +758,7 @@ public class TestSeries01Ironwood
         var searchText = await File.ReadAllTextAsync(search.FullName);
         var db = await Db.Context();
         var aguaBlancaDbContent = db.PhotoContents.Single(x => x.Title == IronwoodPhotoInfo.AguaBlancaContent.Title);
-        Assert.That(searchText.Contains(aguaBlancaDbContent.Slug));
+        Assert.That(searchText.Contains(aguaBlancaDbContent.Slug!));
 
         aguaBlancaDbContent.ShowInSearch = false;
         await db.SaveChangesAsync();
@@ -767,7 +767,7 @@ public class TestSeries01Ironwood
 
         searchText = await File.ReadAllTextAsync(search.FullName);
 
-        Assert.That(!searchText.Contains(aguaBlancaDbContent.Slug));
+        Assert.That(!searchText.Contains(aguaBlancaDbContent.Slug!));
     }
 
     [OneTimeTearDown]
