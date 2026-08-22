@@ -5,14 +5,14 @@
     </AssemblyAttribute>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FluentMigrator" Version="8.0.1" />
-    <PackageReference Include="FluentMigrator.Runner.SQLite" Version="8.0.1" />
-    <PackageReference Include="Metalama.Framework" Version="2026.1.24" />
-    <PackageReference Include="Metalama.Patterns.Observability" Version="2026.1.24" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.11" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.11" />
-    <PackageReference Include="Microsoft.Playwright" Version="1.62.0" />
-    <PackageReference Include="ValueInjecter" Version="3.2.0" />
+    <PackageReference Include="FluentMigrator" />
+    <PackageReference Include="FluentMigrator.Runner.SQLite" />
+    <PackageReference Include="Metalama.Framework" />
+    <PackageReference Include="Metalama.Patterns.Observability" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="Microsoft.Playwright" />
+    <PackageReference Include="ValueInjecter" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PointlessWaymarksTools\PointlessWaymarks.FeedReader\PointlessWaymarks.FeedReader.csproj" />

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
@@ -11,11 +11,11 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
-        <PackageReference Include="IdentityModel" Version="7.0.0" />
-        <PackageReference Include="Metalama.Framework" Version="2026.1.24" />
-        <PackageReference Include="Mjml.Net" Version="4.14.0" />
-        <PackageReference Include="ObjectDumper.NET" Version="4.3.2" />
+        <PackageReference Include="HtmlAgilityPack" />
+        <PackageReference Include="IdentityModel" />
+        <PackageReference Include="Metalama.Framework" />
+        <PackageReference Include="Mjml.Net" />
+        <PackageReference Include="ObjectDumper.NET" />
     </ItemGroup>
 
     <ItemGroup>

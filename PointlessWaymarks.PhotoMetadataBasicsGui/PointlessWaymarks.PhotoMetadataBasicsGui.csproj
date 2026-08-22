@@ -24,8 +24,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Jot" Version="2.1.17" />
-        <PackageReference Include="Metalama.Patterns.Observability" Version="2026.1.24" />
+        <PackageReference Include="Jot" />
+        <PackageReference Include="Metalama.Patterns.Observability" />
     </ItemGroup>
 
     <ItemGroup>

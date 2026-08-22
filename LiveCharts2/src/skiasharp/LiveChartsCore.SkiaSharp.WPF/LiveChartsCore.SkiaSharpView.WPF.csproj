@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <UseWPF>true</UseWPF>
@@ -30,8 +30,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SkiaSharp.Views.WPF" Version="4.151.1" />
-    <PackageReference Include="SkiaSharp.HarfBuzz" Version="4.151.1" />
+    <PackageReference Include="SkiaSharp.Views.WPF" />
+    <PackageReference Include="SkiaSharp.HarfBuzz" />
   </ItemGroup>
 
   <ItemGroup>

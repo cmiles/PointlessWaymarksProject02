@@ -6,6 +6,7 @@
     <Platform Name="x64" />
   </Configurations>
   <Folder Name="/PointlessWaymarksTools/">
+    <File Path="PointlessWaymarksTools/Directory.Packages.props" />
     <File Path="PointlessWaymarksTools/README.md" />
     <Project Path="PointlessWaymarksTools/PointlessWaymarks.CommonTools/PointlessWaymarks.CommonTools.csproj">
       <Platform Project="x64" />
@@ -46,6 +47,7 @@
     <File Path=".editorconfig" />
     <File Path="DevNotes.md" />
     <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
     <File Path="global.json" />
     <File Path="PointlessWaymarksTools/PointlessWaymarks.SpatialTools/PointlessWaymarks.SpatialTools.csproj" />
     <File Path="PointlessWaymarksTools/PointlessWaymarks.WpfCommon/PointlessWaymarks.WpfCommon.csproj" />

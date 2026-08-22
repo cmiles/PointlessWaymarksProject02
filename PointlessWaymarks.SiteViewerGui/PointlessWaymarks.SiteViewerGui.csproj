@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
@@ -25,14 +25,14 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="CommandLineParser" Version="2.9.1" />
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-        <PackageReference Include="Dragablz" Version="0.0.3.234" />
-        <PackageReference Include="Jot" Version="2.1.17" />
-        <PackageReference Include="Metalama.Framework" Version="2026.1.24" />
-        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4129.50" />
-        <PackageReference Include="Microsoft.Web.WebView2.DevToolsProtocolExtension" Version="1.0.2901" />
-        <PackageReference Include="ModernWpfUI" Version="0.9.6" />
+        <PackageReference Include="CommandLineParser" />
+        <PackageReference Include="CommunityToolkit.Mvvm" />
+        <PackageReference Include="Dragablz" />
+        <PackageReference Include="Jot" />
+        <PackageReference Include="Metalama.Framework" />
+        <PackageReference Include="Microsoft.Web.WebView2" />
+        <PackageReference Include="Microsoft.Web.WebView2.DevToolsProtocolExtension" />
+        <PackageReference Include="ModernWpfUI" />
     </ItemGroup>
 
     <ItemGroup>

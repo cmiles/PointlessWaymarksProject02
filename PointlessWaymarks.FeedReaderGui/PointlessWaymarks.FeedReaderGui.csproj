@@ -20,11 +20,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="FluentScheduler" Version="6.0.0" />
-        <PackageReference Include="Jot" Version="2.1.17" />
-        <PackageReference Include="Metalama.Framework" Version="2026.1.24" />
-        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4129.50" />
-        <PackageReference Include="Microsoft.Web.WebView2.DevToolsProtocolExtension" Version="1.0.2901" />
+        <PackageReference Include="FluentScheduler" />
+        <PackageReference Include="Jot" />
+        <PackageReference Include="Metalama.Framework" />
+        <PackageReference Include="Microsoft.Web.WebView2" />
+        <PackageReference Include="Microsoft.Web.WebView2.DevToolsProtocolExtension" />
     </ItemGroup>
 
     <ItemGroup>

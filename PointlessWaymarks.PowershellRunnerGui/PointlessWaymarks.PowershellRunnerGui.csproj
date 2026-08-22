@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
@@ -31,15 +31,15 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
-        <PackageReference Include="CronExpressionDescriptor" Version="2.51.0" />
-        <PackageReference Include="Cronos" Version="0.13.0" />
-        <PackageReference Include="DiffPlex.Wpf" Version="1.9.1" />
-        <PackageReference Include="FilterDataGrid" Version="1.2.9" />
-        <PackageReference Include="Jot" Version="2.1.17" />
-        <PackageReference Include="Metalama.Framework" Version="2026.1.24" />
-        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4129.50" />
-        <PackageReference Include="ValueInjecter" Version="3.2.0" />
+        <PackageReference Include="AvalonEdit" />
+        <PackageReference Include="CronExpressionDescriptor" />
+        <PackageReference Include="Cronos" />
+        <PackageReference Include="DiffPlex.Wpf" />
+        <PackageReference Include="FilterDataGrid" />
+        <PackageReference Include="Jot" />
+        <PackageReference Include="Metalama.Framework" />
+        <PackageReference Include="Microsoft.Web.WebView2" />
+        <PackageReference Include="ValueInjecter" />
     </ItemGroup>
 
     <ItemGroup>
