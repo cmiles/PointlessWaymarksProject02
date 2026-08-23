@@ -31,6 +31,7 @@
     <Compile Include="..\PointlessWaymarks.SiteViewerMaui\Models\ConnectionValidation.cs" Link="Models\ConnectionValidation.cs" />
     <Compile Include="..\PointlessWaymarks.SiteViewerMaui\Models\ConnectionSettingsImport.cs" Link="Models\ConnectionSettingsImport.cs" />
     <Compile Include="..\PointlessWaymarks.SiteViewerMaui\Tools\ObfuscationTools.cs" Link="Tools\ObfuscationTools.cs" />
+    <Compile Include="..\PointlessWaymarks.SiteViewerMaui\Tools\SortedObservableCollection.cs" Link="Tools\SortedObservableCollection.cs" />
     <Compile Include="..\PointlessWaymarks.SiteViewerMaui\Services\S3ContentService.cs" Link="Services\S3ContentService.cs" />
     <Compile Include="..\PointlessWaymarks.SiteViewerMaui\Services\ViewerNavigation.cs" Link="Services\ViewerNavigation.cs" />
   </ItemGroup>

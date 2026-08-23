@@ -12,7 +12,8 @@
     </ContentPage.ToolbarItems>
 
     <Grid>
-        <CollectionView ItemsSource="{Binding Profiles}"
+        <CollectionView x:Name="ProfilesCollectionView"
+                        ItemsSource="{Binding Profiles}"
                         SelectionMode="None">
             <CollectionView.EmptyView>
                 <VerticalStackLayout Padding="24" Spacing="8" VerticalOptions="Center">
