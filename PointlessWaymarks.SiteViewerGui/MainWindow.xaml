@@ -24,7 +24,8 @@
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/PointlessWaymarks.CmsWpfControls;component/WpfControlsResourceDictionary.xaml" />
+                <ResourceDictionary
+                    Source="/PointlessWaymarks.CmsWpfControls;component/WpfControlsResourceDictionary.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/Dragablz;component/Themes/Generic.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <valueConverters:BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
@@ -39,7 +40,8 @@
             NewItemFactory="{Binding NewTab}"
             ShowDefaultAddButton="True"
             ShowDefaultCloseButton="True">
-            <TabItem Header="{Binding PreviewContext.CurrentDocumentTitle}" IsSelected="True">
+            <TabItem Header="{Binding PreviewContext.CurrentDocumentTitle}"
+                     ToolTip="{Binding PreviewContext.CurrentDocumentTitle}" IsSelected="True">
                 <sitePreview:SitePreviewControl DataContext="{Binding PreviewContext}" />
             </TabItem>
         </dragablz:TabablzControl>
@@ -53,6 +55,9 @@
             Background="White"
             DataContext="{Binding SettingsFileChooser}"
             Visibility="{Binding DataContext.ShowSettingsFileChooser, Converter={StaticResource BooleanToVisibility}, ElementName=MainWindowXaml}" />
+        <Button Command="{Binding NewSiteViewerWindowCommand}" HorizontalAlignment="Right" VerticalAlignment="Top"
+                Margin="0,0,7,0" Opacity=".4">New Site Viewer Window
+        </Button>
         <programUpdateMessage:ProgramUpdateMessageControl
             Width="400"
             HorizontalAlignment="Center"

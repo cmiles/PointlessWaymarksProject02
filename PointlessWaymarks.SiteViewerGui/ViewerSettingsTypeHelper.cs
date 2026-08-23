@@ -18,7 +18,10 @@ public static class ViewerSettingsTypeHelper
         if (!fileToCheck.Exists) return ViewerSettingsTypes.Unknown;
 
         var content = File.ReadAllText(fileToCheck.FullName);
-        if (content.TrimStart().StartsWith("{"))
+        
+        if(fileToCheck.Extension == ".ini") return ViewerSettingsTypes.PointlessWaymarksCms;
+        
+        if (fileToCheck.Extension == ".json")
         {
             using var jsonDoc = JsonDocument.Parse(content);
             var root = jsonDoc.RootElement;
@@ -30,7 +33,6 @@ public static class ViewerSettingsTypeHelper
                 {
                     "SecureCloudViewer" => ViewerSettingsTypes.SecureCloudViewer,
                     "OpenCloudViewer" => ViewerSettingsTypes.OpenCloudViewer,
-                    "PointlessWaymarksCms" => ViewerSettingsTypes.PointlessWaymarksCms,
                     _ => ViewerSettingsTypes.Unknown
                 };
             }

@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -23,6 +24,7 @@ namespace PointlessWaymarks.SiteViewerGui;
 ///     Interaction logic for MainWindow.xaml
 /// </summary>
 [NotifyPropertyChanged]
+[GenerateStatusCommands]
 [StaThreadConstructorGuard]
 public partial class MainWindow
 {
@@ -49,6 +51,8 @@ public partial class MainWindow
 
         StatusContext = new StatusControlContext { BlockUi = false };
 
+        BuildCommands();
+        
         SiteUrl = siteUrl ?? string.Empty;
         InitialPage = initialPage ?? string.Empty;
         LocalFolder = localFolder ?? string.Empty;
@@ -101,7 +105,6 @@ public partial class MainWindow
     public string SiteUrl { get; set; }
     public StatusControlContext StatusContext { get; set; }
     public ProgramUpdateMessageContext UpdateMessageContext { get; set; }
-
 
     public async Task CheckForProgramUpdate(string currentDateVersion)
     {
@@ -287,6 +290,20 @@ public partial class MainWindow
         ViewTabs.SelectedItem = newTab;
     }
 
+    [NonBlockingCommand]
+    public async Task NewSiteViewerWindow()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        //6/18/2023 - Assembly.GetEntryAssembly()!.Location might be more expected, but I saw some indication
+        //in the online material that the method below might be more durable. The dll/exe swap is a bit of 
+        //a guess but at the least seems to help inside Visual Studio...
+        var command = Environment.GetCommandLineArgs()[0];
+        if (command.EndsWith(".dll")) command = $"{command[..^4]}.exe";
+
+        Process.Start(command);
+    }
+
     private async Task<TabItem> NewTabFromAddress(string requestedAddress)
     {
         await ThreadSwitcher.ResumeForegroundAsync();
@@ -368,6 +385,13 @@ public partial class MainWindow
 
         var directoryInfo = new DirectoryInfo(settingReturn.userInput);
 
+        var fileList = RecentSettingsFilesNames.Split('|').ToList();
+
+        if (fileList.Contains(directoryInfo.FullName))
+            fileList.Remove(directoryInfo.FullName);
+
+        RecentSettingsFilesNames = string.Join("|", fileList);
+
         if (!directoryInfo.Exists)
         {
             await StatusContext.ToastError("Error with Directory? Does not exist?");
@@ -375,11 +399,6 @@ public partial class MainWindow
         }
 
         StatusContext.Progress($"Using {directoryInfo.FullName}");
-
-        var fileList = settingReturn.fileList;
-
-        if (fileList.Contains(directoryInfo.FullName))
-            fileList.Remove(directoryInfo.FullName);
 
         fileList = [directoryInfo.FullName, .. fileList];
 
@@ -419,18 +438,13 @@ public partial class MainWindow
             return;
         }
 
-        var fileList = settingReturn.fileList;
+        var fileList = RecentSettingsFilesNames.Split('|').ToList();
 
-        if (fileList.Contains(UserSettingsUtilities.SettingsFileFullName))
-            fileList.Remove(UserSettingsUtilities.SettingsFileFullName);
-
-        fileList = [UserSettingsUtilities.SettingsFileFullName, .. fileList];
-
-        if (fileList.Count > 10)
-            fileList = [.. fileList.Take(10)];
+        if (fileList.Contains(settingsFile.FullName))
+            fileList.Remove(settingsFile.FullName);
 
         RecentSettingsFilesNames = string.Join("|", fileList);
-
+        
         var fileType = ViewerSettingsTypeHelper.GetViewerSettingsType(settingsFile);
 
         if (fileType == ViewerSettingsTypeHelper.ViewerSettingsTypes.Unknown)
@@ -439,21 +453,31 @@ public partial class MainWindow
             return;
         }
 
-        SettingsFile = settingReturn.userInput;
+        fileList = [settingsFile.FullName, .. fileList];
 
-        if (fileType == ViewerSettingsTypeHelper.ViewerSettingsTypes.PointlessWaymarksCms)
+        if (fileList.Count > 10)
+            fileList = [.. fileList.Take(10)];
+
+        RecentSettingsFilesNames = string.Join("|", fileList);
+
+        SettingsFile = settingsFile.FullName;
+
+        switch (fileType)
         {
-            UserSettingsUtilities.SettingsFileFullName = settingReturn.userInput;
+            case ViewerSettingsTypeHelper.ViewerSettingsTypes.PointlessWaymarksCms:
+                UserSettingsUtilities.SettingsFileFullName = settingReturn.userInput;
 
-            StatusContext.Progress($"Using CMS Settings {UserSettingsUtilities.SettingsFileFullName}");
+                StatusContext.Progress($"Using CMS Settings {UserSettingsUtilities.SettingsFileFullName}");
 
-            LocalFolder = UserSettingsSingleton.CurrentSettings().LocalSiteRootFullDirectory().FullName;
-            SiteUrl = new Uri(UserSettingsSingleton.CurrentSettings().SiteUrl()).Host;
-            SiteName = UserSettingsSingleton.CurrentSettings().SiteName;
+                LocalFolder = UserSettingsSingleton.CurrentSettings().LocalSiteRootFullDirectory().FullName;
+                SiteUrl = new Uri(UserSettingsSingleton.CurrentSettings().SiteUrl()).Host;
+                SiteName = UserSettingsSingleton.CurrentSettings().SiteName;
+                break;
+            case ViewerSettingsTypeHelper.ViewerSettingsTypes.SecureCloudViewer
+                or ViewerSettingsTypeHelper.ViewerSettingsTypes.OpenCloudViewer:
+                CloudViewerMode = true;
+                break;
         }
-
-        if (fileType == ViewerSettingsTypeHelper.ViewerSettingsTypes.SecureCloudViewer || fileType == ViewerSettingsTypeHelper.ViewerSettingsTypes.OpenCloudViewer)
-            CloudViewerMode = true;
 
         StatusContext.RunFireAndForgetBlockingTask(LoadData);
     }
