@@ -43,9 +43,11 @@
                 <MenuItem Command="{Binding ListContext.GenerateHtmlSelectedCommand}" Header="Generate Html" />
                 <MenuItem Command="{Binding ListContext.ExtractNewLinksSelectedCommand}" Header="Extract Links" />
             </MenuItem>
-            <MenuItem Header="Activity Log">
-                <MenuItem Command="{Binding ActivityLogMonthlyStatsWindowForAllLineContentCommand}" Header="Monthly Stats - All Line Content" />
-                <MenuItem Command="{Binding ActivityLogMonthlyStatsWindowForSelectedCommand}" Header="Monthly Stats - Selected Line Content" />
+            <MenuItem Header="Tracked Activity Log">
+                <MenuItem Command="{Binding TrackedActivityLogMonthlyStatsWindowForAllLineContentCommand}" Header="Monthly Stats - All Line Content" />
+                <MenuItem Command="{Binding TrackedActivityLogMonthlyStatsWindowForSelectedCommand}" Header="Monthly Stats - Selected Line Content" />
+                <Separator />
+                <MenuItem Command="{Binding CommonCommands.NewActivityLogWindowCommand}" Header="Monthly Stats - All Line and Workout Content" />
             </MenuItem>
             <StaticResource ResourceKey="ViewMenu" />
             <StaticResource ResourceKey="SiteMenu" />

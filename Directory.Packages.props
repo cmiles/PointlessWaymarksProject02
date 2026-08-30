@@ -45,6 +45,7 @@
     <PackageVersion Include="FluentScheduler" Version="6.0.0" />
     <PackageVersion Include="Flurl.Http" Version="4.0.2" />
     <PackageVersion Include="Fractions" Version="8.3.2" />
+    <PackageVersion Include="Garmin.FIT.Sdk" Version="21.171.0" />
     <PackageVersion Include="GeoAPI" Version="1.7.5" />
     <PackageVersion Include="GeoTimeZone" Version="6.1.0" />
     <PackageVersion Include="gong-wpf-dragdrop" Version="4.0.0" />

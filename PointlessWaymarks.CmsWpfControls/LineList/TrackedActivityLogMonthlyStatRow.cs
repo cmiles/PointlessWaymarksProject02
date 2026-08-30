@@ -3,7 +3,7 @@ using PointlessWaymarks.LlamaAspects;
 namespace PointlessWaymarks.CmsWpfControls.LineList;
 
 [NotifyPropertyChanged]
-public partial class ActivityLogMonthlyStatRow
+public partial class TrackedActivityLogMonthlyStatRow
 {
     public int Activities { get; set; }
     public string ActivityType { get; set; } = string.Empty;

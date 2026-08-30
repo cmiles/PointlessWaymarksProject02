@@ -29,6 +29,7 @@
     xmlns:valueConverters="clr-namespace:PointlessWaymarks.WpfCommon.ValueConverters;assembly=PointlessWaymarks.WpfCommon"
     xmlns:videoList="clr-namespace:PointlessWaymarks.CmsWpfControls.VideoList;assembly=PointlessWaymarks.CmsWpfControls"
     xmlns:windowScreenShot1="clr-namespace:PointlessWaymarks.WpfCommon.WindowScreenShot;assembly=PointlessWaymarks.WpfCommon"
+    xmlns:workoutItemsList="clr-namespace:PointlessWaymarks.CmsWpfControls.WorkoutItemsList;assembly=PointlessWaymarks.CmsWpfControls"
     Name="MainWindowXaml"
     Title="{Binding InfoTitle}"
     Width="950"
@@ -98,6 +99,9 @@
             </TabItem>
             <TabItem Header="Links">
                 <linkList:LinkListWithActionsControl DataContext="{Binding TabLinkContext}" />
+            </TabItem>
+            <TabItem Header="Workouts">
+                <workoutItemsList:WorkoutItemsListControl DataContext="{Binding TabWorkoutListContext}" />
             </TabItem>
             <TabItem Header="Snippets">
                 <snippetList:SnippetListControl DataContext="{Binding TabSnippetContext}" />

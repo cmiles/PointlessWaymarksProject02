@@ -4,6 +4,7 @@ using PointlessWaymarks.CmsData.CommonHtml;
 using PointlessWaymarks.CmsData.ContentGeneration;
 using PointlessWaymarks.CmsData.Database;
 using PointlessWaymarks.CmsData.ImageHelpers;
+using PointlessWaymarks.CmsWpfControls.ActivityLog;
 using PointlessWaymarks.CmsWpfControls.AllContentList;
 using PointlessWaymarks.CmsWpfControls.ContentMap;
 using PointlessWaymarks.CmsWpfControls.FileContentEditor;
@@ -36,6 +37,8 @@ using PointlessWaymarks.CmsWpfControls.TrailContentEditor;
 using PointlessWaymarks.CmsWpfControls.TrailList;
 using PointlessWaymarks.CmsWpfControls.VideoContentEditor;
 using PointlessWaymarks.CmsWpfControls.VideoList;
+using PointlessWaymarks.CmsWpfControls.WorkoutItemEditor;
+using PointlessWaymarks.CmsWpfControls.WorkoutItemsList;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.SpatialTools;
@@ -128,6 +131,13 @@ public partial class CmsCommonCommands
         }
     }
 
+
+    [NonBlockingCommand]
+    public async Task NewActivityLogWindow()
+    {
+        var newWindow = await ActivityLogWindow.CreateInstance();
+        await newWindow.PositionWindowAndShowOnUiThread();
+    }
 
     [NonBlockingCommand]
     public async Task NewAllContentListWindow()
@@ -1123,6 +1133,148 @@ public partial class CmsCommonCommands
             await VideoListWindow.CreateInstance(
                 await VideoListWithActionsContext.CreateInstance(null, WindowStatus, null));
         await newWindow.PositionWindowAndShowOnUiThread();
+    }
+
+    [NonBlockingCommand]
+    public async Task NewWorkoutContent()
+    {
+        var newContentWindow = await WorkoutItemEditorWindow.CreateInstance(null, true);
+
+        await newContentWindow.PositionWindowAndShowOnUiThread();
+    }
+
+    [BlockingCommand]
+    public async Task NewWorkoutContentFromFiles(CancellationToken cancellationToken)
+    {
+        await WindowIconStatus.IndeterminateTask(WindowStatus,
+            async () => await NewWorkoutContentFromFilesBase(cancellationToken, false, StatusContext, WindowStatus),
+            StatusContext.StatusControlContextId);
+    }
+
+    [BlockingCommand]
+    public async Task NewWorkoutContentFromFilesWithAutosave(CancellationToken cancellationToken)
+    {
+        await WindowIconStatus.IndeterminateTask(WindowStatus,
+            async () => await NewWorkoutContentFromFilesBase(cancellationToken, true, StatusContext, WindowStatus),
+            StatusContext.StatusControlContextId);
+    }
+
+    [NonBlockingCommand]
+    public async Task NewWorkoutItemsListWindow()
+    {
+        var newWindow =
+            await WorkoutItemsListWindow.CreateInstance(
+                await WorkoutItemsListContext.CreateInstance(null));
+        await newWindow.PositionWindowAndShowOnUiThread();
+    }
+
+    public static async Task NewWorkoutContentFromFilesBase(CancellationToken cancellationToken,
+        bool autoSaveAndClose,
+        StatusControlContext statusContext, WindowIconStatus? windowStatus)
+    {
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        statusContext.Progress("Starting Workout load.");
+
+        var dialog = new VistaOpenFileDialog
+            { Multiselect = true, Filter = "supported formats (*.fit)|*.fit" };
+
+        if (!(dialog.ShowDialog() ?? false)) return;
+
+        var selectedFiles = dialog.FileNames?.ToList() ?? [];
+
+        if (!selectedFiles.Any()) return;
+
+        if (!autoSaveAndClose && selectedFiles.Count > 10)
+        {
+            await statusContext.ToastError(
+                "Opening new content in an editor window is limited to 10 files at a time...");
+            return;
+        }
+
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var selectedFileInfos = selectedFiles.Select(x => new FileInfo(x)).ToList();
+
+        if (!selectedFileInfos.Any(x => x.Exists))
+        {
+            await statusContext.ToastError("Files don't exist?");
+            return;
+        }
+
+        selectedFileInfos = selectedFileInfos.Where(x => x.Exists).ToList();
+
+        if (selectedFileInfos.Any(x => !x.Extension.Equals(".fit", StringComparison.OrdinalIgnoreCase)))
+            await statusContext.ToastWarning(
+                $"Skipping - not supported - {string.Join(", ", selectedFileInfos.Where(x => !x.Extension.Equals(".fit", StringComparison.OrdinalIgnoreCase)))}");
+
+        var validFiles = selectedFileInfos
+            .Where(x => x.Extension.Equals(".fit", StringComparison.OrdinalIgnoreCase)).ToList();
+
+        if (!validFiles.Any())
+        {
+            await statusContext.ToastError("None of the files appear to be supported file types...");
+            return;
+        }
+
+        await NewWorkoutContentFromFilesBase(validFiles, autoSaveAndClose, cancellationToken, statusContext,
+            windowStatus);
+    }
+
+    public static async Task NewWorkoutContentFromFilesBase(List<FileInfo> selectedFileInfos,
+        bool autoSaveAndClose,
+        CancellationToken cancellationToken,
+        StatusControlContext statusContext, WindowIconStatus? windowStatus)
+    {
+        var outerLoopCounter = 0;
+
+        foreach (var loopFile in selectedFileInfos)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            outerLoopCounter++;
+
+            windowStatus?.AddRequest(new WindowIconStatusRequest(statusContext.StatusControlContextId,
+                TaskbarItemProgressState.Normal, (decimal)outerLoopCounter / (selectedFileInfos.Count + 1)));
+
+            if (!loopFile.Exists)
+            {
+                await statusContext.ToastError($"File {loopFile.FullName} doesn't exist?");
+                continue;
+            }
+
+            var workoutItem = FitTools.WorkoutItemFromFitFile(loopFile);
+
+            if (workoutItem == null)
+            {
+                await statusContext.ToastError($"Could not extract workout data from {loopFile.Name}");
+                continue;
+            }
+
+            if (autoSaveAndClose)
+            {
+                var (hasError, generationNote) = await FitTools.SaveWorkoutItem(workoutItem);
+
+                if (hasError)
+                {
+                    var editor = await WorkoutItemEditorWindow.CreateInstance(workoutItem);
+                    await editor.PositionWindowAndShowOnUiThread();
+#pragma warning disable 4014
+                    //Allow execution to continue so Automation can continue
+                    editor.StatusContext.ShowMessageWithOkButton("Problem Saving", generationNote);
+#pragma warning restore 4014
+                    continue;
+                }
+
+                await statusContext.ToastSuccess(
+                    $"Saved Workout ({workoutItem.WorkoutType} on {workoutItem.WorkoutOn:d})");
+            }
+            else
+            {
+                await WorkoutItemEditorWindow.CreateInstance(workoutItem, true);
+                statusContext.Progress($"New Workout Item Editor - {loopFile.FullName}");
+            }
+        }
     }
 
     [NonBlockingCommand]

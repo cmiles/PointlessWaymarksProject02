@@ -44,6 +44,9 @@ public static class DataNotifications
             PostContent => DataNotificationContentType.Post,
             TrailContent => DataNotificationContentType.Trail,
             VideoContent => DataNotificationContentType.Video,
+            MapIcon => DataNotificationContentType.MapIcon,
+            Snippet => DataNotificationContentType.Snippet,
+            WorkoutItem => DataNotificationContentType.Workout,
             _ => DataNotificationContentType.Unknown
         };
     }
@@ -146,5 +149,6 @@ public enum DataNotificationContentType
     Unknown,
     MapIcon,
     Snippet,
-    Trail
+    Trail,
+    Workout
 }

@@ -48,6 +48,7 @@ public class PointlessWaymarksContext(DbContextOptions<PointlessWaymarksContext>
     public DbSet<TrailContent> TrailContents { get; set; }
     public DbSet<TagExclusion> TagExclusions { get; set; }
     public DbSet<VideoContent> VideoContents { get; set; }
+    public DbSet<WorkoutItem> WorkoutItems { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -69,6 +70,7 @@ public class PointlessWaymarksContext(DbContextOptions<PointlessWaymarksContext>
         modelBuilder.Entity<Snippet>().HasIndex(b => b.ContentId).IsUnique();
         modelBuilder.Entity<TrailContent>().HasIndex(b => b.ContentId).IsUnique();
         modelBuilder.Entity<VideoContent>().HasIndex(b => b.ContentId).IsUnique();
+        modelBuilder.Entity<WorkoutItem>().HasIndex(b => b.ContentId).IsUnique();
 
         modelBuilder.Entity<GenerationChangedContentId>().Property(e => e.ContentId).ValueGeneratedNever();
     }

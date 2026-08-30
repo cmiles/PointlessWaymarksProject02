@@ -2388,8 +2388,10 @@
         <MenuItem Command="{Binding CommonCommands.NewSnippetListWindowCommand}" Header="New Snippet List Window" />
         <MenuItem Command="{Binding CommonCommands.NewTrailListWindowCommand}" Header="New Trail List Window" />
         <MenuItem Command="{Binding CommonCommands.NewVideoListWindowCommand}" Header="New Video List Window" />
+        <MenuItem Command="{Binding CommonCommands.NewWorkoutItemsListWindowCommand}" Header="New Workout List Window" />
         <Separator />
         <MenuItem Command="{Binding CommonCommands.NewContentMapWindowCommand}" Header="New Map View/Search Window" />
+        <MenuItem Command="{Binding CommonCommands.NewActivityLogWindowCommand}" Header="New Activity Log Window" />
         <Separator />
         <MenuItem Command="{Binding CommonCommands.NewCmsWindowCommand}" Header="New CMS Window" />
     </collections:ArrayList>
@@ -2428,6 +2430,10 @@
         <MenuItem Command="{Binding CommonCommands.NewTrailContentCommand}" Header="Trail" />
         <MenuItem Command="{Binding CommonCommands.NewVideoContentFromFilesCommand}" Header="Video From Files" />
         <MenuItem Command="{Binding CommonCommands.NewVideoContentCommand}" Header="Video" />
+        <MenuItem Command="{Binding CommonCommands.NewWorkoutContentFromFilesWithAutosaveCommand}"
+                  Header="Workout from File - Auto-Save" />
+        <MenuItem Command="{Binding CommonCommands.NewWorkoutContentFromFilesCommand}" Header="Workout from File" />
+        <MenuItem Command="{Binding CommonCommands.NewWorkoutContentCommand}" Header="Workout" />
         <Separator />
         <MenuItem Command="{Binding CommonCommands.NewContentMapWindowCommand}" Header="New Map View/Search Window" />
         <Separator />

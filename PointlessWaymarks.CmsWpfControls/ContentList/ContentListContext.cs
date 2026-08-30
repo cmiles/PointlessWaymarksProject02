@@ -1271,8 +1271,9 @@ public partial class ContentListContext : IDragSource, IDropTarget
         }
 
         var pictureContentExtensions = new List<string> { ".JPG", ".JPEG", ".WEBP", ".BMP", ".PNG", ".TIF" };
-        var lineContentExtensions = new List<string> { ".GPX", ".TCX", ".FIT" };
+        var lineContentExtensions = new List<string> { ".GPX", ".TCX" };
         var videoContentExtensions = new List<string> { ".MP4", ".OGG", ".WEBM" };
+        var workoutContentExtensions = new List<string> { ".FIT" };
 
         foreach (var loopFile in files)
         {
@@ -1289,6 +1290,18 @@ public partial class ContentListContext : IDragSource, IDropTarget
                 StatusContext.RunNonBlockingTask(async () =>
                 {
                     await CmsCommonCommands.NewLineContentFromFilesBase(fileInfo.AsList(), false, false,
+                        CancellationToken.None,
+                        StatusContext,
+                        WindowStatus);
+                });
+                continue;
+            }
+
+            if (workoutContentExtensions.Contains(Path.GetExtension(loopFile).ToUpperInvariant()))
+            {
+                StatusContext.RunNonBlockingTask(async () =>
+                {
+                    await CmsCommonCommands.NewWorkoutContentFromFilesBase(fileInfo.AsList(), false,
                         CancellationToken.None,
                         StatusContext,
                         WindowStatus);

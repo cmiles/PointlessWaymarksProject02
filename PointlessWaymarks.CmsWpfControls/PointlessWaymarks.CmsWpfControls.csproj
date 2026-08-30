@@ -26,6 +26,7 @@
         <PackageReference Include="DataGridExtensions" />
         <PackageReference Include="Dirkster.NumericUpDownLib" />
         <PackageReference Include="Fractions" />
+        <PackageReference Include="Garmin.FIT.Sdk" />
         <PackageReference Include="Metalama.Framework" />
         <PackageReference Include="Microsoft.Recognizers.Text.DateTime" />
         <PackageReference Include="Microsoft.Web.WebView2" />

@@ -1,0 +1,207 @@
+<UserControl
+    x:Class="PointlessWaymarks.CmsWpfControls.WorkoutItemsList.WorkoutItemsListControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:behaviors="clr-namespace:PointlessWaymarks.WpfCommon.Behaviors;assembly=PointlessWaymarks.WpfCommon"
+    xmlns:columnSort="clr-namespace:PointlessWaymarks.WpfCommon.ColumnSort;assembly=PointlessWaymarks.WpfCommon"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dd="urn:gong-wpf-dragdrop"
+    xmlns:local="clr-namespace:PointlessWaymarks.CmsWpfControls.WorkoutItemsList"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:status="clr-namespace:PointlessWaymarks.WpfCommon.Status;assembly=PointlessWaymarks.WpfCommon"
+    xmlns:utility="clr-namespace:PointlessWaymarks.WpfCommon.Utility;assembly=PointlessWaymarks.WpfCommon"
+    d:DataContext="{d:DesignInstance local:WorkoutItemsListContext}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../WpfControlsResourceDictionary.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <utility:BindingProxy x:Key="Proxy" Data="{Binding .}" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Menu>
+            <StaticResource ResourceKey="NewMenu" />
+            <MenuItem Header="Workout Activity Log">
+                <MenuItem Command="{Binding WorkoutActivityLogMonthlyStatsWindowForAllWorkoutContentCommand}" Header="Monthly Stats - All Workout Content" />
+                <MenuItem Command="{Binding WorkoutActivityLogMonthlyStatsWindowForSelectedCommand}" Header="Monthly Stats - Selected Workout Content" />
+                <Separator />
+                <MenuItem Command="{Binding CommonCommands.NewActivityLogWindowCommand}" Header="Monthly Stats - All Line and Workout Content" />
+            </MenuItem>
+            <StaticResource ResourceKey="ViewMenu" />
+            <StaticResource ResourceKey="SiteMenu" />
+        </Menu>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <GroupBox Header="Search" Style="{StaticResource UiComponentGroupBoxStyle}">
+                <Grid>
+                    <TextBox
+                        VerticalAlignment="Stretch"
+                        AcceptsReturn="True"
+                        Text="{Binding UserFilterText, UpdateSourceTrigger=PropertyChanged, Delay=1000}"
+                        TextWrapping="Wrap" />
+                </Grid>
+            </GroupBox>
+            <GroupBox
+                Grid.Column="1"
+                Header="Sort"
+                Style="{StaticResource UiComponentGroupBoxStyle}">
+                <columnSort:ColumnSortControl DataContext="{Binding ListSort}" />
+            </GroupBox>
+        </Grid>
+        <GroupBox
+            Grid.Row="2"
+            Header="Workouts"
+            Style="{StaticResource UiComponentGroupBoxStyle}">
+            <ListBox
+                behaviors:MultiSelectBehavior.SynchronizedSelectedItems="{Binding ListSelection.SelectedItems}"
+                dd:DragDrop.DropHandler="{Binding .}"
+                dd:DragDrop.IsDropTarget="True"
+                ItemsSource="{Binding Items}"
+                SelectedItem="{Binding ListSelection.Selected}"
+                Style="{StaticResource ContentListListBoxStyle}">
+                <b:Interaction.Behaviors>
+                    <behaviors:AttachCommandBindingsBehavior CommandBindings="{Binding ListSelection.ListBoxAppCommandBindings}" />
+                </b:Interaction.Behaviors>
+                <ListBox.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Command="{Binding EditSelectedCommand}" Header="_Edit" />
+                        <MenuItem Command="{Binding WorkoutActivityLogMonthlyStatsWindowForSelectedCommand}" Header="Workout Activity Log Monthly Stats Window" />
+                        <MenuItem Command="{Binding DeleteSelectedCommand}" Header="_Delete" />
+                        <MenuItem Command="{Binding LoadDataCommand}" Header="Refresh Data" />
+                    </ContextMenu>
+                </ListBox.ContextMenu>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource ContentListOuterBorderStyle}">
+                            <Border.InputBindings>
+                                <MouseBinding
+                                    Command="{Binding Data.EditCommand, Source={StaticResource Proxy}}"
+                                    CommandParameter="{Binding DbEntry}"
+                                    Gesture="Shift+LeftDoubleClick" />
+                            </Border.InputBindings>
+                            <Grid Margin="4">
+                                <Grid Style="{StaticResource ContentListTextGridStyle}">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <StackPanel HorizontalAlignment="Left" Orientation="Vertical">
+                                        <TextBlock
+                                            Margin="4,2,4,2"
+                                            FontWeight="Bold">
+                                            <TextBlock.Text>
+                                                <MultiBinding StringFormat="{}{0} - {1:g}">
+                                                    <Binding Path="DbEntry.WorkoutType" />
+                                                    <Binding Path="DbEntry.WorkoutOn" />
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                        <TextBlock
+                                            Margin="4,0,4,2"
+                                            Text="{Binding DbEntry.WorkoutBy, StringFormat='By: {0}'}" />
+                                    </StackPanel>
+                                    <WrapPanel
+                                        Grid.Row="1"
+                                        Margin="4,2,4,2"
+                                        Orientation="Horizontal">
+                                        <Border
+                                            Margin="2,1,4,1"
+                                            Padding="4,2,4,2"
+                                            CornerRadius="3">
+                                            <TextBlock Text="{Binding DbEntry.DurationMinutes, StringFormat='Duration: {0} min'}" />
+                                        </Border>
+                                        <Border
+                                            Margin="2,1,4,1"
+                                            Padding="4,2,4,2"
+                                            CornerRadius="3">
+                                            <TextBlock Text="{Binding DbEntry.DistanceMiles, StringFormat='Distance: {0:F2} mi', TargetNullValue='Distance: N/A', FallbackValue='Distance: N/A'}" />
+                                        </Border>
+                                        <Border
+                                            Margin="2,1,4,1"
+                                            Padding="4,2,4,2"
+                                            CornerRadius="3">
+                                            <TextBlock Text="{Binding DbEntry.ClimbFeet, StringFormat='Climb: {0:N0} ft', FallbackValue='Climb: 0 ft'}" />
+                                        </Border>
+                                        <Border
+                                            Margin="2,1,4,1"
+                                            Padding="4,2,4,2"
+                                            CornerRadius="3">
+                                            <TextBlock Text="{Binding DbEntry.DescentFeet, StringFormat='Descent: {0:N0} ft', FallbackValue='Descent: 0 ft'}" />
+                                        </Border>
+                                        <Border
+                                            Margin="2,1,4,1"
+                                            Padding="4,2,4,2"
+                                            CornerRadius="3">
+                                            <TextBlock Text="{Binding DbEntry.Calories, StringFormat='Calories: {0}', TargetNullValue='Calories: N/A', FallbackValue='Calories: N/A'}" />
+                                        </Border>
+                                    </WrapPanel>
+                                    <TextBox
+                                        Grid.Row="2"
+                                        MaxHeight="100"
+                                        Margin="4,4,4,4"
+                                        AcceptsReturn="true"
+                                        BorderThickness="0"
+                                        HorizontalScrollBarVisibility="Disabled"
+                                        IsReadOnly="True"
+                                        Text="{Binding DbEntry.Note}"
+                                        TextWrapping="Wrap"
+                                        VerticalScrollBarVisibility="Auto" />
+                                    <TextBlock
+                                        Grid.Row="3"
+                                        Margin="4,2,4,2"
+                                        HorizontalAlignment="Right"
+                                        Text="{Binding DbEntry.ContentId, StringFormat='ContentId: {0}'}" />
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </GroupBox>
+        <Border Grid.Row="3" Style="{StaticResource ActionPanelBorderStyle}">
+            <WrapPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                <Button
+                    Command="{Binding EditSelectedCommand}"
+                    Content="_Edit"
+                    Style="{StaticResource ActionPanelButtonStyle}" />
+                <Button
+                    Command="{Binding DeleteSelectedCommand}"
+                    Content="_Delete"
+                    Style="{StaticResource ActionPanelButtonStyle}" />
+                <Button
+                    Command="{Binding NewWorkoutItemCommand}"
+                    Content="_New Workout"
+                    Style="{StaticResource ActionPanelButtonStyle}" />
+                <Button
+                    Command="{Binding NewWorkoutItemFromFilesCommand}"
+                    Content="_New from Files"
+                    Style="{StaticResource ActionPanelButtonStyle}" />
+                <Button
+                    Command="{Binding NewWorkoutItemFromFilesWithAutosaveCommand}"
+                    Content="_New w/Autosave"
+                    Style="{StaticResource ActionPanelButtonStyle}" />
+            </WrapPanel>
+        </Border>
+        <status:StatusControl
+            Grid.Row="0"
+            Grid.RowSpan="4"
+            d:IsHidden="true"
+            DataContext="{Binding StatusContext}" />
+    </Grid>
+</UserControl>

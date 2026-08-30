@@ -81,8 +81,8 @@ public partial class LineListWithActionsContext
             },
             new ContextMenuItemData
             {
-                ItemName = "Activity Log Monthly Stats Window",
-                ItemCommand = ActivityLogMonthlyStatsWindowForSelectedCommand
+                ItemName = "Tracked Activity Log Monthly Stats Window",
+                ItemCommand = TrackedActivityLogMonthlyStatsWindowForSelectedCommand
             },
             new ContextMenuItemData
             {
@@ -128,7 +128,7 @@ public partial class LineListWithActionsContext
     public WindowIconStatus? WindowStatus { get; set; }
 
     [BlockingCommand]
-    public async Task ActivityLogMonthlyStatsWindowForAllLineContent()
+    public async Task TrackedActivityLogMonthlyStatsWindowForAllLineContent()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
@@ -138,21 +138,21 @@ public partial class LineListWithActionsContext
             await db.LineContents.LineContentFilteredForActivities().Select(x => x.ContentId).ToListAsync();
 
         var window =
-            await ActivityLogMonthlySummaryWindow.CreateInstance(allActivities);
+            await TrackedActivityLogMonthlySummaryWindow.CreateInstance(allActivities);
 
         await window.PositionWindowAndShowOnUiThread();
     }
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    public async Task ActivityLogMonthlyStatsWindowForSelected()
+    public async Task TrackedActivityLogMonthlyStatsWindowForSelected()
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         var frozenSelected = SelectedListItems();
 
         var window =
-            await ActivityLogMonthlySummaryWindow.CreateInstance(frozenSelected.Select(x => x.DbEntry.ContentId)
+            await TrackedActivityLogMonthlySummaryWindow.CreateInstance(frozenSelected.Select(x => x.DbEntry.ContentId)
                 .ToList());
 
         await window.PositionWindowAndShowOnUiThread();

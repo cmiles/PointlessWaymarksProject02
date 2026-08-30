@@ -36,6 +36,7 @@ using PointlessWaymarks.CmsWpfControls.TrailList;
 using PointlessWaymarks.CmsWpfControls.UserSettingsEditor;
 using PointlessWaymarks.CmsWpfControls.Utility;
 using PointlessWaymarks.CmsWpfControls.VideoList;
+using PointlessWaymarks.CmsWpfControls.WorkoutItemsList;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.CommonTools.S3;
 using PointlessWaymarks.LlamaAspects;
@@ -137,6 +138,7 @@ public partial class MainWindow
     public VideoListWithActionsContext TabVideoListContext { get; set; }
     public ProgramUpdateMessageContext UpdateMessageContext { get; set; }
     public WindowIconStatus WindowStatus { get; }
+    public WorkoutItemsListContext TabWorkoutListContext { get; set; }
 
     [BlockingCommand]
     private async Task CheckAllContentForInvalidBracketCodeContentIds()
@@ -569,6 +571,8 @@ public partial class MainWindow
             TabSnippetContext = await SnippetListContext.CreateInstance(null);
         if (SelectedTab.Header.ToString() == "Links" && TabLinkContext == null)
             TabLinkContext = await LinkListWithActionsContext.CreateInstance(null, WindowStatus);
+        if (SelectedTab.Header.ToString() == "Workouts" && TabWorkoutListContext == null)
+            TabWorkoutListContext = await WorkoutItemsListContext.CreateInstance(null);
         if (SelectedTab.Header.ToString() == "Tag Search Exclusions" && TabTagExclusionContext == null)
             TabTagExclusionContext = await TagExclusionEditorContext.CreateInstance(null);
         if (SelectedTab.Header.ToString() == "Menu Links" && TabMenuLinkContext == null)
