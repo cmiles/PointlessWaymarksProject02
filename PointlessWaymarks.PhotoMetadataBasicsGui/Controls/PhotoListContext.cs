@@ -634,7 +634,7 @@ public partial class PhotoListContext : IDropTarget
             return;
         }
 
-        _previewWindow = await PhotoPreviewWindow.CreateInstance(false);
+        _previewWindow = await PhotoPreviewWindow.CreateInstance();
         await _previewWindow.PositionWindowAndShowOnUiThread();
 
         SendPreviewRequest();
@@ -755,17 +755,18 @@ public partial class PhotoListContext : IDropTarget
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
 
-        if (SelectedItem == null) return;
+        var matchingItem = Items.FirstOrDefault(i =>
+            i.Items.Any(x => string.Equals(x.PhotoFile.FullName, data.FullFilePath, StringComparison.OrdinalIgnoreCase)));
 
-        var primaryFile = GetCurrentPrimaryFile();
-        if (primaryFile == null) return;
-
-        if (string.Equals(primaryFile.FullName, data.FullFilePath, StringComparison.OrdinalIgnoreCase))
+        if (matchingItem != null)
         {
-            SelectedItem.RatingEntry.UserValue = data.Rating;
+            matchingItem.RatingEntry.UserValue = data.Rating;
             await ThreadSwitcher.ResumeForegroundAsync();
             FilteredItems?.Refresh();
-            EnsureSelectedItemVisible();
+            if (matchingItem == SelectedItem)
+            {
+                EnsureSelectedItemVisible();
+            }
         }
     }
 
