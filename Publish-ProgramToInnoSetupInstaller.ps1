@@ -1,4 +1,9 @@
-$program = $args[0]
+param(
+    [Parameter(Mandatory = $true, Position = 0)]
+    [string]$program,
+    [switch]$IncludePhotoPreviewGui
+)
+
 $baseName = "PointlessWaymarks.$program"
 
 $ErrorActionPreference = "Stop"
@@ -38,6 +43,25 @@ Remove-Item -Path $publishPath\* -Recurse
 & $msBuild .\$baseName\$baseName.csproj -t:publish -p:PublishProfile=.\$baseName\Properties\PublishProfile\FolderProfile.pubxml -verbosity:minimal
 
 if ($lastexitcode -ne 0) {throw ("Exec: " + $errorMessage) }
+
+if ($IncludePhotoPreviewGui) {
+    $photoPreviewPublishPath = "M:\PointlessWaymarksPublications\PointlessWaymarks.PhotoPreviewGui"
+    if (!(Test-Path -PathType Container $photoPreviewPublishPath)) {
+        New-Item -ItemType Directory -Path $photoPreviewPublishPath
+    }
+
+    Remove-Item -Path "$photoPreviewPublishPath\*" -Recurse -Force
+
+    & $msBuild .\PointlessWaymarksTools\PointlessWaymarks.PhotoPreviewGui\PointlessWaymarks.PhotoPreviewGui.csproj -t:publish -p:PublishProfile=.\PointlessWaymarksTools\PointlessWaymarks.PhotoPreviewGui\Properties\PublishProfiles\FolderProfile.pubxml -verbosity:minimal
+
+    if ($lastexitcode -ne 0) { throw ("Exec: " + $errorMessage) }
+
+    $photoPreviewDestination = "$publishPath\PointlessWaymarks.PhotoPreviewGui"
+    if (!(Test-Path -PathType Container $photoPreviewDestination)) {
+        New-Item -ItemType Directory -Path $photoPreviewDestination
+    }
+    Copy-Item -Path "$photoPreviewPublishPath\*" -Destination $photoPreviewDestination -Recurse -Force
+}
 
 $exePath = "M:\PointlessWaymarksPublications\$baseName\$baseName.exe"
 $fileVersionInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($exePath)

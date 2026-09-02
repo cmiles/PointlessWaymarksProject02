@@ -5,6 +5,7 @@
         <UseWPF>true</UseWPF>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <ApplicationIcon>PointlessWaymarksPhotoMetadataBasicsIcon.ico</ApplicationIcon>
+        <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
     </PropertyGroup>
 
     <ItemGroup>
@@ -30,8 +31,10 @@
 
     <ItemGroup>
         <ProjectReference Include="..\PointlessWaymarks.FeatureIntersectionTags\PointlessWaymarks.FeatureIntersectionTags.csproj" />
+        <ProjectReference Include="..\PointlessWaymarksTools\PointlessWaymarks.PhotoPreviewGui\PointlessWaymarks.PhotoPreviewGui.csproj" ReferenceOutputAssembly="false" Private="false" ExcludeAssets="all" />
         <ProjectReference Include="..\PointlessWaymarksTools\PointlessWaymarks.WpfCommon\PointlessWaymarks.WpfCommon.csproj" />
     </ItemGroup>
+
 
     <ItemGroup>
       <Resource Include="PointlessWaymarksPhotoMetadataBasicsIcon.ico">

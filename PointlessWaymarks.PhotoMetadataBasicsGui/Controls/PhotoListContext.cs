@@ -35,7 +35,7 @@ namespace PointlessWaymarks.PhotoMetadataBasicsGui.Controls;
 public partial class PhotoListContext : IDropTarget
 {
     private bool _previewFilterUnratedOnly;
-    private PhotoPreviewWindow? _previewWindow;
+    private PhotoPreviewLauncher? _previewLauncher;
     private PhotoListGroupListItem? _previouslySelectedItem;
     public ICollectionView? FilteredItems { get; set; }
     public StarRatingContext FilterMinimumRatingEntry { get; set; } = StarRatingContext.CreateInstance();
@@ -282,7 +282,7 @@ public partial class PhotoListContext : IDropTarget
             if (factoryReturn.SelectedItem != null)
                 factoryReturn._previouslySelectedItem = factoryReturn.SelectedItem;
 
-            if (factoryReturn._previewWindow != null)
+            if (factoryReturn._previewLauncher is { IsRunning: true })
                 factoryReturn.SendPreviewRequest();
         };
 
@@ -634,10 +634,43 @@ public partial class PhotoListContext : IDropTarget
             return;
         }
 
-        _previewWindow = await PhotoPreviewWindow.CreateInstance();
-        await _previewWindow.PositionWindowAndShowOnUiThread();
+        if (_previewLauncher == null)
+        {
+            _previewLauncher = new PhotoPreviewLauncher();
+            _previewLauncher.RatingChangedReceived += (_, e) =>
+            {
+                StatusContext.RunFireAndForgetNonBlockingTask(() =>
+                    OnRatingChangedFromPreview(new PhotoItemRatingChangedData(e.FilePath, e.Rating, e.SenderId)));
+            };
+            _previewLauncher.NavigateReceived += (_, e) =>
+            {
+                if (e.Direction.Equals("Next", StringComparison.OrdinalIgnoreCase))
+                    StatusContext.RunFireAndForgetNonBlockingTask(OnPreviewNextItem);
+                else if (e.Direction.Equals("Previous", StringComparison.OrdinalIgnoreCase))
+                    StatusContext.RunFireAndForgetNonBlockingTask(OnPreviewPreviousItem);
+            };
+            _previewLauncher.FilterUnratedReceived += (_, e) =>
+            {
+                _previewFilterUnratedOnly = e.FilterUnratedOnly;
+            };
+            _previewLauncher.ProcessExited += (_, _) =>
+            {
+                StatusContext.Progress("Photo Preview window closed.");
+            };
+        }
 
-        SendPreviewRequest();
+        var title = SelectedItem?.TitleEntryContext.UserValue.TrimNullToEmpty() ?? primaryFile.Name;
+        var rating = SelectedItem?.RatingEntry.UserValue ?? 0;
+
+        var launched = await _previewLauncher.EnsureRunningAsync(primaryFile.FullName, title, rating);
+        if (launched)
+        {
+            SendPreviewRequest();
+        }
+        else
+        {
+            await StatusContext.ToastError("Could not launch Photo Preview application.");
+        }
     }
 
     public async Task LoadItems(List<string> files)
@@ -697,6 +730,7 @@ public partial class PhotoListContext : IDropTarget
         if (e.PropertyName == nameof(StarRatingContext.UserValue))
             StatusContext.RunNonBlockingTask(async () =>
             {
+                if (!FilterNoRatingOnly && FilterMinimumRatingEntry.UserValue == 0 && !_previewFilterUnratedOnly) return;
                 await ThreadSwitcher.ResumeForegroundAsync();
                 FilteredItems?.Refresh();
                 EnsureSelectedItemVisible();
@@ -761,11 +795,14 @@ public partial class PhotoListContext : IDropTarget
         if (matchingItem != null)
         {
             matchingItem.RatingEntry.UserValue = data.Rating;
-            await ThreadSwitcher.ResumeForegroundAsync();
-            FilteredItems?.Refresh();
-            if (matchingItem == SelectedItem)
+            if (FilterNoRatingOnly || FilterMinimumRatingEntry.UserValue > 0 || _previewFilterUnratedOnly)
             {
-                EnsureSelectedItemVisible();
+                await ThreadSwitcher.ResumeForegroundAsync();
+                FilteredItems?.Refresh();
+                if (matchingItem == SelectedItem)
+                {
+                    EnsureSelectedItemVisible();
+                }
             }
         }
     }
@@ -889,6 +926,7 @@ public partial class PhotoListContext : IDropTarget
         if (primaryFile == null)
         {
             WeakReferenceMessenger.Default.Send(new PhotoPreviewClearMessage());
+            _previewLauncher?.SendClearPreview();
             return;
         }
 
@@ -935,9 +973,14 @@ public partial class PhotoListContext : IDropTarget
             }
         }
 
+        var upcoming = upcomingPaths.Count > 0 ? upcomingPaths : null;
         WeakReferenceMessenger.Default.Send(
-            new PhotoPreviewRequestMessage(new PhotoPreviewRequestData(primaryFile.FullName, title, rating,
-                upcomingPaths.Count > 0 ? upcomingPaths : null)));
+            new PhotoPreviewRequestMessage(new PhotoPreviewRequestData(primaryFile.FullName, title, rating, upcoming)));
+
+        if (_previewLauncher is { IsRunning: true })
+        {
+            _previewLauncher.SendPreviewRequest(primaryFile.FullName, title, rating, upcoming);
+        }
     }
 
     [NonBlockingCommand]

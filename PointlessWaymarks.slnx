@@ -23,6 +23,9 @@
     <Project Path="PointlessWaymarksTools/PointlessWaymarks.LlamaAspects/PointlessWaymarks.LlamaAspects.csproj">
       <Platform Project="x64" />
     </Project>
+    <Project Path="PointlessWaymarksTools/PointlessWaymarks.PhotoPreviewGui/PointlessWaymarks.PhotoPreviewGui.csproj">
+      <Platform Project="x64" />
+    </Project>
     <Project Path="PointlessWaymarksTools/PointlessWaymarks.SpatialTools.Tests/PointlessWaymarks.SpatialTools.Tests.csproj">
       <Platform Project="x64" />
     </Project>

@@ -5,7 +5,7 @@ dotnet run Publish-PublishReadmeHelper.cs
 .\Publish-ProgramToInnoSetupInstaller.ps1 FeedReaderGui
 .\Publish-ProgramToInnoSetupInstaller.ps1 GeoToolsGui
 .\Publish-ProgramToInnoSetupInstaller.ps1 PowerShellRunnerGui
-.\Publish-ProgramToInnoSetupInstaller.ps1 PhotoMetadataBasicsGui
+.\Publish-ProgramToInnoSetupInstaller.ps1 PhotoMetadataBasicsGui -IncludePhotoPreviewGui
 .\Publish-ProgramToInnoSetupInstaller.ps1 SiteViewerGui
 .\Publish-ProgramToInnoSetupInstaller.ps1 UtilitarianImageCombinerGui
 .\Publish-ProgramToZip.ps1 CloudBackupRunner
