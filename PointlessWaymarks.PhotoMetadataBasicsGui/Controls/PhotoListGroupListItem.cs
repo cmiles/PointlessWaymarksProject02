@@ -464,10 +464,11 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
     [StopAndWarnIfFirstParameterIsNull]
     public async Task RemoveFile(PhotoListFileItem? file)
     {
+        if (file == null) return;
         await ThreadSwitcher.ResumeForegroundAsync();
-        Items.Remove(file!);
+        Items.Remove(file);
 
-        if (!Items.Any(x => x.IsPrimaryPhoto)) DesignateBestGuessPrimary();
+        if (Items.Count > 0 && !Items.Any(x => x.IsPrimaryPhoto)) DesignateBestGuessPrimary();
     }
 
     [NonBlockingCommand]
@@ -477,10 +478,18 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         await ThreadSwitcher.ResumeForegroundAsync();
 
         var frozenSelected = SelectedItems.ToList();
+        if (frozenSelected.Count == 0) return;
 
-        foreach (var item in frozenSelected) Items.Remove(item);
+        if (frozenSelected.Count == Items.Count)
+        {
+            Items.Clear();
+        }
+        else
+        {
+            foreach (var item in frozenSelected) Items.Remove(item);
+        }
 
-        if (!Items.Any(x => x.IsPrimaryPhoto)) DesignateBestGuessPrimary();
+        if (Items.Count > 0 && !Items.Any(x => x.IsPrimaryPhoto)) DesignateBestGuessPrimary();
     }
 
     [BlockingCommand]

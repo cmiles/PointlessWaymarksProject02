@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
 using System.Text;
@@ -37,10 +38,11 @@ public partial class PhotoListContext : IDropTarget
     private bool _previewFilterUnratedOnly;
     private PhotoPreviewLauncher? _previewLauncher;
     private PhotoListGroupListItem? _previouslySelectedItem;
+    private bool _suppressCollectionChangedRefresh;
     public ICollectionView? FilteredItems { get; set; }
     public StarRatingContext FilterMinimumRatingEntry { get; set; } = StarRatingContext.CreateInstance();
     public bool FilterNoRatingOnly { get; set; }
-    public required ObservableCollection<PhotoListGroupListItem> Items { get; set; }
+    public required ObservableRangeCollection<PhotoListGroupListItem> Items { get; set; }
     public PhotoListGroupListItem? SelectedItem { get; set; }
     public List<PhotoListGroupListItem> SelectedItems { get; set; } = [];
     public required StatusControlContext StatusContext { get; set; }
@@ -217,7 +219,7 @@ public partial class PhotoListContext : IDropTarget
 
         var factoryReturn = new PhotoListContext
         {
-            Items = new ObservableCollection<PhotoListGroupListItem>(),
+            Items = new ObservableRangeCollection<PhotoListGroupListItem>(),
             StatusContext = statusContext ?? await StatusControlContext.CreateInstance()
         };
 
@@ -251,13 +253,26 @@ public partial class PhotoListContext : IDropTarget
 
         factoryReturn.Items.CollectionChanged += (_, args) =>
         {
-            if (args.NewItems != null)
-                foreach (PhotoListGroupListItem newItem in args.NewItems)
-                    newItem.RatingEntry.PropertyChanged += factoryReturn.OnItemRatingChanged;
+            if (args.Action == NotifyCollectionChangedAction.Reset)
+            {
+                foreach (var item in factoryReturn.Items)
+                {
+                    item.RatingEntry.PropertyChanged -= factoryReturn.OnItemRatingChanged;
+                    item.RatingEntry.PropertyChanged += factoryReturn.OnItemRatingChanged;
+                }
+            }
+            else
+            {
+                if (args.NewItems != null)
+                    foreach (PhotoListGroupListItem newItem in args.NewItems)
+                        newItem.RatingEntry.PropertyChanged += factoryReturn.OnItemRatingChanged;
 
-            if (args.OldItems != null)
-                foreach (PhotoListGroupListItem oldItem in args.OldItems)
-                    oldItem.RatingEntry.PropertyChanged -= factoryReturn.OnItemRatingChanged;
+                if (args.OldItems != null)
+                    foreach (PhotoListGroupListItem oldItem in args.OldItems)
+                        oldItem.RatingEntry.PropertyChanged -= factoryReturn.OnItemRatingChanged;
+            }
+
+            if (factoryReturn._suppressCollectionChangedRefresh) return;
 
             factoryReturn.FilteredItems?.Refresh();
             factoryReturn.EnsureSelectedItemVisible();
@@ -293,69 +308,118 @@ public partial class PhotoListContext : IDropTarget
     [StopAndWarnIfNoSelectedListItems]
     public async Task DeleteAllFilesInSelectedGroups()
     {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
         var frozenGroups = SelectedItems.ToList();
-        var totalFiles = frozenGroups.Sum(g => g.Items.Count);
+        if (frozenGroups.Count == 0) return;
 
-        var errors = new List<string>();
+        var errors = new ConcurrentBag<string>();
+        var deletedGroups = new ConcurrentBag<PhotoListGroupListItem>();
+        var fileDeleteCount = 0;
 
-        foreach (var group in frozenGroups)
+        Parallel.ForEach(frozenGroups, group =>
         {
+            var groupHadErrors = false;
             foreach (var fileItem in group.Items.ToList())
                 try
                 {
                     FileSystem.DeleteFile(fileItem.PhotoFile.FullName, UIOption.OnlyErrorDialogs,
                         RecycleOption.SendToRecycleBin);
+                    Interlocked.Increment(ref fileDeleteCount);
                 }
                 catch (Exception ex)
                 {
+                    groupHadErrors = true;
                     errors.Add($"{fileItem.PhotoFile.Name}: {ex.Message}");
                 }
 
-            await ThreadSwitcher.ResumeForegroundAsync();
-            Items.Remove(group);
-            await ThreadSwitcher.ResumeBackgroundAsync();
+            if (!groupHadErrors)
+            {
+                deletedGroups.Add(group);
+            }
+        });
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+        try
+        {
+            _suppressCollectionChangedRefresh = true;
+            foreach (var group in deletedGroups)
+            {
+                Items.Remove(group);
+            }
+        }
+        finally
+        {
+            _suppressCollectionChangedRefresh = false;
         }
 
-        if (errors.Count > 0)
+        FilteredItems?.Refresh();
+        EnsureSelectedItemVisible();
+
+        if (!errors.IsEmpty)
             await StatusContext.ShowMessageWithOkButton("Delete Errors",
                 string.Join(Environment.NewLine, errors));
         else
-            await StatusContext.ToastSuccess($"Deleted {totalFiles} file(s) from {frozenGroups.Count} group(s).");
+            await StatusContext.ToastSuccess($"Deleted {fileDeleteCount} file(s) from {deletedGroups.Count} group(s).");
     }
 
     [BlockingCommand]
     public async Task DeleteGroupsWithNoRating()
     {
-        var unratedGroups = CurrentFilteredListItems.Where(x => x.RatingEntry.UserValue < 1).ToList();
-        var errors = new List<string>();
+        await ThreadSwitcher.ResumeBackgroundAsync();
 
+        var unratedGroups = CurrentFilteredListItems.Where(x => x.RatingEntry.UserValue < 1).ToList();
+        if (unratedGroups.Count == 0) return;
+
+        var errors = new ConcurrentBag<string>();
+        var deletedGroups = new ConcurrentBag<PhotoListGroupListItem>();
         var fileDeleteCount = 0;
-        
-        foreach (var group in unratedGroups)
+
+        Parallel.ForEach(unratedGroups, group =>
         {
+            var groupHadErrors = false;
             foreach (var fileItem in group.Items.ToList())
                 try
                 {
                     FileSystem.DeleteFile(fileItem.PhotoFile.FullName, UIOption.OnlyErrorDialogs,
                         RecycleOption.SendToRecycleBin);
-                    fileDeleteCount++;
+                    Interlocked.Increment(ref fileDeleteCount);
                 }
                 catch (Exception ex)
                 {
+                    groupHadErrors = true;
                     errors.Add($"{fileItem.PhotoFile.Name}: {ex.Message}");
                 }
 
-            await ThreadSwitcher.ResumeForegroundAsync();
-            Items.Remove(group);
-            await ThreadSwitcher.ResumeBackgroundAsync();
+            if (!groupHadErrors)
+            {
+                deletedGroups.Add(group);
+            }
+        });
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+        try
+        {
+            _suppressCollectionChangedRefresh = true;
+            foreach (var group in deletedGroups)
+            {
+                Items.Remove(group);
+            }
+        }
+        finally
+        {
+            _suppressCollectionChangedRefresh = false;
         }
 
-        if (errors.Count > 0)
+        FilteredItems?.Refresh();
+        EnsureSelectedItemVisible();
+
+        if (!errors.IsEmpty)
             await StatusContext.ShowMessageWithOkButton("Delete Errors",
                 string.Join(Environment.NewLine, errors));
         else
             await StatusContext.ToastSuccess(
-                $"Deleted {fileDeleteCount} file(s) from {unratedGroups.Count} filtered-out group(s).");
+                $"Deleted {fileDeleteCount} file(s) from {deletedGroups.Count} unrated group(s).");
     }
 
     [BlockingCommand]
@@ -375,39 +439,62 @@ public partial class PhotoListContext : IDropTarget
         }
 
         var fileDeleteCount = 0;
-        var errors = new List<string>();
+        var errors = new ConcurrentBag<string>();
+        var deletedGroups = new ConcurrentBag<PhotoListGroupListItem>();
 
-        foreach (var group in hiddenGroups)
+        Parallel.ForEach(hiddenGroups, group =>
         {
+            var groupHadErrors = false;
             foreach (var fileItem in group.Items.ToList())
                 try
                 {
                     FileSystem.DeleteFile(fileItem.PhotoFile.FullName, UIOption.OnlyErrorDialogs,
                         RecycleOption.SendToRecycleBin);
-                    fileDeleteCount++;
+                    Interlocked.Increment(ref fileDeleteCount);
                 }
                 catch (Exception ex)
                 {
+                    groupHadErrors = true;
                     errors.Add($"{fileItem.PhotoFile.Name}: {ex.Message}");
                 }
 
-            await ThreadSwitcher.ResumeForegroundAsync();
-            Items.Remove(group);
-            await ThreadSwitcher.ResumeBackgroundAsync();
+            if (!groupHadErrors)
+            {
+                deletedGroups.Add(group);
+            }
+        });
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+        try
+        {
+            _suppressCollectionChangedRefresh = true;
+            foreach (var group in deletedGroups)
+            {
+                Items.Remove(group);
+            }
+        }
+        finally
+        {
+            _suppressCollectionChangedRefresh = false;
         }
 
-        if (errors.Count > 0)
+        FilteredItems?.Refresh();
+        EnsureSelectedItemVisible();
+
+        if (!errors.IsEmpty)
             await StatusContext.ShowMessageWithOkButton("Delete Errors",
                 string.Join(Environment.NewLine, errors));
         else
             await StatusContext.ToastSuccess(
-                $"Deleted {fileDeleteCount} file(s) from {hiddenGroups.Count} filtered-out group(s).");
+                $"Deleted {fileDeleteCount} file(s) from {deletedGroups.Count} filtered-out group(s).");
     }
 
     [BlockingCommand]
     [StopAndWarnIfFirstParameterIsNull]
     public async Task DeleteSelectedFiles(PhotoListGroupListItem? listItem)
     {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
         var selectedFiles = listItem!.SelectedItems.ToList();
 
         if (selectedFiles.Count < 1)
@@ -416,10 +503,11 @@ public partial class PhotoListContext : IDropTarget
             return;
         }
 
-        var errors = new List<string>();
-        var deleted = new List<PhotoListFileItem>();
+        var errors = new ConcurrentBag<string>();
+        var deleted = new ConcurrentBag<PhotoListFileItem>();
 
-        foreach (var loopFile in selectedFiles)
+        Parallel.ForEach(selectedFiles, loopFile =>
+        {
             try
             {
                 FileSystem.DeleteFile(loopFile.PhotoFile.FullName, UIOption.OnlyErrorDialogs,
@@ -430,6 +518,7 @@ public partial class PhotoListContext : IDropTarget
             {
                 errors.Add($"{loopFile.PhotoFile.Name}: {ex.Message}");
             }
+        });
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -439,7 +528,7 @@ public partial class PhotoListContext : IDropTarget
         if (listItem.Items.Count == 0)
             Items.Remove(listItem);
 
-        if (errors.Count > 0)
+        if (!errors.IsEmpty)
             await StatusContext.ShowMessageWithOkButton("Delete Errors",
                 string.Join(Environment.NewLine, errors));
     }
@@ -493,7 +582,7 @@ public partial class PhotoListContext : IDropTarget
     /// <summary>
     ///     Given an anchor file, finds all related files in the same directory by matching
     ///     base name prefixes (bidirectional with separator boundary), camera identifier
-    ///     tokens, and numbered suffix variants.
+    ///     tokens, and numbered suffix variants (when a base root file exists).
     /// </summary>
     private static List<FileInfo> FindRelatedFiles(FileInfo anchor)
     {
@@ -513,7 +602,12 @@ public partial class PhotoListContext : IDropTarget
         if (suffixMatch.Success)
             numberRoot = suffixMatch.Groups[1].Value;
 
-        foreach (var f in dir.GetFiles("*", SearchOption.TopDirectoryOnly))
+        var dirFiles = dir.GetFiles("*", SearchOption.TopDirectoryOnly);
+
+        var hasRootFile = numberRoot is not null
+            && dirFiles.Any(f => Path.GetFileNameWithoutExtension(f.Name).Equals(numberRoot, StringComparison.OrdinalIgnoreCase));
+
+        foreach (var f in dirFiles)
         {
             if (!seen.Add(f.FullName)) continue;
 
@@ -553,13 +647,23 @@ public partial class PhotoListContext : IDropTarget
                 continue;
             }
 
-            // Numbered suffix grouping: if anchor is "root-N" or "root_N",
-            // also match "root" and "root-M" / "root_M"
-            if (numberRoot is not null
+            // Numbered suffix grouping: if anchor is "root-N" or "root_N" and "root.xxx" exists in directory,
+            // match "root" and "root-M" / "root_M". If anchor is "root", also match "root-M" / "root_M".
+            if (hasRootFile && numberRoot is not null
                 && (candidateBase.Equals(numberRoot, StringComparison.OrdinalIgnoreCase)
                     || Regex.IsMatch(candidateBase, $@"^{Regex.Escape(numberRoot)}[_-]\d+$",
                         RegexOptions.IgnoreCase)))
+            {
                 result.Add(f);
+                continue;
+            }
+
+            if (numberRoot is null
+                && Regex.IsMatch(candidateBase, $@"^{Regex.Escape(baseName)}[_-]\d+$",
+                    RegexOptions.IgnoreCase))
+            {
+                result.Add(f);
+            }
         }
 
         return result;
@@ -859,27 +963,58 @@ public partial class PhotoListContext : IDropTarget
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        foreach (var photoListGroupListItem in toAdd) Items.Add(photoListGroupListItem);
+        Items.AddRange(toAdd);
+
+        FilteredItems?.Refresh();
+        EnsureSelectedItemVisible();
     }
 
     [BlockingCommand]
-    [StopAndWarnIfNoSelectedListItems]
+    [StopAndWarnIfNoItems]
     public async Task RemoveAllGroups()
     {
         await ThreadSwitcher.ResumeForegroundAsync();
 
         var frozenItems = CurrentFilteredListItems.ToList();
+        if (frozenItems.Count == 0) return;
 
-        foreach (var loopSelected in frozenItems) Items.Remove(loopSelected);
+        try
+        {
+            _suppressCollectionChangedRefresh = true;
+
+            if (frozenItems.Count == Items.Count)
+            {
+                foreach (var item in frozenItems)
+                {
+                    item.RatingEntry.PropertyChanged -= OnItemRatingChanged;
+                }
+                Items.Clear();
+            }
+            else
+            {
+                foreach (var loopSelected in frozenItems)
+                {
+                    Items.Remove(loopSelected);
+                }
+            }
+        }
+        finally
+        {
+            _suppressCollectionChangedRefresh = false;
+        }
+
+        FilteredItems?.Refresh();
+        EnsureSelectedItemVisible();
     }
 
     [BlockingCommand]
     [StopAndWarnIfFirstParameterIsNull]
     public async Task RemoveGroup(PhotoListGroupListItem? toRemove)
     {
+        if (toRemove == null) return;
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        Items.Remove(toRemove!);
+        Items.Remove(toRemove);
     }
 
     [BlockingCommand]
@@ -889,8 +1024,35 @@ public partial class PhotoListContext : IDropTarget
         await ThreadSwitcher.ResumeForegroundAsync();
 
         var frozenSelected = SelectedItems.ToList();
+        if (frozenSelected.Count == 0) return;
 
-        foreach (var loopSelected in frozenSelected) Items.Remove(loopSelected);
+        try
+        {
+            _suppressCollectionChangedRefresh = true;
+
+            if (frozenSelected.Count == Items.Count)
+            {
+                foreach (var item in frozenSelected)
+                {
+                    item.RatingEntry.PropertyChanged -= OnItemRatingChanged;
+                }
+                Items.Clear();
+            }
+            else
+            {
+                foreach (var loopSelected in frozenSelected)
+                {
+                    Items.Remove(loopSelected);
+                }
+            }
+        }
+        finally
+        {
+            _suppressCollectionChangedRefresh = false;
+        }
+
+        FilteredItems?.Refresh();
+        EnsureSelectedItemVisible();
     }
 
     [BlockingCommand]

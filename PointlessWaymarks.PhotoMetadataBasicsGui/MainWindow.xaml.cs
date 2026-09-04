@@ -64,7 +64,6 @@ public partial class MainWindow
          """;
 
     public ImportPhotosContext? ImportPhotosTabContext { get; set; }
-
     public string InfoTitle { get; set; }
     public PhotoListContext? PhotoTabContext { get; set; }
     public int SelectedMainTabIndex { get; set; }
