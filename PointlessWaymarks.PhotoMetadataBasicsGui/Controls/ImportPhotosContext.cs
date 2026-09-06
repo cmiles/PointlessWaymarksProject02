@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.IO;
 using System.Windows;
 using GongSolutions.Wpf.DragDrop;
@@ -35,16 +36,21 @@ public partial class ImportPhotosContext
     public required StatusControlContext StatusContext { get; set; }
     public required ImportDropHandler WorkingFilesDropHandler { get; set; }
 
+    private readonly object _logLock = new();
+
     private void AppendLog(string message, string? directory = null)
     {
-        var timestamp = DateTime.Now.ToString("HH:mm:ss");
-        var entry = $"[{timestamp}] {message}";
-        ImportLog = string.IsNullOrEmpty(ImportLog)
-            ? entry
-            : $"{entry}{Environment.NewLine}{ImportLog}";
-        StatusContext.Progress(message);
-        if (!string.IsNullOrWhiteSpace(directory))
-            LastImportDirectory = directory;
+        lock (_logLock)
+        {
+            var timestamp = DateTime.Now.ToString("HH:mm:ss");
+            var entry = $"[{timestamp}] {message}";
+            ImportLog = string.IsNullOrEmpty(ImportLog)
+                ? entry
+                : $"{entry}{Environment.NewLine}{ImportLog}";
+            StatusContext.Progress(message);
+            if (!string.IsNullOrWhiteSpace(directory))
+                LastImportDirectory = directory;
+        }
     }
 
     [BlockingCommand]
@@ -224,11 +230,13 @@ public partial class ImportPhotosContext
         var skippedCount = 0;
         var overwrittenCount = 0;
         var errorCount = 0;
-        var errors = new List<string>();
+        var errors = new ConcurrentBag<string>();
         var processed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var importedDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var importedDirectories = new ConcurrentBag<string>();
 
         AppendLog($"{operationLabel} importing {files.Count} file(s) as {label}...");
+
+        var fileGroups = new List<(FileInfo anchor, List<FileInfo> companions)>();
 
         foreach (var filePath in files)
         {
@@ -238,12 +246,19 @@ public partial class ImportPhotosContext
             if (!fileInfo.Exists)
             {
                 AppendLog($"[Skip] File not found: {filePath}");
-                skippedCount++;
+                Interlocked.Increment(ref skippedCount);
                 continue;
             }
 
             var companions = FindCompanionFiles(fileInfo);
             foreach (var c in companions) processed.Add(c.FullName);
+
+            fileGroups.Add((fileInfo, companions));
+        }
+
+        await Parallel.ForEachAsync(fileGroups, async (fileGroup, _) =>
+        {
+            var (fileInfo, companions) = fileGroup;
 
             var createdDate = await GetPhotoCreatedDate(fileInfo);
 
@@ -266,7 +281,7 @@ public partial class ImportPhotosContext
                         if (!overwrite)
                         {
                             AppendLog($"[Skip] Already exists: {targetPath}");
-                            skippedCount++;
+                            Interlocked.Increment(ref skippedCount);
                             continue;
                         }
 
@@ -281,7 +296,7 @@ public partial class ImportPhotosContext
                                 $"{companion.Name}: Could not recycle existing file - {recycleEx.Message}";
                             AppendLog($"[Error] {msg}");
                             errors.Add(msg);
-                            errorCount++;
+                            Interlocked.Increment(ref errorCount);
                             continue;
                         }
 
@@ -292,7 +307,7 @@ public partial class ImportPhotosContext
 
                         importedDirectories.Add(Path.GetFullPath(targetFolder));
                         AppendLog($"[Overwrite/{operationLabel}] {companion.Name} -> {targetPath}");
-                        overwrittenCount++;
+                        Interlocked.Increment(ref overwrittenCount);
                     }
                     else
                     {
@@ -303,7 +318,7 @@ public partial class ImportPhotosContext
 
                         importedDirectories.Add(Path.GetFullPath(targetFolder));
                         AppendLog($"[{label}/{operationLabel}] {companion.Name} -> {targetPath}");
-                        importedCount++;
+                        Interlocked.Increment(ref importedCount);
                     }
                 }
                 catch (Exception ex)
@@ -311,24 +326,25 @@ public partial class ImportPhotosContext
                     var msg = $"{companion.Name}: {ex.Message}";
                     AppendLog($"[Error] {msg}");
                     errors.Add(msg);
-                    errorCount++;
+                    Interlocked.Increment(ref errorCount);
                 }
-        }
+        });
 
         var summary =
             $"{operationLabel} import complete: {importedCount} imported, {overwrittenCount} overwritten, {skippedCount} skipped, {errorCount} error(s).";
         AppendLog(summary, destinationRoot);
 
-        if (errors.Count > 0)
+        if (!errors.IsEmpty)
             await StatusContext.ShowMessageWithOkButton("Import Errors",
                 string.Join(Environment.NewLine, errors));
 
         var openFilesAfterImport = isWorkingFiles ? OpenWorkingFilesAfterImport : OpenFinishedFilesAfterImport;
-        if (openFilesAfterImport && PhotoListContext != null && importedDirectories.Count > 0)
+        if (openFilesAfterImport && PhotoListContext != null && !importedDirectories.IsEmpty)
         {
             AppendLog($"Opening imported {label.ToLowerInvariant()} directories in the photo list...");
             MainWindowEvents.RequestMainTabChange.Raise(MainWindowTab.Photos);
-            await PhotoListContext.ProcessDroppedDirectoriesToFileGroups(importedDirectories.ToList());
+            await PhotoListContext.ProcessDroppedDirectoriesToFileGroups(importedDirectories
+                .Distinct(StringComparer.OrdinalIgnoreCase).ToList());
         }
     }
 
