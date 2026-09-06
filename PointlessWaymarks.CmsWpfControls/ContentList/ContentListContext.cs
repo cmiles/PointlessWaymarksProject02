@@ -1,3 +1,10 @@
+using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.IO;
+using System.Text.Json;
+using System.Windows;
+using System.Windows.Data;
 using GongSolutions.Wpf.DragDrop;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
@@ -32,18 +39,12 @@ using PointlessWaymarks.CmsWpfControls.VideoContentEditor;
 using PointlessWaymarks.CmsWpfControls.VideoList;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
+using PointlessWaymarks.SpatialTools;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.ColumnSort;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
 using Serilog;
-using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.IO;
-using System.Windows;
-using System.Windows.Data;
-using PointlessWaymarks.SpatialTools;
 using TinyIpc.Messaging;
 
 namespace PointlessWaymarks.CmsWpfControls.ContentList;
@@ -162,13 +163,13 @@ public partial class ContentListContext : IDragSource, IDropTarget
             // If there's only one item selected, use its rich format
             if (clipboardObjects.Count == 1)
             {
-                var clipboardJson = System.Text.Json.JsonSerializer.Serialize(clipboardObjects[0]);
+                var clipboardJson = JsonSerializer.Serialize(clipboardObjects[0]);
                 dataObject.SetData(ContentClipboardRepresentation.ContentClipboardFormat, clipboardJson);
             }
             // If multiple items are selected, create a collection representation
             else if (clipboardObjects.Count > 1)
             {
-                var collectionJson = System.Text.Json.JsonSerializer.Serialize(clipboardObjects);
+                var collectionJson = JsonSerializer.Serialize(clipboardObjects);
                 dataObject.SetData(ContentClipboardRepresentation.ContentClipboardCollectionListFormat, collectionJson);
             }
 
@@ -217,7 +218,7 @@ public partial class ContentListContext : IDragSource, IDropTarget
                     if (!string.IsNullOrEmpty(clipboardData))
                     {
                         var contentRef =
-                            System.Text.Json.JsonSerializer.Deserialize<ContentClipboardRepresentation>(clipboardData);
+                            JsonSerializer.Deserialize<ContentClipboardRepresentation>(clipboardData);
 
                         if (contentRef != null && contentRef.SiteId != Guid.Empty && contentRef.SiteId != currentSiteId)
                         {
@@ -237,7 +238,7 @@ public partial class ContentListContext : IDragSource, IDropTarget
                     if (!string.IsNullOrEmpty(collectionData))
                     {
                         var contentRefs =
-                            System.Text.Json.JsonSerializer.Deserialize<List<ContentClipboardRepresentation>>(
+                            JsonSerializer.Deserialize<List<ContentClipboardRepresentation>>(
                                 collectionData);
 
                         if (contentRefs != null && contentRefs.Any() &&
@@ -288,12 +289,9 @@ public partial class ContentListContext : IDragSource, IDropTarget
                     if (!string.IsNullOrEmpty(clipboardData))
                     {
                         var contentRef =
-                            System.Text.Json.JsonSerializer.Deserialize<ContentClipboardRepresentation>(clipboardData);
+                            JsonSerializer.Deserialize<ContentClipboardRepresentation>(clipboardData);
 
-                        if (contentRef != null)
-                        {
-                            contentRefs.Add(contentRef);
-                        }
+                        if (contentRef != null) contentRefs.Add(contentRef);
                     }
                 }
 
@@ -307,13 +305,10 @@ public partial class ContentListContext : IDragSource, IDropTarget
                     if (!string.IsNullOrEmpty(collectionData))
                     {
                         var deserializedRefs =
-                            System.Text.Json.JsonSerializer.Deserialize<List<ContentClipboardRepresentation>>(
+                            JsonSerializer.Deserialize<List<ContentClipboardRepresentation>>(
                                 collectionData);
 
-                        if (deserializedRefs != null && deserializedRefs.Any())
-                        {
-                            contentRefs.AddRange(deserializedRefs);
-                        }
+                        if (deserializedRefs != null && deserializedRefs.Any()) contentRefs.AddRange(deserializedRefs);
                     }
                 }
 
@@ -325,11 +320,9 @@ public partial class ContentListContext : IDragSource, IDropTarget
                         contentRefs.Where(c => c.SiteId != Guid.Empty && c.SiteId != currentSiteId).ToList();
 
                     if (contentRefsFromOtherSites.Any())
-                    {
                         StatusContext.RunBlockingTask(async () =>
                             await ContentClipboardRepresentationHandlers.HandleReferencesFromOtherSites(
                                 contentRefsFromOtherSites, StatusContext));
-                    }
                 }
             }
         }
@@ -379,13 +372,13 @@ public partial class ContentListContext : IDragSource, IDropTarget
             // If there's only one item selected, use its rich format
             if (clipboardObjects.Count == 1)
             {
-                var clipboardJson = System.Text.Json.JsonSerializer.Serialize(clipboardObjects[0]);
+                var clipboardJson = JsonSerializer.Serialize(clipboardObjects[0]);
                 dataObject.SetData(ContentClipboardRepresentation.ContentClipboardFormat, clipboardJson);
             }
             // If multiple items are selected, create a collection representation
             else if (clipboardObjects.Count > 1)
             {
-                var collectionJson = System.Text.Json.JsonSerializer.Serialize(clipboardObjects);
+                var collectionJson = JsonSerializer.Serialize(clipboardObjects);
                 dataObject.SetData(ContentClipboardRepresentation.ContentClipboardCollectionListFormat, collectionJson);
             }
 
@@ -440,21 +433,6 @@ public partial class ContentListContext : IDragSource, IDropTarget
         await newWindow.PositionWindowAndShowOnUiThread();
     }
 
-    public static async Task<List<object>> CreatedOnDayFilter(DateTime? createdOn)
-    {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        if (createdOn == null) return [];
-
-        return (await Db.ContentCreatedOnDay(createdOn.Value)).ToList();
-    }
-
-    [NonBlockingCommand]
-    public static async Task CreatedOnDaySearch(DateTime? filter)
-    {
-        await RunReport(async () => await CreatedOnDayFilter(filter), $"Created On Search - {filter}");
-    }
-
     public static async Task<ContentListContext> CreateInstance(StatusControlContext? statusContext,
         IContentListLoader loader, List<string> searchBuilderContentTypes, WindowIconStatus? windowStatus = null)
     {
@@ -468,6 +446,21 @@ public partial class ContentListContext : IDragSource, IDropTarget
         return new ContentListContext(factoryStatusContext, factoryObservable, factoryListSelection,
             factorySearchBuilder,
             loader, windowStatus);
+    }
+
+    public static async Task<List<object>> CreatedOnDayFilter(DateTime? createdOn)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (createdOn == null) return [];
+
+        return (await Db.ContentCreatedOnDay(createdOn.Value)).ToList();
+    }
+
+    [NonBlockingCommand]
+    public static async Task CreatedOnDaySearch(DateTime? filter)
+    {
+        await RunReport(async () => await CreatedOnDayFilter(filter), $"Created On Search - {filter}");
     }
 
     private async Task DataNotificationReceived(TinyMessageReceivedEventArgs e)
@@ -677,28 +670,6 @@ public partial class ContentListContext : IDragSource, IDropTarget
         }
     }
 
-    public async Task<List<IContentListItem>> FilteredListItems()
-    {
-        var returnList = new List<IContentListItem>();
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        var itemsView = CollectionViewSource.GetDefaultView(Items);
-
-        var filter = itemsView.Filter;
-
-        if (filter is null) return Items.ToList();
-
-        foreach (var loopView in itemsView)
-        {
-            if (!filter(loopView)) continue;
-
-            if (loopView is IContentListItem itemList) returnList.Add(itemList);
-        }
-
-        return returnList;
-    }
-
     private async Task FilterList()
     {
         if (!Items.Any()) return;
@@ -850,6 +821,28 @@ public partial class ContentListContext : IDragSource, IDropTarget
         };
     }
 
+    public async Task<List<IContentListItem>> FilteredListItems()
+    {
+        var returnList = new List<IContentListItem>();
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        var itemsView = CollectionViewSource.GetDefaultView(Items);
+
+        var filter = itemsView.Filter;
+
+        if (filter is null) return Items.ToList();
+
+        foreach (var loopView in itemsView)
+        {
+            if (!filter(loopView)) continue;
+
+            if (loopView is IContentListItem itemList) returnList.Add(itemList);
+        }
+
+        return returnList;
+    }
+
     public static async Task<List<object>> FolderFilter(string? folderName)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -908,12 +901,6 @@ public partial class ContentListContext : IDragSource, IDropTarget
     public async Task ImportFromOpenExcelInstance()
     {
         await ExcelHelpers.ImportFromOpenExcelInstance(StatusContext);
-    }
-
-    [BlockingCommand]
-    public async Task SlugifyExcelSelectionInOpenExcelInstance()
-    {
-        await ExcelHelpers.SlugifyExcelSelection(StatusContext);
     }
 
     public ICollectionView ItemsView()
@@ -1037,49 +1024,6 @@ public partial class ContentListContext : IDragSource, IDropTarget
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    public async Task PictureGalleryBracketCodeToClipboardSelected(CancellationToken cancelToken)
-    {
-        var currentSelected = SelectedListItems();
-
-        var bracketCodes = new List<string>();
-
-        foreach (var loopSelected in currentSelected)
-        {
-            var toAdd = loopSelected switch //!!Content List
-            {
-                FileListListItem f => BracketCodeFileImageLink.Create(f.DbEntry),
-                ImageListListItem i => BracketCodeImages.Create(i.DbEntry),
-                GeoJsonListListItem g => BracketCodeGeoJsonImageLink.Create(g.DbEntry),
-                LineListListItem l => BracketCodeLineImageLink.Create(l.DbEntry),
-                PhotoListListItem p => BracketCodePhotos.Create(p.DbEntry),
-                PointListListItem pt => BracketCodePointImageLink.Create(pt.DbEntry.ToDbObject()),
-                PostListListItem po => BracketCodePostImageLink.Create(po.DbEntry),
-                VideoListListItem v => BracketCodeVideoImageLink.Create(v.DbEntry),
-                _ => string.Empty
-            };
-
-            if (!string.IsNullOrWhiteSpace(toAdd)) bracketCodes.Add(toAdd);
-        }
-
-        var individualCodes = string.Join(Environment.NewLine, bracketCodes.Where(x => !string.IsNullOrWhiteSpace(x)));
-
-        if (string.IsNullOrWhiteSpace(individualCodes))
-        {
-            await StatusContext.ToastSuccess("No Bracket Codes Found?");
-            return;
-        }
-
-        var finalString = GalleryBracketCodePictures.Create(individualCodes);
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        Clipboard.SetText(finalString);
-
-        await StatusContext.ToastSuccess("Bracket Codes copied to Clipboard");
-    }
-
-    [BlockingCommand]
-    [StopAndWarnIfNoSelectedListItems]
     public async Task PictureBlockBracketCodeToClipboardSelected(CancellationToken cancelToken)
     {
         var currentSelected = SelectedListItems();
@@ -1113,6 +1057,49 @@ public partial class ContentListContext : IDragSource, IDropTarget
         }
 
         var finalString = PictureBlockBracketCode.Create(individualCodes);
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        Clipboard.SetText(finalString);
+
+        await StatusContext.ToastSuccess("Bracket Codes copied to Clipboard");
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task PictureGalleryBracketCodeToClipboardSelected(CancellationToken cancelToken)
+    {
+        var currentSelected = SelectedListItems();
+
+        var bracketCodes = new List<string>();
+
+        foreach (var loopSelected in currentSelected)
+        {
+            var toAdd = loopSelected switch //!!Content List
+            {
+                FileListListItem f => BracketCodeFileImageLink.Create(f.DbEntry),
+                ImageListListItem i => BracketCodeImages.Create(i.DbEntry),
+                GeoJsonListListItem g => BracketCodeGeoJsonImageLink.Create(g.DbEntry),
+                LineListListItem l => BracketCodeLineImageLink.Create(l.DbEntry),
+                PhotoListListItem p => BracketCodePhotos.Create(p.DbEntry),
+                PointListListItem pt => BracketCodePointImageLink.Create(pt.DbEntry.ToDbObject()),
+                PostListListItem po => BracketCodePostImageLink.Create(po.DbEntry),
+                VideoListListItem v => BracketCodeVideoImageLink.Create(v.DbEntry),
+                _ => string.Empty
+            };
+
+            if (!string.IsNullOrWhiteSpace(toAdd)) bracketCodes.Add(toAdd);
+        }
+
+        var individualCodes = string.Join(Environment.NewLine, bracketCodes.Where(x => !string.IsNullOrWhiteSpace(x)));
+
+        if (string.IsNullOrWhiteSpace(individualCodes))
+        {
+            await StatusContext.ToastSuccess("No Bracket Codes Found?");
+            return;
+        }
+
+        var finalString = GalleryBracketCodePictures.Create(individualCodes);
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
@@ -1216,6 +1203,12 @@ public partial class ContentListContext : IDragSource, IDropTarget
     }
 
     [BlockingCommand]
+    public async Task SlugifyExcelSelectionInOpenExcelInstance()
+    {
+        await ExcelHelpers.SlugifyExcelSelection(StatusContext);
+    }
+
+    [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
     public async Task SpatialItemsToContentMapWindowSelected(CancellationToken cancelToken)
     {
@@ -1271,7 +1264,8 @@ public partial class ContentListContext : IDragSource, IDropTarget
         }
 
         var pictureContentExtensions = new List<string> { ".JPG", ".JPEG", ".WEBP", ".BMP", ".PNG", ".TIF" };
-        var lineContentExtensions = new List<string> { ".GPX", ".TCX" };
+        var lineContentExtensions = new List<string> { ".GPX", ".TCX", ".FIT" };
+        var lineOrWorkoutContentExtensions = new List<string> { ".FIT" };
         var videoContentExtensions = new List<string> { ".MP4", ".OGG", ".WEBM" };
         var workoutContentExtensions = new List<string> { ".FIT" };
 
@@ -1293,6 +1287,26 @@ public partial class ContentListContext : IDragSource, IDropTarget
                         CancellationToken.None,
                         StatusContext,
                         WindowStatus);
+                });
+                continue;
+            }
+
+            if (lineOrWorkoutContentExtensions.Contains(Path.GetExtension(loopFile).ToUpperInvariant()))
+            {
+                StatusContext.RunNonBlockingTask(async () =>
+                {
+                    var hasLocationData = await FitTools.FitFileHasLocationData(fileInfo);
+
+                    if (hasLocationData)
+                        await CmsCommonCommands.NewLineContentFromFilesBase(fileInfo.AsList(), false, false,
+                            CancellationToken.None,
+                            StatusContext,
+                            WindowStatus);
+                    else
+                        await CmsCommonCommands.NewWorkoutContentFromFilesBase(fileInfo.AsList(), false,
+                            CancellationToken.None,
+                            StatusContext,
+                            WindowStatus);
                 });
                 continue;
             }

@@ -9,7 +9,7 @@ namespace PointlessWaymarks.CmsWpfControls.GpxImport;
 [NotifyPropertyChanged]
 public partial class GpxImportRoute : IGpxImportListItem
 {
-    private GpxImportRoute(GpxRoute route, GpxTools.GpxRouteInformation routeInformation,
+    private GpxImportRoute(GpxRoute route, GpxTools.GpsRouteInformation routeInformation,
         DistanceTools.LineStatsInImperial statistics)
     {
         Route = route;
@@ -19,7 +19,7 @@ public partial class GpxImportRoute : IGpxImportListItem
 
     public string LineGeoJson { get; set; } = string.Empty;
     public GpxRoute Route { get; set; }
-    public GpxTools.GpxRouteInformation RouteInformation { get; set; }
+    public GpxTools.GpsRouteInformation RouteInformation { get; set; }
     public DistanceTools.LineStatsInImperial Statistics { get; set; }
     public DateTime? CreatedOn { get; set; }
     public Guid DisplayId { get; set; } = Guid.NewGuid();

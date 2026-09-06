@@ -73,6 +73,14 @@ public partial class LineListWithActionsContext
             },
             new ContextMenuItemData
             {
+                ItemName = "Save Selected to Fit File - Single File", ItemCommand = SelectedToFitFileCommand
+            },
+            new ContextMenuItemData
+            {
+                ItemName = "Save Selected to Fit File - Individual Files", ItemCommand = SelectedToFitFilesCommand
+            },
+            new ContextMenuItemData
+            {
                 ItemName = "Save Selected to Gpx File - Single File", ItemCommand = SelectedToGpxFileCommand
             },
             new ContextMenuItemData
@@ -346,6 +354,20 @@ public partial class LineListWithActionsContext
     {
         return ListContext.ListSelection.SelectedItems.Where(x => x is LineListListItem).Cast<LineListListItem>()
             .Select(x => x.DbEntry).ToList();
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task SelectedToFitFile()
+    {
+        await LineActions.ToFitFile(SelectedListItemsContent(), StatusContext);
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task SelectedToFitFiles()
+    {
+        await LineActions.ToFitFiles(SelectedListItemsContent(), StatusContext);
     }
 
     [BlockingCommand]

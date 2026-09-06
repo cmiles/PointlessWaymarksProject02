@@ -313,6 +313,90 @@ public static class LineActions
         await TextAndContentRepresentationToClipboard(contents, finalString, statusContext);
     }
 
+    public static async Task ToFitFile(List<LineContent> contents, StatusControlContext statusContext)
+    {
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        var fileDialog = new VistaSaveFileDialog
+        {
+            Filter = "fit file (*.fit)|*.fit;",
+            AddExtension = true,
+            OverwritePrompt = true,
+            DefaultExt = ".fit"
+        };
+        var fileDialogResult = fileDialog.ShowDialog();
+
+        if (!(fileDialogResult ?? false)) return;
+
+        var fileName = fileDialog.FileName;
+
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            await statusContext.ToastError("No file name?");
+            return;
+        }
+
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var lineList = contents.Select(x => (
+            line: (IFeature)x.FeatureFromGeoJsonLine()!,
+            utcStart: x.RecordingStartedOnUtc,
+            name: x.Title ?? "New Track",
+            description: x.Title!.Replace(".", string.Empty)
+                .Contains(x.Summary.TrimNullToEmpty().Replace(".", string.Empty),
+                    StringComparison.OrdinalIgnoreCase)
+                ? string.Empty
+                : x.Summary ?? string.Empty)).Where(x => x.line != null).ToList();
+
+        if (lineList.Count == 0)
+        {
+            await statusContext.ToastError("No valid lines to write to FIT file?");
+            return;
+        }
+
+        var fileInfo = new FileInfo(fileName);
+        FitTools.WriteActivityFitFile(fileInfo, lineList);
+    }
+
+    public static async Task ToFitFiles(List<LineContent> contents,
+        StatusControlContext statusContext)
+    {
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        var fileDialog = new VistaFolderBrowserDialog { Multiselect = false };
+        var fileDialogResult = fileDialog.ShowDialog();
+
+        if (!(fileDialogResult ?? false)) return;
+
+        var directory = new DirectoryInfo(fileDialog.SelectedPath);
+
+        if (!directory.Exists)
+        {
+            await statusContext.ToastError("Directory doesn't exist?");
+            return;
+        }
+
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        foreach (var loopSelected in contents)
+        {
+            var lineFeature = loopSelected.FeatureFromGeoJsonLine();
+            if (lineFeature == null) continue;
+
+            var fileName = UniqueFileTools.UniqueFile(directory, $"{loopSelected.Title!}.fit");
+
+            if (fileName is null)
+            {
+                await statusContext.ToastError(
+                    $"Couldn't create a unique file name for {loopSelected.Title}?: {fileName}");
+                continue;
+            }
+
+            FitTools.WriteActivityFitFile(fileName, lineFeature, loopSelected.RecordingStartedOnUtc,
+                loopSelected.Title ?? "New Track", loopSelected.Summary ?? string.Empty);
+        }
+    }
+
     public static async Task ToGpxFile(List<LineContent> contents, StatusControlContext statusContext)
     {
         await ThreadSwitcher.ResumeForegroundAsync();

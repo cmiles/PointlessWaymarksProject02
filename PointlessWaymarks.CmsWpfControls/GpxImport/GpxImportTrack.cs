@@ -10,7 +10,7 @@ namespace PointlessWaymarks.CmsWpfControls.GpxImport;
 public partial class GpxImportTrack : IGpxImportListItem
 {
     private GpxImportTrack(DistanceTools.LineStatsInImperial statistics, GpxTrack track,
-        GpxTools.GpxTrackInformation trackInformation)
+        GpxTools.GpsTrackInformation trackInformation)
     {
         Statistics = statistics;
         Track = track;
@@ -20,7 +20,7 @@ public partial class GpxImportTrack : IGpxImportListItem
     public string LineGeoJson { get; set; } = string.Empty;
     public DistanceTools.LineStatsInImperial Statistics { get; set; }
     public GpxTrack Track { get; set; }
-    public GpxTools.GpxTrackInformation TrackInformation { get; set; }
+    public GpxTools.GpsTrackInformation TrackInformation { get; set; }
     public DateTime? CreatedOn { get; set; }
     public Guid DisplayId { get; set; } = Guid.NewGuid();
     public bool MarkedForImport { get; set; }

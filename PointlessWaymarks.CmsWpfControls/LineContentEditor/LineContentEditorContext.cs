@@ -222,6 +222,51 @@ public partial class LineContentEditorContext : IHasChanges, IHasValidationIssue
     }
 
     [BlockingCommand]
+    public async Task ImportFromFit()
+    {
+        await ImportFromFit(ReplaceElevationOnImport, UpdateStatsOnImport);
+    }
+
+    public async Task ImportFromFit(bool replaceElevations, bool updateStats)
+    {
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        StatusContext.Progress("Starting Line load.");
+
+        var dialog = new VistaOpenFileDialog();
+
+        if (!(dialog.ShowDialog() ?? false)) return;
+
+        var newFile = new FileInfo(dialog.FileName);
+
+        if (!newFile.Exists)
+        {
+            await StatusContext.ToastError("File doesn't exist?");
+            return;
+        }
+
+        var track = await FitTools.TrackInformationFromFitFile(newFile, StatusContext.ProgressTracker());
+        var route = track == null ? await FitTools.RouteInformationFromFitFile(newFile, StatusContext.ProgressTracker()) : null;
+
+        if (track == null && route == null)
+        {
+            await StatusContext.ToastError("No Track or Course in FIT File?");
+            return;
+        }
+
+        if (track != null)
+        {
+            await UpdateLineFromTrack(track, replaceElevations, updateStats);
+            return;
+        }
+
+        if (route != null)
+        {
+            await UpdateLineFromRoute(route, replaceElevations, updateStats);
+        }
+    }
+
+    [BlockingCommand]
     public async Task ImportFromGpx()
     {
         await ImportFromGpx(ReplaceElevationOnImport, UpdateStatsOnImport);
@@ -583,7 +628,7 @@ public partial class LineContentEditorContext : IHasChanges, IHasValidationIssue
         }
     }
 
-    private async Task UpdateLineFromRoute(GpxTools.GpxRouteInformation routeToImport, bool replaceElevations,
+    private async Task UpdateLineFromRoute(GpxTools.GpsRouteInformation routeToImport, bool replaceElevations,
         bool updateStats)
     {
         if (string.IsNullOrWhiteSpace(TitleSummarySlugFolder.TitleEntry.UserValue))
@@ -597,7 +642,7 @@ public partial class LineContentEditorContext : IHasChanges, IHasValidationIssue
         if (updateStats) await UpdateStatistics();
     }
 
-    private async Task UpdateLineFromTrack(GpxTools.GpxTrackInformation trackToImport, bool replaceElevations,
+    private async Task UpdateLineFromTrack(GpxTools.GpsTrackInformation trackToImport, bool replaceElevations,
         bool updateStats)
     {
         if (string.IsNullOrWhiteSpace(TitleSummarySlugFolder.TitleEntry.UserValue))

@@ -396,6 +396,13 @@ public partial class LineContentActions : IContentActions<LineContent>
 
     [BlockingCommand]
     [StopAndWarnIfFirstParameterIsNull]
+    public async Task ToFitFile(LineContent? content)
+    {
+        await LineActions.ToFitFile(content!.AsList(), StatusContext);
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfFirstParameterIsNull]
     public async Task ToGpxFile(LineContent? content)
     {
         await LineActions.ToGpxFile(content!.AsList(), StatusContext);

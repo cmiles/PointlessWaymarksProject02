@@ -26,7 +26,7 @@ public static class LineGenerator
         await htmlContext.WriteLocalHtml().ConfigureAwait(false);
     }
 
-    public static async Task<LineContent> NewFromGpxTrack(GpxTools.GpxTrackInformation trackInformation,
+    public static async Task<LineContent> NewFromGpxTrack(GpxTools.GpsTrackInformation trackInformation,
         bool replaceElevations, bool skipFeatureIntersectTagging, bool linkAssociatedPhotosInBody,
         IProgress<string> progress)
     {
@@ -132,7 +132,7 @@ public static class LineGenerator
         return newEntry;
     }
 
-    public static async Task<LineContent> NewFromGpxTrack(GpxTools.GpxRouteInformation trackInformation,
+    public static async Task<LineContent> NewFromGpxTrack(GpxTools.GpsRouteInformation trackInformation,
         bool replaceElevations, bool skipFeatureIntersectTagging, IProgress<string> progress)
     {
         var lineStatistics = DistanceTools.LineStatsInImperialFromCoordinateList(trackInformation.Track);

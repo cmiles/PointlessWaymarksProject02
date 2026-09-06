@@ -1243,7 +1243,7 @@ public partial class CmsCommonCommands
                 continue;
             }
 
-            var workoutItem = FitTools.WorkoutItemFromFitFile(loopFile);
+            var workoutItem = WorkoutItemsList.WorkoutFitFileHelpers.WorkoutItemFromFitFile(loopFile);
 
             if (workoutItem == null)
             {
@@ -1253,7 +1253,7 @@ public partial class CmsCommonCommands
 
             if (autoSaveAndClose)
             {
-                var (hasError, generationNote) = await FitTools.SaveWorkoutItem(workoutItem);
+                var (hasError, generationNote) = await WorkoutItemsList.WorkoutFitFileHelpers.SaveWorkoutItem(workoutItem);
 
                 if (hasError)
                 {

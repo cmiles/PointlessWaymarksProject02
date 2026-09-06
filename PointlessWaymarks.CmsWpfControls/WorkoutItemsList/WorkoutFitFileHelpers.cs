@@ -10,7 +10,7 @@ using Serilog;
 
 namespace PointlessWaymarks.CmsWpfControls.WorkoutItemsList;
 
-public static class FitTools
+public static class WorkoutFitFileHelpers
 {
     public static WorkoutItem? WorkoutItemFromFitFile(FileInfo fitFile)
     {

@@ -27,7 +27,7 @@
     </Window.Resources>
     <Grid>
         <TabControl SelectedIndex="{Binding SelectedTab, Mode=TwoWay}" TabStripPlacement="Left" ItemContainerStyle="{StaticResource VerticalTabs}">
-            <TabItem Header="GeoTag from Gpx Files">
+            <TabItem Header="GeoTag from GPX/FIT/TCX Files">
                 <fileBasedGeoTagger:FileBasedGeoTaggerControl DataContext="{Binding FileGeoTaggerContext}" Margin="2" />
             </TabItem>
             <TabItem Header="GeoTag from Garmin Connect">

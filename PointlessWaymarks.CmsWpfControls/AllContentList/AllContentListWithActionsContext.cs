@@ -68,7 +68,7 @@ public partial class AllContentListWithActionsContext
             new ContextMenuItemData
             {
                 ItemName = "Picture Block to Clipboard",
-                ItemCommand = ListContext.PictureGalleryBracketCodeToClipboardSelectedCommand
+                ItemCommand = ListContext.PictureBlockBracketCodeToClipboardSelectedCommand
             },
             new ContextMenuItemData
             {
