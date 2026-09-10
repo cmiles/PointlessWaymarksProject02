@@ -184,6 +184,30 @@ public class ListSearchFilterTests
     }
 
     [Test]
+    public void DateTimeMonthSearch_Include()
+    {
+        var searchString = "January 2022";
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ContentListSearchFunctions
+                .FilterDateTime(new DateTime(2022, 1, 15, 10, 0, 0), searchString, "Test DateTime").Include);
+            Assert.That(ContentListSearchFunctions
+                .FilterDateTime(new DateTime(2022, 2, 1, 0, 0, 0), searchString, "Test DateTime").Include, Is.False);
+        });
+    }
+
+    [Test]
+    public void DateTimeRelativeYesterdaySearch_Include()
+    {
+        var yesterday = DateTime.Now.Date.AddDays(-1).AddHours(12);
+        var searchString = "yesterday";
+
+        Assert.That(ContentListSearchFunctions
+            .FilterDateTime(yesterday, searchString, "Test DateTime").Include);
+    }
+
+    [Test]
     public void FocalLengthBlankSearchAndBlankFocalLength_Include()
     {
         Assert.That(ContentListSearchFunctions.FilterFocalLength(null, string.Empty).Include);

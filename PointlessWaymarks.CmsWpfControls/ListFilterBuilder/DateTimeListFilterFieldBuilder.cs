@@ -1,6 +1,5 @@
 using System.ComponentModel;
-using Microsoft.Recognizers.Text;
-using Microsoft.Recognizers.Text.DateTime;
+using PointlessWaymarks.CmsWpfControls.ContentList;
 using PointlessWaymarks.LlamaAspects;
 
 namespace PointlessWaymarks.CmsWpfControls.ListFilterBuilder;
@@ -56,51 +55,42 @@ public partial class DateTimeListFilterFieldBuilder
 
     private (bool, string) TextParses(string searchString, string operatorChoice)
     {
-        var dateTimeParse = DateTimeRecognizer.RecognizeDateTime(searchString, Culture.English,
-            DateTimeOptions.None, DateTime.Now);
+        if (!ContentListSearchFunctions.TryParseDateTimeSearch(searchString, out var parsed))
+            return (false, string.Empty);
 
-        if (dateTimeParse.Count == 0 || dateTimeParse[0].Resolution.Count == 0) return (false, string.Empty);
-
-        if (dateTimeParse[0].TypeName == "datetimeV2.daterange")
+        if (parsed.Type == ContentListSearchFunctions.ParsedDateTimeType.DateRange)
         {
-            var valuesFound = dateTimeParse[0].Resolution.TryGetValue("values", out var valuesObject);
-            if (!valuesFound || valuesObject is not List<Dictionary<string, string>> valuesDictionary ||
-                valuesDictionary.Count < 1 ||
-                !valuesDictionary[0].TryGetValue("start", out var searchStartDateTimeString) ||
-                !DateTime.TryParse(searchStartDateTimeString, out var searchStartDateTime) ||
-                !valuesDictionary[0].TryGetValue("end", out var searchEndDateTimeString) ||
-                !DateTime.TryParse(searchEndDateTimeString, out var searchEndDateTime))
-                return (false, string.Empty);
-
             switch (operatorChoice)
             {
                 case "":
-                    return (true, $">= {searchStartDateTime} and < {searchEndDateTime}");
                 case "==":
-                    return (true, $">= {searchStartDateTime} and < {searchEndDateTime}");
+                    return (true, $">= {parsed.Start} and < {parsed.End}");
                 case "!=":
-                    return (true, $"< {searchStartDateTime} and >= {searchEndDateTime}");
+                    return (true, $"< {parsed.Start} and >= {parsed.End}");
                 case ">":
-                    return (true, $"> {searchEndDateTime}");
+                    return (true, $"> {parsed.End}");
                 case ">=":
-                    return (true, $">= {searchEndDateTime}");
+                    return (true, $">= {parsed.End}");
                 case "<":
-                    return (true, $"< {searchEndDateTime}");
+                    return (true, $"< {parsed.End}");
                 case "<=":
-                    return (true, $"<= {searchEndDateTime}");
+                    return (true, $"<= {parsed.End}");
             }
         }
 
-        if (dateTimeParse[0].TypeName == "datetimeV2.date")
+        if (parsed.Type == ContentListSearchFunctions.ParsedDateTimeType.Date)
         {
-            var valuesFound = dateTimeParse[0].Resolution.TryGetValue("values", out var valuesObject);
-            if (!valuesFound || valuesObject is not List<Dictionary<string, string>> valuesDictionary ||
-                valuesDictionary.Count < 1 ||
-                !valuesDictionary[0].TryGetValue("value", out var searchDateTimeString) ||
-                !DateTime.TryParse(searchDateTimeString, out var searchDateTime))
-                return (false, string.Empty);
+            return (true, $"{operatorChoice} {parsed.ExactDateTime.Date}");
+        }
 
-            return (true, $"{operatorChoice} {searchDateTime.Date}");
+        if (parsed.Type == ContentListSearchFunctions.ParsedDateTimeType.DateTime)
+        {
+            return (true, $"{operatorChoice} {parsed.ExactDateTime}");
+        }
+
+        if (parsed.Type == ContentListSearchFunctions.ParsedDateTimeType.Time)
+        {
+            return (true, $"{operatorChoice} {parsed.Time}");
         }
 
         return (false, string.Empty);
