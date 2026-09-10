@@ -11,8 +11,8 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Duende.IdentityModel" />
         <PackageReference Include="HtmlAgilityPack" />
-        <PackageReference Include="IdentityModel" />
         <PackageReference Include="Metalama.Framework" />
         <PackageReference Include="Mjml.Net" />
         <PackageReference Include="ObjectDumper.NET" />
