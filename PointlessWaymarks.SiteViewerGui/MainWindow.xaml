@@ -17,7 +17,6 @@
     Width="900"
     Height="700"
     d:DataContext="{d:DesignInstance siteViewerGui:MainWindow}"
-    ui:WindowHelper.UseModernWindowStyle="True"
     Closing="MainWindow_OnClosing"
     Icon="PointlessWaymarksSiteViewerIcon.ico"
     mc:Ignorable="d">
