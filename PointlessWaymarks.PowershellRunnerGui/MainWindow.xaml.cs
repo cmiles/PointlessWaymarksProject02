@@ -118,7 +118,7 @@ public partial class MainWindow
 
         foreach (var loopJobs in jobs)
         {
-            if (!loopJobs.DbEntry.ScheduleEnabled ||
+            if (loopJobs.DbEntry.AlwaysRunning || !loopJobs.DbEntry.ScheduleEnabled ||
                 string.IsNullOrWhiteSpace(loopJobs.DbEntry.CronExpression)) continue;
 
             try
@@ -228,6 +228,8 @@ public partial class MainWindow
             await CustomScriptRunnerContext.CreateInstance(ScriptKind.DotNetSingleFile, null, CurrentDatabase);
         ProgressContext = await ScriptProgressContext.CreateInstance(null, [], [], CurrentDatabase);
         SettingsContext = await AppSettingsContext.CreateInstance(StatusContext);
+
+        StartAlwaysRunningJobs();
     }
 
     private async Task MainTimerCheckForNewRuns()
@@ -339,6 +341,8 @@ public partial class MainWindow
             await CustomScriptRunnerContext.CreateInstance(ScriptKind.DotNetSingleFile, null, CurrentDatabase);
         ProgressContext = await ScriptProgressContext.CreateInstance(null, [], [], CurrentDatabase);
         SettingsContext = await AppSettingsContext.CreateInstance(StatusContext);
+
+        StartAlwaysRunningJobs();
     }
 
     private async Task OnCloseRequested()
@@ -448,8 +452,31 @@ public partial class MainWindow
         StatusContext.Progress("Starting Main Timer");
         _ = MainTimerCheckForNewRuns();
 
+        StartAlwaysRunningJobs();
+
         StatusContext.RunFireAndForgetNonBlockingTask(async () =>
             await PowerShellRunnerDbQuery
                 .DeleteScriptJobRunsBasedOnDeleteScriptJobRunsAfterMonthsSetting(CurrentDatabase));
+    }
+
+    private void StartAlwaysRunningJobs()
+    {
+        if (JobListContext is null) return;
+        var jobs = JobListContext.Items.ToList();
+
+        foreach (var loopJobs in jobs)
+        {
+            if (!loopJobs.DbEntry.AlwaysRunning) continue;
+
+            try
+            {
+                PowerShellRunner.StartAlwaysRunningJob(loopJobs.DbEntry.PersistentId, CurrentDatabase,
+                    "Main Program Timer");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+        }
     }
 }

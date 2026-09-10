@@ -46,6 +46,7 @@
                         Style="{StaticResource ReadOnlyTextBoxStyle}"
                         Text="{Binding CronNextRun, StringFormat='Next Run: {0:g}'}" />
                     <boolDataEntry:BoolDataEntryControl Margin="6,10,4,0" DataContext="{Binding EnabledEntry}" />
+                    <boolDataEntry:BoolDataEntryControl Margin="6,10,4,0" DataContext="{Binding AlwaysRunningEntry}" />
                     <boolDataEntry:BoolDataEntryControl Margin="6,10,4,0"
                                                         DataContext="{Binding AllowSimultaneousRunsEntry}" />
                 </StackPanel>

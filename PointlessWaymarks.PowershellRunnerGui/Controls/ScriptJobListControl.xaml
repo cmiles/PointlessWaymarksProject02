@@ -334,6 +334,15 @@
                                                 </TextBox.Visibility>
                                                 Scheduled
                                             </TextBox>
+                                            <TextBox
+                                                Margin="8,0,0,0"
+                                                FontWeight="Bold"
+                                                Foreground="ForestGreen"
+                                                Style="{StaticResource ReadOnlyTextBoxStyle}"
+                                                ToolTip="{Binding TranslatedScript}"
+                                                Visibility="{Binding DbEntry.AlwaysRunning, Converter={StaticResource BooleanToVisibility}}">
+                                                Always Running
+                                            </TextBox>
                                         </StackPanel>
                                         <TextBox
                                             Grid.Row="1"
