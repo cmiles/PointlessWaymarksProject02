@@ -32,7 +32,6 @@
         <PackageReference Include="Metalama.Framework" />
         <PackageReference Include="Microsoft.Web.WebView2" />
         <PackageReference Include="Microsoft.Web.WebView2.DevToolsProtocolExtension" />
-        <PackageReference Include="ModernWpfUI" />
     </ItemGroup>
 
     <ItemGroup>
