@@ -513,7 +513,10 @@ public partial class CmsCommonCommands
 
         statusContext.Progress("Starting Line load.");
 
-        var dialog = new VistaOpenFileDialog { Multiselect = true };
+        var supportedExtensions = new List<string> { ".gpx", ".tcx", ".fit" };
+
+        var dialog = new VistaOpenFileDialog
+            { Multiselect = true, Filter = "supported formats (*.gpx;*.tcx;*.fit)|*.gpx;*.tcx;*.fit" };
 
         if (!(dialog.ShowDialog() ?? false)) return;
 
@@ -540,7 +543,20 @@ public partial class CmsCommonCommands
 
         selectedFileInfos = selectedFileInfos.Where(x => x.Exists).ToList();
 
-        await NewLineContentFromFilesBase(selectedFileInfos, addTimeAssociatedPhotosToBody, autoSaveAndClose,
+        if (selectedFileInfos.Any(x => !supportedExtensions.Contains(x.Extension, StringComparer.OrdinalIgnoreCase)))
+            await statusContext.ToastWarning(
+                $"Skipping - not supported - {string.Join(", ", selectedFileInfos.Where(x => !supportedExtensions.Contains(x.Extension, StringComparer.OrdinalIgnoreCase)))}");
+
+        var validFiles = selectedFileInfos
+            .Where(x => supportedExtensions.Contains(x.Extension, StringComparer.OrdinalIgnoreCase)).ToList();
+
+        if (!validFiles.Any())
+        {
+            await statusContext.ToastError("None of the files appear to be supported file types...");
+            return;
+        }
+
+        await NewLineContentFromFilesBase(validFiles, addTimeAssociatedPhotosToBody, autoSaveAndClose,
             cancellationToken, statusContext,
             windowStatus);
     }
@@ -569,8 +585,35 @@ public partial class CmsCommonCommands
             windowStatus?.AddRequest(new WindowIconStatusRequest(statusContext.StatusControlContextId,
                 TaskbarItemProgressState.Normal, (decimal)outerLoopCounter / (selectedFileInfos.Count + 1)));
 
-            var tracksList = await GpxTools.TracksFromGpxFile(loopFile, statusContext.ProgressTracker());
-            var routesList = await GpxTools.RoutesFromGpxFile(loopFile, statusContext.ProgressTracker());
+            if (!loopFile.Exists)
+            {
+                await statusContext.ToastError($"File {loopFile.FullName} doesn't exist?");
+                continue;
+            }
+
+            if (!loopFile.Extension.Equals(".gpx", StringComparison.OrdinalIgnoreCase) &&
+                !loopFile.Extension.Equals(".tcx", StringComparison.OrdinalIgnoreCase) &&
+                !loopFile.Extension.Equals(".fit", StringComparison.OrdinalIgnoreCase))
+            {
+                await statusContext.ToastWarning($"Skipping {loopFile.Name} - not a supported file type (.gpx, .tcx, .fit)");
+                continue;
+            }
+
+            List<GpsTrackInformation> tracksList;
+            List<GpsRouteInformation> routesList;
+
+            if (loopFile.Extension.Equals(".fit", StringComparison.OrdinalIgnoreCase))
+            {
+                var fitTrack = await FitTools.TrackInformationSimplifiedFromFitFile(loopFile, statusContext.ProgressTracker());
+
+                tracksList = fitTrack is { Track.Count: > 1 } ? [fitTrack] : [];
+                routesList = [];
+            }
+            else
+            {
+                tracksList = await GpxTools.TracksFromGpxFile(loopFile, statusContext.ProgressTracker());
+                routesList = await GpxTools.RoutesFromGpxFile(loopFile, statusContext.ProgressTracker());
+            }
 
             var noValidTracks = tracksList.Count < 1 || tracksList.All(x => x.Track.Count < 2);
             var noValidRoutes = routesList.Count < 1 || routesList.All(x => x.Track.Count < 2);
@@ -994,7 +1037,7 @@ public partial class CmsCommonCommands
     {
         var newWindow =
             await PhotoListWindow.CreateInstance(
-                await PhotoListWithActionsContext.CreateInstance(null, WindowStatus, null));
+                await PhotoListWithActionsContext.CreateInstance(null, WindowStatus));
         await newWindow.PositionWindowAndShowOnUiThread();
     }
 
@@ -1243,7 +1286,7 @@ public partial class CmsCommonCommands
                 continue;
             }
 
-            var workoutItem = WorkoutItemsList.WorkoutFitFileHelpers.WorkoutItemFromFitFile(loopFile);
+            var workoutItem = WorkoutFitFileHelpers.WorkoutItemFromFitFile(loopFile);
 
             if (workoutItem == null)
             {
@@ -1253,7 +1296,7 @@ public partial class CmsCommonCommands
 
             if (autoSaveAndClose)
             {
-                var (hasError, generationNote) = await WorkoutItemsList.WorkoutFitFileHelpers.SaveWorkoutItem(workoutItem);
+                var (hasError, generationNote) = await WorkoutFitFileHelpers.SaveWorkoutItem(workoutItem);
 
                 if (hasError)
                 {

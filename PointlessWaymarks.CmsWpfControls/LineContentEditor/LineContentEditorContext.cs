@@ -245,25 +245,15 @@ public partial class LineContentEditorContext : IHasChanges, IHasValidationIssue
             return;
         }
 
-        var track = await FitTools.TrackInformationFromFitFile(newFile, StatusContext.ProgressTracker());
-        var route = track == null ? await FitTools.RouteInformationFromFitFile(newFile, StatusContext.ProgressTracker()) : null;
+        var track = await FitTools.TrackInformationSimplifiedFromFitFile(newFile, StatusContext.ProgressTracker());
 
-        if (track == null && route == null)
+        if (track == null)
         {
             await StatusContext.ToastError("No Track or Course in FIT File?");
             return;
         }
 
-        if (track != null)
-        {
-            await UpdateLineFromTrack(track, replaceElevations, updateStats);
-            return;
-        }
-
-        if (route != null)
-        {
-            await UpdateLineFromRoute(route, replaceElevations, updateStats);
-        }
+        await UpdateLineFromTrack(track, replaceElevations, updateStats);
     }
 
     [BlockingCommand]
@@ -313,7 +303,7 @@ public partial class LineContentEditorContext : IHasChanges, IHasValidationIssue
 
         var importRouteTrackName = await StatusContext.ShowMessage("Choose Track",
             "The GPX file contains more than 1 track/route - choose which to import:",
-            tracksList.Select(x => $"{x.Name} (track)").Concat(routesList.Select(x => $"{x.Name} (route)")).ToList());
+            [.. tracksList.Select(x => $"{x.Name} (track)"), .. routesList.Select(x => $"{x.Name} (route)")]);
 
         if (string.IsNullOrWhiteSpace(importRouteTrackName)) return;
 
@@ -329,7 +319,6 @@ public partial class LineContentEditorContext : IHasChanges, IHasValidationIssue
             await UpdateLineFromRoute(possibleSelectedRoute.Single(), replaceElevations, updateStats);
 
         await StatusContext.ToastError("Track not found?");
-        return;
     }
 
     [BlockingCommand]
@@ -548,10 +537,12 @@ public partial class LineContentEditorContext : IHasChanges, IHasValidationIssue
         var geoJsonLinks =
             (await BracketCodeGeoJsonLinks.DbContentFromBracketCodes(BodyContent.UserValue)).Cast<object>();
 
-        var mapInformation = await MapCmsJson.ProcessContentToMapInformation(photos.Concat(photosWithDetails)
-            .Concat(photoLinks).Concat(points)
-            .Concat(pointExternalDirectionsLinks)
-            .Concat(pointDetailsLinks).Concat(pointLinks).Concat(geoJson).Concat(geoJsonLinks).ToList(), false);
+        var mapInformation = await MapCmsJson.ProcessContentToMapInformation([
+            .. photos, .. photosWithDetails,
+            .. photoLinks, .. points,
+            .. pointExternalDirectionsLinks,
+            .. pointDetailsLinks, .. pointLinks, .. geoJson, .. geoJsonLinks
+        ], false);
 
         var lineAsFeatureCollection = GeoJsonTools.DeserializeStringToFeatureCollection(LineGeoJson)!;
 
@@ -628,7 +619,7 @@ public partial class LineContentEditorContext : IHasChanges, IHasValidationIssue
         }
     }
 
-    private async Task UpdateLineFromRoute(GpxTools.GpsRouteInformation routeToImport, bool replaceElevations,
+    private async Task UpdateLineFromRoute(GpsRouteInformation routeToImport, bool replaceElevations,
         bool updateStats)
     {
         if (string.IsNullOrWhiteSpace(TitleSummarySlugFolder.TitleEntry.UserValue))
@@ -642,7 +633,7 @@ public partial class LineContentEditorContext : IHasChanges, IHasValidationIssue
         if (updateStats) await UpdateStatistics();
     }
 
-    private async Task UpdateLineFromTrack(GpxTools.GpsTrackInformation trackToImport, bool replaceElevations,
+    private async Task UpdateLineFromTrack(GpsTrackInformation trackToImport, bool replaceElevations,
         bool updateStats)
     {
         if (string.IsNullOrWhiteSpace(TitleSummarySlugFolder.TitleEntry.UserValue))
