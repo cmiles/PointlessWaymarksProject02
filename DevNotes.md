@@ -1,18 +1,34 @@
 ## Todos
- - For geo types and notes review local file cleanup on delete
  - Check whole site import - test(s)?
  - Deleted Content Report so it is possible to restore completely deleted
  - Text to Speech - abstract to better control:
    - Cancellation
    - in Update Notes
    - Potentially in editor
+   - Explore AI Possibilities
+ - AI text checking
 
 ## Ideas
- - Appium GUI Test
  - Could I successfully tuck away a copy of the current edits to help in unexpected shut downs? No good if I can't expose these in a helpful way...
  - Could all in app font sizes be controlled by slider or setting? I like the control in the editor but maybe everywhere would be more useful? And persist in Settings?
 
 ## Notes
+
+9/13/2026
+
+Wow! It has been over two years since I have written anything here. My life and coding have changed unimaginably during that time. My long time job at the Summit Hut came to an end last year and I've moved on to School and Job that don't involve coding at all. A bit over a year later and I still have some raw feelings about how it all ended - but I am greatful for everything I did and learned. I think it was a beautiful and maybe slightly unique proposition to get to maintain and work on code long term where the users were internal and software sales weren't a factor - it was incredible to see how your decisions and code held up (haha or didn't hold up!!!!) over 10+ years of daily use.
+
+Coding has also changed. Increasingly over the past year features and sections of code have been AI generated. There are still many surprising (and I guess unsurprising) failures with this approach and I'm still writing (especially refactoring and specific fixes) some by hand but it is a whole new world. When I started working with the Copilot Beta I was just happy that it could occasionally generate tedious string matching code blocks and now...
+
+Reading my post from 7/21/2024 I'm proud of my older self - that still resonates with me 100% and the Power Shell Runner has been in constant personal use - even saw a little professional use at the Summit Hut - and evolved to support single file C# and always running processes. It is a powerful personal tool!
+
+The project has become even more personal especially over the past 2 years. The Photo Metadata Basics program is a great example. I would say that project is a great reflection of shifting solidly to trying to write good software that is pleasant to use 'FOR ME'. There are decisions in Photo Metadata Basics that simplify code/setup/use that would cause such sadness and misunderstanding in a general audience!!! But 'for me' they are exactly what I want. I prime example is that you have to deliberately write out the metadata you are working on to the files - there is no background autosave, no alarm huge bells that it isn't written and not really anything to let you know about this quirk interactively in the GUI - madness! Umm but it is my madness!! This shift has actually impacted how I think about software - I'm finding more and more software interactions disappointing, in part because I've had a taste of software that does what I want the way I want without much else in the way! Another way this software has become more personal is the CMS Workouts feature - I don't think tracking workouts really belongs in the CMS in the big picture - but it is a great spot for me because it sits along my gps based activities and puts them all in one place. My wife and I are really the only users - so why not! I'm hoping that AI remains good enough, at low enough cost, that I can expand my personal software in the future - it really is a source of joy!
+
+One thing that has not been a source of joy is experiments in Avalonia and Uno. Avalonia worked really nice - I pushed thru a lot of details to get a working cross platform FeedReader - and then found that embedded browsers on linux can cause issues. That really took the wind out of my sails with a push to Avalonia - embedded browser is a top feature a modern desktop app in many cases. Uno seems to do a better job with embedded browser on linux - but I was recently disappointed because the AI (Gemini+Junie mostly in this case) wasted my time building up a tower of wouldn't debug possibly nonsense code for Uno that I'm glad I commited into a branch and think I will now abandon. It is so stupid to just write for Windows these days - but I haven't found joy in any of the alternatives. I suspect that it is probably time to revisit a desktop web app - my web front end skills are minimal but maybe with the AI? I would say a pure/true web app but in the spirit of keeping it personal I almost always pick app over website on mobile - I can't really think of a website on mobile that beats a well done app.
+
+I've moved everything back to a local Fossil setup and push to GitHub as a remote backup now. Maybe this fits into the 'more personal' bucket?
+
+Much joy and happiness to anyone who ever sees this!
 
 7/21/2024
 
