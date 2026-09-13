@@ -570,8 +570,12 @@ public partial class ScriptJobListContext
             return;
         }
 
-        await PowerShellRunner.ExecuteJob(toRun.DbEntry.PersistentId, toRun.DbEntry.AllowSimultaneousRuns, DatabaseFile,
-            "Run From PowerShell Runner Gui");
+        if (toRun.DbEntry.AlwaysRunning)
+            AlwaysRunningJobExecution.RestartAlwaysRunningJob(toRun.DbEntry.PersistentId, DatabaseFile,
+                "Run From PowerShell Runner Gui");
+        else
+            await PowerShellRunner.ExecuteJob(toRun.DbEntry.PersistentId, toRun.DbEntry.AllowSimultaneousRuns, DatabaseFile,
+                "Run From PowerShell Runner Gui");
     }
 
     [NonBlockingCommand]
@@ -588,9 +592,13 @@ public partial class ScriptJobListContext
         }
 
         foreach (var loopSelected in currentSelection)
-            await PowerShellRunner.ExecuteJob(loopSelected.DbEntry.PersistentId,
-                loopSelected.DbEntry.AllowSimultaneousRuns, DatabaseFile,
-                "Run From PowerShell Runner Gui");
+            if (loopSelected.DbEntry.AlwaysRunning)
+                AlwaysRunningJobExecution.RestartAlwaysRunningJob(loopSelected.DbEntry.PersistentId, DatabaseFile,
+                    "Run From PowerShell Runner Gui");
+            else
+                await PowerShellRunner.ExecuteJob(loopSelected.DbEntry.PersistentId,
+                    loopSelected.DbEntry.AllowSimultaneousRuns, DatabaseFile,
+                    "Run From PowerShell Runner Gui");
     }
 
     [NonBlockingCommand]

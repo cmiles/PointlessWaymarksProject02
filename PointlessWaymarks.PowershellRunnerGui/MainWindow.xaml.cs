@@ -118,7 +118,7 @@ public partial class MainWindow
 
         foreach (var loopJobs in jobs)
         {
-            if (loopJobs.DbEntry.AlwaysRunning || !loopJobs.DbEntry.ScheduleEnabled ||
+            if (!loopJobs.DbEntry.ScheduleEnabled ||
                 string.IsNullOrWhiteSpace(loopJobs.DbEntry.CronExpression)) continue;
 
             try
@@ -131,10 +131,19 @@ public partial class MainWindow
                 if (nextRunDateTime.Year == frozenNow.Year && nextRunDateTime.Month == frozenNow.Month &&
                     nextRunDateTime.Day == frozenNow.Day &&
                     nextRunDateTime.Hour == frozenNow.Hour && nextRunDateTime.Minute == frozenNow.Minute)
-                    StatusContext.RunFireAndForgetNonBlockingTask(() =>
-                        PowerShellRunner.ExecuteJob(loopJobs.DbEntry.PersistentId,
-                            loopJobs.DbEntry.AllowSimultaneousRuns, CurrentDatabase,
-                            "Main Program Timer"));
+                {
+                    if (loopJobs.DbEntry.AlwaysRunning)
+                        StatusContext.RunFireAndForgetNonBlockingTask(async () =>
+                        {
+                            AlwaysRunningJobExecution.RestartAlwaysRunningJob(loopJobs.DbEntry.PersistentId,
+                                CurrentDatabase, "Main Program Timer");
+                        });
+                    else
+                        StatusContext.RunFireAndForgetNonBlockingTask(() =>
+                            PowerShellRunner.ExecuteJob(loopJobs.DbEntry.PersistentId,
+                                loopJobs.DbEntry.AllowSimultaneousRuns, CurrentDatabase,
+                                "Main Program Timer"));
+                }
             }
             catch (Exception e)
             {
@@ -466,7 +475,7 @@ public partial class MainWindow
 
         foreach (var loopJobs in jobs)
         {
-            if (!loopJobs.DbEntry.AlwaysRunning) continue;
+            if (!loopJobs.DbEntry.AlwaysRunning || !loopJobs.DbEntry.ScheduleEnabled) continue;
 
             try
             {

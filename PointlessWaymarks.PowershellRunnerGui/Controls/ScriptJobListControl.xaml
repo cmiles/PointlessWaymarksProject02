@@ -337,7 +337,7 @@
                                             <TextBox
                                                 Margin="8,0,0,0"
                                                 FontWeight="Bold"
-                                                Foreground="ForestGreen"
+                                                Foreground="DarkOrchid"
                                                 Style="{StaticResource ReadOnlyTextBoxStyle}"
                                                 ToolTip="{Binding TranslatedScript}"
                                                 Visibility="{Binding DbEntry.AlwaysRunning, Converter={StaticResource BooleanToVisibility}}">

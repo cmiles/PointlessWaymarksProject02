@@ -31,15 +31,14 @@ public class PowerShellRunner
         string runType,
         Func<ScriptJobRun, Task>? callbackAfterRunFirstSave = null)
     {
-        var runner = new AlwaysRunningJobExecution
-        {
-            CallbackAfterRunFirstSave = callbackAfterRunFirstSave,
-            DatabaseFile = databaseFile, JobId = jobId, RunType = runType
-        };
+        return AlwaysRunningJobExecution.StartAlwaysRunningJob(jobId, databaseFile, runType, callbackAfterRunFirstSave);
+    }
 
-        _ = Task.Run(() => runner.Execute());
-
-        return runner;
+    public static AlwaysRunningJobExecution RestartAlwaysRunningJob(Guid jobId, string databaseFile,
+        string runType = "Main Program Timer",
+        Func<ScriptJobRun, Task>? callbackAfterRunFirstSave = null)
+    {
+        return AlwaysRunningJobExecution.RestartAlwaysRunningJob(jobId, databaseFile, runType, callbackAfterRunFirstSave);
     }
 
     public static async Task<(bool errors, List<string> runLog)> ExecuteScript(string toInvoke, ScriptKind type, Guid databaseId,

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
@@ -11,35 +12,136 @@ namespace PointlessWaymarks.PowerShellRunnerData;
 
 public class AlwaysRunningJobExecution
 {
+    private static readonly ConcurrentDictionary<(string databaseFile, Guid jobId), AlwaysRunningJobExecution>
+        ActiveExecutions = new();
+
     private readonly CancellationTokenSource _stopCts = new();
     private Guid _dbId;
     private string _obfuscationKey = string.Empty;
     private Pipeline? _pipeline;
     private Guid? _runId;
     private bool _restartRequested;
-    internal Func<ScriptJobRun, Task>? CallbackAfterRunFirstSave;
+    public Func<ScriptJobRun, Task>? CallbackAfterRunFirstSave;
     public required string DatabaseFile;
     public required Guid JobId;
     public required string RunType;
 
-    internal AlwaysRunningJobExecution()
+    public AlwaysRunningJobExecution()
     {
         DataNotifications.NewDataNotificationChannel().MessageReceived += OnDataNotificationReceived;
     }
 
-    internal async Task Execute()
+    private static string NormalizeDatabasePath(string dbPath) => Path.GetFullPath(dbPath).Trim().ToLowerInvariant();
+
+    public async Task Execute()
     {
-        _obfuscationKey = await ObfuscationKeyHelpers.GetObfuscationKey(DatabaseFile);
-        _dbId = await PowerShellRunnerDbQuery.DbId(DatabaseFile);
+        var key = (NormalizeDatabasePath(DatabaseFile), JobId);
+        ActiveExecutions[key] = this;
 
-        while (!_stopCts.IsCancellationRequested)
+        try
         {
-            await RunOnce();
+            _obfuscationKey = await ObfuscationKeyHelpers.GetObfuscationKey(DatabaseFile);
+            _dbId = await PowerShellRunnerDbQuery.DbId(DatabaseFile);
 
-            if (!_restartRequested) break;
+            while (!_stopCts.IsCancellationRequested)
+            {
+                await RunOnce();
 
-            _restartRequested = false;
+                if (!_restartRequested) break;
+
+                _restartRequested = false;
+            }
         }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            Log.Error(e, "Error Running Always-Running Script Execution");
+        }
+        finally
+        {
+            ActiveExecutions.TryRemove(KeyValuePair.Create(key, this));
+        }
+    }
+
+    public static AlwaysRunningJobExecution StartAlwaysRunningJob(Guid jobId, string databaseFile,
+        string runType,
+        Func<ScriptJobRun, Task>? callbackAfterRunFirstSave = null)
+    {
+        var key = (NormalizeDatabasePath(databaseFile), jobId);
+
+        if (ActiveExecutions.TryGetValue(key, out var existing) && !existing._stopCts.IsCancellationRequested)
+        {
+            return existing;
+        }
+
+        var runner = new AlwaysRunningJobExecution
+        {
+            CallbackAfterRunFirstSave = callbackAfterRunFirstSave,
+            DatabaseFile = databaseFile,
+            JobId = jobId,
+            RunType = runType
+        };
+
+        _ = Task.Run(runner.Execute);
+
+        return runner;
+    }
+
+    public static AlwaysRunningJobExecution RestartAlwaysRunningJob(Guid jobId, string databaseFile,
+        string runType = "Main Program Timer",
+        Func<ScriptJobRun, Task>? callbackAfterRunFirstSave = null)
+    {
+        var key = (NormalizeDatabasePath(databaseFile), jobId);
+
+        if (ActiveExecutions.TryGetValue(key, out var existing) && !existing._stopCts.IsCancellationRequested)
+        {
+            existing.RunType = runType;
+            if (callbackAfterRunFirstSave != null)
+                existing.CallbackAfterRunFirstSave = callbackAfterRunFirstSave;
+            existing.RequestRestart();
+            return existing;
+        }
+
+        return StartAlwaysRunningJob(jobId, databaseFile, runType, callbackAfterRunFirstSave);
+    }
+
+    public static bool RequestRestart(Guid jobId, string databaseFile)
+    {
+        var key = (NormalizeDatabasePath(databaseFile), jobId);
+
+        if (ActiveExecutions.TryGetValue(key, out var existing) && !existing._stopCts.IsCancellationRequested)
+        {
+            existing.RequestRestart();
+            return true;
+        }
+
+        return false;
+    }
+
+    public static bool RequestRestart(Guid jobId)
+    {
+        var matched = ActiveExecutions.Values.Where(x => x.JobId == jobId && !x._stopCts.IsCancellationRequested).ToList();
+        if (!matched.Any()) return false;
+
+        foreach (var execution in matched)
+        {
+            execution.RequestRestart();
+        }
+
+        return true;
+    }
+
+    public static bool RequestRestartByDatabaseId(Guid dbId, Guid jobId)
+    {
+        var matched = ActiveExecutions.Values.Where(x => x._dbId == dbId && x.JobId == jobId && !x._stopCts.IsCancellationRequested).ToList();
+        if (!matched.Any()) return false;
+
+        foreach (var execution in matched)
+        {
+            execution.RequestRestart();
+        }
+
+        return true;
     }
 
     private async Task RunOnce()
@@ -118,7 +220,7 @@ public class AlwaysRunningJobExecution
         }
     }
 
-    internal void RequestRestart()
+    public void RequestRestart()
     {
         _restartRequested = true;
 
@@ -132,7 +234,7 @@ public class AlwaysRunningJobExecution
         }
     }
 
-    internal void RequestStop()
+    public void RequestStop()
     {
         _restartRequested = false;
         _stopCts.Cancel();
@@ -153,83 +255,104 @@ public class AlwaysRunningJobExecution
     {
         var initialSessionState = InitialSessionState.CreateDefault();
 
-        var runSpace = RunspaceFactory.CreateRunspace(initialSessionState);
+        using var runSpace = RunspaceFactory.CreateRunspace(initialSessionState);
         runSpace.Open();
 
         _pipeline = runSpace.CreatePipeline();
         DirectoryInfo? tempRunDirectory = null;
 
-        if (scriptType == nameof(ScriptKind.DotNetSingleFile))
+        try
         {
-            tempRunDirectory = FileLocationHelpers.RunCodeTempDirectory(runId);
-
-            runLog.Add($"Program directory: {tempRunDirectory.FullName}");
-
-            var tempCsFile = Path.Combine(tempRunDirectory.FullName,
-                $"pw-dnr--{JobId.ToString().Replace("-", string.Empty)}.cs");
-            await File.WriteAllTextAsync(tempCsFile, toInvoke);
-            _pipeline.Commands.AddScript(
-                $"& dotnet run {tempCsFile} --artifacts-path {tempRunDirectory.FullName}");
-        }
-        else
-        {
-            _pipeline.Commands.AddScript(toInvoke);
-        }
-
-        _pipeline.Input.Close();
-
-        _pipeline.Output.DataReady += (_, _) =>
-        {
-            Collection<PSObject> psObjects = _pipeline.Output.NonBlockingRead();
-            foreach (var psObject in psObjects)
+            if (scriptType == nameof(ScriptKind.DotNetSingleFile))
             {
-                runLog.Add($"{DateTime.Now:G}>> {psObject.ToString()}");
-                DataNotifications.PublishPowershellProgressNotification(identifier, databaseId, jobId, runId,
-                    psObject.ToString());
+                tempRunDirectory = FileLocationHelpers.RunCodeTempDirectory(runId);
+
+                runLog.Add($"Program directory: {tempRunDirectory.FullName}");
+
+                var tempCsFile = Path.Combine(tempRunDirectory.FullName,
+                    $"pw-dnr--{JobId.ToString().Replace("-", string.Empty)}.cs");
+                await File.WriteAllTextAsync(tempCsFile, toInvoke);
+                _pipeline.Commands.AddScript(
+                    $"& dotnet run {tempCsFile} --artifacts-path {tempRunDirectory.FullName}");
             }
-        };
-
-        _pipeline.StateChanged += (_, eventArgs) =>
-        {
-            runLog.Add(
-                $"{DateTime.Now:G}>> State: {eventArgs.PipelineStateInfo.State} {eventArgs.PipelineStateInfo.Reason?.ToString() ?? string.Empty}");
-
-            DataNotifications.PublishPowershellStateNotification(identifier, databaseId, jobId, runId,
-                eventArgs.PipelineStateInfo.State,
-                eventArgs.PipelineStateInfo.Reason?.ToString() ?? string.Empty);
-        };
-
-        _pipeline.Error.DataReady += (_, _) =>
-        {
-            Collection<object> errorObjects = _pipeline.Error.NonBlockingRead();
-            if (errorObjects.Count == 0) return;
-
-            runLog.SetErrored();
-            foreach (var errorObject in errorObjects)
+            else
             {
-                var errorString = errorObject.ToString();
-                runLog.Add($"{DateTime.Now:G}>> Error: {errorString}");
-                if (!string.IsNullOrWhiteSpace(errorString))
+                _pipeline.Commands.AddScript(toInvoke);
+            }
+
+            _pipeline.Input.Close();
+
+            _pipeline.Output.DataReady += (_, _) =>
+            {
+                Collection<PSObject> psObjects = _pipeline.Output.NonBlockingRead();
+                foreach (var psObject in psObjects)
+                {
+                    runLog.Add($"{DateTime.Now:G}>> {psObject.ToString()}");
                     DataNotifications.PublishPowershellProgressNotification(identifier, databaseId, jobId, runId,
-                        errorString);
+                        psObject.ToString());
+                }
+            };
+
+            _pipeline.StateChanged += (_, eventArgs) =>
+            {
+                runLog.Add(
+                    $"{DateTime.Now:G}>> State: {eventArgs.PipelineStateInfo.State} {eventArgs.PipelineStateInfo.Reason?.ToString() ?? string.Empty}");
+
+                DataNotifications.PublishPowershellStateNotification(identifier, databaseId, jobId, runId,
+                    eventArgs.PipelineStateInfo.State,
+                    eventArgs.PipelineStateInfo.Reason?.ToString() ?? string.Empty);
+            };
+
+            _pipeline.Error.DataReady += (_, _) =>
+            {
+                Collection<object> errorObjects = _pipeline.Error.NonBlockingRead();
+                if (errorObjects.Count == 0) return;
+
+                runLog.SetErrored();
+                foreach (var errorObject in errorObjects)
+                {
+                    var errorString = errorObject.ToString();
+                    runLog.Add($"{DateTime.Now:G}>> Error: {errorString}");
+                    if (!string.IsNullOrWhiteSpace(errorString))
+                        DataNotifications.PublishPowershellProgressNotification(identifier, databaseId, jobId, runId,
+                            errorString);
+                }
+            };
+
+            if (_restartRequested || _stopCts.IsCancellationRequested)
+            {
+                _pipeline.StopAsync();
             }
-        };
+            else
+            {
+                _pipeline.InvokeAsync();
+            }
 
-        _pipeline.InvokeAsync();
+            await Task.Delay(200);
 
-        await Task.Delay(200);
+            while (_pipeline.PipelineStateInfo.State == PipelineState.Running) await Task.Delay(250);
 
-        while (_pipeline.PipelineStateInfo.State == PipelineState.Running) await Task.Delay(250);
+            if (tempRunDirectory is not null && tempRunDirectory.Exists) tempRunDirectory.Delete(true);
 
-        if (tempRunDirectory is not null && tempRunDirectory.Exists) tempRunDirectory.Delete(true);
+            if (_pipeline.HadErrors) runLog.SetErrored();
+        }
+        finally
+        {
+            try
+            {
+                _pipeline.Dispose();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
 
-        if (_pipeline.HadErrors) runLog.SetErrored();
+            _pipeline = null;
+        }
     }
 
     private void OnDataNotificationReceived(object? sender, TinyMessageReceivedEventArgs e)
     {
-        if (_pipeline == null || _runId == null) return;
-
         var translatedMessage = DataNotifications.TranslateDataNotification(e.Message.ToString());
 
         if (translatedMessage.IsT6 && _runId.HasValue)
@@ -249,6 +372,7 @@ public class AlwaysRunningJobExecution
             if (cancelRequest.RunPersistentId != _runId) return;
 
             RequestStop();
+            return;
         }
     }
 }
