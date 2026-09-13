@@ -79,13 +79,11 @@ public static class Intersection
         foreach (var loopFit in fitFiles)
         {
             var bufferedTrackLine = await FitTools.TrackLineFromFitFileBuffered(loopFit.FileToTag, pointBufferInFeet);
-            var bufferedRouteLine = await FitTools.RouteLineFromFitFileBuffered(loopFit.FileToTag, pointBufferInFeet);
             var waypointPoints =
                 await FitTools.WaypointPointsFromFitFileAs2DCircles(loopFit.FileToTag, pointBufferInFeet);
 
             var fitFeatures = new List<IFeature>();
             if (bufferedTrackLine != null) fitFeatures.Add(bufferedTrackLine.BufferedFeature);
-            if (bufferedRouteLine != null) fitFeatures.Add(bufferedRouteLine.BufferedFeature);
             fitFeatures.AddRange(waypointPoints.features);
 
             loopFit.IntersectInformation = new IntersectResult(fitFeatures) { Description = loopFit.FileToTag.FullName };
@@ -96,10 +94,6 @@ public static class Intersection
             if (bufferedTrackLine != null)
                 loopFit.IntersectInformation.OsmIsInPoints.AddRange(
                     LineTools.GetRepresentativePointsFromLine(bufferedTrackLine.Feature.Geometry));
-
-            if (bufferedRouteLine != null)
-                loopFit.IntersectInformation.OsmIsInPoints.AddRange(
-                    LineTools.GetRepresentativePointsFromLine(bufferedRouteLine.Feature.Geometry));
         }
 
         var geojsonFiles = sourceFileAndFeatures.Where(x =>
