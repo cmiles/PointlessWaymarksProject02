@@ -291,7 +291,7 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
 
         var window =
             await FileBasedGeoTaggerWindow.CreateInstance(toProcess.Select(x => x.PhotoFile.FullName).ToList(),
-                initialGpxFiles: gpxFiles);
+                initialGpsFiles: gpxFiles);
 
         window.CloseAfterWrite = true;
 

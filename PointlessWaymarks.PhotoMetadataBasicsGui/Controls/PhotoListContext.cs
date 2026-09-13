@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
@@ -39,9 +38,15 @@ public partial class PhotoListContext : IDropTarget
     private PhotoPreviewLauncher? _previewLauncher;
     private PhotoListGroupListItem? _previouslySelectedItem;
     private bool _suppressCollectionChangedRefresh;
-    public ICollectionView? FilteredItems { get; set; }
+
+    [NotObservable]
+    public List<PhotoListGroupListItem> CurrentFilteredListItems =>
+        FilteredItems?.Cast<PhotoListGroupListItem>().ToList()
+        ?? [];
+
     public StarRatingContext FilterMinimumRatingEntry { get; set; } = StarRatingContext.CreateInstance();
     public bool FilterNoRatingOnly { get; set; }
+    public ICollectionView? FilteredItems { get; set; }
     public required ObservableRangeCollection<PhotoListGroupListItem> Items { get; set; }
     public PhotoListGroupListItem? SelectedItem { get; set; }
     public List<PhotoListGroupListItem> SelectedItems { get; set; } = [];
@@ -52,10 +57,6 @@ public partial class PhotoListContext : IDropTarget
         var files = DragAndDropFilesHelper.DroppedFileNames(dropInfo, true);
         dropInfo.Effects = files.Count > 0 ? DragDropEffects.Copy : DragDropEffects.None;
     }
-
-    [NotObservable]
-    public List<PhotoListGroupListItem> CurrentFilteredListItems => FilteredItems?.Cast<PhotoListGroupListItem>().ToList()
-                                                                    ?? [];
 
     public void Drop(IDropInfo dropInfo)
     {
@@ -201,16 +202,16 @@ public partial class PhotoListContext : IDropTarget
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    public async Task AddFeatureIntersectTagsForSelected(CancellationToken cancellationToken)
+    public async Task AddFeatureIntersectTagsForAll(CancellationToken cancellationToken)
     {
-        await AddFeatureIntersectTags(SelectedItems, cancellationToken);
+        await AddFeatureIntersectTags(CurrentFilteredListItems, cancellationToken);
     }
 
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
-    public async Task AddFeatureIntersectTagsForAll(CancellationToken cancellationToken)
+    public async Task AddFeatureIntersectTagsForSelected(CancellationToken cancellationToken)
     {
-        await AddFeatureIntersectTags(CurrentFilteredListItems, cancellationToken);
+        await AddFeatureIntersectTags(SelectedItems, cancellationToken);
     }
 
     public static async Task<PhotoListContext> CreateInstance(StatusControlContext? statusContext)
@@ -275,7 +276,46 @@ public partial class PhotoListContext : IDropTarget
             if (factoryReturn._suppressCollectionChangedRefresh) return;
 
             factoryReturn.FilteredItems?.Refresh();
-            factoryReturn.EnsureSelectedItemVisible();
+            if (factoryReturn.FilteredItems != null && args.Action == NotifyCollectionChangedAction.Remove &&
+                args.OldStartingIndex >= 0 &&
+                (factoryReturn.SelectedItem == null || !factoryReturn.FilteredItems.Cast<PhotoListGroupListItem>().Contains(factoryReturn.SelectedItem)))
+            {
+                var visible = factoryReturn.FilteredItems.Cast<PhotoListGroupListItem>().ToHashSet();
+                if (visible.Count == 0)
+                {
+                    factoryReturn.SelectedItem = null;
+                }
+                else
+                {
+                    PhotoListGroupListItem? selected = null;
+                    for (var i = args.OldStartingIndex - 1; i >= 0; i--)
+                    {
+                        if (visible.Contains(factoryReturn.Items[i]))
+                        {
+                            selected = factoryReturn.Items[i];
+                            break;
+                        }
+                    }
+
+                    if (selected == null)
+                    {
+                        for (var i = args.OldStartingIndex; i < factoryReturn.Items.Count; i++)
+                        {
+                            if (visible.Contains(factoryReturn.Items[i]))
+                            {
+                                selected = factoryReturn.Items[i];
+                                break;
+                            }
+                        }
+                    }
+
+                    factoryReturn.SelectedItem = selected ?? visible.First();
+                }
+            }
+            else
+            {
+                factoryReturn.EnsureSelectedItemVisible();
+            }
         };
 
         WeakReferenceMessenger.Default.Register<PhotoPreviewNextItemMessage>(factoryReturn,
@@ -333,93 +373,17 @@ public partial class PhotoListContext : IDropTarget
                     errors.Add($"{fileItem.PhotoFile.Name}: {ex.Message}");
                 }
 
-            if (!groupHadErrors)
-            {
-                deletedGroups.Add(group);
-            }
+            if (!groupHadErrors) deletedGroups.Add(group);
         });
 
         await ThreadSwitcher.ResumeForegroundAsync();
-        try
-        {
-            _suppressCollectionChangedRefresh = true;
-            foreach (var group in deletedGroups)
-            {
-                Items.Remove(group);
-            }
-        }
-        finally
-        {
-            _suppressCollectionChangedRefresh = false;
-        }
-
-        FilteredItems?.Refresh();
-        EnsureSelectedItemVisible();
+        RemoveGroups(deletedGroups.ToList());
 
         if (!errors.IsEmpty)
             await StatusContext.ShowMessageWithOkButton("Delete Errors",
                 string.Join(Environment.NewLine, errors));
         else
             await StatusContext.ToastSuccess($"Deleted {fileDeleteCount} file(s) from {deletedGroups.Count} group(s).");
-    }
-
-    [BlockingCommand]
-    public async Task DeleteGroupsWithNoRating()
-    {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        var unratedGroups = CurrentFilteredListItems.Where(x => x.RatingEntry.UserValue < 1).ToList();
-        if (unratedGroups.Count == 0) return;
-
-        var errors = new ConcurrentBag<string>();
-        var deletedGroups = new ConcurrentBag<PhotoListGroupListItem>();
-        var fileDeleteCount = 0;
-
-        Parallel.ForEach(unratedGroups, group =>
-        {
-            var groupHadErrors = false;
-            foreach (var fileItem in group.Items.ToList())
-                try
-                {
-                    FileSystem.DeleteFile(fileItem.PhotoFile.FullName, UIOption.OnlyErrorDialogs,
-                        RecycleOption.SendToRecycleBin);
-                    Interlocked.Increment(ref fileDeleteCount);
-                }
-                catch (Exception ex)
-                {
-                    groupHadErrors = true;
-                    errors.Add($"{fileItem.PhotoFile.Name}: {ex.Message}");
-                }
-
-            if (!groupHadErrors)
-            {
-                deletedGroups.Add(group);
-            }
-        });
-
-        await ThreadSwitcher.ResumeForegroundAsync();
-        try
-        {
-            _suppressCollectionChangedRefresh = true;
-            foreach (var group in deletedGroups)
-            {
-                Items.Remove(group);
-            }
-        }
-        finally
-        {
-            _suppressCollectionChangedRefresh = false;
-        }
-
-        FilteredItems?.Refresh();
-        EnsureSelectedItemVisible();
-
-        if (!errors.IsEmpty)
-            await StatusContext.ShowMessageWithOkButton("Delete Errors",
-                string.Join(Environment.NewLine, errors));
-        else
-            await StatusContext.ToastSuccess(
-                $"Deleted {fileDeleteCount} file(s) from {deletedGroups.Count} unrated group(s).");
     }
 
     [BlockingCommand]
@@ -458,28 +422,11 @@ public partial class PhotoListContext : IDropTarget
                     errors.Add($"{fileItem.PhotoFile.Name}: {ex.Message}");
                 }
 
-            if (!groupHadErrors)
-            {
-                deletedGroups.Add(group);
-            }
+            if (!groupHadErrors) deletedGroups.Add(group);
         });
 
         await ThreadSwitcher.ResumeForegroundAsync();
-        try
-        {
-            _suppressCollectionChangedRefresh = true;
-            foreach (var group in deletedGroups)
-            {
-                Items.Remove(group);
-            }
-        }
-        finally
-        {
-            _suppressCollectionChangedRefresh = false;
-        }
-
-        FilteredItems?.Refresh();
-        EnsureSelectedItemVisible();
+        RemoveGroups(deletedGroups.ToList());
 
         if (!errors.IsEmpty)
             await StatusContext.ShowMessageWithOkButton("Delete Errors",
@@ -487,6 +434,48 @@ public partial class PhotoListContext : IDropTarget
         else
             await StatusContext.ToastSuccess(
                 $"Deleted {fileDeleteCount} file(s) from {deletedGroups.Count} filtered-out group(s).");
+    }
+
+    [BlockingCommand]
+    public async Task DeleteGroupsWithNoRating()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var unratedGroups = CurrentFilteredListItems.Where(x => x.RatingEntry.UserValue < 1).ToList();
+        if (unratedGroups.Count == 0) return;
+
+        var errors = new ConcurrentBag<string>();
+        var deletedGroups = new ConcurrentBag<PhotoListGroupListItem>();
+        var fileDeleteCount = 0;
+
+        Parallel.ForEach(unratedGroups, group =>
+        {
+            var groupHadErrors = false;
+            foreach (var fileItem in group.Items.ToList())
+                try
+                {
+                    FileSystem.DeleteFile(fileItem.PhotoFile.FullName, UIOption.OnlyErrorDialogs,
+                        RecycleOption.SendToRecycleBin);
+                    Interlocked.Increment(ref fileDeleteCount);
+                }
+                catch (Exception ex)
+                {
+                    groupHadErrors = true;
+                    errors.Add($"{fileItem.PhotoFile.Name}: {ex.Message}");
+                }
+
+            if (!groupHadErrors) deletedGroups.Add(group);
+        });
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+        RemoveGroups(deletedGroups.ToList());
+
+        if (!errors.IsEmpty)
+            await StatusContext.ShowMessageWithOkButton("Delete Errors",
+                string.Join(Environment.NewLine, errors));
+        else
+            await StatusContext.ToastSuccess(
+                $"Deleted {fileDeleteCount} file(s) from {deletedGroups.Count} unrated group(s).");
     }
 
     [BlockingCommand]
@@ -526,7 +515,7 @@ public partial class PhotoListContext : IDropTarget
             listItem.Items.Remove(loopDeleted);
 
         if (listItem.Items.Count == 0)
-            Items.Remove(listItem);
+            RemoveGroups([listItem]);
 
         if (!errors.IsEmpty)
             await StatusContext.ShowMessageWithOkButton("Delete Errors",
@@ -534,8 +523,74 @@ public partial class PhotoListContext : IDropTarget
     }
 
     /// <summary>
+    ///     Determines the next item that should be selected when the specified items are removed or become hidden.
+    ///     If the current SelectedItem is not being removed and is visible, it remains selected.
+    ///     Otherwise, selects the closest remaining visible list item above the removed item;
+    ///     if everything through the top of the list is removed, selects the first remaining visible item below.
+    ///     Must be called on the UI thread before the items are removed from Items (or while reference position is known).
+    /// </summary>
+    private PhotoListGroupListItem? CalculateNextSelectedItem(IReadOnlyList<PhotoListGroupListItem> itemsToRemove)
+    {
+        if (FilteredItems == null) return null;
+
+        var visible = FilteredItems.Cast<PhotoListGroupListItem>().ToList();
+        if (visible.Count == 0) return null;
+
+        var itemsToRemoveSet = new HashSet<PhotoListGroupListItem>(itemsToRemove);
+        var remainingVisible = visible.Where(x => !itemsToRemoveSet.Contains(x)).ToList();
+        if (remainingVisible.Count == 0) return null;
+
+        if (SelectedItem != null && !itemsToRemoveSet.Contains(SelectedItem) && visible.Contains(SelectedItem))
+            return SelectedItem;
+
+        var reference = SelectedItem ?? _previouslySelectedItem;
+        if (reference == null) return remainingVisible.FirstOrDefault();
+
+        var referenceIndex = Items.IndexOf(reference);
+        if (referenceIndex < 0)
+        {
+            var visibleRefIndex = visible.IndexOf(reference);
+            if (visibleRefIndex >= 0)
+            {
+                for (var i = visibleRefIndex - 1; i >= 0; i--)
+                {
+                    if (!itemsToRemoveSet.Contains(visible[i]))
+                        return visible[i];
+                }
+
+                for (var i = visibleRefIndex + 1; i < visible.Count; i++)
+                {
+                    if (!itemsToRemoveSet.Contains(visible[i]))
+                        return visible[i];
+                }
+            }
+
+            return remainingVisible.FirstOrDefault();
+        }
+
+        var visibleSet = visible.ToHashSet();
+
+        for (var i = referenceIndex - 1; i >= 0; i--)
+        {
+            var candidate = Items[i];
+            if (!itemsToRemoveSet.Contains(candidate) && visibleSet.Contains(candidate))
+                return candidate;
+        }
+
+        for (var i = referenceIndex + 1; i < Items.Count; i++)
+        {
+            var candidate = Items[i];
+            if (!itemsToRemoveSet.Contains(candidate) && visibleSet.Contains(candidate))
+                return candidate;
+        }
+
+        return remainingVisible.FirstOrDefault();
+    }
+
+    /// <summary>
     ///     If the current SelectedItem is no longer visible after a filter refresh,
-    ///     selects the next visible item (scanning forward from the previous position).
+    ///     selects the closest remaining visible item above the previous position,
+    ///     or the first remaining visible item below if everything through the top is hidden.
     ///     Must be called on the UI thread.
     /// </summary>
     private void EnsureSelectedItemVisible()
@@ -553,16 +608,26 @@ public partial class PhotoListContext : IDropTarget
         }
 
         var reference = SelectedItem ?? _previouslySelectedItem;
-        var previousIndex = reference != null ? Items.IndexOf(reference) : 0;
-        if (previousIndex < 0) previousIndex = 0;
+        var previousIndex = reference != null ? Items.IndexOf(reference) : -1;
 
-        for (var i = 0; i < Items.Count; i++)
+        if (previousIndex >= 0)
         {
-            var candidate = Items[(previousIndex + i) % Items.Count];
-            if (visible.Contains(candidate))
+            for (var i = previousIndex - 1; i >= 0; i--)
             {
-                SelectedItem = candidate;
-                return;
+                if (visible.Contains(Items[i]))
+                {
+                    SelectedItem = Items[i];
+                    return;
+                }
+            }
+
+            for (var i = previousIndex + 1; i < Items.Count; i++)
+            {
+                if (visible.Contains(Items[i]))
+                {
+                    SelectedItem = Items[i];
+                    return;
+                }
             }
         }
 
@@ -605,7 +670,9 @@ public partial class PhotoListContext : IDropTarget
         var dirFiles = dir.GetFiles("*", SearchOption.TopDirectoryOnly);
 
         var hasRootFile = numberRoot is not null
-            && dirFiles.Any(f => Path.GetFileNameWithoutExtension(f.Name).Equals(numberRoot, StringComparison.OrdinalIgnoreCase));
+                          && dirFiles.Any(f =>
+                              Path.GetFileNameWithoutExtension(f.Name)
+                                  .Equals(numberRoot, StringComparison.OrdinalIgnoreCase));
 
         foreach (var f in dirFiles)
         {
@@ -650,9 +717,9 @@ public partial class PhotoListContext : IDropTarget
             // Numbered suffix grouping: if anchor is "root-N" or "root_N" and "root.xxx" exists in directory,
             // match "root" and "root-M" / "root_M". If anchor is "root", also match "root-M" / "root_M".
             if (hasRootFile && numberRoot is not null
-                && (candidateBase.Equals(numberRoot, StringComparison.OrdinalIgnoreCase)
-                    || Regex.IsMatch(candidateBase, $@"^{Regex.Escape(numberRoot)}[_-]\d+$",
-                        RegexOptions.IgnoreCase)))
+                            && (candidateBase.Equals(numberRoot, StringComparison.OrdinalIgnoreCase)
+                                || Regex.IsMatch(candidateBase, $@"^{Regex.Escape(numberRoot)}[_-]\d+$",
+                                    RegexOptions.IgnoreCase)))
             {
                 result.Add(f);
                 continue;
@@ -661,9 +728,7 @@ public partial class PhotoListContext : IDropTarget
             if (numberRoot is null
                 && Regex.IsMatch(candidateBase, $@"^{Regex.Escape(baseName)}[_-]\d+$",
                     RegexOptions.IgnoreCase))
-            {
                 result.Add(f);
-            }
         }
 
         return result;
@@ -678,6 +743,33 @@ public partial class PhotoListContext : IDropTarget
         await GeoTagItems(CurrentFilteredListItems.SelectMany(g => g.Items).ToList(), cancellationToken);
     }
 
+    public async Task GeoTagItems(List<PhotoListFileItem> toTag, CancellationToken cancellationToken)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        List<string>? gpsFiles = null;
+        var settings = PhotoMetadataBasicsGuiSettingTools.ReadSettings();
+
+        if (!string.IsNullOrWhiteSpace(settings.DefaultGpxDirectory) && Directory.Exists(settings.DefaultGpxDirectory))
+        {
+            var allowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".gpx", ".tcx", ".fit" };
+
+            gpsFiles =
+            [
+                .. Directory.EnumerateFiles(settings.DefaultGpxDirectory)
+                    .Where(file => allowedExtensions.Contains(Path.GetExtension(file)))
+            ];
+        }
+
+        var window =
+            await FileBasedGeoTaggerWindow.CreateInstance(toTag.Select(x => x.PhotoFile.FullName).ToList(),
+                initialGpsFiles: gpsFiles);
+
+        window.CloseAfterWrite = true;
+
+        await window.PositionWindowAndShowDialogOnUiThread();
+    }
+
     [BlockingCommand]
     [StopAndWarnIfNoSelectedListItems]
     public async Task GeoTagSelectedItems(CancellationToken cancellationToken)
@@ -686,24 +778,6 @@ public partial class PhotoListContext : IDropTarget
         var filesFromSelected = SelectedItems.SelectMany(g => g.Items).ToList();
 
         await GeoTagItems(filesFromSelected, cancellationToken);
-    }
-
-    public async Task GeoTagItems(List<PhotoListFileItem> toTag, CancellationToken cancellationToken)
-    {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        List<string>? gpxFiles = null;
-        var settings = PhotoMetadataBasicsGuiSettingTools.ReadSettings();
-        if (!string.IsNullOrWhiteSpace(settings.DefaultGpxDirectory) && Directory.Exists(settings.DefaultGpxDirectory))
-            gpxFiles = Directory.GetFiles(settings.DefaultGpxDirectory, "*.gpx").ToList();
-
-        var window =
-            await FileBasedGeoTaggerWindow.CreateInstance(toTag.Select(x => x.PhotoFile.FullName).ToList(),
-                initialGpxFiles: gpxFiles);
-
-        window.CloseAfterWrite = true;
-
-        await window.PositionWindowAndShowDialogOnUiThread();
     }
 
     private FileInfo? GetCurrentPrimaryFile()
@@ -753,14 +827,8 @@ public partial class PhotoListContext : IDropTarget
                 else if (e.Direction.Equals("Previous", StringComparison.OrdinalIgnoreCase))
                     StatusContext.RunFireAndForgetNonBlockingTask(OnPreviewPreviousItem);
             };
-            _previewLauncher.FilterUnratedReceived += (_, e) =>
-            {
-                _previewFilterUnratedOnly = e.FilterUnratedOnly;
-            };
-            _previewLauncher.ProcessExited += (_, _) =>
-            {
-                StatusContext.Progress("Photo Preview window closed.");
-            };
+            _previewLauncher.FilterUnratedReceived += (_, e) => { _previewFilterUnratedOnly = e.FilterUnratedOnly; };
+            _previewLauncher.ProcessExited += (_, _) => { StatusContext.Progress("Photo Preview window closed."); };
         }
 
         var title = SelectedItem?.TitleEntryContext.UserValue.TrimNullToEmpty() ?? primaryFile.Name;
@@ -768,13 +836,9 @@ public partial class PhotoListContext : IDropTarget
 
         var launched = await _previewLauncher.EnsureRunningAsync(primaryFile.FullName, title, rating);
         if (launched)
-        {
             SendPreviewRequest();
-        }
         else
-        {
             await StatusContext.ToastError("Could not launch Photo Preview application.");
-        }
     }
 
     public async Task LoadItems(List<string> files)
@@ -834,7 +898,8 @@ public partial class PhotoListContext : IDropTarget
         if (e.PropertyName == nameof(StarRatingContext.UserValue))
             StatusContext.RunNonBlockingTask(async () =>
             {
-                if (!FilterNoRatingOnly && FilterMinimumRatingEntry.UserValue == 0 && !_previewFilterUnratedOnly) return;
+                if (!FilterNoRatingOnly && FilterMinimumRatingEntry.UserValue == 0 &&
+                    !_previewFilterUnratedOnly) return;
                 await ThreadSwitcher.ResumeForegroundAsync();
                 FilteredItems?.Refresh();
                 EnsureSelectedItemVisible();
@@ -894,7 +959,8 @@ public partial class PhotoListContext : IDropTarget
         await ThreadSwitcher.ResumeBackgroundAsync();
 
         var matchingItem = Items.FirstOrDefault(i =>
-            i.Items.Any(x => string.Equals(x.PhotoFile.FullName, data.FullFilePath, StringComparison.OrdinalIgnoreCase)));
+            i.Items.Any(x =>
+                string.Equals(x.PhotoFile.FullName, data.FullFilePath, StringComparison.OrdinalIgnoreCase)));
 
         if (matchingItem != null)
         {
@@ -903,10 +969,7 @@ public partial class PhotoListContext : IDropTarget
             {
                 await ThreadSwitcher.ResumeForegroundAsync();
                 FilteredItems?.Refresh();
-                if (matchingItem == SelectedItem)
-                {
-                    EnsureSelectedItemVisible();
-                }
+                if (matchingItem == SelectedItem) EnsureSelectedItemVisible();
             }
         }
     }
@@ -978,33 +1041,7 @@ public partial class PhotoListContext : IDropTarget
         var frozenItems = CurrentFilteredListItems.ToList();
         if (frozenItems.Count == 0) return;
 
-        try
-        {
-            _suppressCollectionChangedRefresh = true;
-
-            if (frozenItems.Count == Items.Count)
-            {
-                foreach (var item in frozenItems)
-                {
-                    item.RatingEntry.PropertyChanged -= OnItemRatingChanged;
-                }
-                Items.Clear();
-            }
-            else
-            {
-                foreach (var loopSelected in frozenItems)
-                {
-                    Items.Remove(loopSelected);
-                }
-            }
-        }
-        finally
-        {
-            _suppressCollectionChangedRefresh = false;
-        }
-
-        FilteredItems?.Refresh();
-        EnsureSelectedItemVisible();
+        RemoveGroups(frozenItems);
     }
 
     [BlockingCommand]
@@ -1014,7 +1051,43 @@ public partial class PhotoListContext : IDropTarget
         if (toRemove == null) return;
         await ThreadSwitcher.ResumeForegroundAsync();
 
-        Items.Remove(toRemove);
+        RemoveGroups([toRemove]);
+    }
+
+    private void RemoveGroups(IReadOnlyList<PhotoListGroupListItem> groupsToRemove)
+    {
+        if (groupsToRemove.Count == 0) return;
+
+        var nextSelected = CalculateNextSelectedItem(groupsToRemove);
+        var removingAll = groupsToRemove.Count == Items.Count && groupsToRemove.All(Items.Contains);
+
+        try
+        {
+            _suppressCollectionChangedRefresh = true;
+
+            if (removingAll)
+            {
+                foreach (var item in Items) item.RatingEntry.PropertyChanged -= OnItemRatingChanged;
+                Items.Clear();
+            }
+            else
+            {
+                foreach (var item in groupsToRemove)
+                {
+                    item.RatingEntry.PropertyChanged -= OnItemRatingChanged;
+                    Items.Remove(item);
+                }
+            }
+        }
+        finally
+        {
+            _suppressCollectionChangedRefresh = false;
+        }
+
+        FilteredItems?.Refresh();
+        SelectedItem = nextSelected;
+        if (SelectedItem != null)
+            _previouslySelectedItem = SelectedItem;
     }
 
     [BlockingCommand]
@@ -1026,33 +1099,7 @@ public partial class PhotoListContext : IDropTarget
         var frozenSelected = SelectedItems.ToList();
         if (frozenSelected.Count == 0) return;
 
-        try
-        {
-            _suppressCollectionChangedRefresh = true;
-
-            if (frozenSelected.Count == Items.Count)
-            {
-                foreach (var item in frozenSelected)
-                {
-                    item.RatingEntry.PropertyChanged -= OnItemRatingChanged;
-                }
-                Items.Clear();
-            }
-            else
-            {
-                foreach (var loopSelected in frozenSelected)
-                {
-                    Items.Remove(loopSelected);
-                }
-            }
-        }
-        finally
-        {
-            _suppressCollectionChangedRefresh = false;
-        }
-
-        FilteredItems?.Refresh();
-        EnsureSelectedItemVisible();
+        RemoveGroups(frozenSelected);
     }
 
     [BlockingCommand]
@@ -1140,9 +1187,7 @@ public partial class PhotoListContext : IDropTarget
             new PhotoPreviewRequestMessage(new PhotoPreviewRequestData(primaryFile.FullName, title, rating, upcoming)));
 
         if (_previewLauncher is { IsRunning: true })
-        {
             _previewLauncher.SendPreviewRequest(primaryFile.FullName, title, rating, upcoming);
-        }
     }
 
     [NonBlockingCommand]
