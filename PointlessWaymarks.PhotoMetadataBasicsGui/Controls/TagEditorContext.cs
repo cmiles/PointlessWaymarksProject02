@@ -63,4 +63,12 @@ public partial class TagsEditorContext : IHasChanges, IHasValidationIssues,
     {
         return string.IsNullOrWhiteSpace(Tags) ? string.Empty : SlugTagTools.TagListJoinToSpacedString(TagsList());
     }
+
+    public void TryAddTags(string tags)
+    {
+        var tagList = SlugTagTools.TagListParseToSpacedString($"{Tags}, {tags}");
+        Tags = SlugTagTools.TagListJoinToSpacedString(tagList);
+
+        CheckForChangesAndValidationIssues();
+    }
 }

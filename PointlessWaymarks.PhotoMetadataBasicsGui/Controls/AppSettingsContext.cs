@@ -1,5 +1,6 @@
 using System.IO;
 using Metalama.Patterns.Observability;
+using Microsoft.Win32;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.WpfCommon;
@@ -12,12 +13,29 @@ namespace PointlessWaymarks.PhotoMetadataBasicsGui.Controls;
 [GenerateStatusCommands]
 public partial class AppSettingsContext
 {
+    public required StringDataEntryContext CreatedByEntryContext { get; set; }
+    public required StringDataEntryContext DefaultGpxDirectoryEntryContext { get; set; }
     public required StatusControlContext StatusContext { get; set; }
 
-    public required StringDataEntryContext CreatedByEntryContext { get; set; }
 
-    public required StringDataEntryContext DefaultGpxDirectoryEntryContext { get; set; }
-    
+    [NonBlockingCommand]
+    public async Task BrowseForDefaultGpxDirectory()
+    {
+        await ThreadSwitcher.ResumeForegroundAsync();
+
+        var folderDialog = new OpenFolderDialog
+        {
+            Title = "Select Default GPX Directory"
+        };
+
+        var currentValue = DefaultGpxDirectoryEntryContext.UserValue.TrimNullToEmpty();
+        if (Directory.Exists(currentValue))
+            folderDialog.InitialDirectory = currentValue;
+
+        if (folderDialog.ShowDialog() == true)
+            DefaultGpxDirectoryEntryContext.UserValue = folderDialog.FolderName;
+    }
+
     public static Task<AppSettingsContext> CreateInstance(StatusControlContext? statusContext)
     {
         try
@@ -55,25 +73,6 @@ public partial class AppSettingsContext
         {
             return Task.FromException<AppSettingsContext>(exception);
         }
-    }
-
-
-    [NonBlockingCommand]
-    public async Task BrowseForDefaultGpxDirectory()
-    {
-        await ThreadSwitcher.ResumeForegroundAsync();
-
-        var folderDialog = new Microsoft.Win32.OpenFolderDialog
-        {
-            Title = "Select Default GPX Directory"
-        };
-
-        var currentValue = DefaultGpxDirectoryEntryContext.UserValue.TrimNullToEmpty();
-        if (Directory.Exists(currentValue))
-            folderDialog.InitialDirectory = currentValue;
-
-        if (folderDialog.ShowDialog() == true)
-            DefaultGpxDirectoryEntryContext.UserValue = folderDialog.FolderName;
     }
 
     [BlockingCommand]

@@ -8,7 +8,6 @@ using Microsoft.VisualBasic.FileIO;
 using Microsoft.Win32;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.LlamaAspects;
-using PointlessWaymarks.PhotoMetadataBasicsGui;
 using PointlessWaymarks.SpatialTools;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.Status;
@@ -23,6 +22,7 @@ namespace PointlessWaymarks.PhotoMetadataBasicsGui.Controls;
 [GenerateStatusCommands]
 public partial class ImportPhotosContext
 {
+    private readonly Lock _logLock = new();
     public required StringDataEntryContext DestinationFolderEntry { get; set; }
     public required ImportDropHandler FinishedPhotosDropHandler { get; set; }
     public string ImportLog { get; set; } = string.Empty;
@@ -33,10 +33,9 @@ public partial class ImportPhotosContext
     public bool OpenWorkingFilesAfterImport { get; set; }
     public bool OverwriteExistingFiles { get; set; }
     public PhotoListContext? PhotoListContext { get; set; }
+    public bool RemoveEmptyDirectoriesAfterMovingFinishedFiles { get; set; }
     public required StatusControlContext StatusContext { get; set; }
     public required ImportDropHandler WorkingFilesDropHandler { get; set; }
-
-    private readonly object _logLock = new();
 
     private void AppendLog(string message, string? directory = null)
     {
@@ -102,6 +101,8 @@ public partial class ImportPhotosContext
                 OpenWorkingFilesAfterImport = settings.OpenWorkingFilesAfterImport,
                 OpenFinishedFilesAfterImport = settings.OpenFinishedFilesAfterImport,
                 OverwriteExistingFiles = settings.OverwriteOnImport,
+                RemoveEmptyDirectoriesAfterMovingFinishedFiles =
+                    settings.RemoveEmptyDirectoriesAfterMovingFinishedFiles,
                 PhotoListContext = photoListContext
             };
 
@@ -144,6 +145,14 @@ public partial class ImportPhotosContext
                 {
                     var current = PhotoMetadataBasicsGuiSettingTools.ReadSettings();
                     current.OpenFinishedFilesAfterImport = context.OpenFinishedFilesAfterImport;
+                    await PhotoMetadataBasicsGuiSettingTools.WriteSettings(current);
+                }
+
+                if (e.PropertyName == nameof(RemoveEmptyDirectoriesAfterMovingFinishedFiles))
+                {
+                    var current = PhotoMetadataBasicsGuiSettingTools.ReadSettings();
+                    current.RemoveEmptyDirectoriesAfterMovingFinishedFiles =
+                        context.RemoveEmptyDirectoriesAfterMovingFinishedFiles;
                     await PhotoMetadataBasicsGuiSettingTools.WriteSettings(current);
                 }
             };
@@ -233,6 +242,7 @@ public partial class ImportPhotosContext
         var errors = new ConcurrentBag<string>();
         var processed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var importedDirectories = new ConcurrentBag<string>();
+        var movedFromDirectories = new ConcurrentBag<string>();
 
         AppendLog($"{operationLabel} importing {files.Count} file(s) as {label}...");
 
@@ -301,9 +311,15 @@ public partial class ImportPhotosContext
                         }
 
                         if (moveFiles)
+                        {
                             File.Move(companion.FullName, targetPath);
+                            if (!string.IsNullOrWhiteSpace(companion.DirectoryName))
+                                movedFromDirectories.Add(companion.DirectoryName);
+                        }
                         else
+                        {
                             File.Copy(companion.FullName, targetPath);
+                        }
 
                         importedDirectories.Add(Path.GetFullPath(targetFolder));
                         AppendLog($"[Overwrite/{operationLabel}] {companion.Name} -> {targetPath}");
@@ -312,9 +328,15 @@ public partial class ImportPhotosContext
                     else
                     {
                         if (moveFiles)
+                        {
                             File.Move(companion.FullName, targetPath);
+                            if (!string.IsNullOrWhiteSpace(companion.DirectoryName))
+                                movedFromDirectories.Add(companion.DirectoryName);
+                        }
                         else
+                        {
                             File.Copy(companion.FullName, targetPath);
+                        }
 
                         importedDirectories.Add(Path.GetFullPath(targetFolder));
                         AppendLog($"[{label}/{operationLabel}] {companion.Name} -> {targetPath}");
@@ -337,6 +359,32 @@ public partial class ImportPhotosContext
         if (!errors.IsEmpty)
             await StatusContext.ShowMessageWithOkButton("Import Errors",
                 string.Join(Environment.NewLine, errors));
+
+        if (!isWorkingFiles && RemoveEmptyDirectoriesAfterMovingFinishedFiles)
+        {
+            var distinctSourceDirectories = movedFromDirectories
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderByDescending(x => x.Length)
+                .ToList();
+
+            foreach (var directory in distinctSourceDirectories)
+                try
+                {
+                    if (Directory.Exists(directory))
+                    {
+                        var hasFiles = Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories).Any();
+                        if (!hasFiles)
+                        {
+                            Directory.Delete(directory, true);
+                            AppendLog($"Removed empty directory: {directory}");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await StatusContext.ToastError($"Error removing empty directory {directory}: {ex.Message}");
+                }
+        }
 
         var openFilesAfterImport = isWorkingFiles ? OpenWorkingFilesAfterImport : OpenFinishedFilesAfterImport;
         if (openFilesAfterImport && PhotoListContext != null && !importedDirectories.IsEmpty)

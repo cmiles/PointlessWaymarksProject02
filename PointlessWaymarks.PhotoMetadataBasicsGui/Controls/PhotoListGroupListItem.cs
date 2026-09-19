@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Windows;
@@ -16,8 +18,8 @@ using PointlessWaymarks.WpfCommon.ConversionDataEntry;
 using PointlessWaymarks.WpfCommon.FileBasedGeoTagger;
 using PointlessWaymarks.WpfCommon.FileMetadataDisplay;
 using PointlessWaymarks.WpfCommon.LocationPicker;
-using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.StarRating;
+using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.StringDataEntry;
 using PointlessWaymarks.WpfCommon.Utility;
 
@@ -33,6 +35,8 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         ".orf", ".nef", ".cr2", ".cr3", ".arw", ".dng", ".raf", ".rw2", ".pef",
         ".srw", ".x3f", ".3fr", ".nrw", ".raw", ".rwl", ".mrw", ".iiq", ".erf"
     };
+
+    public bool BestGuessPrimaryIsRaw { get; set; }
 
     public Guid ContentId { get; set; } = Guid.NewGuid();
     public required ConversionDataEntryContext<double?> ElevationEntry { get; set; }
@@ -142,7 +146,7 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
     }
 
     public static async Task<PhotoListGroupListItem> CreateInstance(
-        StatusControlContext? statusContext, List<FileInfo> inputFiles)
+        StatusControlContext? statusContext, List<FileInfo> inputFiles, bool bestGuessPrimaryIsRaw)
     {
         var factoryStatusContext = statusContext ?? await StatusControlContext.CreateInstance(statusContext);
 
@@ -212,7 +216,8 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
             LatitudeEntry = latitudeEntry,
             LongitudeEntry = longitudeEntry,
             ElevationEntry = elevationEntry,
-            RatingEntry = ratingEntry
+            RatingEntry = ratingEntry,
+            BestGuessPrimaryIsRaw = bestGuessPrimaryIsRaw
         };
 
         factoryReturn.BuildCommands();
@@ -225,10 +230,43 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         {
             if (e.PropertyName == nameof(StarRatingContext.UserValue))
                 factoryReturn.StatusContext.RunFireAndForgetNonBlockingTask(factoryReturn.WriteRatingToFiles);
+            if (e.PropertyName == nameof(BestGuessPrimaryIsRaw))
+                factoryReturn.DesignateBestGuessPrimary();
+        };
+
+        factoryReturn.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(BestGuessPrimaryIsRaw))
+                factoryReturn.DesignateBestGuessPrimary();
         };
 
         PropertyScanners.SubscribeToChildHasChangesAndHasValidationIssues(factoryReturn,
             factoryReturn.CheckForChangesAndValidationIssues);
+
+        foreach (var fileItem in factoryReturn.Items)
+            fileItem.PropertyChanged += factoryReturn.OnFileItemPropertyChanged;
+
+        factoryReturn.Items.CollectionChanged += (s, e) =>
+        {
+            if (e.Action == NotifyCollectionChangedAction.Reset)
+            {
+                foreach (var item in factoryReturn.Items)
+                {
+                    item.PropertyChanged -= factoryReturn.OnFileItemPropertyChanged;
+                    item.PropertyChanged += factoryReturn.OnFileItemPropertyChanged;
+                }
+            }
+            else
+            {
+                if (e.OldItems != null)
+                    foreach (PhotoListFileItem oldItem in e.OldItems)
+                        oldItem.PropertyChanged -= factoryReturn.OnFileItemPropertyChanged;
+
+                if (e.NewItems != null)
+                    foreach (PhotoListFileItem newItem in e.NewItems)
+                        newItem.PropertyChanged += factoryReturn.OnFileItemPropertyChanged;
+            }
+        };
 
         WeakReferenceMessenger.Default.Register<FileMetadataLocationUpdateMessage>(factoryReturn,
             (r, m) => ((PhotoListGroupListItem)r).StatusContext.RunFireAndForgetNonBlockingTask(() =>
@@ -239,13 +277,42 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
 
     private void DesignateBestGuessPrimary()
     {
+        if (BestGuessPrimaryIsRaw)
+            DesignateRawBestGuessPrimary();
+        else
+            DesignateJpgBestGuessPrimary();
+    }
+
+    private void DesignateJpgBestGuessPrimary()
+    {
+        // Pick a primary photo:
+        //  1. Prefer .jpg/.jpeg files
+        //  2. Prefer other viewable file types over .dng and other raw image formats
+        //  3. Prefer the "base" filename (shortest name without extension) — e.g.
+        //     "2026 Jan Photo.orf" over "2026 Jan Photo 01.orf"
+        //  4. Fall back to the most recent write time
+        var primaryCandidate = Items
+            .OrderByDescending(i => i.PhotoFile.Extension.Equals(".jpg", StringComparison.OrdinalIgnoreCase) ||
+                                    i.PhotoFile.Extension.Equals(".jpeg", StringComparison.OrdinalIgnoreCase))
+            .ThenByDescending(i => !RawExtensions.Contains(i.PhotoFile.Extension))
+            .ThenBy(i => Path.GetFileNameWithoutExtension(i.PhotoFile.Name).Length)
+            .ThenByDescending(i => i.PhotoFile.LastWriteTimeUtc)
+            .FirstOrDefault();
+
+        if (primaryCandidate != null)
+            foreach (var loopListItem in Items)
+                loopListItem.IsPrimaryPhoto = primaryCandidate == loopListItem;
+    }
+
+    private void DesignateRawBestGuessPrimary()
+    {
         // Pick a primary photo:
         //  1. Prefer .dng files
         //  2. Prefer raw file types over processed image formats
         //  3. Prefer DxO_DeepPRIME processed files
         //  4. Prefer the "base" filename (shortest name without extension) — e.g.
         //     "2026 Jan Photo.orf" over "2026 Jan Photo 01.orf"
-        //  5. Fall back to most recent write time
+        //  5. Fall back to the most recent write time
         var primaryCandidate = Items
             .OrderByDescending(i => i.PhotoFile.Extension.Equals(".dng", StringComparison.OrdinalIgnoreCase))
             .ThenByDescending(i => RawExtensions.Contains(i.PhotoFile.Extension))
@@ -254,7 +321,9 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
             .ThenByDescending(i => i.PhotoFile.LastWriteTimeUtc)
             .FirstOrDefault();
 
-        if (primaryCandidate != null) primaryCandidate.IsPrimaryPhoto = true;
+        if (primaryCandidate != null)
+            foreach (var loopListItem in Items)
+                loopListItem.IsPrimaryPhoto = primaryCandidate == loopListItem;
     }
 
     [BlockingCommand]
@@ -372,6 +441,12 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         foreach (var loopItems in Items) loopItems.IsPrimaryPhoto = loopItems == item;
     }
 
+    private void OnFileItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(PhotoListFileItem.IsPrimaryPhoto) &&
+            sender is PhotoListFileItem { IsPrimaryPhoto: true }) PrimaryPhotoChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     public async Task OnFileMetadataLocationUpdate(FileMetadataLocationUpdateMessage message)
     {
         await ThreadSwitcher.ResumeBackgroundAsync();
@@ -460,6 +535,8 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         }
     }
 
+    public event EventHandler? PrimaryPhotoChanged;
+
     [NonBlockingCommand]
     [StopAndWarnIfFirstParameterIsNull]
     public async Task RemoveFile(PhotoListFileItem? file)
@@ -481,13 +558,10 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         if (frozenSelected.Count == 0) return;
 
         if (frozenSelected.Count == Items.Count)
-        {
             Items.Clear();
-        }
         else
-        {
-            foreach (var item in frozenSelected) Items.Remove(item);
-        }
+            foreach (var item in frozenSelected)
+                Items.Remove(item);
 
         if (Items.Count > 0 && !Items.Any(x => x.IsPrimaryPhoto)) DesignateBestGuessPrimary();
     }
@@ -681,31 +755,6 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         RatingEntry.UserValue = composite.Rating;
     }
 
-    public async Task WriteRatingToFiles()
-    {
-        await ThreadSwitcher.ResumeBackgroundAsync();
-
-        var exifToolCheckResult =
-            await FileLocationTools.FindDownloadUpdateExifTool(null, StatusContext.ProgressTracker());
-
-        if (!exifToolCheckResult.Success || exifToolCheckResult.ExifToolExe is null) return;
-
-        var supportedExt = FileMetadataTools.ExifToolWriteSupportedExtensions;
-        var filesToProcess = Items
-            .Select(i => i.PhotoFile)
-            .Where(f => supportedExt.Contains(f.Extension.ToUpperInvariant()))
-            .ToList();
-
-        if (filesToProcess.Count == 0) return;
-
-        var request = new ExifToolWriteRequest { Rating = RatingEntry.UserValue };
-
-        await ExifToolWriter.WriteMetadataAsync(
-            exifToolCheckResult.ExifToolExe, request, filesToProcess, StatusContext.ProgressTracker());
-
-        foreach (var item in Items) await item.RefreshMetadata();
-    }
-
     [BlockingCommand]
     public async Task WriteMetadata()
     {
@@ -775,5 +824,30 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
         foreach (var loopItems in Items) await loopItems.RefreshMetadata();
 
         OverwriteAllEntriesWithCurrentMetadata();
+    }
+
+    public async Task WriteRatingToFiles()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var exifToolCheckResult =
+            await FileLocationTools.FindDownloadUpdateExifTool(null, StatusContext.ProgressTracker());
+
+        if (!exifToolCheckResult.Success || exifToolCheckResult.ExifToolExe is null) return;
+
+        var supportedExt = FileMetadataTools.ExifToolWriteSupportedExtensions;
+        var filesToProcess = Items
+            .Select(i => i.PhotoFile)
+            .Where(f => supportedExt.Contains(f.Extension.ToUpperInvariant()))
+            .ToList();
+
+        if (filesToProcess.Count == 0) return;
+
+        var request = new ExifToolWriteRequest { Rating = RatingEntry.UserValue };
+
+        await ExifToolWriter.WriteMetadataAsync(
+            exifToolCheckResult.ExifToolExe, request, filesToProcess, StatusContext.ProgressTracker());
+
+        foreach (var item in Items) await item.RefreshMetadata();
     }
 }

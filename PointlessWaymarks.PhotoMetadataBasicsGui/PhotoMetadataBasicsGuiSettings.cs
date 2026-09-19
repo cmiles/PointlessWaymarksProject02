@@ -5,6 +5,7 @@ namespace PointlessWaymarks.PhotoMetadataBasicsGui;
 [NotifyPropertyChanged]
 public partial class PhotoMetadataBasicsGuiSettings
 {
+    public bool BestGuessPrimaryIsRaw { get; set; }
     public string DefaultCreatedBy { get; set; } = string.Empty;
 
     public string DefaultGpxDirectory { get; set; } = string.Empty;
@@ -25,4 +26,6 @@ public partial class PhotoMetadataBasicsGuiSettings
 
     public string ProgramUpdateDirectory { get; set; } =
         @"https://software.pointlesswaymarks.com/Software/PointlessWaymarksSoftwareList.json";
+
+    public bool RemoveEmptyDirectoriesAfterMovingFinishedFiles { get; set; }
 }

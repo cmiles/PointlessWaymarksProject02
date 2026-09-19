@@ -98,6 +98,10 @@
                               Content="Open files after import" Margin="0,4,0,0"
                               IsEnabled="{Binding PhotoListContext, Converter={StaticResource NullOrWhiteSpaceStringToFalse}}">
                     </CheckBox>
+                    <CheckBox IsChecked="{Binding RemoveEmptyDirectoriesAfterMovingFinishedFiles}" HorizontalAlignment="Center"
+                              Content="Remove Empty Folders after Move" Margin="0,4,0,0"
+                              IsEnabled="{Binding PhotoListContext, Converter={StaticResource NullOrWhiteSpaceStringToFalse}}">
+                    </CheckBox>
                 </StackPanel>
             </Border>
         </Grid>

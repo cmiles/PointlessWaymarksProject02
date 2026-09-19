@@ -9,7 +9,6 @@ using System.Windows.Data;
 using CommunityToolkit.Mvvm.Messaging;
 using GongSolutions.Wpf.DragDrop;
 using Metalama.Patterns.Observability;
-using Microsoft.VisualBasic.FileIO;
 using NetTopologySuite.Features;
 using NetTopologySuite.Geometries;
 using PointlessWaymarks.CommonTools;
@@ -38,6 +37,7 @@ public partial class PhotoListContext : IDropTarget
     private PhotoPreviewLauncher? _previewLauncher;
     private PhotoListGroupListItem? _previouslySelectedItem;
     private bool _suppressCollectionChangedRefresh;
+    public bool BestGuessPrimaryIsRaw { get; set; }
 
     [NotObservable]
     public List<PhotoListGroupListItem> CurrentFilteredListItems =>
@@ -214,6 +214,144 @@ public partial class PhotoListContext : IDropTarget
         await AddFeatureIntersectTags(SelectedItems, cancellationToken);
     }
 
+    public async Task AddTags(List<PhotoListGroupListItem> toApplyTo, string tags)
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (toApplyTo.Count == 0) return;
+
+        foreach (var item in toApplyTo) item.TagEntryContext.TryAddTags(tags);
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoItems]
+    public async Task AddTagsToAll()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var frozenSelected = CurrentFilteredListItems.ToList();
+
+        var toAddString = await StatusContext.ShowStringEntry("Add Tags to All Items", "Comma Separated Tags:", "");
+        if (!toAddString.Item1)
+        {
+            await StatusContext.ToastWarning("Add Tags Cancelled");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(toAddString.Item2))
+        {
+            await StatusContext.ToastWarning("Nothing Entered?");
+            return;
+        }
+
+        var tagString = SlugTagTools.CreateRelaxedInputSpacedString(true, toAddString.Item2, [',', ' ', '-', '_'])
+            .ToLower();
+
+        if (string.IsNullOrWhiteSpace(tagString))
+        {
+            await StatusContext.ToastWarning("No Valid Tags Entered?");
+            return;
+        }
+
+        await AddTags(frozenSelected, tagString);
+    }
+
+    [BlockingCommand]
+    [StopAndWarnIfNoSelectedListItems]
+    public async Task AddTagsToSelected()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var frozenSelected = SelectedItems.ToList();
+
+        var toAddString = await StatusContext.ShowStringEntry("Add Tags to Selected", "Comma Separated Tags:", "");
+        if (!toAddString.Item1)
+        {
+            await StatusContext.ToastWarning("Add Tags Cancelled");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(toAddString.Item2))
+        {
+            await StatusContext.ToastWarning("Nothing Entered?");
+            return;
+        }
+
+        var tagString = SlugTagTools.CreateRelaxedInputSpacedString(true, toAddString.Item2, [',', ' ', '-', '_'])
+            .ToLower();
+
+        if (string.IsNullOrWhiteSpace(tagString))
+        {
+            await StatusContext.ToastWarning("No Valid Tags Entered?");
+            return;
+        }
+
+        ;
+
+        await AddTags(frozenSelected, tagString);
+    }
+
+    /// <summary>
+    ///     Determines the next item that should be selected when the specified items are removed or become hidden.
+    ///     If the current SelectedItem is not being removed and is visible, it remains selected.
+    ///     Otherwise, selects the closest remaining visible list item above the removed item;
+    ///     if everything through the top of the list is removed, selects the first remaining visible item below.
+    ///     Must be called on the UI thread before the items are removed from Items (or while reference position is known).
+    /// </summary>
+    private PhotoListGroupListItem? CalculateNextSelectedItem(IReadOnlyList<PhotoListGroupListItem> itemsToRemove)
+    {
+        if (FilteredItems == null) return null;
+
+        var visible = FilteredItems.Cast<PhotoListGroupListItem>().ToList();
+        if (visible.Count == 0) return null;
+
+        var itemsToRemoveSet = new HashSet<PhotoListGroupListItem>(itemsToRemove);
+        var remainingVisible = visible.Where(x => !itemsToRemoveSet.Contains(x)).ToList();
+        if (remainingVisible.Count == 0) return null;
+
+        if (SelectedItem != null && !itemsToRemoveSet.Contains(SelectedItem) && visible.Contains(SelectedItem))
+            return SelectedItem;
+
+        var reference = SelectedItem ?? _previouslySelectedItem;
+        if (reference == null) return remainingVisible.FirstOrDefault();
+
+        var referenceIndex = Items.IndexOf(reference);
+        if (referenceIndex < 0)
+        {
+            var visibleRefIndex = visible.IndexOf(reference);
+            if (visibleRefIndex >= 0)
+            {
+                for (var i = visibleRefIndex - 1; i >= 0; i--)
+                    if (!itemsToRemoveSet.Contains(visible[i]))
+                        return visible[i];
+
+                for (var i = visibleRefIndex + 1; i < visible.Count; i++)
+                    if (!itemsToRemoveSet.Contains(visible[i]))
+                        return visible[i];
+            }
+
+            return remainingVisible.FirstOrDefault();
+        }
+
+        var visibleSet = visible.ToHashSet();
+
+        for (var i = referenceIndex - 1; i >= 0; i--)
+        {
+            var candidate = Items[i];
+            if (!itemsToRemoveSet.Contains(candidate) && visibleSet.Contains(candidate))
+                return candidate;
+        }
+
+        for (var i = referenceIndex + 1; i < Items.Count; i++)
+        {
+            var candidate = Items[i];
+            if (!itemsToRemoveSet.Contains(candidate) && visibleSet.Contains(candidate))
+                return candidate;
+        }
+
+        return remainingVisible.FirstOrDefault();
+    }
+
     public static async Task<PhotoListContext> CreateInstance(StatusControlContext? statusContext)
     {
         await ThreadSwitcher.ResumeForegroundAsync();
@@ -225,6 +363,9 @@ public partial class PhotoListContext : IDropTarget
         };
 
         factoryReturn.BuildCommands();
+
+        var settings = PhotoMetadataBasicsGuiSettingTools.ReadSettings();
+        factoryReturn.BestGuessPrimaryIsRaw = settings.BestGuessPrimaryIsRaw;
 
         factoryReturn.FilteredItems = CollectionViewSource.GetDefaultView(factoryReturn.Items);
         factoryReturn.FilteredItems.Filter = o =>
@@ -243,12 +384,22 @@ public partial class PhotoListContext : IDropTarget
             }
         };
 
-        factoryReturn.PropertyChanged += (_, e) =>
+        factoryReturn.PropertyChanged += async (_, e) =>
         {
             if (e.PropertyName is nameof(FilterNoRatingOnly))
             {
                 factoryReturn.FilteredItems?.Refresh();
                 factoryReturn.EnsureSelectedItemVisible();
+            }
+
+            if (e.PropertyName is nameof(BestGuessPrimaryIsRaw))
+            {
+                foreach (var loopItems in factoryReturn.Items)
+                    loopItems.BestGuessPrimaryIsRaw = factoryReturn.BestGuessPrimaryIsRaw;
+
+                var current = PhotoMetadataBasicsGuiSettingTools.ReadSettings();
+                current.BestGuessPrimaryIsRaw = factoryReturn.BestGuessPrimaryIsRaw;
+                await PhotoMetadataBasicsGuiSettingTools.WriteSettings(current);
             }
         };
 
@@ -260,17 +411,26 @@ public partial class PhotoListContext : IDropTarget
                 {
                     item.RatingEntry.PropertyChanged -= factoryReturn.OnItemRatingChanged;
                     item.RatingEntry.PropertyChanged += factoryReturn.OnItemRatingChanged;
+
+                    item.PrimaryPhotoChanged -= factoryReturn.OnGroupPrimaryPhotoChanged;
+                    item.PrimaryPhotoChanged += factoryReturn.OnGroupPrimaryPhotoChanged;
                 }
             }
             else
             {
                 if (args.NewItems != null)
                     foreach (PhotoListGroupListItem newItem in args.NewItems)
+                    {
                         newItem.RatingEntry.PropertyChanged += factoryReturn.OnItemRatingChanged;
+                        newItem.PrimaryPhotoChanged += factoryReturn.OnGroupPrimaryPhotoChanged;
+                    }
 
                 if (args.OldItems != null)
                     foreach (PhotoListGroupListItem oldItem in args.OldItems)
+                    {
                         oldItem.RatingEntry.PropertyChanged -= factoryReturn.OnItemRatingChanged;
+                        oldItem.PrimaryPhotoChanged -= factoryReturn.OnGroupPrimaryPhotoChanged;
+                    }
             }
 
             if (factoryReturn._suppressCollectionChangedRefresh) return;
@@ -278,7 +438,8 @@ public partial class PhotoListContext : IDropTarget
             factoryReturn.FilteredItems?.Refresh();
             if (factoryReturn.FilteredItems != null && args.Action == NotifyCollectionChangedAction.Remove &&
                 args.OldStartingIndex >= 0 &&
-                (factoryReturn.SelectedItem == null || !factoryReturn.FilteredItems.Cast<PhotoListGroupListItem>().Contains(factoryReturn.SelectedItem)))
+                (factoryReturn.SelectedItem == null || !factoryReturn.FilteredItems.Cast<PhotoListGroupListItem>()
+                    .Contains(factoryReturn.SelectedItem)))
             {
                 var visible = factoryReturn.FilteredItems.Cast<PhotoListGroupListItem>().ToHashSet();
                 if (visible.Count == 0)
@@ -289,25 +450,19 @@ public partial class PhotoListContext : IDropTarget
                 {
                     PhotoListGroupListItem? selected = null;
                     for (var i = args.OldStartingIndex - 1; i >= 0; i--)
-                    {
                         if (visible.Contains(factoryReturn.Items[i]))
                         {
                             selected = factoryReturn.Items[i];
                             break;
                         }
-                    }
 
                     if (selected == null)
-                    {
                         for (var i = args.OldStartingIndex; i < factoryReturn.Items.Count; i++)
-                        {
                             if (visible.Contains(factoryReturn.Items[i]))
                             {
                                 selected = factoryReturn.Items[i];
                                 break;
                             }
-                        }
-                    }
 
                     factoryReturn.SelectedItem = selected ?? visible.First();
                 }
@@ -363,8 +518,7 @@ public partial class PhotoListContext : IDropTarget
             foreach (var fileItem in group.Items.ToList())
                 try
                 {
-                    FileSystem.DeleteFile(fileItem.PhotoFile.FullName, UIOption.OnlyErrorDialogs,
-                        RecycleOption.SendToRecycleBin);
+                    FileAndFolderTools.SendToRecycleBinWithRetry(fileItem.PhotoFile.FullName, 2);
                     Interlocked.Increment(ref fileDeleteCount);
                 }
                 catch (Exception ex)
@@ -412,8 +566,7 @@ public partial class PhotoListContext : IDropTarget
             foreach (var fileItem in group.Items.ToList())
                 try
                 {
-                    FileSystem.DeleteFile(fileItem.PhotoFile.FullName, UIOption.OnlyErrorDialogs,
-                        RecycleOption.SendToRecycleBin);
+                    FileAndFolderTools.SendToRecycleBinWithRetry(fileItem.PhotoFile.FullName, 2);
                     Interlocked.Increment(ref fileDeleteCount);
                 }
                 catch (Exception ex)
@@ -454,8 +607,7 @@ public partial class PhotoListContext : IDropTarget
             foreach (var fileItem in group.Items.ToList())
                 try
                 {
-                    FileSystem.DeleteFile(fileItem.PhotoFile.FullName, UIOption.OnlyErrorDialogs,
-                        RecycleOption.SendToRecycleBin);
+                    FileAndFolderTools.SendToRecycleBinWithRetry(fileItem.PhotoFile.FullName, 2);
                     Interlocked.Increment(ref fileDeleteCount);
                 }
                 catch (Exception ex)
@@ -499,8 +651,7 @@ public partial class PhotoListContext : IDropTarget
         {
             try
             {
-                FileSystem.DeleteFile(loopFile.PhotoFile.FullName, UIOption.OnlyErrorDialogs,
-                    RecycleOption.SendToRecycleBin);
+                FileAndFolderTools.SendToRecycleBinWithRetry(loopFile.PhotoFile.FullName, 2);
                 deleted.Add(loopFile);
             }
             catch (Exception ex)
@@ -520,71 +671,6 @@ public partial class PhotoListContext : IDropTarget
         if (!errors.IsEmpty)
             await StatusContext.ShowMessageWithOkButton("Delete Errors",
                 string.Join(Environment.NewLine, errors));
-    }
-
-    /// <summary>
-    ///     Determines the next item that should be selected when the specified items are removed or become hidden.
-    ///     If the current SelectedItem is not being removed and is visible, it remains selected.
-    ///     Otherwise, selects the closest remaining visible list item above the removed item;
-    ///     if everything through the top of the list is removed, selects the first remaining visible item below.
-    ///     Must be called on the UI thread before the items are removed from Items (or while reference position is known).
-    /// </summary>
-    private PhotoListGroupListItem? CalculateNextSelectedItem(IReadOnlyList<PhotoListGroupListItem> itemsToRemove)
-    {
-        if (FilteredItems == null) return null;
-
-        var visible = FilteredItems.Cast<PhotoListGroupListItem>().ToList();
-        if (visible.Count == 0) return null;
-
-        var itemsToRemoveSet = new HashSet<PhotoListGroupListItem>(itemsToRemove);
-        var remainingVisible = visible.Where(x => !itemsToRemoveSet.Contains(x)).ToList();
-        if (remainingVisible.Count == 0) return null;
-
-        if (SelectedItem != null && !itemsToRemoveSet.Contains(SelectedItem) && visible.Contains(SelectedItem))
-            return SelectedItem;
-
-        var reference = SelectedItem ?? _previouslySelectedItem;
-        if (reference == null) return remainingVisible.FirstOrDefault();
-
-        var referenceIndex = Items.IndexOf(reference);
-        if (referenceIndex < 0)
-        {
-            var visibleRefIndex = visible.IndexOf(reference);
-            if (visibleRefIndex >= 0)
-            {
-                for (var i = visibleRefIndex - 1; i >= 0; i--)
-                {
-                    if (!itemsToRemoveSet.Contains(visible[i]))
-                        return visible[i];
-                }
-
-                for (var i = visibleRefIndex + 1; i < visible.Count; i++)
-                {
-                    if (!itemsToRemoveSet.Contains(visible[i]))
-                        return visible[i];
-                }
-            }
-
-            return remainingVisible.FirstOrDefault();
-        }
-
-        var visibleSet = visible.ToHashSet();
-
-        for (var i = referenceIndex - 1; i >= 0; i--)
-        {
-            var candidate = Items[i];
-            if (!itemsToRemoveSet.Contains(candidate) && visibleSet.Contains(candidate))
-                return candidate;
-        }
-
-        for (var i = referenceIndex + 1; i < Items.Count; i++)
-        {
-            var candidate = Items[i];
-            if (!itemsToRemoveSet.Contains(candidate) && visibleSet.Contains(candidate))
-                return candidate;
-        }
-
-        return remainingVisible.FirstOrDefault();
     }
 
     /// <summary>
@@ -613,22 +699,18 @@ public partial class PhotoListContext : IDropTarget
         if (previousIndex >= 0)
         {
             for (var i = previousIndex - 1; i >= 0; i--)
-            {
                 if (visible.Contains(Items[i]))
                 {
                     SelectedItem = Items[i];
                     return;
                 }
-            }
 
             for (var i = previousIndex + 1; i < Items.Count; i++)
-            {
                 if (visible.Contains(Items[i]))
                 {
                     SelectedItem = Items[i];
                     return;
                 }
-            }
         }
 
         SelectedItem = visible.First();
@@ -866,7 +948,7 @@ public partial class PhotoListContext : IDropTarget
         // If a single file was dropped, expand the set with likely related files in the same folder.
         if (confirmedFiles.Count == 1) confirmedFiles = FindRelatedFiles(confirmedFiles[0]);
 
-        var group = await PhotoListGroupListItem.CreateInstance(StatusContext, confirmedFiles);
+        var group = await PhotoListGroupListItem.CreateInstance(StatusContext, confirmedFiles, BestGuessPrimaryIsRaw);
 
         await ThreadSwitcher.ResumeForegroundAsync();
         Items.Add(group);
@@ -891,6 +973,17 @@ public partial class PhotoListContext : IDropTarget
 
             await RemoveGroup(frozenSelectedItems[i]);
         }
+    }
+
+    private void OnGroupPrimaryPhotoChanged(object? sender, EventArgs e)
+    {
+        if (sender is PhotoListGroupListItem group && group == SelectedItem)
+            StatusContext.RunFireAndForgetNonBlockingTask(async () =>
+            {
+                await ThreadSwitcher.ResumeForegroundAsync();
+                if (group == SelectedItem)
+                    SendPreviewRequest();
+            });
     }
 
     private void OnItemRatingChanged(object? sender, PropertyChangedEventArgs e)
@@ -1014,7 +1107,8 @@ public partial class PhotoListContext : IDropTarget
         Parallel.ForEach(fileGroups, fileGroup =>
         {
             var groupItem = PhotoListGroupListItem
-                .CreateInstance(StatusContext, fileGroup.Select(f => new FileInfo(f)).ToList()).Result;
+                .CreateInstance(StatusContext, fileGroup.Select(f => new FileInfo(f)).ToList(), BestGuessPrimaryIsRaw)
+                .Result;
             StatusContext.Progress(
                 $"Created group for {fileGroup.Count} file(s) starting with {Path.GetFileName(fileGroup[0])}...");
             groupListItems.Add(groupItem);
@@ -1067,7 +1161,12 @@ public partial class PhotoListContext : IDropTarget
 
             if (removingAll)
             {
-                foreach (var item in Items) item.RatingEntry.PropertyChanged -= OnItemRatingChanged;
+                foreach (var item in Items)
+                {
+                    item.RatingEntry.PropertyChanged -= OnItemRatingChanged;
+                    item.PrimaryPhotoChanged -= OnGroupPrimaryPhotoChanged;
+                }
+
                 Items.Clear();
             }
             else
@@ -1075,6 +1174,7 @@ public partial class PhotoListContext : IDropTarget
                 foreach (var item in groupsToRemove)
                 {
                     item.RatingEntry.PropertyChanged -= OnItemRatingChanged;
+                    item.PrimaryPhotoChanged -= OnGroupPrimaryPhotoChanged;
                     Items.Remove(item);
                 }
             }
@@ -1224,7 +1324,7 @@ public partial class PhotoListContext : IDropTarget
         }
 
         var newGroup = await PhotoListGroupListItem.CreateInstance(StatusContext,
-            selectedFileItems.Select(x => x.PhotoFile).ToList());
+            selectedFileItems.Select(x => x.PhotoFile).ToList(), BestGuessPrimaryIsRaw);
 
         await ThreadSwitcher.ResumeForegroundAsync();
 
