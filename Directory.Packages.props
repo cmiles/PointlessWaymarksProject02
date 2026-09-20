@@ -4,7 +4,7 @@
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="AngleSharp" Version="1.8.1" />
+    <PackageVersion Include="AngleSharp" Version="1.8.2" />
     <PackageVersion Include="AngleSharp.Io" Version="1.1.0" />
     <PackageVersion Include="AngleSharp.Js" Version="1.1.0" />
     <PackageVersion Include="AnyClone" Version="1.1.6" />
@@ -65,8 +65,8 @@
     <PackageVersion Include="MathNet.Numerics" Version="5.0.0" />
     <PackageVersion Include="MdXaml.Plugins" Version="1.27.0" />
     <PackageVersion Include="MetadataExtractor" Version="2.9.3" />
-    <PackageVersion Include="Metalama.Framework" Version="2026.1.27" />
-    <PackageVersion Include="Metalama.Patterns.Observability" Version="2026.1.27" />
+    <PackageVersion Include="Metalama.Framework" Version="2026.1.28" />
+    <PackageVersion Include="Metalama.Patterns.Observability" Version="2026.1.28" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.9.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
@@ -76,13 +76,13 @@
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.11" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Maui.Controls" Version="10.0.101" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
     <PackageVersion Include="Microsoft.Playwright" Version="1.62.0" />
     <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.6.6" />
     <PackageVersion Include="Microsoft.Web.WebView2" Version="1.0.4191.47" />
     <PackageVersion Include="Microsoft.Web.WebView2.DevToolsProtocolExtension" Version="1.0.2901" />
     <PackageVersion Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.142" />
-    <PackageVersion Include="Mjml.Net" Version="4.14.0" />
+    <PackageVersion Include="Mjml.Net" Version="4.15.0" />
     <PackageVersion Include="MSTest.TestAdapter" Version="4.3.3" />
     <PackageVersion Include="MSTest.TestFramework" Version="4.3.3" />
     <PackageVersion Include="NetTopologySuite" Version="2.6.0" />
@@ -118,9 +118,9 @@
     <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageVersion Include="SharpVectors.Wpf" Version="1.8.5" />
     <PackageVersion Include="SimMetricsCore" Version="2.1.0" />
-    <PackageVersion Include="SkiaSharp" Version="4.152.0" />
-    <PackageVersion Include="SkiaSharp.HarfBuzz" Version="4.152.0" />
-    <PackageVersion Include="SkiaSharp.Views.WPF" Version="4.152.0" />
+    <PackageVersion Include="SkiaSharp" Version="4.152.1" />
+    <PackageVersion Include="SkiaSharp.HarfBuzz" Version="4.152.1" />
+    <PackageVersion Include="SkiaSharp.Views.WPF" Version="4.152.1" />
     <PackageVersion Include="System.CodeDom" Version="10.0.12" />
     <PackageVersion Include="System.Data.SQLite" Version="2.0.4" />
     <PackageVersion Include="System.Data.SQLite.Core" Version="1.0.119" />
