@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 dotnet run Publish-PublishReadmeHelper.cs
 .\Publish-ProgramToInnoSetupInstaller.ps1 CloudBackupGui
-.\Publish-ProgramToInnoSetupInstaller.ps1 CmsGui
+.\Publish-ProgramToInnoSetupInstaller.ps1 CmsGui -IncludePhotoPreviewGui
 .\Publish-ProgramToInnoSetupInstaller.ps1 FeedReaderGui
 .\Publish-ProgramToInnoSetupInstaller.ps1 GeoToolsGui
 .\Publish-ProgramToInnoSetupInstaller.ps1 PowerShellRunnerGui

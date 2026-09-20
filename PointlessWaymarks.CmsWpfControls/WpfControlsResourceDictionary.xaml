@@ -2393,6 +2393,9 @@
         <MenuItem Command="{Binding CommonCommands.NewContentMapWindowCommand}" Header="New Map View/Search Window" />
         <MenuItem Command="{Binding CommonCommands.NewActivityLogWindowCommand}" Header="New Activity Log Window" />
         <Separator />
+        <MenuItem Command="{Binding ListContext.LaunchPhotoPreviewCommand}"
+                  Header="Photo Preview - Selected Item" />
+        <Separator />
         <MenuItem Command="{Binding CommonCommands.NewCmsWindowCommand}" Header="New CMS Window" />
     </collections:ArrayList>
     <MenuItem

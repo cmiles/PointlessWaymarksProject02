@@ -42,6 +42,7 @@ using PointlessWaymarks.LlamaAspects;
 using PointlessWaymarks.SpatialTools;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.ColumnSort;
+using PointlessWaymarks.WpfCommon.PhotoPreview;
 using PointlessWaymarks.WpfCommon.Status;
 using PointlessWaymarks.WpfCommon.Utility;
 using Serilog;
@@ -53,6 +54,8 @@ namespace PointlessWaymarks.CmsWpfControls.ContentList;
 [GenerateStatusCommands]
 public partial class ContentListContext : IDragSource, IDropTarget
 {
+    private PhotoPreviewLauncher? _previewLauncher;
+
     private ContentListContext(StatusControlContext statusContext,
         ObservableCollection<IContentListItem> factoryContentListItems,
         ContentListSelected<IContentListItem> factoryListSelection, ListFilterBuilderContext factoryListFilterBuilder,
@@ -98,6 +101,7 @@ public partial class ContentListContext : IDragSource, IDropTarget
             StatusContext.RunFireAndForgetNonBlockingTask(() => ListContextSortHelpers.SortList(list, Items));
 
         PropertyChanged += OnPropertyChanged;
+        ListSelection.PropertyChanged += OnListSelectionPropertyChanged;
     }
 
     public IContentListLoader ContentListLoader { get; set; }
@@ -891,6 +895,13 @@ public partial class ContentListContext : IDragSource, IDropTarget
         return (smallImageUrl, displayImageUrl);
     }
 
+    private static string? GetDisplayPictureFilePath(IContentListItem? item)
+    {
+        return item is IContentListImage { DisplayImageUrl: not null } imageItem
+            ? imageItem.DisplayImageUrl
+            : null;
+    }
+
     [BlockingCommand]
     public async Task ImportFromExcelFile()
     {
@@ -941,6 +952,49 @@ public partial class ContentListContext : IDragSource, IDropTarget
                 ContentListLoader.ShowType),
             _ => null
         };
+    }
+
+    [NonBlockingCommand]
+    public async Task LaunchPhotoPreview()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var selectedItem = ListSelection.Selected ?? SelectedListItems().FirstOrDefault();
+        if (selectedItem == null)
+        {
+            await StatusContext.ToastWarning("No item selected to preview.");
+            return;
+        }
+
+        var displayFilePath = GetDisplayPictureFilePath(selectedItem);
+        if (string.IsNullOrWhiteSpace(displayFilePath) || !File.Exists(displayFilePath))
+        {
+            await StatusContext.ToastWarning("The selected item does not have an available display image.");
+            return;
+        }
+
+        if (_previewLauncher == null)
+        {
+            _previewLauncher = new PhotoPreviewLauncher(showRating: false);
+            _previewLauncher.NavigateReceived += (_, e) =>
+            {
+                if (e.Direction.Equals("Next", StringComparison.OrdinalIgnoreCase))
+                    StatusContext.RunFireAndForgetNonBlockingTask(OnPreviewNextItem);
+                else if (e.Direction.Equals("Previous", StringComparison.OrdinalIgnoreCase))
+                    StatusContext.RunFireAndForgetNonBlockingTask(OnPreviewPreviousItem);
+            };
+            _previewLauncher.ProcessExited += (_, _) =>
+            {
+                StatusContext.Progress("Photo Preview window closed.");
+            };
+        }
+
+        var title = selectedItem.Content().Title ?? Path.GetFileName(displayFilePath);
+        var launched = await _previewLauncher.EnsureRunningAsync(displayFilePath, title, 0, showRating: false);
+        if (launched)
+            await SendPreviewRequest();
+        else
+            await StatusContext.ToastError("Could not launch Photo Preview application.");
     }
 
     [BlockingCommand]
@@ -1020,6 +1074,103 @@ public partial class ContentListContext : IDragSource, IDropTarget
 
         if (e.PropertyName == nameof(UserFilterText))
             StatusContext.RunFireAndForgetNonBlockingTask(FilterList);
+    }
+
+    private void OnListSelectionPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(ContentListSelected<IContentListItem>.Selected)
+            or nameof(ContentListSelected<IContentListItem>.SelectedItems))
+        {
+            if (_previewLauncher is { IsRunning: true })
+                StatusContext.RunFireAndForgetNonBlockingTask(SendPreviewRequest);
+        }
+    }
+
+    private async Task OnPreviewNextItem()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var visible = await FilteredListItems();
+        if (visible.Count == 0) return;
+
+        var selectedItem = ListSelection.Selected ?? SelectedListItems().FirstOrDefault();
+        var currentIndex = selectedItem != null ? visible.IndexOf(selectedItem) : -1;
+
+        var nextIndex = (currentIndex + 1) % visible.Count;
+        var nextItem = visible[nextIndex];
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+        ListSelection.Selected = nextItem;
+    }
+
+    private async Task OnPreviewPreviousItem()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var visible = await FilteredListItems();
+        if (visible.Count == 0) return;
+
+        var selectedItem = ListSelection.Selected ?? SelectedListItems().FirstOrDefault();
+        var currentIndex = selectedItem != null ? visible.IndexOf(selectedItem) : -1;
+
+        var prevIndex = (currentIndex - 1 + visible.Count) % visible.Count;
+        var prevItem = visible[prevIndex];
+
+        await ThreadSwitcher.ResumeForegroundAsync();
+        ListSelection.Selected = prevItem;
+    }
+
+    public async Task SendPreviewRequest()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        var selectedItem = ListSelection.Selected ?? SelectedListItems().FirstOrDefault();
+        var displayFilePath = GetDisplayPictureFilePath(selectedItem);
+
+        if (string.IsNullOrWhiteSpace(displayFilePath) || !File.Exists(displayFilePath))
+        {
+            _previewLauncher?.SendClearPreview();
+            return;
+        }
+
+        var title = selectedItem?.Content().Title ?? Path.GetFileName(displayFilePath);
+        var upcomingPaths = new List<string>();
+
+        var visible = await FilteredListItems();
+        var currentIndex = selectedItem != null ? visible.IndexOf(selectedItem) : -1;
+
+        if (currentIndex >= 0 && visible.Count > 1)
+        {
+            // Forward prefetch (up to 5 items)
+            var forwardCount = 0;
+            for (var i = 1; i <= visible.Count && forwardCount < 5; i++)
+            {
+                var candidate = visible[(currentIndex + i) % visible.Count];
+                var path = GetDisplayPictureFilePath(candidate);
+                if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
+                {
+                    upcomingPaths.Add(path);
+                    forwardCount++;
+                }
+            }
+
+            // Backward prefetch (up to 3 items)
+            var backwardCount = 0;
+            for (var i = 1; i <= visible.Count && backwardCount < 3; i++)
+            {
+                var candidate = visible[(currentIndex - i + visible.Count) % visible.Count];
+                var path = GetDisplayPictureFilePath(candidate);
+                if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
+                {
+                    upcomingPaths.Add(path);
+                    backwardCount++;
+                }
+            }
+        }
+
+        var upcoming = upcomingPaths.Count > 0 ? upcomingPaths : null;
+        if (_previewLauncher is { IsRunning: true })
+            _previewLauncher.SendPreviewRequest(displayFilePath, title, 0, upcoming);
     }
 
     [BlockingCommand]
