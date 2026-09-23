@@ -34,6 +34,8 @@ public partial class ImportPhotosContext
     public bool OverwriteExistingFiles { get; set; }
     public PhotoListContext? PhotoListContext { get; set; }
     public bool RemoveEmptyDirectoriesAfterMovingFinishedFiles { get; set; }
+    public bool ShowFinishedDirectoryAfterImport { get; set; }
+    public bool ShowWorkingDirectoryAfterImport { get; set; }
     public required StatusControlContext StatusContext { get; set; }
     public required ImportDropHandler WorkingFilesDropHandler { get; set; }
 
@@ -103,6 +105,8 @@ public partial class ImportPhotosContext
                 OverwriteExistingFiles = settings.OverwriteOnImport,
                 RemoveEmptyDirectoriesAfterMovingFinishedFiles =
                     settings.RemoveEmptyDirectoriesAfterMovingFinishedFiles,
+                ShowFinishedDirectoryAfterImport = settings.ShowFinishedDirectoryAfterImport,
+                ShowWorkingDirectoryAfterImport = settings.ShowWorkingDirectoryAfterImport,
                 PhotoListContext = photoListContext
             };
 
@@ -145,6 +149,20 @@ public partial class ImportPhotosContext
                 {
                     var current = PhotoMetadataBasicsGuiSettingTools.ReadSettings();
                     current.OpenFinishedFilesAfterImport = context.OpenFinishedFilesAfterImport;
+                    await PhotoMetadataBasicsGuiSettingTools.WriteSettings(current);
+                }
+
+                if (e.PropertyName == nameof(ShowWorkingDirectoryAfterImport))
+                {
+                    var current = PhotoMetadataBasicsGuiSettingTools.ReadSettings();
+                    current.ShowWorkingDirectoryAfterImport = context.ShowWorkingDirectoryAfterImport;
+                    await PhotoMetadataBasicsGuiSettingTools.WriteSettings(current);
+                }
+
+                if (e.PropertyName == nameof(ShowFinishedDirectoryAfterImport))
+                {
+                    var current = PhotoMetadataBasicsGuiSettingTools.ReadSettings();
+                    current.ShowFinishedDirectoryAfterImport = context.ShowFinishedDirectoryAfterImport;
                     await PhotoMetadataBasicsGuiSettingTools.WriteSettings(current);
                 }
 
@@ -394,6 +412,85 @@ public partial class ImportPhotosContext
             await PhotoListContext.ProcessDroppedDirectoriesToFileGroups(importedDirectories
                 .Distinct(StringComparer.OrdinalIgnoreCase).ToList());
         }
+
+        var showDirectoryAfterImport = isWorkingFiles
+            ? ShowWorkingDirectoryAfterImport
+            : ShowFinishedDirectoryAfterImport;
+        if (showDirectoryAfterImport)
+        {
+            var fallbackDirectory = isWorkingFiles
+                ? Path.Combine(destinationRoot, "Working")
+                : destinationRoot;
+
+            var directoryToOpen = fallbackDirectory;
+
+            try
+            {
+                var candidate = GetCommonParentDirectory(importedDirectories
+                    .Distinct(StringComparer.OrdinalIgnoreCase).ToList());
+                if (!string.IsNullOrWhiteSpace(candidate) && Directory.Exists(candidate))
+                {
+                    directoryToOpen = candidate;
+                }
+                else if (!Directory.Exists(directoryToOpen))
+                {
+                    directoryToOpen = destinationRoot;
+                }
+            }
+            catch
+            {
+                directoryToOpen = fallbackDirectory;
+            }
+
+            if (Directory.Exists(directoryToOpen))
+            {
+                await ProcessHelpers.OpenExplorerWindowForDirectory(directoryToOpen);
+            }
+            else if (Directory.Exists(destinationRoot))
+            {
+                await ProcessHelpers.OpenExplorerWindowForDirectory(destinationRoot);
+            }
+        }
+    }
+
+    public static string? GetCommonParentDirectory(List<string> directories)
+    {
+        if (directories.Count == 0) return null;
+
+        var parents = directories
+            .Select(Directory.GetParent)
+            .Where(d => d != null)
+            .GroupBy(d => d!.FullName, StringComparer.OrdinalIgnoreCase)
+            .Select(g => g.First())
+            .ToList();
+
+        if (parents.Count == 0) return null;
+        if (parents.Count == 1) return parents[0]!.FullName;
+
+        var common = parents[0];
+        while (common != null)
+        {
+            var commonPath = common.FullName.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            var isCommonToAll = parents.All(p =>
+            {
+                var curr = p;
+                while (curr != null)
+                {
+                    var currPath = curr.FullName.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                    if (string.Equals(currPath, commonPath, StringComparison.OrdinalIgnoreCase))
+                        return true;
+                    curr = curr.Parent;
+                }
+                return false;
+            });
+
+            if (isCommonToAll)
+                return common.FullName;
+
+            common = common.Parent;
+        }
+
+        return null;
     }
 
     [NonBlockingCommand]

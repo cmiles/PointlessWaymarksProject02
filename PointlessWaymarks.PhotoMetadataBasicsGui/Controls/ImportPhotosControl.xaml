@@ -64,6 +64,9 @@
                                Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
                     <CheckBox IsChecked="{Binding MoveWorkingFilesOnImport}" HorizontalAlignment="Center"
                               Content="Move files (instead of copy)" Margin="0,8,0,0" />
+                    <CheckBox IsChecked="{Binding ShowWorkingDirectoryAfterImport}" HorizontalAlignment="Center"
+                              Content="Show directory after import" Margin="0,4,0,0">
+                    </CheckBox>
                     <CheckBox IsChecked="{Binding OpenWorkingFilesAfterImport}" HorizontalAlignment="Center"
                               Content="Open files after import" Margin="0,4,0,0"
                               IsEnabled="{Binding PhotoListContext, Converter={StaticResource NullOrWhiteSpaceStringToFalse}}">
@@ -94,6 +97,9 @@
                                Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
                     <CheckBox IsChecked="{Binding MoveFinishedFilesOnImport}" HorizontalAlignment="Center"
                               Content="Move files (instead of copy)" Margin="0,8,0,0" />
+                    <CheckBox IsChecked="{Binding ShowFinishedDirectoryAfterImport}" HorizontalAlignment="Center"
+                              Content="Show directory after import" Margin="0,4,0,0">
+                    </CheckBox>
                     <CheckBox IsChecked="{Binding OpenFinishedFilesAfterImport}" HorizontalAlignment="Center"
                               Content="Open files after import" Margin="0,4,0,0"
                               IsEnabled="{Binding PhotoListContext, Converter={StaticResource NullOrWhiteSpaceStringToFalse}}">

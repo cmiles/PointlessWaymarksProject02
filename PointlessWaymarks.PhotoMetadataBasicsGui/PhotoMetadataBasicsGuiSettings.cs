@@ -28,4 +28,8 @@ public partial class PhotoMetadataBasicsGuiSettings
         @"https://software.pointlesswaymarks.com/Software/PointlessWaymarksSoftwareList.json";
 
     public bool RemoveEmptyDirectoriesAfterMovingFinishedFiles { get; set; }
+
+    public bool ShowFinishedDirectoryAfterImport { get; set; }
+
+    public bool ShowWorkingDirectoryAfterImport { get; set; }
 }
