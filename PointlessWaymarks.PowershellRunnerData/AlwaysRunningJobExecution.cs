@@ -330,11 +330,31 @@ public class AlwaysRunningJobExecution
 
             await Task.Delay(200);
 
-            while (_pipeline.PipelineStateInfo.State == PipelineState.Running) await Task.Delay(250);
+            while (_pipeline.PipelineStateInfo.State is PipelineState.Running or PipelineState.Stopping)
+                await Task.Delay(250);
 
             if (tempRunDirectory is not null && tempRunDirectory.Exists) tempRunDirectory.Delete(true);
 
-            if (_pipeline.HadErrors) runLog.SetErrored();
+            Collection<object> remainingErrors = _pipeline.Error.NonBlockingRead();
+            if (remainingErrors.Count > 0)
+            {
+                runLog.SetErrored();
+                foreach (var errorObject in remainingErrors)
+                {
+                    var errorString = errorObject.ToString();
+                    runLog.Add($"{DateTime.Now:G}>> Error: {errorString}");
+                    if (!string.IsNullOrWhiteSpace(errorString))
+                        DataNotifications.PublishPowershellProgressNotification(identifier, databaseId, jobId, runId,
+                            errorString);
+                }
+            }
+
+            if (_pipeline.PipelineStateInfo.State == PipelineState.Failed ||
+                (_pipeline.PipelineStateInfo.Reason is not null && _pipeline.PipelineStateInfo.Reason is not PipelineStoppedException) ||
+                (_pipeline.PipelineStateInfo.State != PipelineState.Stopped && _pipeline.HadErrors))
+            {
+                runLog.SetErrored();
+            }
         }
         finally
         {
