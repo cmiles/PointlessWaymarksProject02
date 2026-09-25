@@ -1,0 +1,112 @@
+﻿<Window x:Class="PointlessWaymarks.MetadataDisplayGui.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:dd="urn:gong-wpf-dragdrop"
+        xmlns:local="clr-namespace:PointlessWaymarks.MetadataDisplayGui"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:programUpdateMessage="clr-namespace:PointlessWaymarks.WpfCommon.ProgramUpdateMessage;assembly=PointlessWaymarks.WpfCommon"
+        xmlns:status="clr-namespace:PointlessWaymarks.WpfCommon.Status;assembly=PointlessWaymarks.WpfCommon"
+        xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
+        xmlns:webViewVirtualDomain="clr-namespace:PointlessWaymarks.WpfCommon.WebViewVirtualDomain;assembly=PointlessWaymarks.WpfCommon"
+        xmlns:windowScreenShot="clr-namespace:PointlessWaymarks.WpfCommon.WindowScreenShot;assembly=PointlessWaymarks.WpfCommon"
+        xmlns:wpf="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        Title="{Binding WindowTitle}"
+        Width="900"
+        Height="700"
+        Closing="MainWindow_OnClosing"
+        Icon="PointlessWaymarksMetadataDisplayIcon.ico"
+        dd:DragDrop.DropHandler="{Binding}"
+        dd:DragDrop.IsDropTarget="True"
+        d:DataContext="{d:DesignInstance local:MainWindow}"
+        mc:Ignorable="d">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary
+                    Source="pack://application:,,,/PointlessWaymarks.WpfCommon;component/WpfCommonResourceDictionary.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal">
+                <Button
+                    Width="28"
+                    Height="28"
+                    Margin="2"
+                    Padding="4"
+                    Command="{Binding OpenDirectoryCommand}"
+                    ToolTip="Open Directory in Explorer">
+                    <Image
+                        Source="{svgc:SvgImage Source=/Icons/folder-file-outline.svg, AppName=PointlessWaymarks.WpfCommon}" />
+                </Button>
+                <Button
+                    Width="28"
+                    Height="28"
+                    Margin="2"
+                    Padding="4"
+                    Command="{Binding OpenFileCommand}"
+                    ToolTip="Open File">
+                    <Image
+                        Source="{svgc:SvgImage Source=/Icons/file-code-outline.svg, AppName=PointlessWaymarks.WpfCommon}" />
+                </Button>
+                <Button
+                    Width="28"
+                    Height="28"
+                    Margin="2"
+                    Padding="4"
+                    Command="{Binding CopyFilenameToClipboardCommand}"
+                    ToolTip="Copy Filename to Clipboard">
+                    <Image Source="{svgc:SvgImage Source=/Icons/content-copy.svg, AppName=PointlessWaymarks.WpfCommon}" />
+                </Button>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <TextBox
+                    Margin="8,0,8,0"
+                    VerticalAlignment="Center"
+                    BorderThickness="0"
+                    IsReadOnly="True"
+                    Text="{Binding FileName}" />
+                <TextBox
+                    Margin="4,0,8,0"
+                    VerticalAlignment="Center"
+                    BorderThickness="0"
+                    IsReadOnly="True"
+                    Text="{Binding FilePathAndName}" />
+            </StackPanel>
+        </Grid>
+        <wpf:WebView2CompositionControl Grid.Row="1">
+            <b:Interaction.Behaviors>
+                <webViewVirtualDomain:WebViewGeneratedVirtualDomainBehavior RedirectExternalLinksToBrowser="True"
+                                                                            WebViewMessenger="{Binding .}" />
+            </b:Interaction.Behaviors>
+        </wpf:WebView2CompositionControl>
+        <windowScreenShot:WindowScreenShotControl
+            Margin="4"
+            Grid.Row="1"
+            HorizontalContentAlignment="Left"
+            VerticalContentAlignment="Bottom" />
+        <programUpdateMessage:ProgramUpdateMessageControl
+            Width="400"
+            Grid.Row="0"
+            Grid.RowSpan="2"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Top"
+            DataContext="{Binding UpdateMessageContext}" />
+        <status:StatusControl
+            Grid.Row="0"
+            Grid.RowSpan="2"
+            d:IsHidden="true"
+            DataContext="{Binding StatusContext}" />
+    </Grid>
+</Window>

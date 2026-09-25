@@ -120,6 +120,10 @@
   <Project Path="PointlessWaymarks.GeoToolsGui/PointlessWaymarks.GeoToolsGui.csproj">
     <Platform Project="x64" />
   </Project>
+  <Project Path="PointlessWaymarks.MetadataDisplayGui/PointlessWaymarks.MetadataDisplayGui.csproj">
+    <BuildType Solution="LamaDebug|*" Project="Debug" />
+    <Platform Solution="LamaDebug|*" Project="x64" />
+  </Project>
   <Project Path="PointlessWaymarks.PhotoMetadataBasicsGui/PointlessWaymarks.PhotoMetadataBasicsGui.csproj">
     <BuildType Solution="LamaDebug|*" Project="Release" />
     <Platform Project="x64" />
