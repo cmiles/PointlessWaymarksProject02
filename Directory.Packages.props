@@ -47,7 +47,7 @@
     <PackageVersion Include="FluentScheduler" Version="6.0.0" />
     <PackageVersion Include="Flurl.Http" Version="4.0.2" />
     <PackageVersion Include="Fractions" Version="8.3.2" />
-    <PackageVersion Include="Garmin.FIT.Sdk" Version="21.214.0" />
+    <PackageVersion Include="Garmin.FIT.Sdk" Version="21.217.0" />
     <PackageVersion Include="GeoAPI" Version="1.7.5" />
     <PackageVersion Include="GeoTimeZone" Version="6.1.0" />
     <PackageVersion Include="gong-wpf-dragdrop" Version="4.0.0" />
@@ -77,7 +77,7 @@
     <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Maui.Controls" Version="10.0.101" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
-    <PackageVersion Include="Microsoft.Playwright" Version="1.62.0" />
+    <PackageVersion Include="Microsoft.Playwright" Version="1.63.0" />
     <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.6.6" />
     <PackageVersion Include="Microsoft.Web.WebView2" Version="1.0.4191.47" />
     <PackageVersion Include="Microsoft.Web.WebView2.DevToolsProtocolExtension" Version="1.0.2901" />
