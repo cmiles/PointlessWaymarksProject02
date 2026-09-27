@@ -1,0 +1,41 @@
+<UserControl x:Class="WaterDaze.Controls.MonthlyHeatmapControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="6" Padding="16">
+        <StackPanel>
+            <!-- Heatmap Header & Color Bar -->
+            <Grid Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="Historical Max Daily Mean Flow Matrix" FontSize="13" FontWeight="SemiBold" Foreground="#374151" VerticalAlignment="Center" />
+
+                <!-- Color scale legend -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="0" FontSize="10" Foreground="#6B7280" VerticalAlignment="Center" Margin="0,0,4,0" />
+                    <!-- Gradient Colorbar -->
+                    <Border Width="120" Height="12" CornerRadius="2" BorderBrush="#D1D5DB" BorderThickness="1">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#FFF7FB" Offset="0.0" />
+                                <GradientStop Color="#ECE7F2" Offset="0.15" />
+                                <GradientStop Color="#D0D1E6" Offset="0.3" />
+                                <GradientStop Color="#A6BDDB" Offset="0.45" />
+                                <GradientStop Color="#67A9CF" Offset="0.6" />
+                                <GradientStop Color="#3690C0" Offset="0.75" />
+                                <GradientStop Color="#02818A" Offset="0.9" />
+                                <GradientStop Color="#014636" Offset="1.0" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
+                    <TextBlock x:Name="TxtMaxLog" Text="log₁₀ max" FontSize="10" Foreground="#6B7280" VerticalAlignment="Center" Margin="4,0,0,0" />
+                </StackPanel>
+            </Grid>
+
+            <!-- Matrix Container -->
+            <StackPanel x:Name="MatrixContainer" />
+        </StackPanel>
+    </Border>
+</UserControl>

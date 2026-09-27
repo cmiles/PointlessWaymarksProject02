@@ -1,0 +1,23 @@
+<UserControl x:Class="WaterDaze.Controls.YearFacetControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Width="90" Height="70">
+    <Border Background="White" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="2" Margin="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="14" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Year Label -->
+            <TextBlock x:Name="TxtYear" Grid.Row="0" Text="----" FontSize="9" 
+                       Foreground="#707070" Margin="4,1,0,0" 
+                       HorizontalAlignment="Left" VerticalAlignment="Top" />
+
+            <!-- Mini Sparkline Canvas -->
+            <Canvas x:Name="ChartCanvas" Grid.Row="1" Width="84" Height="50" 
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Background="Transparent" ClipToBounds="True" />
+        </Grid>
+    </Border>
+</UserControl>

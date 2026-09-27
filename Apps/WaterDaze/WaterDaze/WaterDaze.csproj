@@ -1,0 +1,63 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <DefineSilverlight>true</DefineSilverlight>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Metalama.Patterns.Observability" Version="2026.1.28" />
+    <PackageReference Include="OpenSilver" Version="3.3.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </ApplicationDefinition>
+    <Page Include="MainPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\YearFacetControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\MonthlyFlowBandChart.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\MonthlyHeatmapControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="App.xaml.cs" />
+    <Compile Include="MainPage.xaml.cs" />
+    <Compile Include="Controls\YearFacetControl.xaml.cs" />
+    <Compile Include="Controls\MonthlyFlowBandChart.xaml.cs" />
+    <Compile Include="Controls\MonthlyHeatmapControl.xaml.cs" />
+    <Compile Include="Models\DailyFlowRecord.cs" />
+    <Compile Include="Models\DailyPeakFlowRecord.cs" />
+    <Compile Include="Models\GaugeDashboardData.cs" />
+    <Compile Include="Models\GaugeSite.cs" />
+    <Compile Include="Models\MonthlyFlowRecord.cs" />
+    <Compile Include="Models\MonthSummaryRecord.cs" />
+    <Compile Include="Models\StreakRecord.cs" />
+    <Compile Include="Models\UsgsDailyValueResponse.cs" />
+    <Compile Include="Models\YearlyFlowRecord.cs" />
+    <Compile Include="Services\GaugeAnalyticsService.cs" />
+    <Compile Include="Services\IUsgsService.cs" />
+    <Compile Include="Services\UsgsService.cs" />
+    <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="ViewModels\RelayCommand.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="App.xaml" />
+    <Content Include="MainPage.xaml" />
+    <Content Include="Controls\YearFacetControl.xaml" />
+    <Content Include="Controls\MonthlyFlowBandChart.xaml" />
+    <Content Include="Controls\MonthlyHeatmapControl.xaml" />
+  </ItemGroup>
+
+</Project>
