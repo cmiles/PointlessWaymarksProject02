@@ -6,8 +6,12 @@ using OpenSilver.WebAssembly;
 namespace WaterDaze.Browser.Pages
 {
     [Route("/")]
+    [Route("/{*path}")]
     public class Index : ComponentBase
     {
+        [Parameter]
+        public string Path { get; set; } = "";
+
         protected override void BuildRenderTree(RenderTreeBuilder __builder)
         {
         }

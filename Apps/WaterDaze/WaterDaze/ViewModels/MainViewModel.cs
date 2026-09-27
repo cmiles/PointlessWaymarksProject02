@@ -84,7 +84,10 @@ public partial class MainViewModel
 
     public async Task LoadGaugeDataAsync(GaugeSite site)
     {
-        await _cts?.CancelAsync();
+        if (_cts != null)
+        {
+            await _cts.CancelAsync();
+        }
         _cts = new CancellationTokenSource();
         var token = _cts.Token;
 
