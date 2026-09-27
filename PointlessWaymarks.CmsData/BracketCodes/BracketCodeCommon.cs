@@ -92,12 +92,24 @@ public static partial class BracketCodeCommon
     /// <param name="toProcess"></param>
     /// <param name="bracketCodeToken"></param>
     /// <returns></returns>
-    public static List<(string bracketCodeText, Guid contentGuid, string displayText)> ContentBracketCodeMatches(
+    public static List<(string bracketCodeText, Guid contentGuid, string displayText, string customLink)> ContentBracketCodeMatches(
         string? toProcess, string bracketCodeToken)
     {
-        var resultList = new List<(string bracketCodeText, Guid contentGuid, string displayText)>();
+        var resultList = new List<(string bracketCodeText, Guid contentGuid, string displayText, string customLink)>();
 
         if (string.IsNullOrWhiteSpace(toProcess)) return resultList;
+
+        var withCustomLinkMatch = new Regex(
+            $@"{{{{{bracketCodeToken} (?<siteGuid>[\dA-Za-z-]*);\s*[Cc]ustom[Ll]ink (?<customLinkText>[^}};]*);[^}}]*}}}}",
+            RegexOptions.Singleline);
+        var noCustomLinkMatch = withCustomLinkMatch.Match(toProcess);
+        while (noCustomLinkMatch.Success)
+        {
+            Guid.TryParse(noCustomLinkMatch.Groups["siteGuid"].Value, out var parsedContentId);
+            resultList.Add((noCustomLinkMatch.Value, parsedContentId, string.Empty,
+                noCustomLinkMatch.Groups["customLinkText"].Value));
+            noCustomLinkMatch = noCustomLinkMatch.NextMatch();
+        }
 
         var withTextMatch = new Regex(
             $@"{{{{{bracketCodeToken} (?<siteGuid>[\dA-Za-z-]*);\s*[Tt]ext (?<displayText>[^}};]*);[^}}]*}}}}",
@@ -106,7 +118,7 @@ public static partial class BracketCodeCommon
         while (noTextMatch.Success)
         {
             Guid.TryParse(noTextMatch.Groups["siteGuid"].Value, out var parsedContentId);
-            resultList.Add((noTextMatch.Value, parsedContentId, noTextMatch.Groups["displayText"].Value));
+            resultList.Add((noTextMatch.Value, parsedContentId, noTextMatch.Groups["displayText"].Value, string.Empty));
             noTextMatch = noTextMatch.NextMatch();
         }
 
@@ -121,7 +133,7 @@ public static partial class BracketCodeCommon
         while (textMatch.Success)
         {
             Guid.TryParse(textMatch.Groups["siteGuid"].Value, out var parsedContentId);
-            resultList.Add((textMatch.Value, parsedContentId, string.Empty));
+            resultList.Add((textMatch.Value, parsedContentId, string.Empty, string.Empty));
             textMatch = textMatch.NextMatch();
         }
 
