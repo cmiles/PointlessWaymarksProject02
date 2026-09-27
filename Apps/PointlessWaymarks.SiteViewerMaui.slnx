@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="PointlessWaymarks.SiteViewerMaui/PointlessWaymarks.SiteViewerMaui.csproj" />
+  <Project Path="PointlessWaymarks.SiteViewerMauiTests/PointlessWaymarks.SiteViewerMauiTests.csproj" />
+</Solution>
