@@ -1,0 +1,6 @@
+<Project>
+  <!-- 
+    Leaving this file empty of properties blocks MSBuild from searching 
+    higher up the directory tree for other Directory.Build.props files. 
+  -->
+</Project>

@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- Set to false to disable entirely, or true to set up a separate central list -->
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>
