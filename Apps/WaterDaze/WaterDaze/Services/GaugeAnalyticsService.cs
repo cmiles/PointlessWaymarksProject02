@@ -1,7 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 using WaterDaze.Models;
 
 namespace WaterDaze.Services;
@@ -13,6 +17,194 @@ public class GaugeAnalyticsService
         "Jan", "Feb", "Mar", "Apr", "May", "Jun",
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     ];
+
+    public const string DefaultBaseDataUrl = "https://software.pointlesswaymarks.com/WaterDaze/UsgsData/";
+
+    private readonly HttpClient _httpClient;
+
+    public string BaseDataUrl { get; set; } = DefaultBaseDataUrl;
+
+    public GaugeAnalyticsService(HttpClient? httpClient = null, string? baseDataUrl = null)
+    {
+        _httpClient = httpClient ?? new HttpClient
+        {
+            Timeout = TimeSpan.FromSeconds(30)
+        };
+        BaseDataUrl = !string.IsNullOrWhiteSpace(baseDataUrl) ? baseDataUrl : DefaultBaseDataUrl;
+    }
+
+    /// <summary>
+    /// Loads gauge data, checking /UsgsData folder first for cached JSON from WaterDazeDataDownloader,
+    /// requests recent data since the last date in the file, and gracefully falls back to cached data with a warning if USGS fails.
+    /// </summary>
+    public async Task<GaugeDashboardData> LoadAndProcessGaugeDataAsync(
+        GaugeSite site,
+        IUsgsService usgsService,
+        CancellationToken cancellationToken = default)
+    {
+        var hasWarning = false;
+        var warningMessage = string.Empty;
+        var isCached = false;
+        List<DailyFlowRecord> recordsToProcess;
+        DateTime? cacheStartDate = null;
+        DateTime? cacheEndDate = null;
+        DateTime? queriedStartDate = null;
+        DateTime? queriedEndDate = null;
+        var fullHistoryQueried = false;
+        var queryAttempted = false;
+        var queryFailed = false;
+
+        // 1. Check the /UsgsData folder for a pre-downloaded JSON file
+        var cachedRecords = await TryLoadCachedGaugeDataAsync(site.SiteCode, cancellationToken).ConfigureAwait(false);
+
+        if (cachedRecords is { Count: > 0 })
+        {
+            var validCached = cachedRecords
+                .Where(r => r.Date != default)
+                .OrderBy(r => r.Date)
+                .ToList();
+
+            if (validCached.Count > 0)
+            {
+                isCached = true;
+                cacheStartDate = validCached.Min(r => r.Date);
+                cacheEndDate = validCached.Max(r => r.Date);
+
+                var lastDateInFile = cacheEndDate.Value;
+                var requestStartDate = lastDateInFile.Date.AddDays(1);
+
+                // If needed, request data since the last date in the file
+                if (requestStartDate <= DateTime.Today.Date)
+                {
+                    queryAttempted = true;
+                    queriedStartDate = requestStartDate;
+                    queriedEndDate = DateTime.Today.Date;
+
+                    try
+                    {
+                        var recentRecords = await usgsService
+                            .FetchDailyValuesAsync(site.SiteCode, requestStartDate, null, cancellationToken)
+                            .ConfigureAwait(false);
+
+                        if (recentRecords is { Count: > 0 })
+                        {
+                            var maxReturnedDate = recentRecords.Where(r => r.Date != default).Select(r => r.Date).DefaultIfEmpty(DateTime.Today.Date).Max();
+                            if (maxReturnedDate > queriedEndDate) queriedEndDate = maxReturnedDate;
+
+                            var dateMap = validCached.ToDictionary(r => r.Date, r => r);
+                            foreach (var rec in recentRecords)
+                            {
+                                dateMap[rec.Date] = rec;
+                            }
+                            recordsToProcess = dateMap.Values.OrderBy(r => r.Date).ToList();
+                        }
+                        else
+                        {
+                            recordsToProcess = validCached;
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        queryFailed = true;
+                        // USGS request failed: use data from JSON and put a warning note into the GUI
+                        hasWarning = true;
+                        warningMessage = $"Using cached data through {lastDateInFile:yyyy-MM-dd}. Live update from USGS service failed: {ex.Message}";
+                        recordsToProcess = validCached;
+                    }
+                }
+                else
+                {
+                    recordsToProcess = validCached;
+                }
+            }
+            else
+            {
+                fullHistoryQueried = true;
+                recordsToProcess = await usgsService
+                    .FetchDailyValuesAsync(site.SiteCode, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+        }
+        else
+        {
+            // No cache found in /UsgsData - perform full live request from USGS service
+            fullHistoryQueried = true;
+            recordsToProcess = await usgsService
+                .FetchDailyValuesAsync(site.SiteCode, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        var dashboard = ProcessGaugeData(site, recordsToProcess);
+        dashboard.HasWarning = hasWarning;
+        dashboard.WarningMessage = warningMessage;
+        dashboard.IsCachedData = isCached;
+        dashboard.CacheStartDate = cacheStartDate;
+        dashboard.CacheEndDate = cacheEndDate;
+        dashboard.QueriedStartDate = queriedStartDate;
+        dashboard.QueriedEndDate = queriedEndDate;
+
+        dashboard.CachedDateRangeText = isCached && cacheStartDate.HasValue && cacheEndDate.HasValue
+            ? $"{cacheStartDate.Value:yyyy-MM-dd} to {cacheEndDate.Value:yyyy-MM-dd}"
+            : "None";
+
+        if (fullHistoryQueried)
+        {
+            dashboard.QueriedDateRangeText = dashboard.RecordStartDate.HasValue && dashboard.RecordEndDate.HasValue
+                ? $"All available records ({dashboard.RecordStartDate.Value:yyyy-MM-dd} to {dashboard.RecordEndDate.Value:yyyy-MM-dd})"
+                : "All available records";
+        }
+        else if (queryAttempted && queriedStartDate.HasValue && queriedEndDate.HasValue)
+        {
+            var dateRange = $"{queriedStartDate.Value:yyyy-MM-dd} to {queriedEndDate.Value:yyyy-MM-dd}";
+            dashboard.QueriedDateRangeText = queryFailed ? $"{dateRange} (failed)" : dateRange;
+        }
+        else
+        {
+            dashboard.QueriedDateRangeText = "None (cache is current)";
+        }
+
+        dashboard.DataSourceSummary = $"Cache: {dashboard.CachedDateRangeText}. Queried USGS: {dashboard.QueriedDateRangeText}.";
+
+        return dashboard;
+    }
+
+    /// <summary>
+    /// Checks the network endpoint (https://software.pointlesswaymarks.com/WaterDaze/UsgsData/[siteCode].json) for a pre-downloaded gauge JSON file.
+    /// </summary>
+    public async Task<List<DailyFlowRecord>?> TryLoadCachedGaugeDataAsync(
+        string siteCode,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(siteCode)) return null;
+
+        var fileName = $"{siteCode}.json";
+        var baseUrl = BaseDataUrl.TrimEnd('/') + "/";
+        var url = $"{baseUrl}{fileName}";
+
+        try
+        {
+            using var httpResp = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+            if (httpResp.IsSuccessStatusCode)
+            {
+                await using var stream = await httpResp.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+                var records = await UsgsService
+                    .DeserializeDailyFlowRecordsAsync(stream, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (records.Count > 0) return records;
+            }
+        }
+        catch
+        {
+            // Ignore network or deserialization failures and fall back to live USGS query
+        }
+
+        return null;
+    }
 
     public static double CalculateQuantile(List<double> sortedValues, double quantile)
     {
@@ -46,17 +238,30 @@ public class GaugeAnalyticsService
             Site = site
         };
 
-        if (rawRecords.Count == 0) return dashboard;
+        if (rawRecords.Count == 0)
+        {
+            dashboard.CachedDateRangeText = "None";
+            dashboard.QueriedDateRangeText = "None";
+            dashboard.DataSourceSummary = "Cache: None. Queried USGS: None.";
+            return dashboard;
+        }
 
         var validRaw = rawRecords.Where(r => r.Date != default).OrderBy(r => r.Date).ToList();
-        if (validRaw.Count == 0) return dashboard;
+        if (validRaw.Count == 0)
+        {
+            dashboard.CachedDateRangeText = "None";
+            dashboard.QueriedDateRangeText = "None";
+            dashboard.DataSourceSummary = "Cache: None. Queried USGS: None.";
+            return dashboard;
+        }
 
         var minYear = validRaw.Min(r => r.Date.Year);
+        var maxYear = validRaw.Max(r => r.Date.Year);
         var startYear = minYear + 1;
         var currentYear = DateTime.Today.Year;
 
-        // In case startYear > currentYear (e.g. Gauge installed in current year)
-        if (startYear > currentYear) startYear = minYear;
+        // In case startYear > maxYear or startYear > currentYear (e.g. single year data or gauge installed in current year)
+        if (startYear > maxYear || startYear > currentYear) startYear = minYear;
 
         var startDate = new DateTime(startYear, 1, 1);
         var endDate = new DateTime(currentYear, 12, 31);
@@ -361,6 +566,16 @@ public class GaugeAnalyticsService
                     FormattedFlow = FormatCfs(d.MeanFlow!.Value)
                 })
         ];
+
+        if (string.IsNullOrEmpty(dashboard.DataSourceSummary))
+        {
+            var recordRange = dashboard.RecordStartDate.HasValue && dashboard.RecordEndDate.HasValue
+                ? $"{dashboard.RecordStartDate.Value:yyyy-MM-dd} to {dashboard.RecordEndDate.Value:yyyy-MM-dd}"
+                : "All available records";
+            dashboard.CachedDateRangeText = "None";
+            dashboard.QueriedDateRangeText = recordRange;
+            dashboard.DataSourceSummary = $"Cache: None. Queried USGS: {recordRange}.";
+        }
 
         return dashboard;
     }

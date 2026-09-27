@@ -26,12 +26,16 @@ public partial class MainPage
 
         if (ErrorBanner != null)
             ErrorBanner.Visibility = ViewModel.HasError ? Visibility.Visible : Visibility.Collapsed;
+
+        if (WarningBanner != null)
+            WarningBanner.Visibility = ViewModel.HasWarning ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(MainViewModel.IsLoading) ||
-            e.PropertyName == nameof(MainViewModel.HasError))
+            e.PropertyName == nameof(MainViewModel.HasError) ||
+            e.PropertyName == nameof(MainViewModel.HasWarning))
             UpdateBannerVisibilities();
     }
 }

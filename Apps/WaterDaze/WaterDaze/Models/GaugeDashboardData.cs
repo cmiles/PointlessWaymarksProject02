@@ -23,4 +23,14 @@ public class GaugeDashboardData
     public int TotalDaysWithData { get; set; }
     public int TotalDaysWithFlow { get; set; }
     public List<int> Years { get; set; } = [];
+    public bool HasWarning { get; set; }
+    public string WarningMessage { get; set; } = string.Empty;
+    public bool IsCachedData { get; set; }
+    public string DataSourceSummary { get; set; } = string.Empty;
+    public string CachedDateRangeText { get; set; } = string.Empty;
+    public string QueriedDateRangeText { get; set; } = string.Empty;
+    public DateTime? CacheStartDate { get; set; }
+    public DateTime? CacheEndDate { get; set; }
+    public DateTime? QueriedStartDate { get; set; }
+    public DateTime? QueriedEndDate { get; set; }
 }

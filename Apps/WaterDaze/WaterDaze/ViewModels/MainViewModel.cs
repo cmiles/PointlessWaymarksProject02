@@ -59,6 +59,12 @@ public partial class MainViewModel
 
     public bool HasError { get; set; }
 
+    public bool HasWarning { get; set; }
+
+    public string WarningMessage { get; set; } = string.Empty;
+
+    public string DataSourceSummary { get; set; } = string.Empty;
+
     public bool IsLoading { get; set; }
 
     public string LoadingStatus { get; set; } = string.Empty;
@@ -93,23 +99,21 @@ public partial class MainViewModel
 
         IsLoading = true;
         HasError = false;
+        HasWarning = false;
         ErrorMessage = string.Empty;
+        WarningMessage = string.Empty;
         LoadingStatus = $"Fetching streamflow records for {site.DisplayTitle}...";
 
         try
         {
-            var rawRecords = await _usgsService.FetchDailyValuesAsync(site.SiteCode, token);
-
-            if (token.IsCancellationRequested) return;
-
-            LoadingStatus = "Computing monthly aggregations, quantiles, and streaks...";
-
-            // Process statistical engine
-            var processed = _analyticsService.ProcessGaugeData(site, rawRecords);
+            var processed = await _analyticsService.LoadAndProcessGaugeDataAsync(site, _usgsService, token);
 
             if (token.IsCancellationRequested) return;
 
             DashboardData = processed;
+            HasWarning = processed.HasWarning;
+            WarningMessage = processed.WarningMessage;
+            DataSourceSummary = processed.DataSourceSummary;
 
             // Update UI Collections
             UpdateCollections(processed);
@@ -124,6 +128,7 @@ public partial class MainViewModel
         {
             HasError = true;
             ErrorMessage = $"Failed to load USGS streamflow data: {ex.Message}";
+            DataSourceSummary = string.Empty;
         }
         finally
         {
@@ -133,6 +138,8 @@ public partial class MainViewModel
 
     private void UpdateCollections(GaugeDashboardData data)
     {
+        DataSourceSummary = data.DataSourceSummary;
+
         YearFacets.Clear();
         if (data is { Years: not null, MonthlyRecords: not null })
         {
