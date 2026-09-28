@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using System.Threading.Tasks;
 
 namespace WaterDaze.Browser
@@ -10,6 +10,7 @@ namespace WaterDaze.Browser
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("#app");
             var host = builder.Build();
+            
             await host.RunAsync();
         }
     }

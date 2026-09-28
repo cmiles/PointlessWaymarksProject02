@@ -178,7 +178,7 @@
                     <ItemsControl ItemsSource="{Binding YearFacets}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <WrapPanel />
+                                <WrapPanel HorizontalAlignment="Center" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
@@ -219,16 +219,7 @@
                            Style="{StaticResource SectionSubtitleStyle}" />
 
                 <!-- Grid of 4 Ranking Cards -->
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-
+                <WrapPanel>
                     <!-- Top 10 Wet Streaks -->
                     <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource RankingCardBorderStyle}">
                         <StackPanel>
@@ -347,7 +338,7 @@
                             </ItemsControl>
                         </StackPanel>
                     </Border>
-                </Grid>
+                </WrapPanel>
             </StackPanel>
 
             <!-- 7. FOOTER -->
