@@ -55,8 +55,9 @@
         <!-- Visibility Converters / Template Helpers -->
     </Page.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="#F9FAFB">
-        <StackPanel MaxWidth="1180" HorizontalAlignment="Center" Margin="16,16,16,40">
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="#F9FAFB">
+            <StackPanel MaxWidth="1180" HorizontalAlignment="Center" Margin="16,16,16,40">
 
             <!-- 1. HEADER & GAUGE SELECTOR -->
             <Border Style="{StaticResource CardBorderStyle}" Background="White">
@@ -71,7 +72,7 @@
                     <!-- Site Selector & Action Bar (Fluid Wrap Layout) -->
                     <WrapPanel VerticalAlignment="Center" Margin="0,0,0,8">
                         <TextBlock Text="Select USGS Gauge:" FontSize="13" FontWeight="SemiBold" Foreground="#374151" VerticalAlignment="Center" Margin="0,0,10,8" />
-                        <ComboBox x:Name="CmbSites" MinWidth="240" MaxWidth="420" Height="34"
+                        <ComboBox x:Name="CmbSites" MinWidth="180" MaxWidth="420" Height="34"
                                   ItemsSource="{Binding AvailableSites}"
                                   SelectedItem="{Binding SelectedSite, Mode=TwoWay}"
                                   DisplayMemberPath="DisplayTitle"
@@ -124,16 +125,8 @@
                 </StackPanel>
             </Border>
 
-            <!-- 2. LOADING, ERROR & WARNING STATUS BANNERS -->
+            <!-- 2. ERROR & WARNING STATUS BANNERS -->
             <StackPanel x:Name="StatusContainer" Margin="0,0,0,16">
-                <!-- Loading Banner -->
-                <Border x:Name="LoadingBanner" Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,12">
-                    <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="⏳ " FontSize="14" VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding LoadingStatus}" FontSize="13" Foreground="#1D4ED8" FontWeight="Medium" VerticalAlignment="Center" TextWrapping="Wrap" />
-                    </WrapPanel>
-                </Border>
-
                 <!-- Warning Banner (Cached Data Warning) -->
                 <Border x:Name="WarningBanner" Background="#FFFBEB" BorderBrush="#FCD34D" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,12">
                     <Grid>
@@ -353,4 +346,15 @@
 
         </StackPanel>
     </ScrollViewer>
+
+    <!-- Loading Banner -->
+    <Border x:Name="LoadingBanner" Background="#66000000" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Visibility="Collapsed">
+        <Border Background="#D9DBEAFE" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="8" Padding="24,16" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="24">
+            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="⏳ " FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <TextBlock Text="{Binding LoadingStatus}" FontSize="14" Foreground="#1D4ED8" FontWeight="Medium" VerticalAlignment="Center" TextWrapping="Wrap" />
+            </WrapPanel>
+        </Border>
+    </Border>
+</Grid>
 </Page>
