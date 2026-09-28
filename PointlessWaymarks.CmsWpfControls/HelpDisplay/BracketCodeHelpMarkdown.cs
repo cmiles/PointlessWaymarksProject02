@@ -28,7 +28,7 @@ Link Types:
  - geojson - map with GeoJson
  - geojsonimagelink - image link to the GeoJson Page
  - geojsonlink - text link to the GeoJson Page
- - image - image ink to the Image Page
+ - image - image ink to the Image Page - by default the image links to the image page but you can specify an image link url with {{[*link type (see below)*] [*ContentId*]; customlink [*image link url*]; [*title or note - for reference only*]}} - displays a link to the content with the specified display text (don't forget to include 'text ' for this to work).
  - imagelink - text link to the Image Page
  - line - map with Line
  - lineelevationchart - Line Elevation Chart
@@ -37,7 +37,8 @@ Link Types:
  - linestats - Line Stats
  - mapcomponent - Map
  - notelink - text link to the Note Page
- - photo - image link to the Photo Page
+ - photo - image link to the Photo Page - by default the image links to the photo page but you can specify an image link url with {{[*link type (see below)*] [*ContentId*]; customlink [*image link url*]; [*title or note - for reference only*]}} - displays a link to the content with the specified display text (don't forget to include 'text ' for this to work).
+ - photowdetails - image link to the Photo Page with the photo details underneath - by default the image links to the photo page but you can specify an image link url with {{[*link type (see below)*] [*ContentId*]; customlink [*image link url*]; [*title or note - for reference only*]}} - displays a link to the content with the specified display text (don't forget to include 'text ' for this to work).
  - photolink - text link to the Photo Page
  - point - map with Points
  - pointexternaldirectionslink - link to external directions for a Point
@@ -50,8 +51,10 @@ Link Types:
  - videoembed - if possible/supported 'embeds' the video into a player/viewer
 
 Picture Gallery: Content types with a Main Picture can be used inside a picture gallery to create a compact view of a number of images. Content without a Main Picture will be skipped and the gallery will not honor your content order.
- - [[picture gallery {{Include as Many Bracket Codes as you Want}}{{Include as Many Bracket Codes as you Want}}]]
+ - [[picturegallery {{Include as Many Bracket Codes as you Want}}{{Include as Many Bracket Codes as you Want}}]]
 
+Picture Block: Content types with a Main Picture can be used inside a picture gallery to create a layout of Main Image and the rest of the images displayed as two photos side by side. This will collapse the single images on smaller screens and is mainly useful on desktop and tablet devices.
+ - [[pictureblock {{Include as Many Bracket Codes as you Want}}{{Include as Many Bracket Codes as you Want}}]]
 
 #### Site Codes
 

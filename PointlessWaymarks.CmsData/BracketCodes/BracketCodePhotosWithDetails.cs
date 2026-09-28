@@ -52,7 +52,7 @@ public static class BracketCodePhotosWithDetails
     /// <param name="pageConversion"></param>
     /// <param name="progress"></param>
     /// <returns></returns>
-    private static async Task<string?> Process(string? toProcess, Func<SinglePhotoPage, string> pageConversion,
+    private static async Task<string?> Process(string? toProcess, Func<SinglePhotoPage, string, string> pageConversion,
         IProgress<string>? progress = null)
     {
         if (string.IsNullOrWhiteSpace(toProcess)) return string.Empty;
@@ -75,7 +75,7 @@ public static class BracketCodePhotosWithDetails
             progress?.Report($"Photo w/Detail Code for {dbPhoto.Title} processed");
             var singlePhotoInfo = new SinglePhotoPage(dbPhoto);
 
-            toProcess = toProcess.Replace(loopMatch.bracketCodeText, pageConversion(singlePhotoInfo));
+            toProcess = toProcess.Replace(loopMatch.bracketCodeText, pageConversion(singlePhotoInfo, loopMatch.customLink));
         }
 
         return toProcess;
@@ -90,7 +90,7 @@ public static class BracketCodePhotosWithDetails
     public static async Task<string> ProcessForEmail(string? toProcess, IProgress<string>? progress = null)
     {
         return await Process(toProcess,
-            page => page.PictureInformation.EmailPictureTableTag(true).ToString() ?? string.Empty,
+            (page, customLink) => page.PictureInformation.EmailPictureTableTag(true).ToString() ?? string.Empty,
             progress).ConfigureAwait(false) ?? string.Empty;
     }
 
@@ -102,12 +102,17 @@ public static class BracketCodePhotosWithDetails
     /// <returns></returns>
     public static async Task<string?> ProcessToFigureWithLink(string? toProcess, IProgress<string>? progress = null)
     {
-        {
-            return await Process(toProcess,
-                page => page.PictureInformation.PictureFigureWithCaptionAndLinkToPicturePageTag("100vw", true)
-                            .ToString() ??
-                        string.Empty,
-                progress).ConfigureAwait(false);
-        }
+        return await Process(toProcess,
+            (page, customLink) =>
+            {
+                if (!string.IsNullOrWhiteSpace(customLink))
+                    return page.PictureInformation.PictureFigureWithCaptionAndLinkTag("100vw", customLink, true)
+                               .ToString() ??
+                           string.Empty;
+                return page.PictureInformation.PictureFigureWithCaptionAndLinkToPicturePageTag("100vw", true)
+                           .ToString() ??
+                       string.Empty;
+            },
+            progress).ConfigureAwait(false);
     }
 }
