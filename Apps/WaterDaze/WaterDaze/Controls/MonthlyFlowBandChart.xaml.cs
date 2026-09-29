@@ -70,6 +70,53 @@ public partial class MonthlyFlowBandChart
     {
         if (ChartCanvas == null || GridLinesCanvas == null || YAxisCanvas == null || OverlayCanvas == null) return;
 
+        var isCompact = ActualWidth > 0 ? ActualWidth < 480 : (ChartGrid?.ActualWidth > 0 && ChartGrid.ActualWidth < 380);
+
+        // 1. Responsive card padding and margins
+        if (ChartCardBorder != null)
+        {
+            ChartCardBorder.Padding = new Thickness(isCompact ? 10 : 16);
+        }
+
+        // 2. Hide Y-Axis title ("cfs") on small screens
+        if (YAxisTitle != null)
+        {
+            YAxisTitle.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        if (YAxisContainer != null)
+        {
+            YAxisContainer.Margin = new Thickness(0, 0, isCompact ? 4 : 8, 0);
+        }
+
+        // 3. Slim Y-Axis column on compact screens
+        var targetColWidth = isCompact ? 38.0 : 65.0;
+        if (YAxisCol != null && Math.Abs(YAxisCol.Width.Value - targetColWidth) > 0.5)
+        {
+            YAxisCol.Width = new GridLength(targetColWidth);
+        }
+
+        // 4. Responsive X-Axis month labels (Initials on compact, 3-letter on desktop)
+        if (XAxisGrid != null)
+        {
+            var months = isCompact
+                ? new[] { "J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D" }
+                : new[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+
+            foreach (var child in XAxisGrid.Children)
+            {
+                if (child is TextBlock tb)
+                {
+                    var col = Grid.GetColumn(tb);
+                    if (col >= 0 && col < months.Length)
+                    {
+                        tb.Text = months[col];
+                        tb.FontSize = isCompact ? 10 : 11;
+                    }
+                }
+            }
+        }
+
         ChartCanvas.Children.Clear();
         GridLinesCanvas.Children.Clear();
         YAxisCanvas.Children.Clear();
@@ -161,10 +208,10 @@ public partial class MonthlyFlowBandChart
             var textBlock = new TextBlock
             {
                 Text = tickText,
-                FontSize = 10,
+                FontSize = isCompact ? 9 : 10,
                 Foreground = TextBrush,
                 TextAlignment = TextAlignment.Right,
-                Width = 55
+                Width = isCompact ? 34 : 55
             };
             Canvas.SetLeft(textBlock, 0);
             Canvas.SetTop(textBlock, yPos - 7);

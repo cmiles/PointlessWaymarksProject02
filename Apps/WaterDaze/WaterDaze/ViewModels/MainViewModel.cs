@@ -87,7 +87,7 @@ public partial class MainViewModel
     public ObservableCollection<YearFacetItemViewModel> YearFacets { get; } = [];
 
     public ObservableCollection<int> Years { get; set; } = [];
-
+    
     public async Task LoadGaugeDataAsync(GaugeSite site)
     {
         if (_cts != null)
