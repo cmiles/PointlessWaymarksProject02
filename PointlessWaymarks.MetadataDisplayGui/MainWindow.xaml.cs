@@ -21,6 +21,12 @@ using PointlessWaymarks.WpfCommon.WpfHtml;
 using PointlessWaymarks.WpfCommon.WpfHtmlResources;
 using Serilog;
 using XmpCore;
+using OneOf;
+using OneOf.Types;
+using PointlessWaymarks.LlamaAspects;
+using PointlessWaymarks.WpfCommon.Status;
+using PointlessWaymarks.WpfCommon.Utility;
+using Directory = System.IO.Directory;
 
 namespace PointlessWaymarks.MetadataDisplayGui;
 
@@ -32,7 +38,9 @@ namespace PointlessWaymarks.MetadataDisplayGui;
 public partial class MainWindow : IWebViewMessenger, IDropTarget
 {
     private readonly string _currentDateVersion;
-
+    
+    public Func<Task<OneOf<Success<byte[]>, Error<string>>>>? JpgScreenshotFunction { get; set; }
+    
     public MainWindow()
     {
         InitializeComponent();
@@ -84,6 +92,31 @@ public partial class MainWindow : IWebViewMessenger, IDropTarget
     public WindowIconStatus WindowStatus { get; set; }
     public string WindowTitle { get; set; }
 
+    [BlockingCommand]
+    public async Task SaveCurrentPageAsJpeg()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (JpgScreenshotFunction == null)
+        {
+            await StatusContext.ToastError("Screenshot function not available...");
+            return;
+        }
+
+        var screenshotResult = await JpgScreenshotFunction();
+
+        if (screenshotResult.IsT1)
+        {
+            await StatusContext.ToastError(screenshotResult.AsT1.Value);
+            return;
+        }
+
+        var possibleFilename = FileAndFolderTools.TryMakeFilenameValid($"Metadata--{FileName}.jpg");
+        
+        await WebViewToJpg.SaveByteArrayAsJpg(screenshotResult.AsT0.Value, possibleFilename,
+                StatusContext);
+    }
+    
     public async Task CheckForProgramUpdate(string currentDateVersion)
     {
         Log.Information(

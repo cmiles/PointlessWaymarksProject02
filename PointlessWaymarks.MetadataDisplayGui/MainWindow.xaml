@@ -12,6 +12,7 @@
         xmlns:webViewVirtualDomain="clr-namespace:PointlessWaymarks.WpfCommon.WebViewVirtualDomain;assembly=PointlessWaymarks.WpfCommon"
         xmlns:windowScreenShot="clr-namespace:PointlessWaymarks.WpfCommon.WindowScreenShot;assembly=PointlessWaymarks.WpfCommon"
         xmlns:wpf="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        xmlns:behaviors="clr-namespace:PointlessWaymarks.WpfCommon.Behaviors;assembly=PointlessWaymarks.WpfCommon"
         Title="{Binding WindowTitle}"
         Width="900"
         Height="700"
@@ -66,8 +67,22 @@
                     Margin="2"
                     Padding="4"
                     Command="{Binding CopyFilenameToClipboardCommand}"
+                    Visibility="{Binding FilePathAndName, Converter={StaticResource NullOrWhiteSpaceStringToCollapsed}}"
                     ToolTip="Copy Filename to Clipboard">
                     <Image Source="{svgc:SvgImage Source=/Icons/content-copy.svg, AppName=PointlessWaymarks.WpfCommon}" />
+                </Button>
+                <Button
+                    Margin="4,0,0,0"
+                    Padding="24,4,24,4"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Visibility="{Binding FilePathAndName, Converter={StaticResource NullOrWhiteSpaceStringToCollapsed}}"
+                    Command="{Binding SaveCurrentPageAsJpegCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image
+                            Source="{svgc:SvgImage Source=/Icons/file-jpg-box.svg, AppName=PointlessWaymarks.WpfCommon}" />
+                        <TextBlock Margin="8,0,0,0">Save as Jpeg</TextBlock>
+                    </StackPanel>
                 </Button>
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal">
@@ -76,12 +91,14 @@
                     VerticalAlignment="Center"
                     BorderThickness="0"
                     IsReadOnly="True"
+                    Visibility="{Binding FilePathAndName, Converter={StaticResource NullOrWhiteSpaceStringToCollapsed}}"
                     Text="{Binding FileName}" />
                 <TextBox
                     Margin="4,0,8,0"
                     VerticalAlignment="Center"
                     BorderThickness="0"
                     IsReadOnly="True"
+                    Visibility="{Binding FilePathAndName, Converter={StaticResource NullOrWhiteSpaceStringToCollapsed}}"
                     Text="{Binding FilePathAndName}" />
             </StackPanel>
         </Grid>
@@ -89,6 +106,7 @@
             <b:Interaction.Behaviors>
                 <webViewVirtualDomain:WebViewGeneratedVirtualDomainBehavior RedirectExternalLinksToBrowser="True"
                                                                             WebViewMessenger="{Binding .}" />
+                <behaviors:WebViewToJpgFunctionInjection JpgScreenshotFunctionName="JpgScreenshotFunction" />
             </b:Interaction.Behaviors>
         </wpf:WebView2CompositionControl>
         <windowScreenShot:WindowScreenShotControl
