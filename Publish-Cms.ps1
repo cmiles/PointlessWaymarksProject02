@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 dotnet run Publish-PublishReadmeHelper.cs
-.\Publish-ProgramToInnoSetupInstaller.ps1 CmsGui
+.\Publish-ProgramToInnoSetupInstaller.ps1 CmsGui -IncludePhotoPreviewGui -IncludePwTrackTrimmer
 .\Publish-ProgramToInnoSetupInstaller.ps1 SiteViewerGui
 .\Publish-ProgramToZip.ps1 CmsTask.GarminConnectGpxImport
 .\Publish-ProgramToZip.ps1 CmsTask.MemoriesEmail

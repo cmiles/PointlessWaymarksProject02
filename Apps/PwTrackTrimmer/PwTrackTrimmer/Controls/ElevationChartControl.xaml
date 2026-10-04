@@ -1,0 +1,187 @@
+<UserControl x:Class="PwTrackTrimmer.Controls.ElevationChartControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="220" d:DesignWidth="1100">
+
+    <Border Background="#0F172A" BorderBrush="#334155" BorderThickness="0,1,0,0">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Chart Header & Controls Ribbon -->
+            <Border Grid.Row="0" Background="#1E293B" Padding="12,6" BorderBrush="#334155" BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Title -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="ELEVATION PROFILE" FontWeight="Bold" FontSize="11" Foreground="#94A3B8"/>
+                        <TextBlock Text=" · " FontSize="11" Foreground="#64748B"/>
+                        <TextBlock x:Name="TxtHoverInfo" Text="Hover over graph to inspect" FontSize="11" Foreground="#38BDF8"/>
+                    </StackPanel>
+
+                    <!-- Trim Range Information -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Border Background="#064E3B" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
+                            <TextBlock x:Name="TxtStartTrimLabel" Text="Start: 0.00 mi" FontSize="11" FontWeight="SemiBold" Foreground="#34D399"/>
+                        </Border>
+                        <TextBlock Text="➔" FontSize="11" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <Border Background="#7F1D1D" CornerRadius="4" Padding="6,2" Margin="0,0,12,0">
+                            <TextBlock x:Name="TxtEndTrimLabel" Text="End: 0.00 mi" FontSize="11" FontWeight="SemiBold" Foreground="#F87171"/>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Action Buttons -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal">
+                        <Button Content="Reset Trim" Command="{Binding ResetTrimCommand}"
+                                Background="#334155" Foreground="#E2E8F0" BorderThickness="0" Padding="10,4" Margin="0,0,8,0"
+                                CornerRadius="4" FontSize="11" FontWeight="SemiBold" Cursor="Hand"
+                                ToolTipService.ToolTip="Reset trim handles to encompass the entire track"/>
+                        <Button Content="✂ Apply Trim" Command="{Binding TrimTrackCommand}"
+                                Background="#0284C7" Foreground="#FFFFFF" BorderThickness="0" Padding="12,4"
+                                CornerRadius="4" FontSize="11" FontWeight="Bold" Cursor="Hand"
+                                ToolTipService.ToolTip="Trim track to points between the start and end markers"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Interactive Chart Area -->
+            <Grid Grid.Row="1" x:Name="ChartArea" Background="#0B0F19"
+                  MouseMove="ChartArea_MouseMove" MouseLeftButtonDown="ChartArea_MouseLeftButtonDown"
+                  SizeChanged="ChartArea_SizeChanged">
+
+                <!-- Native Canvas for Elevation Shape & Grids -->
+                <Canvas x:Name="ProfileCanvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" IsHitTestVisible="False">
+                    <!-- Dynamic shapes (grid lines, elevation polygon, polyline) drawn here in code -->
+                </Canvas>
+
+                <!-- Left Trim Dimmed Overlay -->
+                <Border x:Name="LeftDimOverlay" HorizontalAlignment="Left" Background="#B30F172A" Visibility="Collapsed" IsHitTestVisible="False"/>
+
+                <!-- Right Trim Dimmed Overlay -->
+                <Border x:Name="RightDimOverlay" HorizontalAlignment="Right" Background="#B30F172A" Visibility="Collapsed" IsHitTestVisible="False"/>
+
+                <!-- Selected Range Highlight Box on Elevation Chart -->
+                <Canvas x:Name="SelectionRangeCanvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" IsHitTestVisible="False">
+                    <Border x:Name="SelectionRangeOverlay" Background="#3338BDF8" BorderBrush="#38BDF8" BorderThickness="1.5,0,1.5,0" Visibility="Collapsed" IsHitTestVisible="False"/>
+                </Canvas>
+
+                <!-- Start Trim Draggable Marker Line (Green) -->
+                <Canvas x:Name="StartMarkerCanvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <Line x:Name="StartMarkerLine" Stroke="#10B981" StrokeThickness="2" StrokeDashArray="3 3" IsHitTestVisible="False"/>
+                    <Border x:Name="StartHandle" Width="20" Height="24" Background="#10B981" CornerRadius="4" Cursor="SizeWE"
+                            MouseLeftButtonDown="StartHandle_MouseLeftButtonDown"
+                            MouseLeftButtonUp="Handle_MouseLeftButtonUp"
+                            MouseMove="StartHandle_MouseMove">
+                        <TextBlock Text="S" FontWeight="Bold" FontSize="11" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Canvas>
+
+                <!-- End Trim Draggable Marker Line (Red) -->
+                <Canvas x:Name="EndMarkerCanvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <Line x:Name="EndMarkerLine" Stroke="#EF4444" StrokeThickness="2" StrokeDashArray="3 3" IsHitTestVisible="False"/>
+                    <Border x:Name="EndHandle" Width="20" Height="24" Background="#EF4444" CornerRadius="4" Cursor="SizeWE"
+                            MouseLeftButtonDown="EndHandle_MouseLeftButtonDown"
+                            MouseLeftButtonUp="Handle_MouseLeftButtonUp"
+                            MouseMove="EndHandle_MouseMove">
+                        <TextBlock Text="E" FontWeight="Bold" FontSize="11" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Canvas>
+
+                <!-- Hover Inspection Hairline & Cursor Point -->
+                <Canvas x:Name="HoverCanvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" IsHitTestVisible="False">
+                    <Line x:Name="HoverHairline" Stroke="#38BDF8" StrokeThickness="1.5" Visibility="Collapsed"/>
+                    <Ellipse x:Name="HoverPointDot" Width="8" Height="8" Fill="#F59E0B" Stroke="#FFFFFF" StrokeThickness="1.5" Visibility="Collapsed"/>
+                </Canvas>
+            </Grid>
+
+            <!-- Combined Dual-Thumb Range Slider for Trimming -->
+            <Border Grid.Row="2" Background="#1E293B" Padding="10,4,10,6" BorderBrush="#334155" BorderThickness="0,1,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Full-Width Combined Range Slider Track -->
+                    <Grid Grid.Row="0" x:Name="RangeSliderContainer" Height="26" VerticalAlignment="Center"
+                          SizeChanged="RangeSliderContainer_SizeChanged"
+                          MouseLeftButtonDown="RangeSlider_Track_MouseDown"
+                          Background="Transparent" Cursor="Hand">
+                        <!-- Inactive Track Bar -->
+                        <Border Height="6" Background="#334155" CornerRadius="3" VerticalAlignment="Center" IsHitTestVisible="False"/>
+
+                        <!-- Active Range Highlight Bar (between Start and End thumbs) -->
+                        <Canvas Height="26" VerticalAlignment="Center" IsHitTestVisible="True">
+                            <Border x:Name="RangeActiveHighlight" Height="6" Background="#2563EB" CornerRadius="3"
+                                    Cursor="Hand"
+                                    MouseLeftButtonDown="RangeActiveHighlight_MouseDown"
+                                    MouseMove="RangeActiveHighlight_MouseMove"
+                                    MouseLeftButtonUp="RangeActiveHighlight_MouseUp"/>
+                        </Canvas>
+
+                        <!-- Thumbs Layer -->
+                        <Canvas Height="26" VerticalAlignment="Center">
+                            <!-- Start Thumb (Green) -->
+                            <Border x:Name="RangeStartThumb" Width="18" Height="20" Background="#10B981" BorderBrush="#FFFFFF" BorderThickness="1.5" CornerRadius="4"
+                                    Cursor="SizeWE"
+                                    MouseLeftButtonDown="RangeStartThumb_MouseDown"
+                                    MouseMove="RangeStartThumb_MouseMove"
+                                    MouseLeftButtonUp="RangeThumb_MouseUp">
+                                <TextBlock Text="S" FontWeight="Bold" FontSize="10" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+
+                            <!-- End Thumb (Red) -->
+                            <Border x:Name="RangeEndThumb" Width="18" Height="20" Background="#EF4444" BorderBrush="#FFFFFF" BorderThickness="1.5" CornerRadius="4"
+                                    Cursor="SizeWE"
+                                    MouseLeftButtonDown="RangeEndThumb_MouseDown"
+                                    MouseMove="RangeEndThumb_MouseMove"
+                                    MouseLeftButtonUp="RangeThumb_MouseUp">
+                                <TextBlock Text="E" FontWeight="Bold" FontSize="10" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </Canvas>
+                    </Grid>
+
+                    <!-- Aligned Badges and Legend -->
+                    <Grid Grid.Row="1" Margin="0,3,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Start Trim Info Badge -->
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Background="#10B981" CornerRadius="3" Padding="5,1" Margin="0,0,6,0">
+                                <TextBlock Text="START" FontSize="9" FontWeight="Bold" Foreground="White"/>
+                            </Border>
+                            <TextBlock x:Name="TxtTrimStartInfo" Text="#1 (0.00 mi)" FontSize="11" Foreground="#34D399" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Center Hint -->
+                        <TextBlock Grid.Column="1" Text="Drag thumbs or middle bar to trim · Double-click profile to move nearest marker" 
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10" Foreground="#64748B"/>
+
+                        <!-- End Trim Info Badge -->
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Background="#EF4444" CornerRadius="3" Padding="5,1" Margin="0,0,6,0">
+                                <TextBlock Text="END" FontSize="9" FontWeight="Bold" Foreground="White"/>
+                            </Border>
+                            <TextBlock x:Name="TxtTrimEndInfo" Text="#1 (0.00 mi)" FontSize="11" Foreground="#F87171" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>

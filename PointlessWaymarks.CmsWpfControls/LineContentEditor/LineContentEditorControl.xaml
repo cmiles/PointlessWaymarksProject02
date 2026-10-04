@@ -90,6 +90,10 @@
                                 Content="Replace Elevations"
                                 Style="{StaticResource ActionPanelButtonStyle}" />
                             <Button
+                                Command="{Binding EditInExternalEditorCommand}"
+                                Content="External Editor"
+                                Style="{StaticResource ActionPanelButtonStyle}" />
+                            <Button
                                 Command="{Binding RefreshMapPreviewCommand}"
                                 Content="Refresh Map"
                                 Style="{StaticResource ActionPanelButtonStyle}" />

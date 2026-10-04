@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Pointless Waymarks Track Trimmer</title>
+    <meta name="author" content="Charles Miles">
+    <meta name="description" content="Pointless Waymarks Track Trimmer - A simple Track trimmer for FIT, GPX and TCX files focused on geographic data">
+    <meta name="application-name" content="Pointless Waymarks Track Trimmer">
+    <meta name="copyright" content="©2026 Charles Miles">
+    <base href="/PwTrackTrimmer/" />
+    <script>
+        (function () {
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                if (!window.location.pathname.startsWith('/PwTrackTrimmer')) {
+                    const baseEl = document.querySelector('base');
+                    if (baseEl) baseEl.setAttribute('href', '/');
+                }
+            }
+        })();
+    </script>
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <script>
+        (function () {
+            const style = document.createElement('link');
+            style.setAttribute('rel', 'stylesheet');
+            style.setAttribute('type', 'text/css');
+            style.setAttribute('href', 'loading-indicator.css?date=' + new Date().toISOString());
+            document.head.appendChild(style);
+        })();
+    </script>
+    <link rel="stylesheet" href="applibs/leaflet/leaflet.css" />
+    <script src="applibs/leaflet/leaflet.js"></script>
+    <style>
+        input, textarea, .opensilver-textboxview {
+            caret-color: #38BDF8 !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="loading-indicator-wrapper">
+            <div class="loading-indicator">
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-text"></div>
+            </div>
+        </div>
+    </div>
+    <div id="opensilver-root" style="position: relative; width: 100%; height: 100%; overflow-x: hidden; overflow-y: hidden"></div>
+
+    <script>
+        (function () {
+            const script = document.createElement('script');
+            script.setAttribute('type', 'application/javascript');
+            script.setAttribute('src', 'libs/OpenSilver.js?date=' + new Date().toISOString());
+            script.addEventListener('load', function () {
+                const scriptWebAssembly = document.createElement('script');
+                scriptWebAssembly.setAttribute('type', 'application/javascript');
+                scriptWebAssembly.setAttribute('src', '_framework/blazor.webassembly.js?date=' + new Date().toISOString());
+                document.body.appendChild(scriptWebAssembly);
+            });
+            document.body.appendChild(script);
+        })();
+    </script>
+</body>
+</html>

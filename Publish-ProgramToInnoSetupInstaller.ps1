@@ -1,7 +1,8 @@
 param(
     [Parameter(Mandatory = $true, Position = 0)]
     [string]$program,
-    [switch]$IncludePhotoPreviewGui
+    [switch]$IncludePhotoPreviewGui,
+    [switch]$IncludePwTrackTrimmer
 )
 
 $baseName = "PointlessWaymarks.$program"
@@ -33,16 +34,16 @@ $msBuild = & $vsWhere -latest -requires Microsoft.Component.MSBuild -find MSBuil
 
 & $msBuild .\PointlessWaymarks.slnx -property:Configuration=Release -property:Platform=x64 -verbosity:minimal
 
-if ($lastexitcode -ne 0) {throw ("Exec: " + $errorMessage) }
+if ($lastexitcode -ne 0) { throw ("Exec: " + $errorMessage) }
 
 $publishPath = "M:\PointlessWaymarksPublications\$baseName"
-if(!(test-path -PathType container $publishPath)) {New-Item -ItemType Directory -Path $publishPath }
+if (!(Test-Path -PathType Container $publishPath)) { New-Item -ItemType Directory -Path $publishPath }
 
 Remove-Item -Path $publishPath\* -Recurse
 
 & $msBuild .\$baseName\$baseName.csproj -t:publish -p:PublishProfile=.\$baseName\Properties\PublishProfile\FolderProfile.pubxml -verbosity:minimal
 
-if ($lastexitcode -ne 0) {throw ("Exec: " + $errorMessage) }
+if ($lastexitcode -ne 0) { throw ("Exec: " + $errorMessage) }
 
 if ($IncludePhotoPreviewGui) {
     $photoPreviewPublishPath = "M:\PointlessWaymarksPublications\PointlessWaymarks.PhotoPreviewGui"
@@ -63,6 +64,23 @@ if ($IncludePhotoPreviewGui) {
     Copy-Item -Path "$photoPreviewPublishPath\*" -Destination $photoPreviewDestination -Recurse -Force
 }
 
+if ($IncludePwTrackTrimmer) {
+	cd .\Apps
+    & .\Publish-PwTrackTrimmerWin.ps1
+    if ($lastexitcode -ne 0) { throw ("Exec: Publishing PwTrackTrimmerWin failed") }
+
+    $pwTrackSource = "M:\PointlessWaymarksPublications\PwTrackTrimmerWin"
+    $pwTrackDestination = "$publishPath\PwTrackTrimmerWin"
+
+    if (!(Test-Path -PathType Container $pwTrackDestination)) {
+        New-Item -ItemType Directory -Path $pwTrackDestination -Force
+    }
+
+    Copy-Item -Path "$pwTrackSource\*" -Destination $pwTrackDestination -Recurse -Force
+	
+	cd ..
+}
+
 $exePath = "M:\PointlessWaymarksPublications\$baseName\$baseName.exe"
 $fileVersionInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($exePath)
 
@@ -76,4 +94,4 @@ Write-Host "Publish Version: $publishVersion"
 
 & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" ".\Publish-InnoSetupInstaller-$program.iss" /DVersion=$publishVersion /DScmCommit=$fossilId
 
-if ($lastexitcode -ne 0) {throw ("Exec: " + $errorMessage) }
+if ($lastexitcode -ne 0) { throw ("Exec: " + $errorMessage) }

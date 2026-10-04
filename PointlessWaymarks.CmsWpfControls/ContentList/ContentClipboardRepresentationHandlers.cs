@@ -19,6 +19,7 @@ using PointlessWaymarks.CmsWpfControls.PostContentEditor;
 using PointlessWaymarks.CmsWpfControls.SnippetEditor;
 using PointlessWaymarks.CmsWpfControls.TrailContentEditor;
 using PointlessWaymarks.CmsWpfControls.VideoContentEditor;
+using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.CommonTools.S3;
 using PointlessWaymarks.WpfCommon;
 using PointlessWaymarks.WpfCommon.Status;
@@ -53,7 +54,7 @@ public static class ContentClipboardRepresentationHandlers
 
         // The API returns a zip file if there are files
         var zipFileName = $"LinkSnapshots_{contentId}.zip";
-        var tempZipPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}_{zipFileName}");
+        var tempZipPath = Path.Combine(FileLocationTools.TempStorageDirectorySubdirectory().FullName, $"{Guid.NewGuid()}_{zipFileName}");
 
         await using (var fs = new FileStream(tempZipPath, FileMode.Create, FileAccess.Write, FileShare.None))
         {

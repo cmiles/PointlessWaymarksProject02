@@ -1,0 +1,378 @@
+<Page x:Class="PwTrackTrimmer.MainPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:PwTrackTrimmer"
+      xmlns:controls="clr-namespace:PwTrackTrimmer.Controls"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      mc:Ignorable="d"
+      Foreground="#F8FAFC">
+
+    <Grid Background="#0F172A">
+        <!-- Main Application Layout Rows -->
+        <Grid.RowDefinitions>
+            <!-- 0: App Header & Menu Bar -->
+            <RowDefinition Height="Auto" />
+            <!-- 1: Top Stats Panel -->
+            <RowDefinition Height="Auto" />
+            <!-- 2: Main Area (Map + Right Point List) -->
+            <RowDefinition Height="*" MinHeight="250" />
+            <!-- 3: Splitter -->
+            <RowDefinition Height="4" />
+            <!-- 4: Bottom Area (Elevation Profile & Trimmer) -->
+            <RowDefinition Height="200" MinHeight="140" MaxHeight="450" />
+        </Grid.RowDefinitions>
+
+        <!-- Row 0: App Header & Menu Toolbar -->
+        <Border Grid.Row="0" Background="#090D16" BorderBrush="#1E293B" BorderThickness="0,0,0,1" Padding="14,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- App Branding -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,24,0">
+                    <TextBlock Text="Track Trimmer - " FontSize="15" FontWeight="Bold" Foreground="#F8FAFC" VerticalAlignment="Center"/>
+                    <HyperlinkButton Content="Charles Miles" NavigateUri="https://cmiles.info" TargetName="_blank"
+                                     Click="Hyperlink_Click"
+                                     FontSize="15" FontWeight="Bold" Foreground="#38BDF8"
+                                     Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Action Toolbar Buttons -->
+                <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" BorderThickness="0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- Host Dialog Actions (Confirm & Cancel) - Visible when launched by parent desktop app -->
+                        <StackPanel Orientation="Horizontal" Visibility="{Binding DialogModeVisibility}" Margin="0,0,14,0" VerticalAlignment="Center">
+                            <Button Content="✓ Confirm &amp; Save" Command="{Binding ConfirmDialogCommand}"
+                                    Background="#10B981" Foreground="#FFFFFF" BorderBrush="#059669" BorderThickness="1"
+                                    CornerRadius="4" Padding="12,5" Margin="0,0,8,0" FontWeight="Bold" FontSize="11" Cursor="Hand"
+                                    ToolTipService.ToolTip="Save edited track and return result to calling application"/>
+                            <Button Content="✕ Cancel" Command="{Binding CancelDialogCommand}"
+                                    Background="#EF4444" Foreground="#FFFFFF" BorderBrush="#DC2626" BorderThickness="1"
+                                    CornerRadius="4" Padding="10,5" FontWeight="Bold" FontSize="11" Cursor="Hand"
+                                    ToolTipService.ToolTip="Discard changes and return to calling application without saving"/>
+                            <Border Width="1" Background="#334155" Height="20" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Open -->
+                        <Button Content="📂 Open Track (.fit, .tcx, .gpx)" Command="{Binding LoadFileCommand}"
+                                Background="#1E293B" Foreground="#38BDF8" BorderBrush="#334155" BorderThickness="1"
+                                CornerRadius="4" Padding="10,5" Margin="0,0,16,0" FontWeight="SemiBold" Cursor="Hand"/>
+
+                        <!-- Export Options -->
+                        <TextBlock Text="EXPORT:" FontSize="10" FontWeight="Bold" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <Button Content="💾 GPX" Command="{Binding ExportGpxCommand}"
+                                Background="#1E293B" Foreground="#34D399" BorderBrush="#334155" BorderThickness="1"
+                                CornerRadius="4" Padding="8,4" Margin="0,0,4,0" FontWeight="SemiBold" Cursor="Hand"/>
+                        <Button Content="💾 TCX" Command="{Binding ExportTcxCommand}"
+                                Background="#1E293B" Foreground="#34D399" BorderBrush="#334155" BorderThickness="1"
+                                CornerRadius="4" Padding="8,4" Margin="0,0,4,0" FontWeight="SemiBold" Cursor="Hand"/>
+                        <Button Content="💾 FIT" Command="{Binding ExportFitCommand}"
+                                Background="#1E293B" Foreground="#34D399" BorderBrush="#334155" BorderThickness="1"
+                                CornerRadius="4" Padding="8,4" Margin="0,0,16,0" FontWeight="SemiBold" Cursor="Hand"/>
+
+                        <!-- Edit Operations -->
+                        <TextBlock Text="EDIT:" FontSize="10" FontWeight="Bold" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <Button Content="↶ Undo" Command="{Binding UndoCommand}"
+                                Background="#1E293B" Foreground="#E2E8F0" BorderBrush="#334155" BorderThickness="1"
+                                CornerRadius="4" Padding="8,4" Margin="0,0,4,0" FontWeight="SemiBold" Cursor="Hand"
+                                ToolTipService.ToolTip="Undo last edit operation"/>
+                        <Button Content="↷ Redo" Command="{Binding RedoCommand}"
+                                Background="#1E293B" Foreground="#E2E8F0" BorderBrush="#334155" BorderThickness="1"
+                                CornerRadius="4" Padding="8,4" Margin="0,0,8,0" FontWeight="SemiBold" Cursor="Hand"
+                                ToolTipService.ToolTip="Redo last undone edit operation"/>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Right Toolbar Actions: Tools Menu & About -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Hamburger / Tools Menu Button -->
+                    <Button Command="{Binding ToggleToolsMenuCommand}"
+                            Background="#1E293B" BorderBrush="#38BDF8" BorderThickness="1"
+                            CornerRadius="4" Padding="10,5" Margin="0,0,8,0" Cursor="Hand"
+                            ToolTipService.ToolTip="Tools &amp; Actions Menu">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="☰" FontSize="13" FontWeight="Bold" Foreground="#38BDF8" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Tools" FontSize="11" FontWeight="SemiBold" Foreground="#F8FAFC" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- About Button -->
+                    <Button Command="{Binding ToggleAboutWindowCommand}"
+                            Background="#1E293B" BorderBrush="#334155" BorderThickness="1"
+                            CornerRadius="4" Padding="10,5" Cursor="Hand"
+                            ToolTipService.ToolTip="About Pointless Waymarks Track Trimmer">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="ℹ️ About" FontSize="11" FontWeight="SemiBold" Foreground="#E2E8F0"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Row 1: Top Stats Panel -->
+        <controls:StatsPanelControl Grid.Row="1" />
+
+        <!-- Row 2: Main Area (Interactive Map + Right Points Grid) -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <!-- Main Map Panel -->
+                <ColumnDefinition Width="*" MinWidth="300" />
+                <!-- Vertical Splitter -->
+                <ColumnDefinition Width="4" />
+                <!-- Right Points Panel -->
+                <ColumnDefinition Width="360" MinWidth="260" MaxWidth="600" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Map View -->
+            <controls:MapControl Grid.Column="0" />
+
+            <!-- Vertical GridSplitter -->
+            <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" Background="#1E293B" />
+
+            <!-- Right Panel: Points List -->
+            <controls:PointsGridControl Grid.Column="2" />
+        </Grid>
+
+        <!-- Row 3: Horizontal GridSplitter -->
+        <GridSplitter Grid.Row="3" Height="4" HorizontalAlignment="Stretch" Background="#1E293B" VerticalAlignment="Stretch" />
+
+        <!-- Bottom Area: Elevation Graph & Track Trimmer -->
+        <controls:ElevationChartControl Grid.Row="4" />
+
+        <!-- FLOATING IN-APP TOOLS & ACTIONS DROPDOWN MENU OVERLAY -->
+        <Grid Grid.Row="0" Grid.RowSpan="5" Visibility="{Binding ToolsMenuVisibility}" Canvas.ZIndex="600">
+            <!-- Fullscreen Transparent Backdrop (click anywhere outside to dismiss) -->
+            <Grid Background="#01000000" MouseLeftButtonDown="ToolsMenu_Backdrop_MouseLeftButtonDown" />
+
+            <!-- Dropdown Menu Card positioned under top bar -->
+            <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,46,14,0"
+                    Background="#0F172A" BorderBrush="#334155" BorderThickness="1.5"
+                    CornerRadius="8" Padding="12" Width="330">
+                <StackPanel>
+                    <!-- Header -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="☰" FontSize="12" FontWeight="Bold" Foreground="#38BDF8" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="TOOLS &amp; ACTIONS" FontSize="11" FontWeight="Bold" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="✕" Command="{Binding CloseToolsMenuCommand}"
+                                Background="#1E293B" Foreground="#94A3B8" BorderThickness="0" CornerRadius="4"
+                                Width="22" Height="22" Padding="0" FontSize="11" FontWeight="Bold" Cursor="Hand"/>
+                    </Grid>
+
+                    <Border Height="1" Background="#1E293B" Margin="0,0,0,8"/>
+
+                    <!-- 1. Reverse Track -->
+                    <Button Command="{Binding ReverseTrackCommand}" Click="MenuItem_Click"
+                            Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="6"
+                            Padding="10,8" Margin="0,0,0,6" HorizontalContentAlignment="Stretch" Cursor="Hand"
+                            ToolTipService.ToolTip="Reverse entire route direction with timestamps running earlier to later">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="🔄" FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="Reverse Track" FontSize="11" FontWeight="SemiBold" Foreground="#F8FAFC"/>
+                                <TextBlock Text="Invert direction with chronological timestamps" FontSize="10" Foreground="#64748B"/>
+                            </StackPanel>
+                        </Grid>
+                    </Button>
+
+                    <!-- 2. Add End to Start -->
+                    <Button Command="{Binding AddEndToStartCommand}" Click="MenuItem_Click"
+                            Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="6"
+                            Padding="10,8" Margin="0,0,0,6" HorizontalContentAlignment="Stretch" Cursor="Hand"
+                            ToolTipService.ToolTip="Add reversed route to end, creating an out-and-back trail with chronological timestamps">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="🔁" FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="Add End to Start" FontSize="11" FontWeight="SemiBold" Foreground="#F8FAFC"/>
+                                <TextBlock Text="Out-and-back trail with forward timestamps" FontSize="10" Foreground="#64748B"/>
+                            </StackPanel>
+                        </Grid>
+                    </Button>
+
+                    <!-- 3. Standardize Pace -->
+                    <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="6"
+                            Padding="10,6" Margin="0,0,0,6">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="⏱" FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="Standardize Pace" FontSize="11" FontWeight="SemiBold" Foreground="#F8FAFC"/>
+                                <TextBlock Text="Pace timestamps from distance" FontSize="10" Foreground="#64748B"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Background="#090E17" BorderBrush="#475569" BorderThickness="1" CornerRadius="4" Padding="5,2" Margin="0,0,6,0">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBox Text="{Binding StandardizePaceMphText, Mode=TwoWay}"
+                                                 CaretBrush="#38BDF8"
+                                                 Width="36" FontSize="11" FontWeight="SemiBold" Foreground="#FFFFFF" Background="Transparent" BorderThickness="0"
+                                                 TextAlignment="Center" VerticalAlignment="Center" Padding="0"/>
+                                        <TextBlock Text="mph" FontSize="10" Foreground="#94A3B8" VerticalAlignment="Center" Margin="2,0,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Button Content="Apply" Command="{Binding StandardizePaceCommand}" Click="MenuItem_Click"
+                                        Background="#0284C7" Foreground="White" BorderThickness="0" CornerRadius="4"
+                                        Padding="8,4" FontSize="11" FontWeight="Bold" Cursor="Hand"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- 4. Simplify Track -->
+                    <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="6"
+                            Padding="10,6" Margin="0,0,0,6">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="✨" FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="Simplify Track" FontSize="11" FontWeight="SemiBold" Foreground="#F8FAFC"/>
+                                <TextBlock Text="Douglas-Peucker reduction" FontSize="10" Foreground="#64748B"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Background="#090E17" BorderBrush="#475569" BorderThickness="1" CornerRadius="4" Padding="5,2" Margin="0,0,6,0">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="Tol:" FontSize="10" FontWeight="Bold" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,2,0"/>
+                                        <TextBox Text="{Binding SimplifyToleranceText, Mode=TwoWay}"
+                                                 CaretBrush="#38BDF8"
+                                                 Width="36" FontSize="11" FontWeight="SemiBold" Foreground="#FFFFFF" Background="Transparent" BorderThickness="0"
+                                                 TextAlignment="Center" VerticalAlignment="Center" Padding="0"/>
+                                        <TextBlock Text="ft" FontSize="10" Foreground="#94A3B8" VerticalAlignment="Center" Margin="2,0,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Button Content="Apply" Command="{Binding SimplifyTrackCommand}" Click="MenuItem_Click"
+                                        Background="#0284C7" Foreground="White" BorderThickness="0" CornerRadius="4"
+                                        Padding="8,4" FontSize="11" FontWeight="Bold" Cursor="Hand"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- 5. Adjust Elevation from DEM -->
+                    <Button Command="{Binding AdjustElevationsFromDemCommand}" Click="MenuItem_Click"
+                            Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="6"
+                            Padding="10,8" Margin="0,0,0,6" HorizontalContentAlignment="Stretch" Cursor="Hand"
+                            ToolTipService.ToolTip="Retrieve and update point elevations from Viewfinderpanoramas DEM tiles">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="🏔" FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="Adjust Elevation (DEM)" FontSize="11" FontWeight="SemiBold" Foreground="#F8FAFC"/>
+                                <TextBlock Text="Fetch elevations from DEM raster tiles" FontSize="10" Foreground="#64748B"/>
+                            </StackPanel>
+                        </Grid>
+                    </Button>
+
+                    <Border Height="1" Background="#1E293B" Margin="0,0,0,6"/>
+
+                    <!-- 6. Activity Log -->
+                    <Button Command="{Binding ToggleLogWindowCommand}" Click="MenuItem_Click"
+                            Background="#1E293B" BorderBrush="#0284C7" BorderThickness="1" CornerRadius="6"
+                            Padding="10,8" HorizontalContentAlignment="Stretch" Cursor="Hand"
+                            ToolTipService.ToolTip="View execution logs and application diagnostics">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="📋" FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="Activity Log" FontSize="11" FontWeight="SemiBold" Foreground="#38BDF8"/>
+                                <TextBlock Text="View logs and diagnostics" FontSize="10" Foreground="#64748B"/>
+                            </StackPanel>
+                            <Border Grid.Column="2" Background="#0284C7" CornerRadius="8" Padding="6,2" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Logs.Messages.Count, FallbackValue='0'}" FontSize="10" FontWeight="Bold" Foreground="White"/>
+                            </Border>
+                        </Grid>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- FLOATING IN-APP ACTIVITY LOG WINDOW OVERLAY -->
+        <Grid Grid.Row="0" Grid.RowSpan="5" Visibility="{Binding LogWindowVisibility}" 
+              Background="#99090D16" Canvas.ZIndex="700">
+            <controls:ActivityLogWindowControl Width="740" Height="480" 
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Grid>
+
+        <!-- FLOATING IN-APP ABOUT WINDOW OVERLAY -->
+        <Grid Grid.Row="0" Grid.RowSpan="5" Visibility="{Binding AboutWindowVisibility}" 
+              Background="#99090D16" Canvas.ZIndex="550">
+            <controls:AboutWindowControl Width="680" Height="520" 
+                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Grid>
+
+        <!-- DRAG AND DROP FILE OVERLAY -->
+        <Grid Grid.Row="0" Grid.RowSpan="5" Visibility="{Binding DragOverlayVisibility}" 
+              IsHitTestVisible="False" Canvas.ZIndex="950" Background="#D9090D16">
+            <Border HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Background="#0F172A" BorderBrush="#0284C7" BorderThickness="2"
+                    CornerRadius="16" Padding="48,36" MaxWidth="520">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <!-- Icon Bubble -->
+                    <Border Width="64" Height="64" CornerRadius="32" Background="#0369A1" 
+                            HorizontalAlignment="Center" Margin="0,0,0,18">
+                        <TextBlock Text="📥" FontSize="30" Foreground="White" 
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+
+                    <!-- Title -->
+                    <TextBlock Text="Drop Track File to Open" FontSize="20" FontWeight="Bold" 
+                               Foreground="#F8FAFC" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+
+                    <!-- Description -->
+                    <TextBlock Text="Release to instantly load and edit your GPS track" FontSize="13" 
+                               Foreground="#94A3B8" HorizontalAlignment="Center" Margin="0,0,0,18"/>
+
+                    <!-- Supported Badges -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Border Background="#1E293B" BorderBrush="#38BDF8" BorderThickness="1" 
+                                CornerRadius="6" Padding="10,4" Margin="0,0,8,0">
+                            <TextBlock Text="GPX" FontSize="11" FontWeight="Bold" Foreground="#38BDF8"/>
+                        </Border>
+                        <Border Background="#1E293B" BorderBrush="#38BDF8" BorderThickness="1" 
+                                CornerRadius="6" Padding="10,4" Margin="0,0,8,0">
+                            <TextBlock Text="TCX" FontSize="11" FontWeight="Bold" Foreground="#38BDF8"/>
+                        </Border>
+                        <Border Background="#1E293B" BorderBrush="#38BDF8" BorderThickness="1" 
+                                CornerRadius="6" Padding="10,4">
+                            <TextBlock Text="FIT" FontSize="11" FontWeight="Bold" Foreground="#38BDF8"/>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- FULL-SCREEN SEMI-TRANSPARENT BUSY / PROGRESS OVERLAY (Blocks App on Operations > 1s) -->
+        <Grid Grid.Row="0" Grid.RowSpan="5" Visibility="{Binding BusyOverlayVisibility}" 
+              Canvas.ZIndex="999">
+            <controls:BusyOverlayControl HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+        </Grid>
+    </Grid>
+</Page>

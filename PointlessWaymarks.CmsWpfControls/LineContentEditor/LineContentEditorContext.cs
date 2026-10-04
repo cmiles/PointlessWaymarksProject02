@@ -215,6 +215,100 @@ public partial class LineContentEditorContext : IHasChanges, IHasValidationIssue
     }
 
     [BlockingCommand]
+    public async Task EditInExternalEditor()
+    {
+        await ThreadSwitcher.ResumeBackgroundAsync();
+
+        if (string.IsNullOrWhiteSpace(LineGeoJson))
+        {
+            await StatusContext.ToastError("No current line?");
+            return;
+        }
+
+        var featureToCheck = LineContent.FeatureFromGeoJsonLine(LineGeoJson);
+
+        if (featureToCheck == null)
+        {
+            await StatusContext.ToastError("No valid Line to edit?");
+            return;
+        }
+
+        var directory = FileLocationTools.TempStorageDirectorySubdirectory().FullName;
+        var tempInputFile = Path.Combine(directory, $"line_track_input_{Guid.NewGuid():N}.fit");
+        var tempOutputFile = Path.Combine(directory, $"line_track_output_{Guid.NewGuid():N}.fit");
+
+        try
+        {
+            FitTools.WriteActivityFitFile(new FileInfo(tempInputFile), featureToCheck,
+                RecordingStartedOnEntry.UserValue?.ToUniversalTime(),
+                TitleSummarySlugFolder.TitleEntry.UserValue.TrimNullToEmpty(),
+                TitleSummarySlugFolder.SummaryEntry.UserValue.TrimNullToEmpty());
+
+            var result = await TrackTrimmerLauncher.EditTrackModalAsync(tempInputFile, tempOutputFile);
+
+            if (result.Confirmed && !string.IsNullOrWhiteSpace(result.OutputFilePath) && File.Exists(result.OutputFilePath))
+            {
+                GpsTrackInformation? track = null;
+
+                if (result.OutputFilePath.EndsWith(".fit", StringComparison.OrdinalIgnoreCase))
+                {
+                    track = await FitTools.TrackInformationSimplifiedFromFitFile(new FileInfo(result.OutputFilePath),
+                        StatusContext.ProgressTracker());
+                }
+                else if (result.OutputFilePath.EndsWith(".gpx", StringComparison.OrdinalIgnoreCase))
+                {
+                    var tracks = await GpxTools.TracksFromGpxFile(new FileInfo(result.OutputFilePath),
+                        StatusContext.ProgressTracker());
+                    track = tracks.FirstOrDefault();
+                }
+
+                if (track == null)
+                {
+                    await StatusContext.ToastError("Could not load track data from the editor output.");
+                    return;
+                }
+
+                await UpdateLineFromTrack(track, ReplaceElevationOnImport, UpdateStatsOnImport);
+                await StatusContext.ToastSuccess("Line updated from external editor.");
+            }
+            else
+            {
+                await StatusContext.ToastWarning($"Edit cancelled or closed (ExitCode: {result.ExitCode}).");
+            }
+        }
+        catch (Exception ex)
+        {
+            await StatusContext.ShowMessageWithOkButton("Error in External Editor", ex.ToString());
+        }
+        finally
+        {
+            try
+            {
+                if (File.Exists(tempInputFile)) File.Delete(tempInputFile);
+            }
+            catch
+            {
+                // ignored
+            }
+
+            try
+            {
+                if (File.Exists(tempOutputFile)) File.Delete(tempOutputFile);
+            }
+            catch
+            {
+                // ignored
+            }
+        }
+    }
+
+    [BlockingCommand]
+    public async Task SendToExternalEditor()
+    {
+        await EditInExternalEditor();
+    }
+
+    [BlockingCommand]
     public async Task ExtractNewLinks()
     {
         await LinkExtraction.ExtractNewAndShowLinkContentEditors(
