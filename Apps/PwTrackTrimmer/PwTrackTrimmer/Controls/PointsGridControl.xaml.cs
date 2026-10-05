@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -19,6 +19,14 @@ namespace PwTrackTrimmer.Controls
             this.KeyDown += PointsGridControl_KeyDown;
             this.DataContextChanged += PointsGridControl_DataContextChanged;
             this.PointsListBox.SelectionChanged += PointsListBox_SelectionChanged;
+        }
+
+        public void SetIsNarrow(bool isNarrow)
+        {
+            if (RootBorder != null)
+            {
+                RootBorder.BorderThickness = isNarrow ? new Thickness(0, 1, 0, 0) : new Thickness(1, 0, 0, 0);
+            }
         }
 
         private void PointsGridControl_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)

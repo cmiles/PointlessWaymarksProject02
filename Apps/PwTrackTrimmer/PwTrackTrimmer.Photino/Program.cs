@@ -11,7 +11,7 @@ namespace PwTrackTrimmer.Photino
         static void Main(string[] args)
         {
             // Window title declared here for visibility
-            string windowTitle = "PwTrackTrimmer";
+            string windowTitle = "Pointless Waymarks Track Trimmer";
 
             // Parse CLI arguments for Host Dialog Mode
             string? inputPath = null;

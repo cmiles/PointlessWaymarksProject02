@@ -1,6 +1,7 @@
 <UserControl x:Class="PwTrackTrimmer.Controls.ElevationChartControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:PwTrackTrimmer.Controls"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
@@ -16,33 +17,27 @@
 
             <!-- Chart Header & Controls Ribbon -->
             <Border Grid.Row="0" Background="#1E293B" Padding="12,6" BorderBrush="#334155" BorderThickness="0,0,0,1">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Title -->
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="ELEVATION PROFILE" FontWeight="Bold" FontSize="11" Foreground="#94A3B8"/>
-                        <TextBlock Text=" · " FontSize="11" Foreground="#64748B"/>
-                        <TextBlock x:Name="TxtHoverInfo" Text="Hover over graph to inspect" FontSize="11" Foreground="#38BDF8"/>
+                <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Title & Hover Info -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,3,16,3">
+                        <TextBlock Text="ELEVATION PROFILE" FontWeight="Bold" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                        <TextBlock Text=" · " FontSize="11" Foreground="#64748B" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="TxtHoverInfo" Text="Hover over graph to inspect" FontSize="11" Foreground="#38BDF8" VerticalAlignment="Center"/>
                     </StackPanel>
 
                     <!-- Trim Range Information -->
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Border Background="#064E3B" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,3,16,3">
+                        <Border Background="#064E3B" CornerRadius="4" Padding="6,2" Margin="0,0,8,0" VerticalAlignment="Center">
                             <TextBlock x:Name="TxtStartTrimLabel" Text="Start: 0.00 mi" FontSize="11" FontWeight="SemiBold" Foreground="#34D399"/>
                         </Border>
                         <TextBlock Text="➔" FontSize="11" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <Border Background="#7F1D1D" CornerRadius="4" Padding="6,2" Margin="0,0,12,0">
+                        <Border Background="#7F1D1D" CornerRadius="4" Padding="6,2" Margin="0,0,0,0" VerticalAlignment="Center">
                             <TextBlock x:Name="TxtEndTrimLabel" Text="End: 0.00 mi" FontSize="11" FontWeight="SemiBold" Foreground="#F87171"/>
                         </Border>
                     </StackPanel>
 
                     <!-- Action Buttons -->
-                    <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,3,0,3">
                         <Button Content="Reset Trim" Command="{Binding ResetTrimCommand}"
                                 Background="#334155" Foreground="#E2E8F0" BorderThickness="0" Padding="10,4" Margin="0,0,8,0"
                                 CornerRadius="4" FontSize="11" FontWeight="SemiBold" Cursor="Hand"
@@ -52,7 +47,7 @@
                                 CornerRadius="4" FontSize="11" FontWeight="Bold" Cursor="Hand"
                                 ToolTipService.ToolTip="Trim track to points between the start and end markers"/>
                     </StackPanel>
-                </Grid>
+                </controls:WrapPanel>
             </Border>
 
             <!-- Interactive Chart Area -->

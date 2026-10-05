@@ -9,43 +9,40 @@
       Foreground="#F8FAFC">
 
     <Grid Background="#0F172A">
-        <!-- Main Application Layout Rows -->
-        <Grid.RowDefinitions>
-            <!-- 0: App Header & Menu Bar -->
-            <RowDefinition Height="Auto" />
-            <!-- 1: Top Stats Panel -->
-            <RowDefinition Height="Auto" />
-            <!-- 2: Main Area (Map + Right Point List) -->
-            <RowDefinition Height="*" MinHeight="250" />
-            <!-- 3: Splitter -->
-            <RowDefinition Height="4" />
-            <!-- 4: Bottom Area (Elevation Profile & Trimmer) -->
-            <RowDefinition Height="200" MinHeight="140" MaxHeight="450" />
-        </Grid.RowDefinitions>
+        <!-- Main Scrollable App Content -->
+        <ScrollViewer x:Name="RootScrollViewer"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Disabled"
+                      BorderThickness="0">
+            <Grid x:Name="RootLayoutGrid" Background="#0F172A">
+                <!-- Main Application Layout Rows -->
+                <Grid.RowDefinitions>
+                    <!-- 0: App Header & Menu Bar -->
+                    <RowDefinition x:Name="RowTopBar" Height="Auto" />
+                    <!-- 1: Top Stats Panel -->
+                    <RowDefinition x:Name="RowStatsPanel" Height="Auto" />
+                    <!-- 2: Main Area (Map + Right Point List) -->
+                    <RowDefinition x:Name="RowMainArea" Height="*" MinHeight="250" />
+                    <!-- 3: Splitter -->
+                    <RowDefinition x:Name="RowSplitter" Height="4" />
+                    <!-- 4: Bottom Area (Elevation Profile & Trimmer) -->
+                    <RowDefinition x:Name="RowElevationChart" Height="200" MinHeight="140" MaxHeight="450" />
+                </Grid.RowDefinitions>
 
-        <!-- Row 0: App Header & Menu Toolbar -->
-        <Border Grid.Row="0" Background="#090D16" BorderBrush="#1E293B" BorderThickness="0,0,0,1" Padding="14,8">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+                <!-- Row 0: App Header & Menu Toolbar -->
+                <Border Grid.Row="0" x:Name="TopBarBorder" Background="#090D16" BorderBrush="#1E293B" BorderThickness="0,0,0,1" Padding="14,6">
+                    <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- App Branding -->
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,20,4">
+                            <TextBlock Text="Track Trimmer - " FontSize="15" FontWeight="Bold" Foreground="#F8FAFC" VerticalAlignment="Center"/>
+                            <HyperlinkButton Content="Charles Miles" NavigateUri="https://cmiles.info" TargetName="_blank"
+                                             Click="Hyperlink_Click"
+                                             FontSize="15" FontWeight="Bold" Foreground="#38BDF8"
+                                             Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
+                        </StackPanel>
 
-                <!-- App Branding -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,24,0">
-                    <TextBlock Text="Track Trimmer - " FontSize="15" FontWeight="Bold" Foreground="#F8FAFC" VerticalAlignment="Center"/>
-                    <HyperlinkButton Content="Charles Miles" NavigateUri="https://cmiles.info" TargetName="_blank"
-                                     Click="Hyperlink_Click"
-                                     FontSize="15" FontWeight="Bold" Foreground="#38BDF8"
-                                     Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
-                </StackPanel>
-
-                <!-- Action Toolbar Buttons -->
-                <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" BorderThickness="0">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <!-- Host Dialog Actions (Confirm & Cancel) - Visible when launched by parent desktop app -->
-                        <StackPanel Orientation="Horizontal" Visibility="{Binding DialogModeVisibility}" Margin="0,0,14,0" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Visibility="{Binding DialogModeVisibility}" Margin="0,4,14,4" VerticalAlignment="Center">
                             <Button Content="✓ Confirm &amp; Save" Command="{Binding ConfirmDialogCommand}"
                                     Background="#10B981" Foreground="#FFFFFF" BorderBrush="#059669" BorderThickness="1"
                                     CornerRadius="4" Padding="12,5" Margin="0,0,8,0" FontWeight="Bold" FontSize="11" Cursor="Hand"
@@ -54,104 +51,111 @@
                                     Background="#EF4444" Foreground="#FFFFFF" BorderBrush="#DC2626" BorderThickness="1"
                                     CornerRadius="4" Padding="10,5" FontWeight="Bold" FontSize="11" Cursor="Hand"
                                     ToolTipService.ToolTip="Discard changes and return to calling application without saving"/>
-                            <Border Width="1" Background="#334155" Height="20" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                            <Border Width="1" Background="#334155" Height="20" Margin="6,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
 
                         <!-- Open -->
                         <Button Content="📂 Open Track (.fit, .tcx, .gpx)" Command="{Binding LoadFileCommand}"
                                 Background="#1E293B" Foreground="#38BDF8" BorderBrush="#334155" BorderThickness="1"
-                                CornerRadius="4" Padding="10,5" Margin="0,0,16,0" FontWeight="SemiBold" Cursor="Hand"/>
+                                CornerRadius="4" Padding="10,5" Margin="0,4,16,4" FontWeight="SemiBold" Cursor="Hand"
+                                VerticalAlignment="Center"/>
 
                         <!-- Export Options -->
-                        <TextBlock Text="EXPORT:" FontSize="10" FontWeight="Bold" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <Button Content="💾 GPX" Command="{Binding ExportGpxCommand}"
-                                Background="#1E293B" Foreground="#34D399" BorderBrush="#334155" BorderThickness="1"
-                                CornerRadius="4" Padding="8,4" Margin="0,0,4,0" FontWeight="SemiBold" Cursor="Hand"/>
-                        <Button Content="💾 TCX" Command="{Binding ExportTcxCommand}"
-                                Background="#1E293B" Foreground="#34D399" BorderBrush="#334155" BorderThickness="1"
-                                CornerRadius="4" Padding="8,4" Margin="0,0,4,0" FontWeight="SemiBold" Cursor="Hand"/>
-                        <Button Content="💾 FIT" Command="{Binding ExportFitCommand}"
-                                Background="#1E293B" Foreground="#34D399" BorderBrush="#334155" BorderThickness="1"
-                                CornerRadius="4" Padding="8,4" Margin="0,0,16,0" FontWeight="SemiBold" Cursor="Hand"/>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,16,4">
+                            <TextBlock Text="EXPORT:" FontSize="10" FontWeight="Bold" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <Button Content="💾 GPX" Command="{Binding ExportGpxCommand}"
+                                    Background="#1E293B" Foreground="#34D399" BorderBrush="#334155" BorderThickness="1"
+                                    CornerRadius="4" Padding="8,4" Margin="0,0,4,0" FontWeight="SemiBold" Cursor="Hand"/>
+                            <Button Content="💾 TCX" Command="{Binding ExportTcxCommand}"
+                                    Background="#1E293B" Foreground="#34D399" BorderBrush="#334155" BorderThickness="1"
+                                    CornerRadius="4" Padding="8,4" Margin="0,0,4,0" FontWeight="SemiBold" Cursor="Hand"/>
+                            <Button Content="💾 FIT" Command="{Binding ExportFitCommand}"
+                                    Background="#1E293B" Foreground="#34D399" BorderBrush="#334155" BorderThickness="1"
+                                    CornerRadius="4" Padding="8,4" Margin="0,0,0,0" FontWeight="SemiBold" Cursor="Hand"/>
+                        </StackPanel>
 
                         <!-- Edit Operations -->
-                        <TextBlock Text="EDIT:" FontSize="10" FontWeight="Bold" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <Button Content="↶ Undo" Command="{Binding UndoCommand}"
-                                Background="#1E293B" Foreground="#E2E8F0" BorderBrush="#334155" BorderThickness="1"
-                                CornerRadius="4" Padding="8,4" Margin="0,0,4,0" FontWeight="SemiBold" Cursor="Hand"
-                                ToolTipService.ToolTip="Undo last edit operation"/>
-                        <Button Content="↷ Redo" Command="{Binding RedoCommand}"
-                                Background="#1E293B" Foreground="#E2E8F0" BorderBrush="#334155" BorderThickness="1"
-                                CornerRadius="4" Padding="8,4" Margin="0,0,8,0" FontWeight="SemiBold" Cursor="Hand"
-                                ToolTipService.ToolTip="Redo last undone edit operation"/>
-                    </StackPanel>
-                </ScrollViewer>
-
-                <!-- Right Toolbar Actions: Tools Menu & About -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <!-- Hamburger / Tools Menu Button -->
-                    <Button Command="{Binding ToggleToolsMenuCommand}"
-                            Background="#1E293B" BorderBrush="#38BDF8" BorderThickness="1"
-                            CornerRadius="4" Padding="10,5" Margin="0,0,8,0" Cursor="Hand"
-                            ToolTipService.ToolTip="Tools &amp; Actions Menu">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="☰" FontSize="13" FontWeight="Bold" Foreground="#38BDF8" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBlock Text="Tools" FontSize="11" FontWeight="SemiBold" Foreground="#F8FAFC" VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,16,4">
+                            <TextBlock Text="EDIT:" FontSize="10" FontWeight="Bold" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <Button Content="↶ Undo" Command="{Binding UndoCommand}"
+                                    Background="#1E293B" Foreground="#E2E8F0" BorderBrush="#334155" BorderThickness="1"
+                                    CornerRadius="4" Padding="8,4" Margin="0,0,4,0" FontWeight="SemiBold" Cursor="Hand"
+                                    ToolTipService.ToolTip="Undo last edit operation"/>
+                            <Button Content="↷ Redo" Command="{Binding RedoCommand}"
+                                    Background="#1E293B" Foreground="#E2E8F0" BorderBrush="#334155" BorderThickness="1"
+                                    CornerRadius="4" Padding="8,4" Margin="0,0,0,0" FontWeight="SemiBold" Cursor="Hand"
+                                    ToolTipService.ToolTip="Redo last undone edit operation"/>
                         </StackPanel>
-                    </Button>
 
-                    <!-- About Button -->
-                    <Button Command="{Binding ToggleAboutWindowCommand}"
-                            Background="#1E293B" BorderBrush="#334155" BorderThickness="1"
-                            CornerRadius="4" Padding="10,5" Cursor="Hand"
-                            ToolTipService.ToolTip="About Pointless Waymarks Track Trimmer">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="ℹ️ About" FontSize="11" FontWeight="SemiBold" Foreground="#E2E8F0"/>
+                        <!-- Right Toolbar Actions: Tools Menu & About -->
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,0,4">
+                            <!-- Hamburger / Tools Menu Button -->
+                            <Button Command="{Binding ToggleToolsMenuCommand}" Click="ToolsButton_Click"
+                                    Background="#1E293B" BorderBrush="#38BDF8" BorderThickness="1"
+                                    CornerRadius="4" Padding="10,5" Margin="0,0,8,0" Cursor="Hand"
+                                    ToolTipService.ToolTip="Tools &amp; Actions Menu">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="☰" FontSize="13" FontWeight="Bold" Foreground="#38BDF8" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Tools" FontSize="11" FontWeight="SemiBold" Foreground="#F8FAFC" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- About Button -->
+                            <Button Command="{Binding ToggleAboutWindowCommand}"
+                                    Background="#1E293B" BorderBrush="#334155" BorderThickness="1"
+                                    CornerRadius="4" Padding="10,5" Cursor="Hand"
+                                    ToolTipService.ToolTip="About Pointless Waymarks Track Trimmer">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="ℹ️ About" FontSize="11" FontWeight="SemiBold" Foreground="#E2E8F0"/>
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
-                    </Button>
-                </StackPanel>
+                    </controls:WrapPanel>
+                </Border>
+
+                <!-- Row 1: Top Stats Panel -->
+                <controls:StatsPanelControl Grid.Row="1" />
+
+                <!-- Row 2: Main Area (Interactive Map + Right Points Grid) -->
+                <Grid Grid.Row="2" x:Name="MainAreaGrid">
+                    <Grid.ColumnDefinitions>
+                        <!-- Main Map Panel -->
+                        <ColumnDefinition Width="*" MinWidth="300" />
+                        <!-- Vertical Splitter -->
+                        <ColumnDefinition Width="4" />
+                        <!-- Right Points Panel -->
+                        <ColumnDefinition Width="360" MinWidth="260" MaxWidth="600" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Map View -->
+                    <controls:MapControl Grid.Column="0" x:Name="MapControlElement" />
+
+                    <!-- Vertical/Horizontal GridSplitter -->
+                    <GridSplitter Grid.Column="1" x:Name="MainAreaSplitter" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="#1E293B" />
+
+                    <!-- Points List (Beside map, or wrapped under map) -->
+                    <controls:PointsGridControl Grid.Column="2" x:Name="PointsGridControlElement" />
+                </Grid>
+
+                <!-- Row 3: Horizontal GridSplitter -->
+                <GridSplitter Grid.Row="3" x:Name="BottomAreaSplitter" Height="4" HorizontalAlignment="Stretch" Background="#1E293B" VerticalAlignment="Stretch" />
+
+                <!-- Bottom Area: Elevation Graph & Track Trimmer -->
+                <controls:ElevationChartControl Grid.Row="4" x:Name="ElevationChartControlElement" />
             </Grid>
-        </Border>
+        </ScrollViewer>
 
-        <!-- Row 1: Top Stats Panel -->
-        <controls:StatsPanelControl Grid.Row="1" />
-
-        <!-- Row 2: Main Area (Interactive Map + Right Points Grid) -->
-        <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <!-- Main Map Panel -->
-                <ColumnDefinition Width="*" MinWidth="300" />
-                <!-- Vertical Splitter -->
-                <ColumnDefinition Width="4" />
-                <!-- Right Points Panel -->
-                <ColumnDefinition Width="360" MinWidth="260" MaxWidth="600" />
-            </Grid.ColumnDefinitions>
-
-            <!-- Map View -->
-            <controls:MapControl Grid.Column="0" />
-
-            <!-- Vertical GridSplitter -->
-            <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" Background="#1E293B" />
-
-            <!-- Right Panel: Points List -->
-            <controls:PointsGridControl Grid.Column="2" />
-        </Grid>
-
-        <!-- Row 3: Horizontal GridSplitter -->
-        <GridSplitter Grid.Row="3" Height="4" HorizontalAlignment="Stretch" Background="#1E293B" VerticalAlignment="Stretch" />
-
-        <!-- Bottom Area: Elevation Graph & Track Trimmer -->
-        <controls:ElevationChartControl Grid.Row="4" />
-
-        <!-- FLOATING IN-APP TOOLS & ACTIONS DROPDOWN MENU OVERLAY -->
-        <Grid Grid.Row="0" Grid.RowSpan="5" Visibility="{Binding ToolsMenuVisibility}" Canvas.ZIndex="600">
+        <!-- FLOATING IN-APP TOOLS & ACTIONS DROPDOWN MENU BACKDROP -->
+        <Grid Visibility="{Binding ToolsMenuVisibility}" Canvas.ZIndex="600">
             <!-- Fullscreen Transparent Backdrop (click anywhere outside to dismiss) -->
             <Grid Background="#01000000" MouseLeftButtonDown="ToolsMenu_Backdrop_MouseLeftButtonDown" />
+        </Grid>
 
-            <!-- Dropdown Menu Card positioned under top bar -->
-            <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,46,14,0"
+        <!-- FLOATING IN-APP TOOLS & ACTIONS DROPDOWN MENU CARD -->
+        <Grid Visibility="{Binding ToolsMenuVisibility}" Canvas.ZIndex="601">
+            <Border x:Name="ToolsMenuCard" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,46,14,0"
                     Background="#0F172A" BorderBrush="#334155" BorderThickness="1.5"
-                    CornerRadius="8" Padding="12" Width="330">
+                    CornerRadius="8" Padding="12" Width="330" MaxWidth="350">
                 <StackPanel>
                     <!-- Header -->
                     <Grid Margin="0,0,0,8">
@@ -315,21 +319,21 @@
         </Grid>
 
         <!-- FLOATING IN-APP ACTIVITY LOG WINDOW OVERLAY -->
-        <Grid Grid.Row="0" Grid.RowSpan="5" Visibility="{Binding LogWindowVisibility}" 
+        <Grid Visibility="{Binding LogWindowVisibility}" 
               Background="#99090D16" Canvas.ZIndex="700">
-            <controls:ActivityLogWindowControl Width="740" Height="480" 
+            <controls:ActivityLogWindowControl MaxWidth="740" MaxHeight="480" Margin="12"
                                                HorizontalAlignment="Center" VerticalAlignment="Center" />
         </Grid>
 
         <!-- FLOATING IN-APP ABOUT WINDOW OVERLAY -->
-        <Grid Grid.Row="0" Grid.RowSpan="5" Visibility="{Binding AboutWindowVisibility}" 
+        <Grid Visibility="{Binding AboutWindowVisibility}" 
               Background="#99090D16" Canvas.ZIndex="550">
-            <controls:AboutWindowControl Width="680" Height="520" 
+            <controls:AboutWindowControl MaxWidth="680" MaxHeight="520" Margin="12"
                                          HorizontalAlignment="Center" VerticalAlignment="Center" />
         </Grid>
 
         <!-- DRAG AND DROP FILE OVERLAY -->
-        <Grid Grid.Row="0" Grid.RowSpan="5" Visibility="{Binding DragOverlayVisibility}" 
+        <Grid Visibility="{Binding DragOverlayVisibility}" 
               IsHitTestVisible="False" Canvas.ZIndex="950" Background="#D9090D16">
             <Border HorizontalAlignment="Center" VerticalAlignment="Center"
                     Background="#0F172A" BorderBrush="#0284C7" BorderThickness="2"
@@ -370,7 +374,7 @@
         </Grid>
 
         <!-- FULL-SCREEN SEMI-TRANSPARENT BUSY / PROGRESS OVERLAY (Blocks App on Operations > 1s) -->
-        <Grid Grid.Row="0" Grid.RowSpan="5" Visibility="{Binding BusyOverlayVisibility}" 
+        <Grid Visibility="{Binding BusyOverlayVisibility}" 
               Canvas.ZIndex="999">
             <controls:BusyOverlayControl HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
         </Grid>

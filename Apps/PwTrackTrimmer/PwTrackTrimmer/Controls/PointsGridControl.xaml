@@ -6,7 +6,7 @@
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="360">
 
-    <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1,0,0,0">
+    <Border x:Name="RootBorder" Background="#1E293B" BorderBrush="#334155" BorderThickness="1,0,0,0">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
