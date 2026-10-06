@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -126,6 +126,13 @@ namespace PwTrackTrimmer.Models
 
         public string TimeFormatted => Time.HasValue ? Time.Value.ToString("HH:mm:ss") : "--";
 
+        /// <summary>
+        /// Holds format-specific raw data (e.g. Dynastream.Fit.Mesg, XElement, or GpxWaypoint)
+        /// preserving extended sensor readings and metadata from the original imported file.
+        /// Null if the point was created or synthesized programmatically.
+        /// </summary>
+        public object RawData { get; set; }
+
         public TrackPoint Clone()
         {
             return new TrackPoint
@@ -141,7 +148,8 @@ namespace PwTrackTrimmer.Models
                 HeartRate = this.HeartRate,
                 Cadence = this.Cadence,
                 IsSelected = this.IsSelected,
-                IsTrimmed = this.IsTrimmed
+                IsTrimmed = this.IsTrimmed,
+                RawData = this.RawData
             };
         }
 

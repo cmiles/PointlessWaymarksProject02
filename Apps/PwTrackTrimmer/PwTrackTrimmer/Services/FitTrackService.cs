@@ -48,7 +48,8 @@ namespace PwTrackTrimmer.Services
             broadcaster.RecordMesgEvent += (sender, e) =>
             {
                 totalRecordsEncountered++;
-                var record = new RecordMesg(e.mesg);
+                var rawMesg = new Mesg(e.mesg);
+                var record = new RecordMesg(rawMesg);
                 int? latSemicircles = record.GetPositionLat();
                 int? lonSemicircles = record.GetPositionLong();
 
@@ -70,7 +71,8 @@ namespace PwTrackTrimmer.Services
                     Time = time,
                     Speed = record.GetSpeed(),
                     HeartRate = record.GetHeartRate(),
-                    Cadence = record.GetCadence()
+                    Cadence = record.GetCadence(),
+                    RawData = rawMesg
                 };
 
                 float? dist = record.GetDistance();
@@ -190,7 +192,10 @@ namespace PwTrackTrimmer.Services
             fileIdMesg.SetTimeCreated(nowTime);
             encode.Write(fileIdMesg);
 
+            bool isFitSource = string.Equals(document.FileFormat, "FIT", StringComparison.OrdinalIgnoreCase);
             int written = 0;
+            int preservedRaw = 0;
+
             foreach (var pt in document.Points)
             {
                 if (pt.IsTrimmed) continue;
@@ -198,7 +203,17 @@ namespace PwTrackTrimmer.Services
                     pt.Latitude < -90.0 || pt.Latitude > 90.0 || pt.Longitude < -180.0 || pt.Longitude > 180.0 ||
                     (Math.Abs(pt.Latitude) < 1e-4 && Math.Abs(pt.Longitude) < 1e-4)) continue;
 
-                var record = new RecordMesg();
+                RecordMesg record;
+                if (isFitSource && pt.RawData is Mesg rawMesg)
+                {
+                    record = new RecordMesg(new Mesg(rawMesg));
+                    preservedRaw++;
+                }
+                else
+                {
+                    record = new RecordMesg();
+                }
+
                 record.SetPositionLat((int)(pt.Latitude * DegreesToSemicircles));
                 record.SetPositionLong((int)(pt.Longitude * DegreesToSemicircles));
 
@@ -206,10 +221,18 @@ namespace PwTrackTrimmer.Services
                 {
                     record.SetAltitude((float)pt.Elevation.Value);
                 }
+                else if (isFitSource && pt.RawData is Mesg)
+                {
+                    record.SetAltitude(null);
+                }
 
                 if (pt.Time.HasValue)
                 {
                     record.SetTimestamp(new Dynastream.Fit.DateTime(pt.Time.Value));
+                }
+                else if (isFitSource && pt.RawData is Mesg)
+                {
+                    record.SetTimestamp(null);
                 }
 
                 if (pt.Speed.HasValue)
@@ -233,12 +256,12 @@ namespace PwTrackTrimmer.Services
 
                 if (written % 500 == 0)
                 {
-                    log.Info($"Encoded {written} FIT records...", "FIT I/O");
+                    log.Info($"Encoded {written} FIT records ({preservedRaw} with preserved raw sensor metadata)...", "FIT I/O");
                 }
             }
 
             encode.Close();
-            log.Success($"FIT encoding complete. Successfully wrote {written} Record messages to output stream.", "FIT I/O");
+            log.Success($"FIT encoding complete. Successfully wrote {written} Record messages to output stream ({preservedRaw} preserved extended records).", "FIT I/O");
         }
     }
 }

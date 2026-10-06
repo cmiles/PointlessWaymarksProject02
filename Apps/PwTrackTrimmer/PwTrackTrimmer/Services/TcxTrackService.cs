@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -104,7 +104,8 @@ namespace PwTrackTrimmer.Services
                     DistanceFromStart = distFromStart,
                     HeartRate = hr,
                     Cadence = cadence,
-                    Speed = speed
+                    Speed = speed,
+                    RawData = new XElement(tp)
                 };
 
                 rawPoints.Add(pt);
@@ -130,51 +131,180 @@ namespace PwTrackTrimmer.Services
             var firstTime = document.Points.FirstOrDefault()?.Time ?? DateTime.UtcNow;
             string isoStartTime = firstTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ");
 
+            bool isTcxSource = string.Equals(document.FileFormat, "TCX", StringComparison.OrdinalIgnoreCase);
             var trackElement = new XElement(TcxNs + "Track");
             int count = 0;
+            int preservedRaw = 0;
 
             foreach (var pt in document.Points)
             {
                 if (pt.IsTrimmed) continue;
 
-                var tpEl = new XElement(TcxNs + "Trackpoint");
-
-                if (pt.Time.HasValue)
+                XElement tpEl;
+                if (isTcxSource && pt.RawData is XElement rawTp)
                 {
-                    tpEl.Add(new XElement(TcxNs + "Time", pt.Time.Value.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")));
+                    tpEl = new XElement(rawTp);
+                    preservedRaw++;
+
+                    // Update Position
+                    var pos = tpEl.Elements().FirstOrDefault(e => e.Name.LocalName == "Position");
+                    if (pos == null)
+                    {
+                        pos = new XElement(TcxNs + "Position");
+                        tpEl.Add(pos);
+                    }
+                    var latEl = pos.Elements().FirstOrDefault(e => e.Name.LocalName == "LatitudeDegrees");
+                    if (latEl == null)
+                    {
+                        latEl = new XElement(TcxNs + "LatitudeDegrees");
+                        pos.Add(latEl);
+                    }
+                    latEl.Value = pt.Latitude.ToString("F7", CultureInfo.InvariantCulture);
+
+                    var lonEl = pos.Elements().FirstOrDefault(e => e.Name.LocalName == "LongitudeDegrees");
+                    if (lonEl == null)
+                    {
+                        lonEl = new XElement(TcxNs + "LongitudeDegrees");
+                        pos.Add(lonEl);
+                    }
+                    lonEl.Value = pt.Longitude.ToString("F7", CultureInfo.InvariantCulture);
+
+                    // Update Altitude
+                    var altEl = tpEl.Elements().FirstOrDefault(e => e.Name.LocalName == "AltitudeMeters");
+                    if (pt.Elevation.HasValue)
+                    {
+                        if (altEl == null)
+                        {
+                            altEl = new XElement(TcxNs + "AltitudeMeters");
+                            tpEl.Add(altEl);
+                        }
+                        altEl.Value = pt.Elevation.Value.ToString("F1", CultureInfo.InvariantCulture);
+                    }
+                    else
+                    {
+                        altEl?.Remove();
+                    }
+
+                    // Update Time
+                    var timeEl = tpEl.Elements().FirstOrDefault(e => e.Name.LocalName == "Time");
+                    if (pt.Time.HasValue)
+                    {
+                        if (timeEl == null)
+                        {
+                            timeEl = new XElement(TcxNs + "Time");
+                            tpEl.Add(timeEl);
+                        }
+                        timeEl.Value = pt.Time.Value.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ");
+                    }
+                    else
+                    {
+                        timeEl?.Remove();
+                    }
+
+                    // Update Distance
+                    var distEl = tpEl.Elements().FirstOrDefault(e => e.Name.LocalName == "DistanceMeters");
+                    if (distEl == null)
+                    {
+                        distEl = new XElement(TcxNs + "DistanceMeters");
+                        tpEl.Add(distEl);
+                    }
+                    distEl.Value = pt.DistanceFromStart.ToString("F1", CultureInfo.InvariantCulture);
+
+                    // Update HeartRate
+                    if (pt.HeartRate.HasValue)
+                    {
+                        var hrEl = tpEl.Elements().FirstOrDefault(e => e.Name.LocalName == "HeartRateBpm");
+                        if (hrEl == null)
+                        {
+                            hrEl = new XElement(TcxNs + "HeartRateBpm");
+                            tpEl.Add(hrEl);
+                        }
+                        var valEl = hrEl.Elements().FirstOrDefault(e => e.Name.LocalName == "Value");
+                        if (valEl == null)
+                        {
+                            valEl = new XElement(TcxNs + "Value");
+                            hrEl.Add(valEl);
+                        }
+                        valEl.Value = pt.HeartRate.Value.ToString();
+                    }
+
+                    // Update Cadence
+                    if (pt.Cadence.HasValue)
+                    {
+                        var cadEl = tpEl.Elements().FirstOrDefault(e => e.Name.LocalName == "Cadence");
+                        if (cadEl == null)
+                        {
+                            cadEl = new XElement(TcxNs + "Cadence");
+                            tpEl.Add(cadEl);
+                        }
+                        cadEl.Value = pt.Cadence.Value.ToString();
+                    }
+
+                    // Update Speed
+                    if (pt.Speed.HasValue)
+                    {
+                        var extEl = tpEl.Elements().FirstOrDefault(e => e.Name.LocalName == "Extensions");
+                        if (extEl == null)
+                        {
+                            extEl = new XElement(TcxNs + "Extensions");
+                            tpEl.Add(extEl);
+                        }
+                        var tpxEl = extEl.Elements().FirstOrDefault(e => e.Name.LocalName == "TPX");
+                        if (tpxEl == null)
+                        {
+                            tpxEl = new XElement(ActivityExtNs + "TPX");
+                            extEl.Add(tpxEl);
+                        }
+                        var speedEl = tpxEl.Elements().FirstOrDefault(e => e.Name.LocalName == "Speed");
+                        if (speedEl == null)
+                        {
+                            speedEl = new XElement(ActivityExtNs + "Speed");
+                            tpxEl.Add(speedEl);
+                        }
+                        speedEl.Value = pt.Speed.Value.ToString("F2", CultureInfo.InvariantCulture);
+                    }
                 }
-
-                tpEl.Add(new XElement(TcxNs + "Position",
-                    new XElement(TcxNs + "LatitudeDegrees", pt.Latitude.ToString("F7", CultureInfo.InvariantCulture)),
-                    new XElement(TcxNs + "LongitudeDegrees", pt.Longitude.ToString("F7", CultureInfo.InvariantCulture))
-                ));
-
-                if (pt.Elevation.HasValue)
+                else
                 {
-                    tpEl.Add(new XElement(TcxNs + "AltitudeMeters", pt.Elevation.Value.ToString("F1", CultureInfo.InvariantCulture)));
-                }
+                    tpEl = new XElement(TcxNs + "Trackpoint");
 
-                tpEl.Add(new XElement(TcxNs + "DistanceMeters", pt.DistanceFromStart.ToString("F1", CultureInfo.InvariantCulture)));
+                    if (pt.Time.HasValue)
+                    {
+                        tpEl.Add(new XElement(TcxNs + "Time", pt.Time.Value.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")));
+                    }
 
-                if (pt.HeartRate.HasValue)
-                {
-                    tpEl.Add(new XElement(TcxNs + "HeartRateBpm",
-                        new XElement(TcxNs + "Value", pt.HeartRate.Value.ToString())
+                    tpEl.Add(new XElement(TcxNs + "Position",
+                        new XElement(TcxNs + "LatitudeDegrees", pt.Latitude.ToString("F7", CultureInfo.InvariantCulture)),
+                        new XElement(TcxNs + "LongitudeDegrees", pt.Longitude.ToString("F7", CultureInfo.InvariantCulture))
                     ));
-                }
 
-                if (pt.Cadence.HasValue)
-                {
-                    tpEl.Add(new XElement(TcxNs + "Cadence", pt.Cadence.Value.ToString()));
-                }
+                    if (pt.Elevation.HasValue)
+                    {
+                        tpEl.Add(new XElement(TcxNs + "AltitudeMeters", pt.Elevation.Value.ToString("F1", CultureInfo.InvariantCulture)));
+                    }
 
-                if (pt.Speed.HasValue)
-                {
-                    tpEl.Add(new XElement(TcxNs + "Extensions",
-                        new XElement(ActivityExtNs + "TPX",
-                            new XElement(ActivityExtNs + "Speed", pt.Speed.Value.ToString("F2", CultureInfo.InvariantCulture))
-                        )
-                    ));
+                    tpEl.Add(new XElement(TcxNs + "DistanceMeters", pt.DistanceFromStart.ToString("F1", CultureInfo.InvariantCulture)));
+
+                    if (pt.HeartRate.HasValue)
+                    {
+                        tpEl.Add(new XElement(TcxNs + "HeartRateBpm",
+                            new XElement(TcxNs + "Value", pt.HeartRate.Value.ToString())
+                        ));
+                    }
+
+                    if (pt.Cadence.HasValue)
+                    {
+                        tpEl.Add(new XElement(TcxNs + "Cadence", pt.Cadence.Value.ToString()));
+                    }
+
+                    if (pt.Speed.HasValue)
+                    {
+                        tpEl.Add(new XElement(TcxNs + "Extensions",
+                            new XElement(ActivityExtNs + "TPX",
+                                new XElement(ActivityExtNs + "Speed", pt.Speed.Value.ToString("F2", CultureInfo.InvariantCulture))
+                            )
+                        ));
+                    }
                 }
 
                 trackElement.Add(tpEl);

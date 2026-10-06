@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -62,7 +62,8 @@ namespace PwTrackTrimmer.Services
                                 Latitude = wpt.Latitude.Value,
                                 Longitude = wpt.Longitude.Value,
                                 Elevation = wpt.ElevationInMeters,
-                                Time = wpt.TimestampUtc
+                                Time = wpt.TimestampUtc,
+                                RawData = wpt
                             };
                             rawPoints.Add(pt);
 
@@ -88,27 +89,58 @@ namespace PwTrackTrimmer.Services
             var log = ActivityLogService.Instance;
             log.Info($"Initiating NetTopologySuite GPX export for '{document.Name}'...", "GPX I/O");
 
+            bool isGpxSource = string.Equals(document.FileFormat, "GPX", StringComparison.OrdinalIgnoreCase);
             var waypoints = new List<GpxWaypoint>();
             int count = 0;
+            int preservedRaw = 0;
             foreach (var pt in document.Points)
             {
                 if (pt.IsTrimmed) continue;
 
-                var wpt = new GpxWaypoint(new GpxLongitude(pt.Longitude), new GpxLatitude(pt.Latitude));
-                if (pt.Elevation.HasValue)
+                GpxWaypoint wpt;
+                if (isGpxSource && pt.RawData is GpxWaypoint rawWpt)
                 {
-                    wpt = wpt.WithElevationInMeters(pt.Elevation.Value);
+                    wpt = rawWpt
+                        .WithLongitude(new GpxLongitude(pt.Longitude))
+                        .WithLatitude(new GpxLatitude(pt.Latitude));
+
+                    if (pt.Elevation.HasValue)
+                    {
+                        wpt = wpt.WithElevationInMeters(pt.Elevation.Value);
+                    }
+                    else
+                    {
+                        wpt = wpt.WithElevationInMeters(null);
+                    }
+
+                    if (pt.Time.HasValue)
+                    {
+                        wpt = wpt.WithTimestampUtc(pt.Time.Value);
+                    }
+                    else
+                    {
+                        wpt = wpt.WithTimestampUtc(null);
+                    }
+                    preservedRaw++;
                 }
-                if (pt.Time.HasValue)
+                else
                 {
-                    wpt = wpt.WithTimestampUtc(pt.Time.Value);
+                    wpt = new GpxWaypoint(new GpxLongitude(pt.Longitude), new GpxLatitude(pt.Latitude));
+                    if (pt.Elevation.HasValue)
+                    {
+                        wpt = wpt.WithElevationInMeters(pt.Elevation.Value);
+                    }
+                    if (pt.Time.HasValue)
+                    {
+                        wpt = wpt.WithTimestampUtc(pt.Time.Value);
+                    }
                 }
                 waypoints.Add(wpt);
                 count++;
 
                 if (count % 500 == 0)
                 {
-                    log.Info($"Prepared {count} GPX waypoints for serialization...", "GPX I/O");
+                    log.Info($"Prepared {count} GPX waypoints for serialization ({preservedRaw} preserved raw)...", "GPX I/O");
                 }
             }
 

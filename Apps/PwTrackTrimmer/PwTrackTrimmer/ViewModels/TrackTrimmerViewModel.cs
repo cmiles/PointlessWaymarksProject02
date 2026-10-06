@@ -1147,6 +1147,12 @@ namespace PwTrackTrimmer.ViewModels
                 reversedPoints[k].Time = reversedPoints[k - 1].Time.Value.Add(delta);
             }
 
+            // Newly created/synthesized points must always have null/empty extended raw data
+            foreach (var rp in reversedPoints)
+            {
+                rp.RawData = null;
+            }
+
             var combinedPoints = originalPoints.Select(p => p.Clone()).Concat(reversedPoints).ToList();
 
             var action = new ReplaceTrackPointsAction(Document.Points, originalPoints, combinedPoints, "Add End to Start", () =>
