@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using OpenSilver;
 using PwTrackTrimmer.Models;
+using PwTrackTrimmer.Services;
 using PwTrackTrimmer.ViewModels;
 
 namespace PwTrackTrimmer.Controls
@@ -26,6 +27,9 @@ namespace PwTrackTrimmer.Controls
             this.SizeChanged += MapControl_SizeChanged;
             this.DataContextChanged += MapControl_DataContextChanged;
             this.KeyDown += MapControl_KeyDown;
+
+            // Stop XAML routed MouseWheel bubbling to ancestor ScrollViewers
+            LeafletScrollIsolationHelper.ProtectControl(this, MapContainer);
         }
 
         private void MapControl_Loaded(object sender, RoutedEventArgs e)
@@ -47,6 +51,10 @@ namespace PwTrackTrimmer.Controls
                         window.leafletMapInstance.invalidateSize();
                     }
                 ");
+            }
+            else
+            {
+                InitializeMap();
             }
         }
 
@@ -164,8 +172,16 @@ namespace PwTrackTrimmer.Controls
                 });
             };
 
-            string initScript = @"
-                (function(containerId, onMovedCb, onSelectedCb, onDeletedCb, onReadyCb, onDeleteSelectedCb, onSetTrimStartCb, onSetTrimEndCb) {
+            Action onFailed = () =>
+            {
+                Dispatcher.BeginInvoke(() =>
+                {
+                    _isMapInitializing = false;
+                });
+            };
+
+            string initScript = LeafletScrollIsolationHelper.GetJavaScriptDefinition() + @"
+                (function(containerId, onMovedCb, onSelectedCb, onDeletedCb, onReadyCb, onDeleteSelectedCb, onSetTrimStartCb, onSetTrimEndCb, onFailedCb) {
                     var styleId = 'pw-leaflet-custom-styles';
                     if (!document.getElementById(styleId)) {
                         var s = document.createElement('style');
@@ -194,8 +210,10 @@ namespace PwTrackTrimmer.Controls
                         try {
                             if (typeof L === 'undefined') {
                                 window.pwInitLeafletAttempts++;
-                                if (window.pwInitLeafletAttempts < 80) {
+                                if (window.pwInitLeafletAttempts < 160) {
                                     setTimeout(tryInit, 50);
+                                } else {
+                                    if (onFailedCb) onFailedCb();
                                 }
                                 return;
                             }
@@ -203,8 +221,10 @@ namespace PwTrackTrimmer.Controls
                             var container = document.getElementById(containerId);
                             if (!container || !container.isConnected) {
                                 window.pwInitLeafletAttempts++;
-                                if (window.pwInitLeafletAttempts < 80) {
+                                if (window.pwInitLeafletAttempts < 160) {
                                     setTimeout(tryInit, 50);
+                                } else {
+                                    if (onFailedCb) onFailedCb();
                                 }
                                 return;
                             }
@@ -213,8 +233,10 @@ namespace PwTrackTrimmer.Controls
                             var h = container.clientHeight;
                             if (w < 30 || h < 30) {
                                 window.pwInitLeafletAttempts++;
-                                if (window.pwInitLeafletAttempts < 80) {
+                                if (window.pwInitLeafletAttempts < 160) {
                                     setTimeout(tryInit, 50);
+                                } else {
+                                    if (onFailedCb) onFailedCb();
                                 }
                                 return;
                             }
@@ -251,8 +273,14 @@ namespace PwTrackTrimmer.Controls
                                 zoomControl: true,
                                 attributionControl: false,
                                 maxZoom: 22,
+                                zoomSnap: 0,
                                 preferCanvas: true
                             }).setView([37.9, -122.6], 12);
+
+                            // Install reusable two-finger gesture and scroll isolation
+                            if (window.pwLeafletGestureIsolation) {
+                                window.pwLeafletGestureIsolation.install(map, container);
+                            }
 
                             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                                 maxZoom: 22,
@@ -327,14 +355,15 @@ namespace PwTrackTrimmer.Controls
                             }
                         } catch (err) {
                             console.error('Error initializing map:', err);
+                            if (onFailedCb) onFailedCb();
                         }
                     }
 
                     tryInit();
-                })($0, $1, $2, $3, $4, $5, $6, $7);
+                })($0, $1, $2, $3, $4, $5, $6, $7, $8);
             ";
 
-            Interop.ExecuteJavaScriptVoid(initScript, containerId, onMoved, onSelected, onDeleted, onReady, onDeleteSelected, onSetTrimStart, onSetTrimEnd);
+            Interop.ExecuteJavaScriptVoid(initScript, containerId, onMoved, onSelected, onDeleted, onReady, onDeleteSelected, onSetTrimStart, onSetTrimEnd, onFailed);
         }
 
         public void RefreshTrackOnMap(bool fitBounds = false)

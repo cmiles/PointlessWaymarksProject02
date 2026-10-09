@@ -162,8 +162,6 @@ namespace PwTrackTrimmer
         private bool _layoutInitialized = false;
         private const double NarrowLayoutBreakpoint = 850.0;
         private GridLength _savedWidePointsWidth = new GridLength(360, GridUnitType.Pixel);
-        private GridLength _savedNarrowMapHeight = new GridLength(420, GridUnitType.Pixel);
-        private GridLength _savedNarrowPointsHeight = new GridLength(340, GridUnitType.Pixel);
 
         private void UpdateResponsiveLayout(double width)
         {
@@ -176,9 +174,9 @@ namespace PwTrackTrimmer
                 return;
             }
 
-            if (_layoutInitialized && MainAreaGrid != null)
+            if (_layoutInitialized && MainAreaGrid != null && MainAreaGrid.ColumnDefinitions.Count >= 3)
             {
-                if (!_isNarrowLayout && MainAreaGrid.ColumnDefinitions.Count >= 3)
+                if (!_isNarrowLayout)
                 {
                     var currentWidth = MainAreaGrid.ColumnDefinitions[2].Width;
                     if (currentWidth.Value > 50)
@@ -186,30 +184,25 @@ namespace PwTrackTrimmer
                         _savedWidePointsWidth = currentWidth;
                     }
                 }
-                else if (_isNarrowLayout && MainAreaGrid.RowDefinitions.Count >= 3)
-                {
-                    var currentMapHeight = MainAreaGrid.RowDefinitions[0].Height;
-                    if (currentMapHeight.Value > 100)
-                    {
-                        _savedNarrowMapHeight = currentMapHeight;
-                    }
-                    var currentPointsHeight = MainAreaGrid.RowDefinitions[2].Height;
-                    if (currentPointsHeight.Value > 100)
-                    {
-                        _savedNarrowPointsHeight = currentPointsHeight;
-                    }
-                }
             }
 
             _isNarrowLayout = shouldBeNarrow;
             _layoutInitialized = true;
 
-            if (MainAreaGrid == null || MapControlElement == null || PointsGridControlElement == null || MainAreaSplitter == null)
+            if (MainAreaGrid == null || MainAreaGrid.ColumnDefinitions.Count < 3 || PointsGridControlElement == null || MainAreaSplitter == null)
                 return;
 
             if (_isNarrowLayout)
             {
-                // Narrow / Small Screen: App adjusts to be more than 1 screen tall with full vertical scrolling
+                // Narrow / Small Screen: Hide Track Points list and splitter; collapse columns to 0 so Map takes full area
+                PointsGridControlElement.Visibility = Visibility.Collapsed;
+                MainAreaSplitter.Visibility = Visibility.Collapsed;
+
+                MainAreaGrid.ColumnDefinitions[1].Width = new GridLength(0);
+                MainAreaGrid.ColumnDefinitions[2].MinWidth = 0;
+                MainAreaGrid.ColumnDefinitions[2].Width = new GridLength(0);
+
+                // Enable vertical scrollbar on small screens so the elevation profile is accessible
                 if (RootScrollViewer != null)
                 {
                     RootScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
@@ -217,13 +210,13 @@ namespace PwTrackTrimmer
 
                 if (RowMainArea != null)
                 {
-                    RowMainArea.Height = GridLength.Auto;
-                    RowMainArea.MinHeight = 0;
+                    RowMainArea.Height = new GridLength(380, GridUnitType.Pixel);
+                    RowMainArea.MinHeight = 300;
                 }
 
                 if (RowElevationChart != null)
                 {
-                    RowElevationChart.Height = new GridLength(240, GridUnitType.Pixel);
+                    RowElevationChart.Height = new GridLength(220, GridUnitType.Pixel);
                     RowElevationChart.MinHeight = 180;
                 }
 
@@ -231,34 +224,20 @@ namespace PwTrackTrimmer
                 {
                     BottomAreaSplitter.Visibility = Visibility.Collapsed;
                 }
-
-                // Inside MainArea: Map on top (generous height), Points list wrapped underneath (generous height)
-                MainAreaGrid.ColumnDefinitions.Clear();
-                MainAreaGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-
-                MainAreaGrid.RowDefinitions.Clear();
-                MainAreaGrid.RowDefinitions.Add(new RowDefinition { Height = _savedNarrowMapHeight, MinHeight = 260 });
-                MainAreaGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(4, GridUnitType.Pixel) });
-                MainAreaGrid.RowDefinitions.Add(new RowDefinition { Height = _savedNarrowPointsHeight, MinHeight = 200 });
-
-                Grid.SetRow(MapControlElement, 0);
-                Grid.SetColumn(MapControlElement, 0);
-
-                Grid.SetRow(MainAreaSplitter, 1);
-                Grid.SetColumn(MainAreaSplitter, 0);
-                MainAreaSplitter.Height = 4;
-                MainAreaSplitter.Width = double.NaN;
-                MainAreaSplitter.HorizontalAlignment = HorizontalAlignment.Stretch;
-                MainAreaSplitter.VerticalAlignment = VerticalAlignment.Stretch;
-
-                Grid.SetRow(PointsGridControlElement, 2);
-                Grid.SetColumn(PointsGridControlElement, 0);
-
-                PointsGridControlElement.SetIsNarrow(true);
             }
             else
             {
-                // Wide / Large Screen: App fits cleanly on 1 screen height without whole-page scroll
+                // Wide / Large Screen: Restore Track Points list and splitter beside the map
+                PointsGridControlElement.Visibility = Visibility.Visible;
+                MainAreaSplitter.Visibility = Visibility.Visible;
+
+                MainAreaGrid.ColumnDefinitions[1].Width = new GridLength(4, GridUnitType.Pixel);
+                MainAreaGrid.ColumnDefinitions[2].MinWidth = 260;
+                MainAreaGrid.ColumnDefinitions[2].Width = _savedWidePointsWidth;
+
+                PointsGridControlElement.SetIsNarrow(false);
+
+                // Wide screen fits cleanly on 1 screen height without page scrolling
                 if (RootScrollViewer != null)
                 {
                     RootScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
@@ -281,30 +260,6 @@ namespace PwTrackTrimmer
                 {
                     BottomAreaSplitter.Visibility = Visibility.Visible;
                 }
-
-                // Inside MainArea: Map on left, Points list beside it on right
-                MainAreaGrid.RowDefinitions.Clear();
-                MainAreaGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-
-                MainAreaGrid.ColumnDefinitions.Clear();
-                MainAreaGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star), MinWidth = 300 });
-                MainAreaGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(4, GridUnitType.Pixel) });
-                MainAreaGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = _savedWidePointsWidth, MinWidth = 260, MaxWidth = 600 });
-
-                Grid.SetRow(MapControlElement, 0);
-                Grid.SetColumn(MapControlElement, 0);
-
-                Grid.SetRow(MainAreaSplitter, 0);
-                Grid.SetColumn(MainAreaSplitter, 1);
-                MainAreaSplitter.Width = 4;
-                MainAreaSplitter.Height = double.NaN;
-                MainAreaSplitter.HorizontalAlignment = HorizontalAlignment.Stretch;
-                MainAreaSplitter.VerticalAlignment = VerticalAlignment.Stretch;
-
-                Grid.SetRow(PointsGridControlElement, 0);
-                Grid.SetColumn(PointsGridControlElement, 2);
-
-                PointsGridControlElement.SetIsNarrow(false);
             }
 
             UpdateToolsMenuCardPosition();
