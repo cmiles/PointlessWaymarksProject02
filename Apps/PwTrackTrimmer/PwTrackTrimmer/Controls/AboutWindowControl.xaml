@@ -80,120 +80,68 @@
 
                     <!-- Package 1: OpenSilver -->
                     <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,8">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
-                                    <TextBlock Text="OpenSilver" FontSize="13" FontWeight="Bold" Foreground="#F8FAFC"/>
-                                    <TextBlock Text=" v3.3.3" FontSize="11" Foreground="#64748B" VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <TextBlock Text="Open-source framework enabling XAML and C# execution via WebAssembly and HTML5."
-                                           FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
-                            </StackPanel>
-                            <HyperlinkButton Grid.Column="1" Content="opensilver.net ↗" NavigateUri="https://opensilver.net" TargetName="_blank"
-                                             Click="Hyperlink_Click" FontSize="11" Foreground="#38BDF8" VerticalAlignment="Center" Cursor="Hand"/>
-                        </Grid>
+                        <StackPanel>
+                            <TextBlock Text="OpenSilver" FontSize="13" FontWeight="Bold" Foreground="#F8FAFC" Margin="0,0,0,3"/>
+                            <TextBlock Text="Open-source framework enabling XAML and C# execution via WebAssembly and HTML5."
+                                       FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                            <HyperlinkButton Content="opensilver.net ↗" NavigateUri="https://opensilver.net" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="#38BDF8" HorizontalAlignment="Left" Margin="0,6,0,0" Cursor="Hand" Padding="0"/>
+                        </StackPanel>
                     </Border>
 
                     <!-- Package 2: Garmin FIT SDK -->
                     <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,8">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
-                                    <TextBlock Text="Garmin.FIT.Sdk" FontSize="13" FontWeight="Bold" Foreground="#F8FAFC"/>
-                                    <TextBlock Text=" v21.217.0" FontSize="11" Foreground="#64748B" VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <TextBlock Text="Official Garmin SDK for parsing and encoding binary Flexible and Interoperable Data Transfer (FIT) files."
-                                           FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
-                            </StackPanel>
-                            <HyperlinkButton Grid.Column="1" Content="developer.garmin.com ↗" NavigateUri="https://developer.garmin.com/fit" TargetName="_blank"
-                                             Click="Hyperlink_Click" FontSize="11" Foreground="#38BDF8" VerticalAlignment="Center" Cursor="Hand"/>
-                        </Grid>
+                        <StackPanel>
+                            <TextBlock Text="Garmin.FIT.Sdk" FontSize="13" FontWeight="Bold" Foreground="#F8FAFC" Margin="0,0,0,3"/>
+                            <TextBlock Text="Official Garmin SDK for parsing and encoding binary Flexible and Interoperable Data Transfer (FIT) files."
+                                       FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                            <HyperlinkButton Content="developer.garmin.com ↗" NavigateUri="https://developer.garmin.com/fit" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="#38BDF8" HorizontalAlignment="Left" Margin="0,6,0,0" Cursor="Hand" Padding="0"/>
+                        </StackPanel>
                     </Border>
 
                     <!-- Package 3: NetTopologySuite.IO.GPX -->
                     <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,8">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
-                                    <TextBlock Text="NetTopologySuite.IO.GPX" FontSize="13" FontWeight="Bold" Foreground="#F8FAFC"/>
-                                    <TextBlock Text=" v1.1.1" FontSize="11" Foreground="#64748B" VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <TextBlock Text="Spatial topology, GPX parsing, and Douglas-Peucker geometric simplification algorithms."
-                                           FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
-                            </StackPanel>
-                            <HyperlinkButton Grid.Column="1" Content="github.com/NetTopologySuite ↗" NavigateUri="https://github.com/NetTopologySuite/NetTopologySuite.IO.GPX" TargetName="_blank"
-                                             Click="Hyperlink_Click" FontSize="11" Foreground="#38BDF8" VerticalAlignment="Center" Cursor="Hand"/>
-                        </Grid>
+                        <StackPanel>
+                            <TextBlock Text="NetTopologySuite.IO.GPX" FontSize="13" FontWeight="Bold" Foreground="#F8FAFC" Margin="0,0,0,3"/>
+                            <TextBlock Text="Spatial topology, GPX parsing, and Douglas-Peucker geometric simplification algorithms."
+                                       FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                            <HyperlinkButton Content="github.com/NetTopologySuite ↗" NavigateUri="https://github.com/NetTopologySuite/NetTopologySuite.IO.GPX" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="#38BDF8" HorizontalAlignment="Left" Margin="0,6,0,0" Cursor="Hand" Padding="0"/>
+                        </StackPanel>
                     </Border>
 
                     <!-- Package 4: Leaflet & OpenStreetMap -->
                     <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,8">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
-                                    <TextBlock Text="Leaflet.js &amp; OpenStreetMap" FontSize="13" FontWeight="Bold" Foreground="#F8FAFC"/>
-                                    <TextBlock Text=" v1.9.4" FontSize="11" Foreground="#64748B" VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <TextBlock Text="Interactive web mapping engine providing responsive vector polylines, milestone markers, and tiles."
-                                           FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
-                            </StackPanel>
-                            <HyperlinkButton Grid.Column="1" Content="leafletjs.com ↗" NavigateUri="https://leafletjs.com" TargetName="_blank"
-                                             Click="Hyperlink_Click" FontSize="11" Foreground="#38BDF8" VerticalAlignment="Center" Cursor="Hand"/>
-                        </Grid>
+                        <StackPanel>
+                            <TextBlock Text="Leaflet.js &amp; OpenStreetMap" FontSize="13" FontWeight="Bold" Foreground="#F8FAFC" Margin="0,0,0,3"/>
+                            <TextBlock Text="Interactive web mapping engine providing responsive vector polylines, milestone markers, and tiles."
+                                       FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                            <HyperlinkButton Content="leafletjs.com ↗" NavigateUri="https://leafletjs.com" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="#38BDF8" HorizontalAlignment="Left" Margin="0,6,0,0" Cursor="Hand" Padding="0"/>
+                        </StackPanel>
                     </Border>
 
                     <!-- Package 5: Photino.NET -->
                     <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,8">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
-                                    <TextBlock Text="Photino.NET" FontSize="13" FontWeight="Bold" Foreground="#F8FAFC"/>
-                                </StackPanel>
-                                <TextBlock Text="Lightweight, cross-platform native desktop webview container for Windows, macOS, and Linux."
-                                           FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
-                            </StackPanel>
-                            <HyperlinkButton Grid.Column="1" Content="tryphotino.io ↗" NavigateUri="https://www.tryphotino.io" TargetName="_blank"
-                                             Click="Hyperlink_Click" FontSize="11" Foreground="#38BDF8" VerticalAlignment="Center" Cursor="Hand"/>
-                        </Grid>
+                        <StackPanel>
+                            <TextBlock Text="Photino.NET" FontSize="13" FontWeight="Bold" Foreground="#F8FAFC" Margin="0,0,0,3"/>
+                            <TextBlock Text="Lightweight, cross-platform native desktop webview container for Windows, macOS, and Linux."
+                                       FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                            <HyperlinkButton Content="tryphotino.io ↗" NavigateUri="https://www.tryphotino.io" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="#38BDF8" HorizontalAlignment="Left" Margin="0,6,0,0" Cursor="Hand" Padding="0"/>
+                        </StackPanel>
                     </Border>
 
                     <!-- Package 6: Viewfinderpanoramas DEM -->
                     <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="12,10">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
-                                    <TextBlock Text="Viewfinderpanoramas DEM" FontSize="13" FontWeight="Bold" Foreground="#F8FAFC"/>
-                                </StackPanel>
-                                <TextBlock Text="Digital elevation model (DEM) terrain elevation tiles curated by Jonathan de Ferranti for elevation adjustments."
-                                           FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
-                            </StackPanel>
-                            <HyperlinkButton Grid.Column="1" Content="viewfinderpanoramas.org ↗" NavigateUri="http://viewfinderpanoramas.org" TargetName="_blank"
-                                             Click="Hyperlink_Click" FontSize="11" Foreground="#38BDF8" VerticalAlignment="Center" Cursor="Hand"/>
-                        </Grid>
+                        <StackPanel>
+                            <TextBlock Text="Viewfinderpanoramas DEM" FontSize="13" FontWeight="Bold" Foreground="#F8FAFC" Margin="0,0,0,3"/>
+                            <TextBlock Text="Digital elevation model (DEM) terrain elevation tiles curated by Jonathan de Ferranti for elevation adjustments."
+                                       FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                            <HyperlinkButton Content="viewfinderpanoramas.org ↗" NavigateUri="http://viewfinderpanoramas.org" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="#38BDF8" HorizontalAlignment="Left" Margin="0,6,0,0" Cursor="Hand" Padding="0"/>
+                        </StackPanel>
                     </Border>
                 </StackPanel>
             </ScrollViewer>
