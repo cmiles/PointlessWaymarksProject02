@@ -1789,11 +1789,14 @@ public static class UserSettingsUtilities
         try
         {
             readResult.CalTopoApiKey = (await IntersectSettingTools.ReadSettings(readResult.FeatureIntersectionTagSettingsFile)).CalTopoApiKey;
+            readResult.DemStaticFilesAddress = (await IntersectSettingTools.ReadSettings(readResult.FeatureIntersectionTagSettingsFile)).DemStaticFilesAddress;
         }
         catch (Exception e)
         {
             Log.Error($"Error trying to read CalTopoApiKey from {readResult.FeatureIntersectionTagSettingsFile} - {e}");
         }
+        
+        ElevationService.StaticDemAddress = readResult.DemStaticFilesAddress;
 
         return readResult;
     }
@@ -2108,5 +2111,7 @@ public static class UserSettingsUtilities
         writer.WriteFile(currentFile.FullName, iniResult);
 
         await IntersectSettingTools.WriteCalTopoApi(toWrite.CalTopoApiKey, toWrite.FeatureIntersectionTagSettingsFile);
+        await IntersectSettingTools.WriteStaticDemAddress(toWrite.DemStaticFilesAddress, toWrite.FeatureIntersectionTagSettingsFile);
+        ElevationService.StaticDemAddress = toWrite.DemStaticFilesAddress;
     }
 }

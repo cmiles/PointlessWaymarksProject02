@@ -12,7 +12,7 @@ public partial class UserSettings
     ///     UserSettingsUtilities for general purpose use.
     /// </summary>
     public string DatabaseFile { get; set; } = string.Empty;
-
+    public string DemStaticFilesAddress { get; set; } = string.Empty;
     public string DefaultCreatedBy { get; set; } = string.Empty;
     public List<string> FeatureIntersectionTagOnImportTypes { get; set; } = [];
     public string FeatureIntersectionTagSettingsFile { get; set; } = string.Empty;

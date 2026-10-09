@@ -515,7 +515,7 @@ public partial class GpxImportContext : IWebViewMessenger
                 }
 
             elevationCache =
-                await ElevationService.OpenTopoNedElevation(elevationsToReplace, StatusContext.ProgressTracker());
+                await ElevationService.Elevation(elevationsToReplace, StatusContext.ProgressTracker());
         }
 
         var pointReturns =

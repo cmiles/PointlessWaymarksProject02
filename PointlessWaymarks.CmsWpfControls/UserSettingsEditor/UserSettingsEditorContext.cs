@@ -45,6 +45,13 @@ public partial class UserSettingsEditorContext
 
     public StringMultiSelectDataEntryContext FeatureIntersectionTagOnImportTypesContext { get; set; }
 
+    public static string HelpMarkdownStaticDemAddressApiKey =>
+        "Set a local directory or URL with DEM, .hgt, files. By default this program uses [Open Topo Data's](https://www.opentopodata.org/) public API when retrieving elevation information. This is an amazing service and provides high quality elevation information with API limits this program tries to avoid hitting." +
+        "" +
+        "As an alternative you can set a local directory or URL with DEM, .hgt, files. This is an interesting and simple alternative because all it requires is that you have the Digital Elevation Model (DEM) files in a local directory or URL. The program will then use these files to retrieve elevation information using Open Topo Data as a fall back as needed." +
+        "" +
+        "The program has been tested with DEMs for North America and Europe from  [viewfinderpanoramas.org](https://viewfinderpanoramas.org/Coverage%20map%20viewfinderpanoramas_org1.htm), an easy to access source of DEMs.";
+    
     public static string HelpMarkdownCalTopoMapsApiKey =>
         "If you have a CalTopo Maps API key you can enter it here - this will allow access to some CalTopo layers in the maps. This is NOT required for maps to be functional.";
 
@@ -472,6 +479,8 @@ public partial class UserSettingsEditorContext
         await EditorSettings.WriteSettings();
 
         UserSettingsSingleton.CurrentSettings().InjectFrom(EditorSettings);
+        
+        await StatusContext.ToastSuccess("Settings Saved");
     }
 
     [NonBlockingCommand]

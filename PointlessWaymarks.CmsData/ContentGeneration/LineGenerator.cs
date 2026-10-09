@@ -174,7 +174,7 @@ public static class LineGenerator
         newEntry.CreatedBy = UserSettingsSingleton.CurrentSettings().DefaultCreatedBy;
         newEntry.ContentVersion = Db.ContentVersionDateTime();
         newEntry.Line = await LineTools.GeoJsonWithLineStringFromCoordinateList(trackInformation.Track,
-            replaceElevations, progress);
+            replaceElevations,  progress);
         newEntry.Title = trackInformation.Name;
         newEntry.Summary = trackInformation.Name;
         newEntry.BodyContent = trackInformation.Description;

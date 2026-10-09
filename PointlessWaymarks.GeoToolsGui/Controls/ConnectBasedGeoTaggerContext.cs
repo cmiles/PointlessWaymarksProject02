@@ -196,8 +196,7 @@ public partial class ConnectBasedGeoTaggerContext
         PreviewResults = await tagger.ProduceGeoTagActions(FilesToTagFileList.Files!.ToList(),
             [fileListGpxService],
             Settings.PointsMustBeWithinMinutes, OffsetPhotoTimeInMinutes,
-            Settings.OverwriteExistingGeoLocation,
-            StatusContext.ProgressTracker(),
+            Settings.OverwriteExistingGeoLocation, StatusContext.ProgressTracker(),
             exifToolCheckResult.ExifToolExe.FullName);
 
         var resultsWithLocation =

@@ -523,6 +523,21 @@
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
                         <Label Style="{StaticResource DataEntryLabelStyle}"
+                               Target="{Binding ElementName=StaticDemAddressTextBox}">
+                            Static DEM Files
+                        </Label>
+                        <TextBox
+                            Name="StaticDemAddressTextBox"
+                            Style="{StaticResource DataEntryTextBoxSingleLineStyle}"
+                            Text="{Binding EditorSettings.DemStaticFilesAddress, UpdateSourceTrigger=PropertyChanged}" />
+                        <wpf:MarkdownViewer Markdown="{Binding HelpMarkdownCalTopoMapsApiKey}">
+                            <b:Interaction.Behaviors>
+                                <behaviors:IgnoreMouseWheelBehavior />
+                            </b:Interaction.Behaviors>
+                        </wpf:MarkdownViewer>
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical">
+                        <Label Style="{StaticResource DataEntryLabelStyle}"
                                Target="{Binding ElementName=CalTopoApiKeyTextBox}">
                             CalTopo Maps Api Key
                         </Label>

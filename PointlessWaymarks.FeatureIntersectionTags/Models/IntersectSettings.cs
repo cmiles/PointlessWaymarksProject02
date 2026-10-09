@@ -6,6 +6,7 @@ public partial class IntersectSettings
     public string CalTopoApiKey { get; set; } = string.Empty;
     public bool CreateBackups { get; set; }
     public bool CreateBackupsInDefaultStorage { get; set; }
+    public string DemStaticFilesAddress { get; set; } = string.Empty;
     public List<IntersectFile> FeatureIntersectFiles { get; set; } = [];
     public string FilesToTagLastDirectoryFullName { get; set; } = string.Empty;
     public bool OsmInTagging { get; set; }

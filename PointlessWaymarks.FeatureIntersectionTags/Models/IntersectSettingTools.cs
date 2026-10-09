@@ -1,6 +1,7 @@
 using System.Text.Json;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.CommonTools.S3;
+using PointlessWaymarks.SpatialTools;
 
 namespace PointlessWaymarks.FeatureIntersectionTags.Models;
 
@@ -28,8 +29,10 @@ public static class IntersectSettingTools
     {
         var settingsFile = await SettingsFile(settingsFileFullName);
         var json = FileAndFolderTools.ReadAllText(settingsFile.FullName);
-        return JsonSerializer.Deserialize<IntersectSettings>(json) ??
+        var settings = JsonSerializer.Deserialize<IntersectSettings>(json) ??
                new IntersectSettings();
+        ElevationService.StaticDemAddress = settings.DemStaticFilesAddress;
+        return settings;
     }
 
     public static async Task WriteSettings(IntersectSettings setting, string? settingsFileFullName)
@@ -45,6 +48,12 @@ public static class IntersectSettingTools
         settings.CalTopoApiKey = calTopoApiKey;
         await WriteSettings(settings, settingsFileFullName);
     }
-
-
+    
+    public static async Task WriteStaticDemAddress(string? staticDemAddress, string? settingsFileFullName)
+    {
+        var settings = await ReadSettings(settingsFileFullName);
+        settings.DemStaticFilesAddress = staticDemAddress.TrimNullToEmpty();
+        ElevationService.StaticDemAddress = settings.DemStaticFilesAddress;
+        await WriteSettings(settings, settingsFileFullName);
+    }
 }
