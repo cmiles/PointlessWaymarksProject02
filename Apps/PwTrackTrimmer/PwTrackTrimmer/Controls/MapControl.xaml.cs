@@ -194,16 +194,35 @@ namespace PwTrackTrimmer.Controls
                         document.head.appendChild(s);
                     }
 
-                    if (typeof L === 'undefined' && !document.querySelector('script[src*=""leaflet.js""]')) {
+                    function ensureCss(href) {
+                        var links = document.getElementsByTagName('link');
+                        for (var i = 0; i < links.length; i++) {
+                            if (links[i].href && links[i].href.indexOf(href) !== -1) return;
+                        }
                         var lCss = document.createElement('link');
                         lCss.rel = 'stylesheet';
-                        lCss.href = 'applibs/leaflet/leaflet.css';
+                        lCss.href = href;
                         document.head.appendChild(lCss);
-
-                        var lScript = document.createElement('script');
-                        lScript.src = 'applibs/leaflet/leaflet.js';
-                        document.head.appendChild(lScript);
                     }
+                    function ensureScript(src) {
+                        var scripts = document.getElementsByTagName('script');
+                        for (var i = 0; i < scripts.length; i++) {
+                            if (scripts[i].src && scripts[i].src.indexOf(src) !== -1) return;
+                        }
+                        var s = document.createElement('script');
+                        s.src = src;
+                        document.head.appendChild(s);
+                    }
+
+                    ensureCss('applibs/leaflet/leaflet.css');
+                    ensureCss('applibs/leaflet-gesture-handling.min.css');
+                    ensureCss('applibs/L.Control.Locate.min.css');
+
+                    if (typeof L === 'undefined') {
+                        ensureScript('applibs/leaflet/leaflet.js');
+                    }
+                    ensureScript('applibs/leaflet-gesture-handling.min.js');
+                    ensureScript('applibs/L.Control.Locate.min.js');
 
                     window.pwInitLeafletAttempts = 0;
                     function tryInit() {
@@ -274,12 +293,33 @@ namespace PwTrackTrimmer.Controls
                                 attributionControl: false,
                                 maxZoom: 22,
                                 zoomSnap: 0,
-                                preferCanvas: true
+                                preferCanvas: true,
+                                gestureHandling: true
                             }).setView([37.9, -122.6], 12);
 
-                            // Install reusable two-finger gesture and scroll isolation
+                            // Install reusable scroll isolation helper tailored for leaflet-gesture-handling
                             if (window.pwLeafletGestureIsolation) {
                                 window.pwLeafletGestureIsolation.install(map, container);
+                            }
+
+                            // Add locate control
+                            if (L.control && L.control.locate) {
+                                try {
+                                    L.control.locate({
+                                        position: 'topleft',
+                                        icon: 'leaflet-control-locate-location-arrow',
+                                        iconLoading: 'leaflet-control-locate-spinner',
+                                        strings: {
+                                            title: 'Show my location'
+                                        },
+                                        locateOptions: {
+                                            maxZoom: 18,
+                                            enableHighAccuracy: true
+                                        }
+                                    }).addTo(map);
+                                } catch(errLocate) {
+                                    console.warn('Could not initialize L.Control.Locate:', errLocate);
+                                }
                             }
 
                             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {

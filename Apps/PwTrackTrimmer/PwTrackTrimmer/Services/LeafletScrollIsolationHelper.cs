@@ -1,34 +1,55 @@
 using System.Windows;
+using System.Windows.Input;
 
 namespace PwTrackTrimmer.Services
 {
     /// <summary>
-    /// Provides reusable scroll isolation and two-finger gesture support (including continuous 60fps
-    /// pinch-to-zoom and two-finger pan) for Leaflet maps embedded inside scrollable OpenSilver /
-    /// Photino (WebView2) / WebAssembly host containers.
+    /// Provides integration and scroll isolation for Leaflet maps using the 'leaflet-gesture-handling'
+    /// module within scrollable OpenSilver / Photino (WebView2) / WebAssembly host containers.
     ///
     /// Key capabilities:
-    /// 1. Mobile & Windows Desktop Touchscreen Two-Finger Gestures: Unified multi-touch engine that
-    ///    simultaneously pans and continuously pinch-zooms the Leaflet map around the gesture midpoint
-    ///    at 60fps with zero latency, while locking the host app's vertical scrollbar.
-    /// 2. Mobile / Touchscreen Single-Finger Scroll: Single-finger swipe scrolls the host page vertically,
-    ///    displaying a sleek guidance badge ("✌️ Use two fingers to move the map").
-    /// 3. Desktop / Trackpad / Mouse Wheel: Trackpad two-finger scroll and mouse wheel over the map zoom
-    ///    the map with smoothed delta accumulation without scrolling the parent ScrollViewer.
-    /// 4. Cross-Platform Input Support: Fully supports both mobile TouchEvents and Windows WebView2
-    ///    PointerEvents (crucial for Photino on Windows touchscreens).
+    /// 1. Gesture Handling Integration: Works seamlessly with 'leaflet-gesture-handling' for two-finger
+    ///    mobile map panning/pinch-zooming and Ctrl+wheel desktop zooming, displaying localized guidance badges.
+    /// 2. OpenSilver Touch Panning Isolation: Sets AllowScrollOnTouchMove = false on the map control and child
+    ///    containers so OpenSilver's PanHelper does not move the host ScrollViewer (Silverlight vertical scroll bar)
+    ///    during map interactions.
+    /// 3. OpenSilver Routed Wheel Event Protection: Intercepts OpenSilver routed MouseWheel events over the map
+    ///    so two-finger trackpad scrolling and mouse wheel events do not scroll the parent ScrollViewer.
+    /// 4. Leaflet Event Bubble Preservation: Preserves DOM touchstart and touchmove bubbling to 'document' so
+    ///    Leaflet's L.Draggable and TouchZoom document listeners receive all multi-touch gestures cleanly.
+    /// 5. Host Viewport Lock: During active multi-touch gestures, temporarily locks the ancestor DOM scroll
+    ///    container to prevent any viewport jitter or browser-native scroll chaining on small/mobile screen sizes.
     /// </summary>
     public static class LeafletScrollIsolationHelper
     {
         /// <summary>
-        /// Prevents OpenSilver's routed MouseWheel event from bubbling up the XAML visual tree
-        /// to any ancestor ScrollViewer. Call this in your MapControl constructor.
+        /// Configures OpenSilver routed MouseWheel and touch pan isolation on the map control and optional child containers.
+        /// By default, disables touch panning (AllowScrollOnTouchMove = false) and intercepts all wheel events over the map
+        /// so two-finger gestures and trackpad scrolling on the map never scroll the Silverlight vertical scroll bar.
         /// </summary>
+        /// <param name="mapControl">The primary MapControl or container hosting the Leaflet map.</param>
+        /// <param name="childContainers">Optional child elements inside the map control to protect.</param>
         public static void ProtectControl(FrameworkElement mapControl, params FrameworkElement[] childContainers)
+        {
+            ProtectControl(mapControl, onlyWhenModifierPressed: false, childContainers);
+        }
+
+        /// <summary>
+        /// Configures OpenSilver routed MouseWheel and touch pan isolation on the map control and optional child containers.
+        /// </summary>
+        /// <param name="mapControl">The primary MapControl or container hosting the Leaflet map.</param>
+        /// <param name="onlyWhenModifierPressed">
+        /// When true, only marks e.Handled = true when Ctrl or Cmd is pressed.
+        /// When false (default / recommended), unconditionally marks e.Handled = true for all mouse wheel events over the control,
+        /// ensuring trackpad two-finger scrolling over the map never scrolls the host ScrollViewer.
+        /// </param>
+        /// <param name="childContainers">Optional child elements inside the map control to protect.</param>
+        public static void ProtectControl(FrameworkElement mapControl, bool onlyWhenModifierPressed, params FrameworkElement[] childContainers)
         {
             if (mapControl != null)
             {
-                mapControl.MouseWheel += (sender, e) => { e.Handled = true; };
+                mapControl.AllowScrollOnTouchMove = false;
+                AttachWheelHandler(mapControl, onlyWhenModifierPressed);
             }
 
             if (childContainers != null)
@@ -37,10 +58,35 @@ namespace PwTrackTrimmer.Services
                 {
                     if (container != null)
                     {
-                        container.MouseWheel += (sender, e) => { e.Handled = true; };
+                        container.AllowScrollOnTouchMove = false;
+                        AttachWheelHandler(container, onlyWhenModifierPressed);
                     }
                 }
             }
+        }
+
+        private static void AttachWheelHandler(FrameworkElement element, bool onlyWhenModifierPressed)
+        {
+            if (element == null) return;
+
+            element.MouseWheel += (sender, e) =>
+            {
+                if (!onlyWhenModifierPressed)
+                {
+                    e.Handled = true;
+                    return;
+                }
+
+                // In modifier-only mode, Ctrl+Wheel or Cmd+Wheel zooms the map.
+                var modifiers = Keyboard.Modifiers;
+                bool isModifierPressed = (modifiers & ModifierKeys.Control) == ModifierKeys.Control ||
+                                         (modifiers & ModifierKeys.Windows) == ModifierKeys.Windows;
+
+                if (isModifierPressed)
+                {
+                    e.Handled = true;
+                }
+            };
         }
 
         /// <summary>
@@ -54,56 +100,13 @@ namespace PwTrackTrimmer.Services
                     install: function(map, container, options) {
                         if (!map || !container) return null;
                         options = options || {};
-                        var badgeText = options.message || 'Use two fingers to move the map';
-                        var badgeIcon = options.icon || '✌️';
-                        var wheelThreshold = options.wheelThreshold || 65;
 
-                        // Enable smooth fractional zooming on map
-                        if (map.options && (map.options.zoomSnap === undefined || map.options.zoomSnap > 0.25)) {
-                            map.options.zoomSnap = 0;
+                        // 1. Ensure leaflet-gesture-handling is enabled on the map instance
+                        if (map.gestureHandling && !map.gestureHandling.enabled()) {
+                            map.gestureHandling.enable();
                         }
 
-                        // 1. Inject Styles
-                        var styleId = 'pw-gesture-isolation-styles';
-                        if (!document.getElementById(styleId)) {
-                            var st = document.createElement('style');
-                            st.id = styleId;
-                            st.textContent = 
-                                '.pw-gesture-overlay { position: absolute; inset: 0; background: rgba(15, 23, 42, 0.65); ' +
-                                '-webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); display: flex; ' +
-                                'align-items: center; justify-content: center; z-index: 999; opacity: 0; ' +
-                                'pointer-events: none; transition: opacity 0.25s ease; } ' +
-                                '.pw-gesture-overlay.active { opacity: 1; } ' +
-                                '.pw-gesture-message { background: #1E293B; border: 1.5px solid #38BDF8; color: #F8FAFC; ' +
-                                'border-radius: 8px; padding: 10px 18px; font-size: 13px; font-weight: 600; display: flex; ' +
-                                'align-items: center; gap: 8px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); transform: scale(0.95); ' +
-                                'transition: transform 0.2s ease; user-select: none; } ' +
-                                '.pw-gesture-overlay.active .pw-gesture-message { transform: scale(1); }';
-                            document.head.appendChild(st);
-                        }
-
-                        // 2. Inject Overlay DOM
-                        var overlay = container.querySelector('.pw-gesture-overlay');
-                        if (!overlay) {
-                            overlay = document.createElement('div');
-                            overlay.className = 'pw-gesture-overlay';
-                            overlay.innerHTML = '<div class=""pw-gesture-message""><span>' + badgeIcon + '</span><span>' + badgeText + '</span></div>';
-                            container.appendChild(overlay);
-                        }
-
-                        var overlayTimeout = null;
-                        function showOverlay() {
-                            if (!overlay) return;
-                            overlay.classList.add('active');
-                            if (overlayTimeout) clearTimeout(overlayTimeout);
-                            overlayTimeout = setTimeout(function() { overlay.classList.remove('active'); }, 1500);
-                        }
-                        function hideOverlay() {
-                            if (overlayTimeout) clearTimeout(overlayTimeout);
-                            if (overlay) overlay.classList.remove('active');
-                        }
-
-                        // 3. Scroll Parent Discovery & Locking
+                        // 2. Discover parent scroll container in OpenSilver
                         var cachedScrollParent = null;
                         function getScrollParent() {
                             if (cachedScrollParent && cachedScrollParent.isConnected) return cachedScrollParent;
@@ -125,18 +128,27 @@ namespace PwTrackTrimmer.Services
                             return cachedScrollParent;
                         }
 
+                        // 3. Wheel Isolation Guard:
+                        // Stops wheel events over the map from propagating to parent DOM scroll containers or OpenSilver root,
+                        // preventing trackpad two-finger scrolling or mouse wheel from moving the Silverlight vertical scroll bar.
+                        function onWheel(e) {
+                            e.stopPropagation();
+                        }
+
+                        // 4. Multi-Touch Isolation Guard:
+                        // Real Leaflet attaches active drag and pinch-zoom handlers to 'document' (L.Draggable and TouchZoom).
+                        // Therefore, we MUST NOT call e.stopPropagation() on touchstart or touchmove on container,
+                        // as doing so starves Leaflet of document touch events and completely freezes 2-finger gestures.
+                        // OpenSilver touch panning is cleanly prevented in C# via AllowScrollOnTouchMove = false.
+                        // As an additional guard against native browser scroll chaining on small/mobile viewports,
+                        // we lock the DOM scroll parent during active multi-touch gestures.
                         var isTwoFingerActive = false;
                         var lockedScrollTop = null;
-                        var lastPanMidpoint = null;
-                        var gestureStartDist = null;
-                        var gestureStartZoom = null;
-                        var lastMoveTime = 0;
 
-                        function startTwoFinger() {
-                            if (isTwoFingerActive) return;
-                            isTwoFingerActive = true;
-                            hideOverlay();
-
+                        function startTwoFingerLock() {
+                            if (!isTwoFingerActive) {
+                                isTwoFingerActive = true;
+                            }
                             var sp = getScrollParent();
                             if (sp) {
                                 lockedScrollTop = sp.scrollTop;
@@ -144,244 +156,68 @@ namespace PwTrackTrimmer.Services
                                     sp.setAttribute('data-pw-prev-overflow', sp.style.overflowY || 'auto');
                                 }
                                 sp.style.overflowY = 'hidden';
-
-                                if (!sp._pwScrollLockAttached) {
-                                    sp._pwScrollLockAttached = true;
-                                    sp.addEventListener('scroll', function() {
-                                        if (isTwoFingerActive && lockedScrollTop !== null && Math.abs(sp.scrollTop - lockedScrollTop) > 0.5) {
-                                            sp.scrollTop = lockedScrollTop;
-                                        }
-                                    }, { passive: false });
-                                }
                             }
-                            container.style.touchAction = 'none';
                         }
 
-                        function stopTwoFinger() {
+                        function stopTwoFingerLock() {
                             if (!isTwoFingerActive) return;
                             isTwoFingerActive = false;
                             lockedScrollTop = null;
-                            lastPanMidpoint = null;
-                            gestureStartDist = null;
-                            gestureStartZoom = null;
-
                             var sp = getScrollParent();
                             if (sp && sp.hasAttribute('data-pw-prev-overflow')) {
                                 sp.style.overflowY = sp.getAttribute('data-pw-prev-overflow');
                                 sp.removeAttribute('data-pw-prev-overflow');
                             }
-                            container.style.touchAction = '';
-
-                            if (map.dragging && !map.dragging.enabled()) {
-                                map.dragging.enable();
-                            }
                         }
-
-                        // 4. Unified Pan & Smooth Continuous Pinch-Zoom
-                        function handleTwoFingerMove(p1, p2) {
-                            var now = (window.performance && window.performance.now) ? window.performance.now() : Date.now();
-                            if (now - lastMoveTime < 6) return; // Coalesce redundant events within 6ms
-                            lastMoveTime = now;
-
-                            var mid = {
-                                x: (p1.clientX + p2.clientX) / 2,
-                                y: (p1.clientY + p2.clientY) / 2
-                            };
-                            var dist = Math.hypot(p2.clientX - p1.clientX, p2.clientY - p1.clientY);
-
-                            // A. Pan by midpoint motion
-                            if (lastPanMidpoint) {
-                                var dx = mid.x - lastPanMidpoint.x;
-                                var dy = mid.y - lastPanMidpoint.y;
-                                if (dx !== 0 || dy !== 0) {
-                                    map.panBy([-dx, -dy], { animate: false, noMoveStart: true });
-                                }
-                            }
-                            lastPanMidpoint = mid;
-
-                            // B. Continuous Fractional Zoom (Logarithmic 1:1 scale)
-                            if (gestureStartDist !== null && gestureStartDist > 10 && dist > 10) {
-                                var scale = dist / gestureStartDist;
-                                var targetZoom = gestureStartZoom + Math.log2(scale);
-                                var minZ = map.getMinZoom();
-                                var maxZ = map.getMaxZoom();
-
-                                if (targetZoom >= minZ && targetZoom <= maxZ) {
-                                    try {
-                                        var containerRect = container.getBoundingClientRect();
-                                        var containerPt = L.point(mid.x - containerRect.left, mid.y - containerRect.top);
-                                        var midLatLng = map.containerPointToLatLng(containerPt);
-                                        map.setZoomAround(midLatLng, targetZoom, { animate: false });
-                                    } catch (err) {
-                                        // Ignore edge projection boundaries
-                                    }
-                                }
-                            }
-
-                            // Keep scroll parent firmly clamped
-                            var sp = getScrollParent();
-                            if (sp && lockedScrollTop !== null && Math.abs(sp.scrollTop - lockedScrollTop) > 0.5) {
-                                sp.scrollTop = lockedScrollTop;
-                            }
-                        }
-
-                        function isOverMap(e) {
-                            if (!container) return false;
-                            if (container === e.target || container.contains(e.target)) return true;
-                            if (e.clientX !== undefined && e.clientY !== undefined) {
-                                var r = container.getBoundingClientRect();
-                                return (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom);
-                            }
-                            return false;
-                        }
-
-                        // 5. Touch Events Stream (Mobile WebAssembly / iOS / Android)
-                        var touchStartPos = null;
 
                         function onTouchStart(e) {
                             if (!e.touches) return;
                             if (e.touches.length >= 2) {
-                                startTwoFinger();
-                                var p1 = e.touches[0];
-                                var p2 = e.touches[1];
-                                lastPanMidpoint = { x: (p1.clientX + p2.clientX) / 2, y: (p1.clientY + p2.clientY) / 2 };
-                                gestureStartDist = Math.hypot(p2.clientX - p1.clientX, p2.clientY - p1.clientY);
-                                gestureStartZoom = map.getZoom();
-                                e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
-                            } else if (e.touches.length === 1) {
-                                stopTwoFinger();
-                                touchStartPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-                                if (map.dragging && map.dragging.enabled()) {
-                                    map.dragging.disable();
-                                }
+                                startTwoFingerLock();
+                            } else {
+                                stopTwoFingerLock();
                             }
+                            // Important: Do NOT call e.stopPropagation() so events bubble to document for Leaflet.
                         }
 
                         function onTouchMove(e) {
                             if (!e.touches) return;
-                            if (e.touches.length >= 2) {
-                                startTwoFinger();
-                                handleTwoFingerMove(e.touches[0], e.touches[1]);
-                                e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
-                            } else if (e.touches.length === 1 && touchStartPos) {
-                                var dx = Math.abs(e.touches[0].clientX - touchStartPos.x);
-                                var dy = Math.abs(e.touches[0].clientY - touchStartPos.y);
-                                if (dx > 10 || dy > 10) showOverlay();
-                            }
-                        }
-
-                        function onTouchEnd(e) {
-                            if (!e.touches || e.touches.length < 2) {
-                                stopTwoFinger();
-                                touchStartPos = (e.touches && e.touches.length === 1) ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
-                            } else if (e.touches.length >= 2) {
-                                var p1 = e.touches[0];
-                                var p2 = e.touches[1];
-                                lastPanMidpoint = { x: (p1.clientX + p2.clientX) / 2, y: (p1.clientY + p2.clientY) / 2 };
-                                gestureStartDist = Math.hypot(p2.clientX - p1.clientX, p2.clientY - p1.clientY);
-                                gestureStartZoom = map.getZoom();
-                            }
-                        }
-
-                        // 6. Pointer Events Stream (Windows Photino / WebView2 Desktop Touchscreens)
-                        var activePointers = new Map();
-
-                        function onPointerDown(e) {
-                            if (e.pointerType === 'touch' && isOverMap(e)) {
-                                activePointers.set(e.pointerId, { clientX: e.clientX, clientY: e.clientY });
-                                if (activePointers.size >= 2) {
-                                    startTwoFinger();
-                                    var pts = Array.from(activePointers.values());
-                                    lastPanMidpoint = { x: (pts[0].clientX + pts[1].clientX) / 2, y: (pts[0].clientY + pts[1].clientY) / 2 };
-                                    gestureStartDist = Math.hypot(pts[1].clientX - pts[0].clientX, pts[1].clientY - pts[0].clientY);
-                                    gestureStartZoom = map.getZoom();
-                                    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
-                                }
-                            }
-                        }
-
-                        function onPointerMove(e) {
-                            if (e.pointerType === 'touch' && activePointers.has(e.pointerId)) {
-                                activePointers.set(e.pointerId, { clientX: e.clientX, clientY: e.clientY });
-                                if (activePointers.size >= 2) {
-                                    startTwoFinger();
-                                    var pts = Array.from(activePointers.values());
-                                    handleTwoFingerMove(pts[0], pts[1]);
-                                    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
-                                }
-                            }
-                        }
-
-                        function onPointerUp(e) {
-                            if (e.pointerType === 'touch') {
-                                activePointers.delete(e.pointerId);
-                                if (activePointers.size < 2) stopTwoFinger();
-                            }
-                        }
-
-                        // 7. Wheel Handler (Mouse Wheel & Trackpad Two-Finger Zoom with Delta Smoothing)
-                        var accumulatedWheelDelta = 0;
-                        function onWheel(e) {
-                            if (isOverMap(e)) {
-                                e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+                            if (e.touches.length >= 2 || isTwoFingerActive) {
+                                startTwoFingerLock();
                                 var sp = getScrollParent();
                                 if (sp && lockedScrollTop !== null && Math.abs(sp.scrollTop - lockedScrollTop) > 0.5) {
                                     sp.scrollTop = lockedScrollTop;
                                 }
-                                if (map) {
-                                    accumulatedWheelDelta += e.deltaY;
-                                    if (accumulatedWheelDelta <= -wheelThreshold) {
-                                        map.zoomIn(1);
-                                        accumulatedWheelDelta = 0;
-                                    } else if (accumulatedWheelDelta >= wheelThreshold) {
-                                        map.zoomOut(1);
-                                        accumulatedWheelDelta = 0;
-                                    }
-                                }
+                            }
+                            // Important: Do NOT call e.stopPropagation() so events bubble to document for Leaflet.
+                        }
+
+                        function onTouchEnd(e) {
+                            if (!e.touches || e.touches.length < 2) {
+                                stopTwoFingerLock();
                             }
                         }
 
-                        // 8. Event Listener Attachment
-                        var opts = { capture: true, passive: false };
+                        container.addEventListener('wheel', onWheel, { passive: false });
+                        container.addEventListener('touchstart', onTouchStart, { passive: true });
+                        container.addEventListener('touchmove', onTouchMove, { passive: true });
+                        container.addEventListener('touchend', onTouchEnd, { passive: true });
+                        container.addEventListener('touchcancel', onTouchEnd, { passive: true });
 
-                        container.addEventListener('touchstart', onTouchStart, opts);
-                        container.addEventListener('touchmove', onTouchMove, opts);
-                        container.addEventListener('touchend', onTouchEnd, opts);
-                        container.addEventListener('touchcancel', onTouchEnd, opts);
-                        container.addEventListener('wheel', onWheel, opts);
+                        window.addEventListener('touchend', onTouchEnd, { passive: true });
+                        window.addEventListener('touchcancel', onTouchEnd, { passive: true });
 
-                        container.addEventListener('pointerdown', onPointerDown, opts);
-                        container.addEventListener('pointermove', onPointerMove, opts);
-                        container.addEventListener('pointerup', onPointerUp, opts);
-                        container.addEventListener('pointercancel', onPointerUp, opts);
-
-                        window.addEventListener('pointerdown', onPointerDown, opts);
-                        window.addEventListener('pointermove', onPointerMove, opts);
-                        window.addEventListener('pointerup', onPointerUp, opts);
-                        window.addEventListener('pointercancel', onPointerUp, opts);
-                        window.addEventListener('wheel', onWheel, opts);
-
-                        // 9. Teardown / Cleanup Handle
+                        // 5. Teardown / Cleanup Handle
                         return {
                             destroy: function() {
-                                container.removeEventListener('touchstart', onTouchStart, opts);
-                                container.removeEventListener('touchmove', onTouchMove, opts);
-                                container.removeEventListener('touchend', onTouchEnd, opts);
-                                container.removeEventListener('touchcancel', onTouchEnd, opts);
-                                container.removeEventListener('wheel', onWheel, opts);
-
-                                container.removeEventListener('pointerdown', onPointerDown, opts);
-                                container.removeEventListener('pointermove', onPointerMove, opts);
-                                container.removeEventListener('pointerup', onPointerUp, opts);
-                                container.removeEventListener('pointercancel', onPointerUp, opts);
-
-                                window.removeEventListener('pointerdown', onPointerDown, opts);
-                                window.removeEventListener('pointermove', onPointerMove, opts);
-                                window.removeEventListener('pointerup', onPointerUp, opts);
-                                window.removeEventListener('pointercancel', onPointerUp, opts);
-                                window.removeEventListener('wheel', onWheel, opts);
-
-                                if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+                                container.removeEventListener('wheel', onWheel);
+                                container.removeEventListener('touchstart', onTouchStart);
+                                container.removeEventListener('touchmove', onTouchMove);
+                                container.removeEventListener('touchend', onTouchEnd);
+                                container.removeEventListener('touchcancel', onTouchEnd);
+                                window.removeEventListener('touchend', onTouchEnd);
+                                window.removeEventListener('touchcancel', onTouchEnd);
+                                stopTwoFingerLock();
                             }
                         };
                     }

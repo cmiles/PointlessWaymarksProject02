@@ -1,0 +1,492 @@
+<Page x:Class="PwImageMetadataViewer.MainPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:PwImageMetadataViewer"
+      xmlns:controls="clr-namespace:PwImageMetadataViewer.Controls"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      mc:Ignorable="d"
+      Foreground="#F8FAFC"
+      FontFamily="Segoe UI, -apple-system, BlinkMacSystemFont, Roboto, sans-serif">
+
+    <Page.Resources>
+        <!-- Wide Screen 3-Column Table Row Template -->
+        <DataTemplate x:Key="WideTagTemplate">
+            <Border BorderBrush="#1F2937" BorderThickness="0,0,0,1" Padding="16,8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="130"/>
+                        <ColumnDefinition Width="240"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Group Badge -->
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left">
+                            <TextBlock Text="{Binding Group}" FontSize="10" FontWeight="SemiBold" Foreground="#38BDF8"/>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Tag Name (monospace) -->
+                    <TextBlock Grid.Column="1" Text="{Binding Tag}" FontSize="12" FontWeight="SemiBold" Foreground="#F8FAFC" FontFamily="Consolas, Cascadia Code, monospace" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,12,0"/>
+
+                    <!-- Value -->
+                    <TextBlock Grid.Column="2" Text="{Binding Value}" FontSize="12" Foreground="#CBD5E1" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!-- Small Screen Collapsed Card Template (Group, Tag Name, Value stacked under each other) -->
+        <DataTemplate x:Key="SmallScreenTagTemplate">
+            <Border BorderBrush="#1F2937" BorderThickness="0,0,0,1" Padding="14,10">
+                <StackPanel>
+                    <!-- 1. Group Badge -->
+                    <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left" Margin="0,0,0,4">
+                        <TextBlock Text="{Binding Group}" FontSize="10" FontWeight="SemiBold" Foreground="#38BDF8"/>
+                    </Border>
+
+                    <!-- 2. Tag Name -->
+                    <TextBlock Text="{Binding Tag}" FontSize="12" FontWeight="Bold" Foreground="#F8FAFC" FontFamily="Consolas, Cascadia Code, monospace" TextWrapping="Wrap" Margin="0,0,0,4"/>
+
+                    <!-- 3. Value -->
+                    <TextBlock Text="{Binding Value}" FontSize="12" Foreground="#CBD5E1" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+    </Page.Resources>
+
+    <Grid Background="#0B0F19">
+        <Grid.RowDefinitions>
+            <!-- Top Header -->
+            <RowDefinition Height="Auto"/>
+            <!-- Status / Notification Banner -->
+            <RowDefinition Height="Auto"/>
+            <!-- Main Scrollable Content -->
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- TOP HEADER BAR -->
+        <Border Grid.Row="0" Background="#111827" BorderBrush="#1F2937" BorderThickness="0,0,0,1" Padding="18,12">
+            <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <!-- Brand & Title Block -->
+                <StackPanel VerticalAlignment="Center" Margin="0,0,20,6">
+                    <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="ExifTool Metadata Viewer" FontSize="18" FontWeight="Bold" Foreground="#F8FAFC" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <Border Background="#1E293B" BorderBrush="#38BDF8" BorderThickness="1" CornerRadius="4" Padding="6,1" VerticalAlignment="Center">
+                            <TextBlock Text="WASM ExifTool" FontSize="10" FontWeight="SemiBold" Foreground="#38BDF8"/>
+                        </Border>
+                    </controls:WrapPanel>
+                    <TextBlock x:Name="TxtCurrentFileName" Text="1510-Rama-Shrine-from-the-Grandview-Trail.jpg" FontSize="12" Foreground="#94A3B8" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <!-- Action Buttons (wraps under title on medium screens, and wraps under themselves on small screens) -->
+                <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,6">
+                    <Button x:Name="BtnOpenFile" Click="BtnOpenFile_Click" Background="#38BDF8" Foreground="#0F172A" FontWeight="Bold" FontSize="13" Padding="14,8" Margin="0,0,8,6" BorderThickness="0" Cursor="Hand">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📂 " FontSize="13"/>
+                            <TextBlock Text="Open Image..." Foreground="#0F172A" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="BtnExportJson" Click="BtnExportJson_Click" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13" Padding="12,8" Margin="0,0,8,6" Cursor="Hand">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📋 " FontSize="13"/>
+                            <TextBlock Text="Copy JSON" Foreground="#F8FAFC"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="BtnAbout" Click="BtnAbout_Click" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13" Padding="12,8" Margin="0,0,0,6" Cursor="Hand">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="ℹ️ " FontSize="13"/>
+                            <TextBlock Text="About" Foreground="#F8FAFC"/>
+                        </StackPanel>
+                    </Button>
+                </controls:WrapPanel>
+            </controls:WrapPanel>
+        </Border>
+
+        <!-- STATUS / ERROR BANNER -->
+        <Border x:Name="StatusBannerBorder" Grid.Row="1" Background="#0C4A6E" BorderBrush="#0284C7" BorderThickness="0,0,0,1" Padding="16,8" Visibility="Collapsed">
+            <Grid HorizontalAlignment="Stretch">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock x:Name="TxtStatusIcon" Grid.Column="0" Text="ℹ️ " FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
+
+                <TextBox x:Name="TxtStatusMessage" Grid.Column="1" Text="Extracting metadata with WebAssembly ExifTool..." FontSize="13" FontWeight="SemiBold" Foreground="#F0F9FF" VerticalAlignment="Center" IsReadOnly="True" BorderThickness="0" Background="Transparent" TextWrapping="Wrap"/>
+
+                <Button x:Name="BtnCopyError" Grid.Column="2" Click="BtnCopyError_Click" Background="#1E293B" BorderBrush="#EF4444" BorderThickness="1" Foreground="#FCA5A5" FontWeight="SemiBold" FontSize="12" Padding="10,4" Margin="12,0,0,0" Cursor="Hand" VerticalAlignment="Center" Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📋 " FontSize="12"/>
+                        <TextBlock x:Name="BtnCopyErrorText" Text="Copy Error" Foreground="#FCA5A5" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- MAIN SCROLLABLE CONTENT -->
+        <ScrollViewer x:Name="MainScrollViewer" Grid.Row="2" Background="#0B0F19" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Background="Transparent" Margin="24,20,24,32">
+
+                <!-- TOP HERO SECTION: Preview Card + Camera Specs Card + Attribution Card (3 Equal Blocks) -->
+                <Grid x:Name="HeroSectionGrid" Background="Transparent" Margin="0,0,0,24">
+                    <Grid.ColumnDefinitions>
+                        <!-- Image Preview Column -->
+                        <ColumnDefinition Width="*"/>
+                        <!-- Camera & Exposure Specs Column -->
+                        <ColumnDefinition Width="*"/>
+                        <!-- Attribution, Copyright & Tags Column -->
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- 1. IMAGE PREVIEW CARD -->
+                    <Border x:Name="PreviewCardBorder" Grid.Column="0" Background="#161F30" BorderBrush="#273549" BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,16,0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Text="Image Preview" FontSize="13" FontWeight="SemiBold" Foreground="#94A3B8" Margin="0,0,0,12"/>
+
+                            <!-- Container for Preview (dual native OpenSilver Image and robust DOM mounting) -->
+                            <Border x:Name="ImagePreviewContainer" Grid.Row="1" Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="8" Height="250" MinHeight="250">
+                                <Grid>
+                                    <!-- Native OpenSilver Image control -->
+                                    <Image x:Name="ImgPreview" MaxHeight="240" MaxWidth="308" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" />
+                                    <!-- Fallback text shown before image loads -->
+                                    <TextBlock x:Name="TxtPreviewPlaceholder" Text="Preview Loading..." FontSize="12" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Dimension & format pills -->
+                            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,12,0,0" HorizontalAlignment="Center">
+                                <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,6,0">
+                                    <TextBlock x:Name="TxtDimensionBadge" Text="-- x --" FontSize="11" Foreground="#38BDF8" FontWeight="SemiBold"/>
+                                </Border>
+                                <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,6,0">
+                                    <TextBlock x:Name="TxtMegapixelBadge" Text="-- MP" FontSize="11" Foreground="#F8FAFC"/>
+                                </Border>
+                                <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="4" Padding="6,2">
+                                    <TextBlock x:Name="TxtFileTypeBadge" Text="--" FontSize="11" Foreground="#94A3B8"/>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- 2. CAMERA & EXPOSURE SPECS CARD -->
+                    <Border x:Name="SpecsCardBorder" Grid.Column="1" Background="#161F30" BorderBrush="#273549" BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,16,0">
+                        <StackPanel>
+                            <TextBlock Text="Camera &amp; Shooting Data" FontSize="13" FontWeight="SemiBold" Foreground="#94A3B8" Margin="0,0,0,14"/>
+
+                            <!-- Camera Model -->
+                            <StackPanel Margin="0,0,0,10">
+                                <TextBlock Text="CAMERA" FontSize="10" FontWeight="Bold" Foreground="#64748B"/>
+                                <TextBlock x:Name="TxtCameraModel" Text="--" FontSize="14" FontWeight="SemiBold" Foreground="#F8FAFC" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                            </StackPanel>
+
+                            <!-- Lens Model -->
+                            <StackPanel Margin="0,0,0,10">
+                                <TextBlock Text="LENS" FontSize="10" FontWeight="Bold" Foreground="#64748B"/>
+                                <TextBlock x:Name="TxtLensModel" Text="--" FontSize="13" Foreground="#E2E8F0" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                            </StackPanel>
+
+                            <!-- Date & Time Taken -->
+                            <StackPanel Margin="0,0,0,10">
+                                <TextBlock Text="DATE TAKEN" FontSize="10" FontWeight="Bold" Foreground="#64748B"/>
+                                <TextBlock x:Name="TxtDateTimeTaken" Text="--" FontSize="13" Foreground="#E2E8F0" Margin="0,2,0,0"/>
+                            </StackPanel>
+
+                            <!-- Exposure Specs Blocks (WrapPanel wraps on small screens) -->
+                            <controls:WrapPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                <!-- Shutter Speed Block -->
+                                <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,8,8" MinWidth="68">
+                                    <StackPanel>
+                                        <TextBlock Text="SHUTTER" FontSize="9" FontWeight="Bold" Foreground="#64748B"/>
+                                        <TextBlock x:Name="TxtShutter" Text="--" FontSize="12" FontWeight="SemiBold" Foreground="#38BDF8" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Aperture Block -->
+                                <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,8,8" MinWidth="68">
+                                    <StackPanel>
+                                        <TextBlock Text="APERTURE" FontSize="9" FontWeight="Bold" Foreground="#64748B"/>
+                                        <TextBlock x:Name="TxtAperture" Text="--" FontSize="12" FontWeight="SemiBold" Foreground="#38BDF8" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- ISO Block -->
+                                <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,8,8" MinWidth="68">
+                                    <StackPanel>
+                                        <TextBlock Text="ISO" FontSize="9" FontWeight="Bold" Foreground="#64748B"/>
+                                        <TextBlock x:Name="TxtIso" Text="--" FontSize="12" FontWeight="SemiBold" Foreground="#38BDF8" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Focal Length Block -->
+                                <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,8,8" MinWidth="68">
+                                    <StackPanel>
+                                        <TextBlock Text="FOCAL" FontSize="9" FontWeight="Bold" Foreground="#64748B"/>
+                                        <TextBlock x:Name="TxtFocalLength" Text="--" FontSize="12" FontWeight="SemiBold" Foreground="#38BDF8" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </controls:WrapPanel>
+
+                            <!-- File Details Footer -->
+                            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                <TextBlock Text="Size: " FontSize="11" Foreground="#64748B"/>
+                                <TextBlock x:Name="TxtFileSize" Text="--" FontSize="11" Foreground="#E2E8F0" Margin="0,0,12,0"/>
+                                <TextBlock Text="MIME: " FontSize="11" Foreground="#64748B"/>
+                                <TextBlock x:Name="TxtMimeType" Text="--" FontSize="11" Foreground="#E2E8F0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 3. ATTRIBUTION, COPYRIGHT & CAPTION CARD -->
+                    <Border x:Name="AttributionCardBorder" Grid.Column="2" Background="#161F30" BorderBrush="#273549" BorderThickness="1" CornerRadius="12" Padding="16">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Section Header -->
+                            <Grid Grid.Row="0" Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Attribution &amp; Copyright" FontSize="13" FontWeight="SemiBold" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                <Border Grid.Column="1" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                                    <TextBlock Text="IPTC / XMP" FontSize="10" FontWeight="SemiBold" Foreground="#38BDF8"/>
+                                </Border>
+                            </Grid>
+
+                            <!-- Metadata Fields List -->
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="280">
+                                <StackPanel>
+                                    <!-- Artist / Creator -->
+                                    <StackPanel Margin="0,0,0,10">
+                                        <TextBlock Text="ARTIST / CREATOR" FontSize="10" FontWeight="Bold" Foreground="#64748B"/>
+                                        <TextBlock x:Name="TxtArtist" Text="--" FontSize="13" FontWeight="SemiBold" Foreground="#F8FAFC" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+
+                                    <!-- Copyright / Rights -->
+                                    <StackPanel Margin="0,0,0,10">
+                                        <TextBlock Text="COPYRIGHT / RIGHTS" FontSize="10" FontWeight="Bold" Foreground="#64748B"/>
+                                        <TextBlock x:Name="TxtCopyright" Text="--" FontSize="12" Foreground="#E2E8F0" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+
+                                    <!-- Attribution / Credit / Source -->
+                                    <StackPanel Margin="0,0,0,10">
+                                        <TextBlock Text="CREDIT / ATTRIBUTION" FontSize="10" FontWeight="Bold" Foreground="#64748B"/>
+                                        <TextBlock x:Name="TxtCredit" Text="--" FontSize="12" Foreground="#CBD5E1" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+
+                                    <!-- Caption / Description -->
+                                    <StackPanel Margin="0,0,0,10">
+                                        <TextBlock Text="CAPTION / DESCRIPTION" FontSize="10" FontWeight="Bold" Foreground="#64748B"/>
+                                        <TextBlock x:Name="TxtCaption" Text="--" FontSize="12" Foreground="#CBD5E1" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+
+                                    <!-- Tags / Keywords -->
+                                    <StackPanel Margin="0,0,0,4">
+                                        <TextBlock Text="TAGS / KEYWORDS" FontSize="10" FontWeight="Bold" Foreground="#64748B"/>
+                                        <TextBlock x:Name="TxtKeywords" Text="--" FontSize="12" Foreground="#38BDF8" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- LOCATION & LEAFLET MAP CARD (Full Width & Taller) -->
+                <Border x:Name="GpsCardBorder" Background="#161F30" BorderBrush="#273549" BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,0,24" HorizontalAlignment="Stretch">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- GPS Header & Coordinates -->
+                        <Grid Grid.Row="0" Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="Location &amp; Map" FontSize="13" FontWeight="SemiBold" Foreground="#94A3B8" VerticalAlignment="Center"/>
+
+                            <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtCoordinatesSummary" Text="No GPS Data" FontSize="11" FontWeight="SemiBold" Foreground="#38BDF8" HorizontalAlignment="Right"/>
+                                <TextBlock x:Name="TxtAltitudeSummary" Text="" FontSize="10" Foreground="#94A3B8" HorizontalAlignment="Right"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Map Container / Placeholder -->
+                        <Grid Grid.Row="1" MinHeight="380" Height="380">
+                            <!-- Leaflet Map container (populated via JS #pw-leaflet-map) -->
+                            <Border x:Name="MapContainerBorder" CornerRadius="8" Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1">
+                                <!-- Fallback message shown when no GPS is available -->
+                                <StackPanel x:Name="PnlNoGpsPlaceholder" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="16">
+                                    <TextBlock Text="📍" FontSize="36" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                    <TextBlock Text="No Location Data in Image" FontSize="14" FontWeight="SemiBold" Foreground="#94A3B8" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="This image does not contain embedded GPS coordinates." FontSize="11" Foreground="#64748B" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- Map Action Buttons (OpenStreetMap & PeakFinderWeb) -->
+                        <controls:WrapPanel x:Name="PnlMapActions" Grid.Row="2" Orientation="Horizontal" Margin="0,12,0,0" HorizontalAlignment="Right">
+                            <Button x:Name="BtnOpenOsm" Click="BtnOpenOsm_Click" Background="#1E293B" BorderBrush="#38BDF8" BorderThickness="1" Foreground="#38BDF8" FontWeight="SemiBold" FontSize="12" Padding="12,6" Margin="0,0,8,6" Cursor="Hand">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🗺️ " FontSize="12"/>
+                                    <TextBlock Text="OpenStreetMap" Foreground="#38BDF8" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Button x:Name="BtnOpenPeakFinder" Click="BtnOpenPeakFinder_Click" Background="#1E293B" BorderBrush="#10B981" BorderThickness="1" Foreground="#10B981" FontWeight="SemiBold" FontSize="12" Padding="12,6" Margin="0,0,0,6" Cursor="Hand">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🏔️ " FontSize="12"/>
+                                    <TextBlock Text="PeakFinderWeb" Foreground="#10B981" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
+                        </controls:WrapPanel>
+                    </Grid>
+                </Border>
+
+                <!-- METADATA TAGS SECTION -->
+                <Border Background="#161F30" BorderBrush="#273549" BorderThickness="1" CornerRadius="12" Padding="20">
+                    <StackPanel>
+                        <!-- Section Header & Search Box (Wraps on small screens) -->
+                        <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,16">
+                            <!-- Section Title & Count -->
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,8">
+                                <TextBlock Text="Metadata Tags" FontSize="16" FontWeight="Bold" Foreground="#F8FAFC" VerticalAlignment="Center"/>
+                                <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="12" Margin="10,0,0,0" Padding="8,2" VerticalAlignment="Center">
+                                    <TextBlock x:Name="TxtTagCount" Text="0 tags" FontSize="11" FontWeight="SemiBold" Foreground="#94A3B8"/>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Search Filter Box -->
+                            <Border Background="#0F172A" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="4,2" MinWidth="220" MaxWidth="320" Margin="0,0,0,8" VerticalAlignment="Center">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="🔍 " FontSize="12" Foreground="#64748B" VerticalAlignment="Center" Margin="6,0,2,0"/>
+                                    <TextBox x:Name="TxtSearchQuery" Grid.Column="1" TextChanged="TxtSearchQuery_TextChanged" BorderThickness="0" Background="Transparent" Foreground="#F8FAFC" FontSize="13" Padding="4,4"/>
+                                </Grid>
+                            </Border>
+                        </controls:WrapPanel>
+
+                        <!-- Group Filter Chips (Wide Screens >= 850px) -->
+                        <controls:WrapPanel x:Name="PnlCategoryChips" Orientation="Horizontal" Margin="0,0,0,16">
+                            <Button x:Name="BtnFilterAll" Click="BtnFilter_Click" Tag="All" Background="#38BDF8" Foreground="#0F172A" FontSize="11" FontWeight="Bold" Padding="10,4" Margin="0,0,6,6" BorderThickness="0" Cursor="Hand">
+                                <TextBlock Text="All Tags" Foreground="#0F172A" FontWeight="Bold"/>
+                            </Button>
+                            <Button x:Name="BtnFilterExif" Click="BtnFilter_Click" Tag="EXIF" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontSize="11" FontWeight="SemiBold" Padding="10,4" Margin="0,0,6,6" Cursor="Hand">
+                                <TextBlock Text="Camera / EXIF" Foreground="#F8FAFC"/>
+                            </Button>
+                            <Button x:Name="BtnFilterFile" Click="BtnFilter_Click" Tag="File" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontSize="11" FontWeight="SemiBold" Padding="10,4" Margin="0,0,6,6" Cursor="Hand">
+                                <TextBlock Text="File &amp; Image" Foreground="#F8FAFC"/>
+                            </Button>
+                            <Button x:Name="BtnFilterGps" Click="BtnFilter_Click" Tag="GPS" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontSize="11" FontWeight="SemiBold" Padding="10,4" Margin="0,0,6,6" Cursor="Hand">
+                                <TextBlock Text="GPS / Location" Foreground="#F8FAFC"/>
+                            </Button>
+                            <Button x:Name="BtnFilterComposite" Click="BtnFilter_Click" Tag="Composite" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontSize="11" FontWeight="SemiBold" Padding="10,4" Margin="0,0,6,6" Cursor="Hand">
+                                <TextBlock Text="Composite" Foreground="#F8FAFC"/>
+                            </Button>
+                            <Button x:Name="BtnFilterMakerNotes" Click="BtnFilter_Click" Tag="MakerNotes" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontSize="11" FontWeight="SemiBold" Padding="10,4" Margin="0,0,6,6" Cursor="Hand">
+                                <TextBlock Text="MakerNotes" Foreground="#F8FAFC"/>
+                            </Button>
+                            <Button x:Name="BtnFilterXmp" Click="BtnFilter_Click" Tag="XMP" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontSize="11" FontWeight="SemiBold" Padding="10,4" Margin="0,0,0,6" Cursor="Hand">
+                                <TextBlock Text="XMP / IPTC" Foreground="#F8FAFC"/>
+                            </Button>
+                        </controls:WrapPanel>
+
+                        <!-- Group Filter Menu (Small Screens < 850px) -->
+                        <Border x:Name="PnlCategoryMenu" Visibility="Collapsed" Background="#0F172A" BorderBrush="#334155" BorderThickness="1" CornerRadius="8" Padding="2" Margin="0,0,0,16">
+                            <StackPanel>
+                                <Button x:Name="BtnCategoryMenuToggle" Click="BtnCategoryMenuToggle_Click" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="12,10" HorizontalAlignment="Stretch" Cursor="Hand">
+                                    <Grid HorizontalAlignment="Stretch">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="🏷️ " FontSize="13" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="Category: " FontSize="12" Foreground="#94A3B8"/>
+                                            <TextBlock x:Name="TxtSelectedCategoryLabel" Text="All Tags" FontSize="12" FontWeight="Bold" Foreground="#38BDF8"/>
+                                        </StackPanel>
+                                        <TextBlock x:Name="TxtCategoryMenuChevron" Grid.Column="2" Text="▼" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center" Margin="8,0,4,0"/>
+                                    </Grid>
+                                </Button>
+
+                                <Border x:Name="PnlCategoryDropdownList" Visibility="Collapsed" Background="#0F172A" BorderThickness="0,1,0,0" BorderBrush="#273549" Padding="6,6,6,6" Margin="0,2,0,0">
+                                    <StackPanel>
+                                        <Button x:Name="BtnMenuAll" Click="BtnMenuCategory_Click" Tag="All" Background="#1E293B" BorderThickness="0" Padding="10,8" Margin="0,0,0,4" HorizontalAlignment="Stretch" Cursor="Hand">
+                                            <TextBlock Text="🌐  All Tags" Foreground="#38BDF8" FontWeight="Bold" FontSize="12" HorizontalAlignment="Left"/>
+                                        </Button>
+                                        <Button x:Name="BtnMenuExif" Click="BtnMenuCategory_Click" Tag="EXIF" Background="#0F172A" BorderThickness="0" Padding="10,8" Margin="0,0,0,4" HorizontalAlignment="Stretch" Cursor="Hand">
+                                            <TextBlock Text="📷  Camera / EXIF" Foreground="#F8FAFC" FontSize="12" HorizontalAlignment="Left"/>
+                                        </Button>
+                                        <Button x:Name="BtnMenuFile" Click="BtnMenuCategory_Click" Tag="File" Background="#0F172A" BorderThickness="0" Padding="10,8" Margin="0,0,0,4" HorizontalAlignment="Stretch" Cursor="Hand">
+                                            <TextBlock Text="📁  File &amp; Image" Foreground="#F8FAFC" FontSize="12" HorizontalAlignment="Left"/>
+                                        </Button>
+                                        <Button x:Name="BtnMenuGps" Click="BtnMenuCategory_Click" Tag="GPS" Background="#0F172A" BorderThickness="0" Padding="10,8" Margin="0,0,0,4" HorizontalAlignment="Stretch" Cursor="Hand">
+                                            <TextBlock Text="📍  GPS / Location" Foreground="#F8FAFC" FontSize="12" HorizontalAlignment="Left"/>
+                                        </Button>
+                                        <Button x:Name="BtnMenuComposite" Click="BtnMenuCategory_Click" Tag="Composite" Background="#0F172A" BorderThickness="0" Padding="10,8" Margin="0,0,0,4" HorizontalAlignment="Stretch" Cursor="Hand">
+                                            <TextBlock Text="🧩  Composite" Foreground="#F8FAFC" FontSize="12" HorizontalAlignment="Left"/>
+                                        </Button>
+                                        <Button x:Name="BtnMenuMakerNotes" Click="BtnMenuCategory_Click" Tag="MakerNotes" Background="#0F172A" BorderThickness="0" Padding="10,8" Margin="0,0,0,4" HorizontalAlignment="Stretch" Cursor="Hand">
+                                            <TextBlock Text="⚙️  MakerNotes" Foreground="#F8FAFC" FontSize="12" HorizontalAlignment="Left"/>
+                                        </Button>
+                                        <Button x:Name="BtnMenuXmp" Click="BtnMenuCategory_Click" Tag="XMP" Background="#0F172A" BorderThickness="0" Padding="10,8" HorizontalAlignment="Stretch" Cursor="Hand">
+                                            <TextBlock Text="🏷️  XMP / IPTC" Foreground="#F8FAFC" FontSize="12" HorizontalAlignment="Left"/>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Tags Table Header (Visible on Wide Screens >= 850px) -->
+                        <Border x:Name="TableHeaderBorder" Background="#0F172A" BorderBrush="#273549" BorderThickness="1" CornerRadius="6,6,0,0" Padding="16,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="130"/>
+                                    <ColumnDefinition Width="240"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="GROUP" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
+                                <TextBlock Grid.Column="1" Text="TAG NAME" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
+                                <TextBlock Grid.Column="2" Text="VALUE" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Tags Items List -->
+                        <Border Background="#111827" BorderBrush="#273549" BorderThickness="1,0,1,1" CornerRadius="0,0,6,6" MinHeight="180">
+                            <ItemsControl x:Name="TagsItemsControl" ItemTemplate="{StaticResource WideTagTemplate}"/>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+ 
+        <!-- FLOATING IN-APP ABOUT WINDOW OVERLAY -->
+        <Grid x:Name="AboutOverlayGrid" Grid.Row="0" Grid.RowSpan="3" Visibility="Collapsed"
+              Background="#B3090D16" Canvas.ZIndex="900">
+            <controls:AboutWindowControl x:Name="AboutWindow" MaxWidth="680" MaxHeight="540" Margin="16"
+                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Grid>
+    </Grid>
+</Page>

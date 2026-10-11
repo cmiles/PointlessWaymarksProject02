@@ -1,0 +1,118 @@
+/* PwImageMetadataViewer Styles */
+
+#pw-drag-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#pw-drag-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.pw-drag-content {
+    background: rgba(30, 41, 59, 0.95);
+    border: 2px dashed #38BDF8;
+    border-radius: 20px;
+    padding: 48px 64px;
+    text-align: center;
+    color: #F8FAFC;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 40px rgba(56, 189, 248, 0.25);
+    transform: scale(0.95);
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    max-width: 90%;
+}
+
+#pw-drag-overlay.visible .pw-drag-content {
+    transform: scale(1);
+}
+
+.pw-drag-icon {
+    font-size: 56px;
+    margin-bottom: 16px;
+    animation: pw-bounce 1.5s infinite;
+}
+
+.pw-drag-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #38BDF8;
+    letter-spacing: -0.02em;
+}
+
+.pw-drag-desc {
+    font-size: 14px;
+    color: #94A3B8;
+    max-width: 440px;
+}
+
+@keyframes pw-bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+/* Map Container */
+#pw-leaflet-map {
+    width: 100%;
+    height: 100%;
+    min-height: 380px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #1E293B;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.leaflet-container {
+    font-family: inherit !important;
+}
+
+.leaflet-popup-content-wrapper {
+    background: #1E293B !important;
+    color: #F8FAFC !important;
+    border-radius: 8px !important;
+    border: 1px solid #334155 !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+}
+
+.leaflet-popup-tip {
+    background: #1E293B !important;
+}
+
+/* Allow text selection and cursor copying on error banners and textboxes */
+.opensilver-textboxview,
+.opensilver-textboxview *,
+[readonly],
+input[readonly],
+textarea[readonly],
+#StatusBannerBorder,
+#StatusBannerBorder * {
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+    cursor: text !important;
+}
+
+#BtnCopyError,
+#BtnCopyError * {
+    cursor: pointer !important;
+    user-select: none !important;
+}

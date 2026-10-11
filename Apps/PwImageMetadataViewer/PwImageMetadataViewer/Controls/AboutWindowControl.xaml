@@ -1,0 +1,158 @@
+<UserControl x:Class="PwImageMetadataViewer.Controls.AboutWindowControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:PwImageMetadataViewer.Controls"
+             mc:Ignorable="d"
+             d:DesignHeight="550" d:DesignWidth="680">
+
+    <Border Background="#1E293B" BorderBrush="#0284C7" BorderThickness="1.5" CornerRadius="10"
+            MaxWidth="680" MaxHeight="560">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Window Header -->
+            <Border Grid.Row="0" Background="#0F172A" CornerRadius="9,9,0,0" Padding="16,12" 
+                    BorderBrush="#334155" BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Grid.Column="0" Margin="0,0,12,0" VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="ℹ️" FontSize="14" Margin="0,2,8,0" VerticalAlignment="Top"/>
+                        <TextBlock Grid.Column="1" Text="About Pointless Waymarks Image Metadata Viewer" FontWeight="Bold" FontSize="14" Foreground="#F8FAFC" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Button x:Name="BtnHeaderClose" Grid.Column="1" Content="✕ Close" Click="BtnClose_Click"
+                            Background="#334155" Foreground="#E2E8F0" BorderThickness="0" CornerRadius="4"
+                            Padding="10,6" FontSize="11" FontWeight="Bold" Cursor="Hand" VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+
+            <!-- Scrollable Content -->
+            <ScrollViewer Grid.Row="1" Background="#0B1120" Padding="18,14"
+                          HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <StackPanel Orientation="Vertical">
+                    <!-- Top Info Card -->
+                    <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="8" Padding="14,12" Margin="0,0,0,14">
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="Pointless Waymarks Image Metadata Viewer" FontSize="16" FontWeight="Bold" Foreground="#F8FAFC" Margin="0,0,0,6"/>
+
+                            <TextBlock Text="A rich client image and camera RAW metadata viewer powered by Phil Harvey's ExifTool (compiled to WebAssembly via ZeroPerl), OpenSilver, and Leaflet. Extract, inspect, and analyze EXIF, IPTC, XMP, MakerNotes, GPS tags, and embedded camera previews locally in your browser or desktop without uploading files."
+                                       FontSize="12" Foreground="#CBD5E1" TextWrapping="Wrap" LineHeight="18" Margin="0,0,0,10"/>
+
+                            <controls:WrapPanel Orientation="Horizontal">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,16,4">
+                                    <HyperlinkButton Content="Resume" NavigateUri="https://cmiles.info/Posts/Career/resume/resume.html" TargetName="_blank"
+                                                     Click="Hyperlink_Click"
+                                                     FontSize="12" FontWeight="SemiBold" Foreground="#38BDF8" 
+                                                     Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,0,16,4">
+                                    <TextBlock Text="Personal Website: " FontSize="12" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                    <HyperlinkButton Content="cmiles - info" NavigateUri="https://cmiles.info/" TargetName="_blank"
+                                                     Click="Hyperlink_Click"
+                                                     FontSize="12" FontWeight="SemiBold" Foreground="#38BDF8" 
+                                                     Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                    <TextBlock Text="Photography: " FontSize="12" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                    <HyperlinkButton Content="Pointless Waymarks" NavigateUri="https://pointlesswaymarks.com/" TargetName="_blank"
+                                                     Click="Hyperlink_Click"
+                                                     FontSize="12" FontWeight="SemiBold" Foreground="#38BDF8" 
+                                                     Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </controls:WrapPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Packages Section Header -->
+                    <TextBlock Text="PACKAGES &amp; TECHNOLOGIES USED" FontSize="11" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,8"/>
+
+                    <!-- Package 1: OpenSilver -->
+                    <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,8">
+                        <StackPanel>
+                            <TextBlock Text="OpenSilver" FontSize="13" FontWeight="Bold" Foreground="#F8FAFC" Margin="0,0,0,3"/>
+                            <TextBlock Text="Open-source framework enabling modern XAML and C# execution via WebAssembly and HTML5."
+                                       FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                            <HyperlinkButton Content="opensilver.net ↗" NavigateUri="https://opensilver.net" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="#38BDF8" HorizontalAlignment="Left" Margin="0,6,0,0" Cursor="Hand" Padding="0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Package 2: ExifTool WebAssembly -->
+                    <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,8">
+                        <StackPanel>
+                            <TextBlock Text="ExifTool (Phil Harvey) &amp; ZeroPerl WebAssembly" FontSize="13" FontWeight="Bold" Foreground="#F8FAFC" Margin="0,0,0,3"/>
+                            <TextBlock Text="The industry-standard image metadata tool compiled to WebAssembly for local, client-side metadata parsing of JPEG, PNG, TIFF, and RAW files (CR2, CR3, NEF, ARW, DNG, RAF, RW2, and 100+ formats)."
+                                       FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                            <HyperlinkButton Content="exiftool.org ↗" NavigateUri="https://exiftool.org" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="#38BDF8" HorizontalAlignment="Left" Margin="0,6,0,0" Cursor="Hand" Padding="0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Package 3: Leaflet & OpenStreetMap -->
+                    <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,8">
+                        <StackPanel>
+                            <TextBlock Text="Leaflet.js &amp; OpenStreetMap" FontSize="13" FontWeight="Bold" Foreground="#F8FAFC" Margin="0,0,0,3"/>
+                            <TextBlock Text="Interactive web mapping engine providing GPS geolocation visualization, EXIF coordinate pinning, and tile rendering."
+                                       FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                            <HyperlinkButton Content="leafletjs.com ↗" NavigateUri="https://leafletjs.com" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="#38BDF8" HorizontalAlignment="Left" Margin="0,6,0,0" Cursor="Hand" Padding="0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Package 4: Leaflet Gesture Handling & Locate -->
+                    <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,8">
+                        <StackPanel>
+                            <TextBlock Text="Leaflet.GestureHandling &amp; L.Control.Locate" FontSize="13" FontWeight="Bold" Foreground="#F8FAFC" Margin="0,0,0,3"/>
+                            <TextBlock Text="Touch and trackpad gesture isolation preventing page scroll entrapment, paired with GPS geolocation and device orientation controls."
+                                       FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                            <HyperlinkButton Content="github.com/elmarquis/Leaflet.GestureHandling ↗" NavigateUri="https://github.com/elmarquis/Leaflet.GestureHandling" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="#38BDF8" HorizontalAlignment="Left" Margin="0,6,0,0" Cursor="Hand" Padding="0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Package 5: Photino.NET -->
+                    <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="12,10">
+                        <StackPanel>
+                            <TextBlock Text="Photino.NET" FontSize="13" FontWeight="Bold" Foreground="#F8FAFC" Margin="0,0,0,3"/>
+                            <TextBlock Text="Lightweight, cross-platform native desktop webview container for Windows, macOS, and Linux."
+                                       FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                            <HyperlinkButton Content="tryphotino.io ↗" NavigateUri="https://www.tryphotino.io" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="#38BDF8" HorizontalAlignment="Left" Margin="0,6,0,0" Cursor="Hand" Padding="0"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Window Footer -->
+            <Border Grid.Row="2" Background="#0F172A" CornerRadius="0,0,9,9" Padding="14,10" 
+                    BorderBrush="#334155" BorderThickness="0,1,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Pointless Waymarks Project" FontSize="11" Foreground="#64748B" VerticalAlignment="Center"/>
+                    <Button x:Name="BtnFooterClose" Grid.Column="1" Content="Close" Click="BtnClose_Click"
+                            Background="#334155" Foreground="#E2E8F0" BorderThickness="0" CornerRadius="4"
+                            Padding="14,5" FontSize="11" FontWeight="SemiBold" Cursor="Hand"/>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>
