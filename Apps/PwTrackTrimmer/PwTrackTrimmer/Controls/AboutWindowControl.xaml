@@ -45,12 +45,15 @@
                         <StackPanel Orientation="Vertical">
                             <TextBlock Text="Pointless Waymarks Track Trimmer" FontSize="16" FontWeight="Bold" Foreground="#F8FAFC" Margin="0,0,0,6"/>
 
-                            <TextBlock Text="A GPS track trimmer for FIT, GPX, and TCX files designed for geographic analysis, route editing, elevation adjustment, and file cleanup."
+                            <TextBlock Text="A GPS track trimmer for FIT, GPX, and TCX files."
+                                       FontSize="12" Foreground="#CBD5E1" TextWrapping="Wrap" LineHeight="18" Margin="0,0,0,10"/>
+
+                            <TextBlock Text="App written and maintained by Charles Miles. A resident of the Tucson area since the late 1990s, I love getting outside to hike, run, and take photos which has resulted in a private library of thousands of gps tracks dating back to 2010. I have over two decades of experience in software development, data management, and inventory control, and I'm currently pursuing an AAS in Health Information Technology at Pima Community College to expand my skills into healthcare."
                                        FontSize="12" Foreground="#CBD5E1" TextWrapping="Wrap" LineHeight="18" Margin="0,0,0,10"/>
 
                             <controls:WrapPanel Orientation="Horizontal">
                                 <StackPanel Orientation="Horizontal" Margin="0,0,16,4">
-                                    <HyperlinkButton Content="Resume" NavigateUri="https://cmiles.info/Posts/Career/resume/resume.html" TargetName="_blank"
+                                    <HyperlinkButton Content="Resume - Charles Miles" NavigateUri="https://cmiles.info/Posts/Career/resume/resume.html" TargetName="_blank"
                                                      Click="Hyperlink_Click"
                                                      FontSize="12" FontWeight="SemiBold" Foreground="#38BDF8" 
                                                      Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
@@ -67,6 +70,14 @@
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                                     <TextBlock Text="Photography: " FontSize="12" Foreground="#94A3B8" VerticalAlignment="Center"/>
                                     <HyperlinkButton Content="Pointless Waymarks" NavigateUri="https://pointlesswaymarks.com/" TargetName="_blank"
+                                                     Click="Hyperlink_Click"
+                                                     FontSize="12" FontWeight="SemiBold" Foreground="#38BDF8" 
+                                                     Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                    <TextBlock Text="LinkedIn: " FontSize="12" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                    <HyperlinkButton Content="Charles Miles" NavigateUri="https://www.linkedin.com/in/charlesamiles/" TargetName="_blank"
                                                      Click="Hyperlink_Click"
                                                      FontSize="12" FontWeight="SemiBold" Foreground="#38BDF8" 
                                                      Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
