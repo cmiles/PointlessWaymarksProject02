@@ -50,6 +50,7 @@
             <Setter Property="FontSize" Value="14" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Foreground" Value="#111827" />
+            <Setter Property="TextWrapping" Value="Wrap" />
             <Setter Property="Margin" Value="0,0,0,10" />
         </Style>
 
@@ -218,7 +219,7 @@
                     <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource RankingCardBorderStyle}">
                         <StackPanel>
                             <TextBlock Text="Top 10 Wet Streaks (flow > 0)" Style="{StaticResource RankingTitleStyle}" Foreground="#047857" />
-                            <TextBlock Text="Continuous days with flow > 0 cfs. Missing data breaks the streak." FontSize="11" Foreground="#6B7280" Margin="0,-6,0,10" />
+                            <TextBlock Text="Continuous days with flow > 0 cfs. Missing data breaks the streak." FontSize="11" Foreground="#6B7280" Margin="0,-6,0,10" TextWrapping="Wrap" />
                             <ItemsControl ItemsSource="{Binding TopWetStreaks}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -240,7 +241,7 @@
                     <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource RankingCardBorderStyle}">
                         <StackPanel>
                             <TextBlock Text="Top 10 Dry Streaks (flow = 0)" Style="{StaticResource RankingTitleStyle}" Foreground="#B45309" />
-                            <TextBlock Text="Continuous days with zero flow. Missing data breaks the streak." FontSize="11" Foreground="#6B7280" Margin="0,-6,0,10" />
+                            <TextBlock Text="Continuous days with zero flow. Missing data breaks the streak." FontSize="11" Foreground="#6B7280" Margin="0,-6,0,10" TextWrapping="Wrap" />
                             <ItemsControl ItemsSource="{Binding TopDryStreaks}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -262,7 +263,7 @@
                     <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource RankingCardBorderStyle}">
                         <StackPanel>
                             <TextBlock Text="Annual Mean Flow (Full Coverage)" Style="{StaticResource RankingTitleStyle}" Foreground="#1D4ED8" />
-                            <TextBlock Text="Ranked annual mean discharge for eligible years with ≥ 1 data day in all 12 months." FontSize="11" Foreground="#6B7280" Margin="0,-6,0,10" />
+                            <TextBlock Text="Ranked annual mean discharge for eligible years with ≥ 1 data day in all 12 months." FontSize="11" Foreground="#6B7280" Margin="0,-6,0,10" TextWrapping="Wrap" />
 
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -315,7 +316,7 @@
                     <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource RankingCardBorderStyle}">
                         <StackPanel>
                             <TextBlock Text="Top 10 Daily Mean Flow Days" Style="{StaticResource RankingTitleStyle}" Foreground="#7C3AED" />
-                            <TextBlock Text="Single highest daily mean streamflow events in the historical record." FontSize="11" Foreground="#6B7280" Margin="0,-6,0,10" />
+                            <TextBlock Text="Single highest daily mean streamflow events in the historical record." FontSize="11" Foreground="#6B7280" Margin="0,-6,0,10" TextWrapping="Wrap" />
                             <ItemsControl ItemsSource="{Binding TopPeakFlowDays}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -340,6 +341,10 @@
                 <StackPanel>
                     <TextBlock Text="App created by Charles Miles." FontSize="14" FontWeight="Medium" Foreground="#1F2937" Margin="0,0,0,12" TextWrapping="Wrap" />
                     <TextBlock Text="Originally written as a Python Marimo notebook - transformed to .NET and OpenSilver with Rider, Junie/Gemini and by-human-hand coding." FontSize="14" Foreground="#1F2937" Margin="0,0,0,12" TextWrapping="Wrap" />                    
+                    <HyperlinkButton NavigateUri="https://cmiles.info/Posts/Career/resume/resume.html"
+                                     TargetName="_blank" Foreground="#2563EB" Margin="0,0,0,4">
+                        <TextBlock Text="Resume" FontSize="14" Margin="0,0,0,8" TextWrapping="Wrap" />
+                    </HyperlinkButton>
                     <HyperlinkButton NavigateUri="https://pointlesswaymarks.com/"
                                      TargetName="_blank" Foreground="#2563EB" Margin="0,0,0,4">
                         <TextBlock Text="Pointless Waymarks - Ramblings, Questionable Geographics, Photographic Half-truths" FontSize="14" Margin="0,0,0,8" TextWrapping="Wrap" />
@@ -348,10 +353,7 @@
                                      TargetName="_blank" Foreground="#2563EB" Margin="0,0,0,4">
                         <TextBlock Text="cmiles - info - Life, Tech and Unimportant Minutiae" FontSize="14" Margin="0,0,0,8" TextWrapping="Wrap" />
                     </HyperlinkButton>
-                    <HyperlinkButton NavigateUri="https://cmiles.info/Posts/Career/resume/resume.html"
-                                     TargetName="_blank" Foreground="#2563EB" Margin="0,0,0,4">
-                        <TextBlock Text="Resume" FontSize="14" Margin="0,0,0,8" TextWrapping="Wrap" />
-                    </HyperlinkButton>
+
                     <HyperlinkButton NavigateUri="https://www.linkedin.com/in/charlesamiles/"
                                      TargetName="_blank" Foreground="#2563EB" Margin="0,0,0,4">
                         <TextBlock Text="LinkedIn" FontSize="14" Margin="0,0,0,0" TextWrapping="Wrap" />

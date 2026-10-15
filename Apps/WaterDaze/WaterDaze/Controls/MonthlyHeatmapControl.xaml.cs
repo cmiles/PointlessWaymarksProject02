@@ -12,15 +12,27 @@ namespace WaterDaze.Controls;
 
 public partial class MonthlyHeatmapControl
 {
-    private static readonly string[] MonthNames =
+    public static readonly string[] FullMonthNames =
     [
         "Jan", "Feb", "Mar", "Apr", "May", "Jun",
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     ];
 
-    private static readonly SolidColorBrush NoDataBrush = new(Color.FromArgb(255, 245, 247, 250));
-    private static readonly SolidColorBrush HeaderTextBrush = new(Color.FromArgb(255, 75, 85, 99));
-    private static readonly SolidColorBrush CellBorderBrush = new(Color.FromArgb(255, 235, 238, 242));
+    public static readonly string[] SingleLetterMonthNames =
+    [
+        "J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"
+    ];
+
+    private static SolidColorBrush? _noDataBrush;
+    private static SolidColorBrush NoDataBrush => _noDataBrush ??= new(Color.FromArgb(255, 245, 247, 250));
+
+    private static SolidColorBrush? _headerTextBrush;
+    private static SolidColorBrush HeaderTextBrush => _headerTextBrush ??= new(Color.FromArgb(255, 75, 85, 99));
+
+    private static SolidColorBrush? _cellBorderBrush;
+    private static SolidColorBrush CellBorderBrush => _cellBorderBrush ??= new(Color.FromArgb(255, 235, 238, 242));
+
+    private bool? _lastIsCompact;
 
     public static readonly DependencyProperty MonthlyRecordsProperty =
         DependencyProperty.Register(nameof(MonthlyRecords), typeof(IEnumerable<MonthlyFlowRecord>),
@@ -35,6 +47,7 @@ public partial class MonthlyHeatmapControl
     {
         InitializeComponent();
         Loaded += (_, _) => RenderHeatmap();
+        SizeChanged += OnSizeChanged;
     }
 
     public IEnumerable<MonthlyFlowRecord>? MonthlyRecords
@@ -49,15 +62,71 @@ public partial class MonthlyHeatmapControl
         set => SetValue(YearsProperty, value);
     }
 
-    private static Grid CreateRowGrid()
+    private void OnSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        var width = e.NewSize.Width > 0 ? e.NewSize.Width : ActualWidth;
+        var isCompact = width > 0 && width < 500;
+
+        UpdateHeaderLayout(isCompact);
+
+        if (_lastIsCompact != isCompact)
+        {
+            _lastIsCompact = isCompact;
+            RenderHeatmap();
+        }
+    }
+
+    public void UpdateHeaderLayout(bool isCompact)
+    {
+        if (HeaderGrid == null || TxtChartTitle == null || LegendPanel == null) return;
+
+        if (HeatmapCardBorder != null)
+        {
+            HeatmapCardBorder.Padding = new Thickness(isCompact ? 10 : 16);
+        }
+
+        if (isCompact)
+        {
+            // Title spans full width in Row 0 and wraps as needed
+            Grid.SetRow(TxtChartTitle, 0);
+            Grid.SetColumn(TxtChartTitle, 0);
+            Grid.SetColumnSpan(TxtChartTitle, 2);
+            TxtChartTitle.TextWrapping = TextWrapping.Wrap;
+            TxtChartTitle.Margin = new Thickness(0, 0, 0, 8);
+
+            // Legend wraps under chart title in Row 1
+            Grid.SetRow(LegendPanel, 1);
+            Grid.SetColumn(LegendPanel, 0);
+            Grid.SetColumnSpan(LegendPanel, 2);
+            LegendPanel.HorizontalAlignment = HorizontalAlignment.Left;
+            LegendPanel.Margin = new Thickness(0, 0, 0, 0);
+        }
+        else
+        {
+            // Desktop: Title and Legend side by side
+            Grid.SetRow(TxtChartTitle, 0);
+            Grid.SetColumn(TxtChartTitle, 0);
+            Grid.SetColumnSpan(TxtChartTitle, 1);
+            TxtChartTitle.TextWrapping = TextWrapping.Wrap;
+            TxtChartTitle.Margin = new Thickness(0, 0, 12, 0);
+
+            Grid.SetRow(LegendPanel, 0);
+            Grid.SetColumn(LegendPanel, 1);
+            Grid.SetColumnSpan(LegendPanel, 1);
+            LegendPanel.HorizontalAlignment = HorizontalAlignment.Right;
+            LegendPanel.Margin = new Thickness(0, 0, 0, 0);
+        }
+    }
+
+    private static Grid CreateRowGrid(bool isCompact)
     {
         var grid = new Grid
         {
             Margin = new Thickness(0, 1, 0, 1)
         };
 
-        // Column 0: Year Label (width 48)
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(48) });
+        // Column 0: Year Label (width 48 on desktop, 36 on compact)
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(isCompact ? 36 : 48) });
 
         // Columns 1..12: Months (proportional width)
         for (var i = 0; i < 12; i++)
@@ -124,6 +193,10 @@ public partial class MonthlyHeatmapControl
     {
         if (MatrixContainer == null) return;
 
+        var isCompact = ActualWidth > 0 && ActualWidth < 500;
+        _lastIsCompact = isCompact;
+        UpdateHeaderLayout(isCompact);
+
         MatrixContainer.Children.Clear();
 
         var records = MonthlyRecords?.ToList() ?? [];
@@ -151,16 +224,18 @@ public partial class MonthlyHeatmapControl
         // Fast lookup by (year, month)
         var recordMap = records.ToDictionary(r => (r.Year, r.Month), r => r);
 
+        var monthNames = isCompact ? SingleLetterMonthNames : FullMonthNames;
+
         // 1. Month Header Row
-        var headerGrid = CreateRowGrid();
+        var headerGrid = CreateRowGrid(isCompact);
         var yearHeader = new TextBlock
         {
             Text = "Year",
-            FontSize = 11,
+            FontSize = isCompact ? 10 : 11,
             FontWeight = FontWeights.SemiBold,
             Foreground = HeaderTextBrush,
             VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(4, 0, 0, 0)
+            Margin = new Thickness(isCompact ? 2 : 4, 0, 0, 0)
         };
         Grid.SetColumn(yearHeader, 0);
         headerGrid.Children.Add(yearHeader);
@@ -169,7 +244,7 @@ public partial class MonthlyHeatmapControl
         {
             var monthHeader = new TextBlock
             {
-                Text = MonthNames[m - 1],
+                Text = monthNames[m - 1],
                 FontSize = 10,
                 FontWeight = FontWeights.SemiBold,
                 Foreground = HeaderTextBrush,
@@ -185,7 +260,7 @@ public partial class MonthlyHeatmapControl
         // 2. Year Data Rows
         foreach (var year in years)
         {
-            var rowGrid = CreateRowGrid();
+            var rowGrid = CreateRowGrid(isCompact);
 
             // Year label
             var yearLabel = new TextBlock
@@ -194,7 +269,7 @@ public partial class MonthlyHeatmapControl
                 FontSize = 10,
                 Foreground = HeaderTextBrush,
                 VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(4, 0, 0, 0)
+                Margin = new Thickness(isCompact ? 2 : 4, 0, 0, 0)
             };
             Grid.SetColumn(yearLabel, 0);
             rowGrid.Children.Add(yearLabel);
@@ -222,13 +297,13 @@ public partial class MonthlyHeatmapControl
                     cellBorder.Background = GetPuBuColorBrush(normalized);
 
                     var tooltip =
-                        $"Year: {year}\nMonth: {MonthNames[m - 1]}\nMax Daily Mean Flow: {GaugeAnalyticsService.FormatCfs(flow)} cfs";
+                        $"Year: {year}\nMonth: {FullMonthNames[m - 1]}\nMax Daily Mean Flow: {GaugeAnalyticsService.FormatCfs(flow)} cfs";
                     ToolTipService.SetToolTip(cellBorder, tooltip);
                 }
                 else
                 {
                     cellBorder.Background = NoDataBrush;
-                    var tooltip = $"Year: {year}\nMonth: {MonthNames[m - 1]}\nNo Data";
+                    var tooltip = $"Year: {year}\nMonth: {FullMonthNames[m - 1]}\nNo Data";
                     ToolTipService.SetToolTip(cellBorder, tooltip);
                 }
 

@@ -29,14 +29,6 @@ public class GaugeSite
 
         new()
         {
-            SiteCode = "09484201",
-            SiteName = "BEAR CREEK ABOVE BEAR CANYON ROAD, NEAR TUCSON, AZ",
-            DisplayTitle = "Bear Creek Above Bear Canyon Road -- 09484201",
-            Description = "South of the Bear Canyon Trail"
-        },
-
-        new()
-        {
             SiteCode = "09484600",
             SiteName = "PANTANO WASH NEAR VAIL, AZ.",
             DisplayTitle = "Pantano Wash Near Vail -- 09484600",
