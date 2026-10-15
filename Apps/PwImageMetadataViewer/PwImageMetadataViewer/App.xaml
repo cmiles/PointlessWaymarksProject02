@@ -5,6 +5,62 @@
     xmlns:local="clr-namespace:PwImageMetadataViewer">
     <Application.Resources>
         <ResourceDictionary>
+            <!-- Application Typography Styles & Defaults -->
+            <!-- Section Header Style (e.g. Metadata Tags Section) -->
+            <Style x:Key="SectionHeaderTextStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="18" />
+                <Setter Property="FontWeight" Value="Bold" />
+                <Setter Property="Foreground" Value="#F8FAFC" />
+            </Style>
+
+            <!-- Card Title Style (e.g. Image Preview, Camera & Shooting Data, Attribution & Copyright, Location & Map) -->
+            <Style x:Key="CardTitleTextStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="15" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Foreground" Value="#F1F5F9" />
+            </Style>
+
+            <!-- Metadata / Field Eyebrow Label Style (e.g. CAMERA, LENS, DATE TAKEN, SHUTTER) -->
+            <Style x:Key="FieldLabelTextStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="FontWeight" Value="Bold" />
+                <Setter Property="Foreground" Value="#64748B" />
+            </Style>
+
+            <!-- Primary Data Value Style (e.g. Camera Model, Artist) -->
+            <Style x:Key="PrimaryDataValueTextStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="15" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Foreground" Value="#F8FAFC" />
+            </Style>
+
+            <!-- Standard Data Value Style (e.g. Lens, Date, Copyright, Caption, Table Values) -->
+            <Style x:Key="StandardDataValueTextStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="13.5" />
+                <Setter Property="Foreground" Value="#E2E8F0" />
+            </Style>
+
+            <!-- Accent Data Value Style (e.g. Shutter, Aperture, ISO, Focal, Coordinates) -->
+            <Style x:Key="AccentDataValueTextStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Foreground" Value="#38BDF8" />
+            </Style>
+
+            <!-- Monospace Metadata Tag Key Style -->
+            <Style x:Key="MonoTagKeyTextStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="13.5" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Foreground" Value="#F8FAFC" />
+                <Setter Property="FontFamily" Value="Consolas, Cascadia Code, monospace" />
+            </Style>
+
+            <!-- Badge / Pill Text Style -->
+            <Style x:Key="BadgeTextStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="11.5" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+            </Style>
+
             <!-- Modern High-Contrast Button Style for OpenSilver -->
             <Style TargetType="Button">
                 <Setter Property="Cursor" Value="Hand" />
