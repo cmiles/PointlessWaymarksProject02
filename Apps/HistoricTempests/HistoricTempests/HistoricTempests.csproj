@@ -1,0 +1,69 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <DefineSilverlight>true</DefineSilverlight>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OpenSilver" Version="3.3.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </ApplicationDefinition>
+    <Page Include="MainPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ComparisonBarBandChart.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\RecentDaysChart.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\MultiYearTimelineLineChart.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\MultiYearTimelineBarChart.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\MultiYearDayHeatmapGrid.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\AboutControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="App.xaml.cs" />
+    <Compile Include="MainPage.xaml.cs" />
+    <Compile Include="Controls\WrapPanel.cs" />
+    <Compile Include="Controls\ComparisonBarBandChart.xaml.cs" />
+    <Compile Include="Controls\RecentDaysChart.xaml.cs" />
+    <Compile Include="Controls\MultiYearTimelineLineChart.xaml.cs" />
+    <Compile Include="Controls\MultiYearTimelineBarChart.xaml.cs" />
+    <Compile Include="Controls\MultiYearDayHeatmapGrid.xaml.cs" />
+    <Compile Include="Controls\AboutControl.xaml.cs" />
+    <Compile Include="Models\StationMetadata.cs" />
+    <Compile Include="Models\OverviewReport.cs" />
+    <Compile Include="Models\AnnualSummary.cs" />
+    <Compile Include="Models\MonthlySummary.cs" />
+    <Compile Include="Models\MonthMatrixItem.cs" />
+    <Compile Include="Models\RecentDayItem.cs" />
+    <Compile Include="Models\UpcomingDayItem.cs" />
+    <Compile Include="Models\DailyWeatherRecord.cs" />
+    <Compile Include="Models\MonthlyYearlyComparisonsReport.cs" />
+    <Compile Include="Models\TimelineWindowModels.cs" />
+    <Compile Include="Models\WeatherRecordRankItem.cs" />
+    <Compile Include="Services\IWeatherReportService.cs" />
+    <Compile Include="Services\WeatherReportService.cs" />
+    <Compile Include="ViewModels\ViewModelBase.cs" />
+    <Compile Include="ViewModels\RelayCommand.cs" />
+    <Compile Include="ViewModels\MainViewModel.cs" />
+  </ItemGroup>
+
+</Project>

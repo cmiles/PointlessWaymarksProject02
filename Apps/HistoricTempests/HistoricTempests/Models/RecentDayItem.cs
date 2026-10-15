@@ -1,0 +1,157 @@
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
+
+namespace HistoricTempests.Models;
+
+public class RecentDaysReport
+{
+    [JsonPropertyName("station")]
+    public StationMetadata? Station { get; set; }
+
+    [JsonPropertyName("asOfDate")]
+    public string AsOfDate { get; set; } = string.Empty;
+
+    [JsonPropertyName("recentDays")]
+    public List<RecentDayItem> RecentDays { get; set; } = [];
+}
+
+public class RecentDayItem
+{
+    [JsonPropertyName("date")]
+    public string Date { get; set; } = string.Empty;
+
+    [JsonPropertyName("month")]
+    public int Month { get; set; }
+
+    [JsonPropertyName("day")]
+    public int Day { get; set; }
+
+    [JsonPropertyName("calendarDay")]
+    public string CalendarDay { get; set; } = string.Empty;
+
+    [JsonPropertyName("dayOfWeek")]
+    public string DayOfWeek { get; set; } = string.Empty;
+
+    [JsonPropertyName("displayDate")]
+    public string DisplayDate { get; set; } = string.Empty;
+
+    [JsonPropertyName("currentYear")]
+    public RecentDayWeatherDetail? CurrentYear { get; set; }
+
+    [JsonPropertyName("previousYears")]
+    public List<RecentDayPreviousYearItem> PreviousYears { get; set; } = [];
+
+    [JsonPropertyName("historicalNormal")]
+    public RecentDayHistoricalNormal? HistoricalNormal { get; set; }
+}
+
+public class RecentDayWeatherDetail
+{
+    [JsonPropertyName("year")]
+    public int Year { get; set; }
+
+    [JsonPropertyName("date")]
+    public string Date { get; set; } = string.Empty;
+
+    [JsonPropertyName("temperatureHighF")]
+    public double? TemperatureHighF { get; set; }
+
+    [JsonPropertyName("temperatureHighC")]
+    public double? TemperatureHighC { get; set; }
+
+    [JsonPropertyName("temperatureLowF")]
+    public double? TemperatureLowF { get; set; }
+
+    [JsonPropertyName("temperatureLowC")]
+    public double? TemperatureLowC { get; set; }
+
+    [JsonPropertyName("temperatureAvgF")]
+    public double? TemperatureAvgF { get; set; }
+
+    [JsonPropertyName("temperatureAvgC")]
+    public double? TemperatureAvgC { get; set; }
+
+    [JsonPropertyName("precipInches")]
+    public double PrecipInches { get; set; }
+
+    [JsonPropertyName("precipMm")]
+    public double PrecipMm { get; set; }
+
+    [JsonPropertyName("windGustMph")]
+    public double? WindGustMph { get; set; }
+
+    [JsonPropertyName("windAvgMph")]
+    public double? WindAvgMph { get; set; }
+
+    [JsonPropertyName("humidityAvg")]
+    public double? HumidityAvg { get; set; }
+}
+
+public class RecentDayPreviousYearItem
+{
+    [JsonPropertyName("year")]
+    public int Year { get; set; }
+
+    [JsonPropertyName("date")]
+    public string Date { get; set; } = string.Empty;
+
+    [JsonPropertyName("temperatureHighF")]
+    public double? TemperatureHighF { get; set; }
+
+    [JsonPropertyName("temperatureHighC")]
+    public double? TemperatureHighC { get; set; }
+
+    [JsonPropertyName("temperatureLowF")]
+    public double? TemperatureLowF { get; set; }
+
+    [JsonPropertyName("temperatureLowC")]
+    public double? TemperatureLowC { get; set; }
+
+    [JsonPropertyName("temperatureAvgF")]
+    public double? TemperatureAvgF { get; set; }
+
+    [JsonPropertyName("temperatureAvgC")]
+    public double? TemperatureAvgC { get; set; }
+
+    [JsonPropertyName("precipInches")]
+    public double PrecipInches { get; set; }
+
+    [JsonPropertyName("precipMm")]
+    public double PrecipMm { get; set; }
+
+    [JsonPropertyName("windGustMph")]
+    public double? WindGustMph { get; set; }
+
+    [JsonPropertyName("humidityAvg")]
+    public double? HumidityAvg { get; set; }
+
+    [JsonPropertyName("diffHighF")]
+    public double? DiffHighF { get; set; }
+}
+
+public class RecentDayHistoricalNormal
+{
+    [JsonPropertyName("normalHighF")]
+    public double? NormalHighF { get; set; }
+
+    [JsonPropertyName("normalLowF")]
+    public double? NormalLowF { get; set; }
+
+    [JsonPropertyName("recordHighF")]
+    public double? RecordHighF { get; set; }
+
+    [JsonPropertyName("recordHighYear")]
+    public int? RecordHighYear { get; set; }
+
+    [JsonPropertyName("recordLowF")]
+    public double? RecordLowF { get; set; }
+
+    [JsonPropertyName("recordLowYear")]
+    public int? RecordLowYear { get; set; }
+
+    [JsonPropertyName("yearsObserved")]
+    public int YearsObserved { get; set; }
+
+    [JsonPropertyName("hadRainCount")]
+    public int HadRainCount { get; set; }
+}

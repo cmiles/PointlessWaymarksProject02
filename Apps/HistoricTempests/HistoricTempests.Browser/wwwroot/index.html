@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Historic Tempests - Multi-Year Weather History &amp; Comparisons</title>
+    <meta name="description"
+        content="Historic Tempest weather comparison charts, monthly rainfall, temperature, lightning strikes, solar irradiance, and upcoming weather last year." />
+    <base href="/HistoricTempests/" />
+    <script>
+        (function () {
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                if (!window.location.pathname.startsWith('/HistoricTempests')) {
+                    const baseEl = document.querySelector('base');
+                    if (baseEl) baseEl.setAttribute('href', '/');
+                }
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        body,
+        html {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #F8FAFC;
+        }
+    </style>
+    <script>
+        (function () {
+            const style = document.createElement('link');
+            style.setAttribute('rel', 'stylesheet');
+            style.setAttribute('type', 'text/css');
+            style.setAttribute('href', 'loading-indicator.css?date=' + new Date().toISOString());
+            document.head.appendChild(style);
+        })();
+    </script>
+</head>
+
+<body>
+    <div id="app">
+        <div class="loading-indicator-wrapper">
+            <div class="loading-indicator">
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-ball"></div>
+                <div class="loading-indicator-text"></div>
+            </div>
+        </div>
+    </div>
+    <div id="opensilver-root"
+        style="position: relative; width: 100%; height: 100%; overflow-x: hidden; overflow-y: hidden"></div>
+
+    <script>
+        (function () {
+            const script = document.createElement('script');
+            script.setAttribute('type', 'application/javascript');
+            script.setAttribute('src', 'libs/OpenSilver.js?date=' + new Date().toISOString());
+            script.addEventListener('load', function () {
+                const scriptWebAssembly = document.createElement('script');
+                scriptWebAssembly.setAttribute('type', 'application/javascript');
+                scriptWebAssembly.setAttribute('src', '_framework/blazor.webassembly.js?date=' + new Date().toISOString());
+                document.body.appendChild(scriptWebAssembly);
+            });
+            document.body.appendChild(script);
+        })();
+    </script>
+    <script>
+        (function () {
+            window.addEventListener('wheel', function (e) {
+                var el = e.target;
+                while (el && el !== document.body && el !== document.documentElement) {
+                    var style = window.getComputedStyle(el);
+                    if ((style.overflowY === 'auto' || style.overflowY === 'scroll') && el.scrollHeight > el.clientHeight + 5) {
+                        return;
+                    }
+                    el = el.parentElement;
+                }
+                var containers = document.querySelectorAll('div');
+                for (var i = 0; i < containers.length; i++) {
+                    var c = containers[i];
+                    if (c.scrollHeight > c.clientHeight + 10) {
+                        var st = window.getComputedStyle(c);
+                        if (st.overflowY === 'auto' || st.overflowY === 'scroll') {
+                            c.scrollTop += e.deltaY;
+                            break;
+                        }
+                    }
+                }
+            }, { passive: true });
+        })();
+    </script>
+    <script src="rain-days-canvas.js"></script>
+</body>
+
+</html>
