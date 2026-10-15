@@ -41,7 +41,7 @@
             </Border>
 
             <!-- Scrollable Content -->
-            <ScrollViewer Grid.Row="1" Background="#0B1120" Padding="18,14"
+            <ScrollViewer x:Name="AboutScrollViewer" Grid.Row="1" Background="#0B1120" Padding="18,14"
                           HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                 <StackPanel Orientation="Vertical">
                     <!-- Top Info Card -->
@@ -49,10 +49,12 @@
                         <StackPanel Orientation="Vertical">
                             <TextBlock Text="A rich client image and camera RAW metadata viewer powered by Phil Harvey's ExifTool (compiled to WebAssembly via ZeroPerl), OpenSilver, and Leaflet. Extract, inspect, and analyze EXIF, IPTC, XMP, MakerNotes, GPS tags, and embedded camera previews."
                                        FontSize="14.5" Foreground="#E2E8F0" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,12"/>
+                            <TextBlock Text="App written and maintained by Charles Miles. A resident of the Tucson area since the late 1990s, I love getting outside to hike, run, and take photos. I have over two decades of experience in software development, data management, and inventory control, and I'm currently pursuing an AAS in Health Information Technology at Pima Community College to expand my skills into healthcare."
+                                       FontSize="14.5" Foreground="#E2E8F0" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,12"/>
 
                             <controls:WrapPanel Orientation="Horizontal">
                                 <StackPanel Orientation="Horizontal" Margin="0,0,18,6">
-                                    <HyperlinkButton Content="Resume" NavigateUri="https://cmiles.info/Posts/Career/resume/resume.html" TargetName="_blank"
+                                    <HyperlinkButton Content="Resume - Charles Miles" NavigateUri="https://cmiles.info/Posts/Career/resume/resume.html" TargetName="_blank"
                                                      Click="Hyperlink_Click"
                                                      FontSize="14" FontWeight="SemiBold" Foreground="#38BDF8" 
                                                      Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
@@ -69,6 +71,14 @@
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                                     <TextBlock Text="Photography: " FontSize="14" Foreground="#94A3B8" VerticalAlignment="Center"/>
                                     <HyperlinkButton Content="Pointless Waymarks" NavigateUri="https://pointlesswaymarks.com/" TargetName="_blank"
+                                                     Click="Hyperlink_Click"
+                                                     FontSize="14" FontWeight="SemiBold" Foreground="#38BDF8" 
+                                                     Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <TextBlock Text="LinkedIn: " FontSize="14" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                    <HyperlinkButton Content="Charles Miles" NavigateUri="https://www.linkedin.com/in/charlesamiles/" TargetName="_blank"
                                                      Click="Hyperlink_Click"
                                                      FontSize="14" FontWeight="SemiBold" Foreground="#38BDF8" 
                                                      Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>

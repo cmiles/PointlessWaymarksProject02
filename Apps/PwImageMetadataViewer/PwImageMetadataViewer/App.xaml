@@ -36,7 +36,7 @@
 
             <!-- Standard Data Value Style (e.g. Lens, Date, Copyright, Caption, Table Values) -->
             <Style x:Key="StandardDataValueTextStyle" TargetType="TextBlock">
-                <Setter Property="FontSize" Value="13.5" />
+                <Setter Property="FontSize" Value="14.5" />
                 <Setter Property="Foreground" Value="#E2E8F0" />
             </Style>
 
@@ -49,7 +49,7 @@
 
             <!-- Monospace Metadata Tag Key Style -->
             <Style x:Key="MonoTagKeyTextStyle" TargetType="TextBlock">
-                <Setter Property="FontSize" Value="13.5" />
+                <Setter Property="FontSize" Value="14.5" />
                 <Setter Property="FontWeight" Value="SemiBold" />
                 <Setter Property="Foreground" Value="#F8FAFC" />
                 <Setter Property="FontFamily" Value="Consolas, Cascadia Code, monospace" />
