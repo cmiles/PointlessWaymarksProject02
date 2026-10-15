@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.CompilerServices;
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.AspNetCore.Components.Routing;
@@ -27,12 +27,7 @@ namespace PwImageMetadataViewer.Browser
                 ));
             builder.AddAttribute(7, "NotFound", (RenderFragment)(builder2 =>
             {
-                builder2.OpenComponent<LayoutView>(8);
-                builder2.AddAttribute(9, "ChildContent", (RenderFragment)(builder3 =>
-                {
-                    builder3.AddMarkupContent(10, "<p>Sorry, there\'s nothing at this address.</p>");
-                }
-                    ));
+                builder2.OpenComponent<Pages.Index>(8);
                 builder2.CloseComponent();
             }
                 ));

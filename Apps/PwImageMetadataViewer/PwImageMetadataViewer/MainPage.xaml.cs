@@ -70,10 +70,10 @@ namespace PwImageMetadataViewer
         {
             if (width <= 0) return;
             UpdateHeroLayout(width);
-            UpdateTagsResponsiveLayout(width);
+            UpdateSmallScreenLayout(width);
         }
 
-        private void UpdateTagsResponsiveLayout(double width)
+        private void UpdateSmallScreenLayout(double width)
         {
             bool wantSmallScreen = width < 850;
             if (_isSmallScreen.HasValue && _isSmallScreen.Value == wantSmallScreen)
@@ -81,6 +81,29 @@ namespace PwImageMetadataViewer
 
             _isSmallScreen = wantSmallScreen;
 
+            // Header responsiveness: Collapse full banner to compact title + hamburger on small screens
+            if (PnlWideHeader != null)
+                PnlWideHeader.Visibility = wantSmallScreen ? Visibility.Collapsed : Visibility.Visible;
+
+            if (PnlSmallHeader != null)
+                PnlSmallHeader.Visibility = wantSmallScreen ? Visibility.Visible : Visibility.Collapsed;
+
+            if (!wantSmallScreen)
+            {
+                CloseHamburgerMenu();
+            }
+
+            if (TopHeaderBorder != null)
+                TopHeaderBorder.Padding = wantSmallScreen ? new Thickness(12, 8, 12, 8) : new Thickness(18, 12, 18, 12);
+
+            // Container margins: Reduce left/right margins on small screens to maximize usable width
+            if (MainContentStackPanel != null)
+                MainContentStackPanel.Margin = wantSmallScreen ? new Thickness(8, 12, 8, 20) : new Thickness(24, 20, 24, 32);
+
+            if (TagsSectionBorder != null)
+                TagsSectionBorder.Padding = wantSmallScreen ? new Thickness(12, 14, 12, 14) : new Thickness(20);
+
+            // Tags section responsiveness
             if (TableHeaderBorder != null)
                 TableHeaderBorder.Visibility = wantSmallScreen ? Visibility.Collapsed : Visibility.Visible;
 
@@ -171,7 +194,7 @@ namespace PwImageMetadataViewer
         {
             try
             {
-                UpdateHeroLayout(this.ActualWidth);
+                UpdateResponsiveLayout(this.ActualWidth);
                 // 1. Inject Leaflet Scroll Isolation Helper script and register ScrollViewer
                 string isolationScript = LeafletScrollIsolationHelper.GetJavaScriptDefinition();
                 OpenSilver.Interop.ExecuteJavaScriptVoid(isolationScript);
@@ -291,6 +314,10 @@ namespace PwImageMetadataViewer
         {
             // Title & File info
             TxtCurrentFileName.Text = report.FileName;
+            if (TxtMobileCurrentFileName != null)
+            {
+                TxtMobileCurrentFileName.Text = report.FileName;
+            }
             TxtDimensionBadge.Text = (!string.IsNullOrEmpty(report.Width) && !string.IsNullOrEmpty(report.Height)) ? $"{report.Width} × {report.Height}" : "-- × --";
             TxtMegapixelBadge.Text = !string.IsNullOrEmpty(report.Megapixels) ? $"{report.Megapixels} MP" : "-- MP";
             TxtFileTypeBadge.Text = !string.IsNullOrEmpty(report.FileType) ? report.FileType : "IMAGE";
@@ -345,6 +372,7 @@ namespace PwImageMetadataViewer
             // Location & Map
             if (report.HasGps && report.Latitude.HasValue && report.Longitude.HasValue)
             {
+                GpsCardBorder.Visibility = Visibility.Visible;
                 TxtCoordinatesSummary.Text = $"{report.LatitudeFormatted}\n{report.LongitudeFormatted}";
                 TxtAltitudeSummary.Text = !string.IsNullOrEmpty(report.AltitudeFormatted) ? $"Alt: {report.AltitudeFormatted}" : "";
                 TxtAltitudeSummary.Visibility = Visibility.Visible;
@@ -370,10 +398,11 @@ namespace PwImageMetadataViewer
             }
             else
             {
+                GpsCardBorder.Visibility = Visibility.Collapsed;
                 TxtCoordinatesSummary.Text = "No GPS Data";
                 TxtAltitudeSummary.Text = "";
                 TxtAltitudeSummary.Visibility = Visibility.Collapsed;
-                PnlNoGpsPlaceholder.Visibility = Visibility.Visible;
+                PnlNoGpsPlaceholder.Visibility = Visibility.Collapsed;
                 PnlMapActions.Visibility = Visibility.Collapsed;
 
                 var mapDiv = OpenSilver.Interop.GetDiv(MapContainerBorder);
@@ -391,6 +420,10 @@ namespace PwImageMetadataViewer
         private void ResetUiToError(string fileName)
         {
             TxtCurrentFileName.Text = !string.IsNullOrEmpty(fileName) ? fileName : "Unknown File";
+            if (TxtMobileCurrentFileName != null)
+            {
+                TxtMobileCurrentFileName.Text = !string.IsNullOrEmpty(fileName) ? fileName : "Unknown File";
+            }
             TxtDimensionBadge.Text = "-- × --";
             TxtMegapixelBadge.Text = "-- MP";
             TxtFileTypeBadge.Text = "UNSUPPORTED";
@@ -421,9 +454,10 @@ namespace PwImageMetadataViewer
                 errPreviewDiv
             );
 
+            GpsCardBorder.Visibility = Visibility.Collapsed;
             TxtCoordinatesSummary.Text = "No GPS Data";
             TxtAltitudeSummary.Text = "";
-            PnlNoGpsPlaceholder.Visibility = Visibility.Visible;
+            PnlNoGpsPlaceholder.Visibility = Visibility.Collapsed;
             PnlMapActions.Visibility = Visibility.Collapsed;
             var errMapDiv = OpenSilver.Interop.GetDiv(MapContainerBorder);
             OpenSilver.Interop.ExecuteJavaScriptVoid(
@@ -577,6 +611,43 @@ namespace PwImageMetadataViewer
         private void BtnOpenFile_Click(object sender, RoutedEventArgs e)
         {
             OpenSilver.Interop.ExecuteJavaScriptVoid("window.pwExifBridge.openFileDialog();");
+        }
+
+        private void BtnHamburgerMenu_Click(object sender, RoutedEventArgs e)
+        {
+            if (PnlHamburgerDropdown == null) return;
+            bool isExpanded = PnlHamburgerDropdown.Visibility == Visibility.Visible;
+            PnlHamburgerDropdown.Visibility = isExpanded ? Visibility.Collapsed : Visibility.Visible;
+            if (TxtHamburgerIcon != null)
+            {
+                TxtHamburgerIcon.Text = isExpanded ? "☰" : "✕";
+            }
+        }
+
+        private void CloseHamburgerMenu()
+        {
+            if (PnlHamburgerDropdown != null)
+                PnlHamburgerDropdown.Visibility = Visibility.Collapsed;
+            if (TxtHamburgerIcon != null)
+                TxtHamburgerIcon.Text = "☰";
+        }
+
+        private void BtnMobileOpenFile_Click(object sender, RoutedEventArgs e)
+        {
+            CloseHamburgerMenu();
+            BtnOpenFile_Click(sender, e);
+        }
+
+        private void BtnMobileExportJson_Click(object sender, RoutedEventArgs e)
+        {
+            CloseHamburgerMenu();
+            BtnExportJson_Click(sender, e);
+        }
+
+        private void BtnMobileAbout_Click(object sender, RoutedEventArgs e)
+        {
+            CloseHamburgerMenu();
+            BtnAbout_Click(sender, e);
         }
 
         private void BtnAbout_Click(object sender, RoutedEventArgs e)

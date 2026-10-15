@@ -66,43 +66,94 @@
         </Grid.RowDefinitions>
 
         <!-- TOP HEADER BAR -->
-        <Border Grid.Row="0" Background="#111827" BorderBrush="#1F2937" BorderThickness="0,0,0,1" Padding="18,12">
-            <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <!-- Brand & Title Block -->
-                <StackPanel VerticalAlignment="Center" Margin="0,0,20,6">
-                    <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="ExifTool Metadata Viewer" FontSize="18" FontWeight="Bold" Foreground="#F8FAFC" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <Border Background="#1E293B" BorderBrush="#38BDF8" BorderThickness="1" CornerRadius="4" Padding="6,1" VerticalAlignment="Center">
-                            <TextBlock Text="WASM ExifTool" FontSize="10" FontWeight="SemiBold" Foreground="#38BDF8"/>
-                        </Border>
+        <Border x:Name="TopHeaderBorder" Grid.Row="0" Background="#111827" BorderBrush="#1F2937" BorderThickness="0,0,0,1" Padding="18,12">
+            <StackPanel>
+                <!-- WIDE SCREEN HEADER (>= 850px) -->
+                <controls:WrapPanel x:Name="PnlWideHeader" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Brand & Title Block -->
+                    <StackPanel VerticalAlignment="Center" Margin="0,0,20,6">
+                        <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Image Metadata Viewer" FontSize="18" FontWeight="Bold" Foreground="#F8FAFC" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        </controls:WrapPanel>
+                        <TextBlock x:Name="TxtCurrentFileName" Text="1510-Rama-Shrine-from-the-Grandview-Trail.jpg" FontSize="12" Foreground="#94A3B8" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <!-- Action Buttons -->
+                    <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,6">
+                        <Button x:Name="BtnOpenFile" Click="BtnOpenFile_Click" Background="#38BDF8" Foreground="#0F172A" FontWeight="Bold" FontSize="13" Padding="14,8" Margin="0,0,8,6" BorderThickness="0" Cursor="Hand">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📂 " FontSize="13"/>
+                                <TextBlock Text="Open Image..." Foreground="#0F172A" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="BtnExportJson" Click="BtnExportJson_Click" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13" Padding="12,8" Margin="0,0,8,6" Cursor="Hand">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📋 " FontSize="13"/>
+                                <TextBlock Text="Copy JSON" Foreground="#F8FAFC"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="BtnAbout" Click="BtnAbout_Click" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13" Padding="12,8" Margin="0,0,0,6" Cursor="Hand">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="ℹ️ " FontSize="13"/>
+                                <TextBlock Text="About" Foreground="#F8FAFC"/>
+                            </StackPanel>
+                        </Button>
                     </controls:WrapPanel>
-                    <TextBlock x:Name="TxtCurrentFileName" Text="1510-Rama-Shrine-from-the-Grandview-Trail.jpg" FontSize="12" Foreground="#94A3B8" Margin="0,2,0,0" TextWrapping="Wrap"/>
-                </StackPanel>
-
-                <!-- Action Buttons (wraps under title on medium screens, and wraps under themselves on small screens) -->
-                <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,6">
-                    <Button x:Name="BtnOpenFile" Click="BtnOpenFile_Click" Background="#38BDF8" Foreground="#0F172A" FontWeight="Bold" FontSize="13" Padding="14,8" Margin="0,0,8,6" BorderThickness="0" Cursor="Hand">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="📂 " FontSize="13"/>
-                            <TextBlock Text="Open Image..." Foreground="#0F172A" FontWeight="Bold"/>
-                        </StackPanel>
-                    </Button>
-
-                    <Button x:Name="BtnExportJson" Click="BtnExportJson_Click" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13" Padding="12,8" Margin="0,0,8,6" Cursor="Hand">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="📋 " FontSize="13"/>
-                            <TextBlock Text="Copy JSON" Foreground="#F8FAFC"/>
-                        </StackPanel>
-                    </Button>
-
-                    <Button x:Name="BtnAbout" Click="BtnAbout_Click" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13" Padding="12,8" Margin="0,0,0,6" Cursor="Hand">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="ℹ️ " FontSize="13"/>
-                            <TextBlock Text="About" Foreground="#F8FAFC"/>
-                        </StackPanel>
-                    </Button>
                 </controls:WrapPanel>
-            </controls:WrapPanel>
+
+                <!-- SMALL SCREEN COLLAPSED HEADER (< 850px) -->
+                <StackPanel x:Name="PnlSmallHeader" Visibility="Collapsed">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Collapsed Title -->
+                        <TextBlock Grid.Column="0" Text="ExifTool Metadata Viewer" FontSize="16" FontWeight="Bold" Foreground="#F8FAFC" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+
+                        <!-- Hamburger Menu Button -->
+                        <Button x:Name="BtnHamburgerMenu" Grid.Column="1" Click="BtnHamburgerMenu_Click" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="10,6" Cursor="Hand" VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtHamburgerIcon" Text="☰" FontSize="18" Foreground="#F8FAFC" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Button>
+                    </Grid>
+
+                    <!-- Collapsible Hamburger Menu Dropdown -->
+                    <Border x:Name="PnlHamburgerDropdown" Visibility="Collapsed" Background="#0F172A" BorderBrush="#273549" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,10,0,0">
+                        <StackPanel>
+                            <!-- Current Loaded File -->
+                            <StackPanel Margin="0,0,0,10">
+                                <TextBlock Text="CURRENT FILE" FontSize="10" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,2"/>
+                                <TextBlock x:Name="TxtMobileCurrentFileName" Text="1510-Rama-Shrine-from-the-Grandview-Trail.jpg" FontSize="12" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                            </StackPanel>
+
+                            <!-- Mobile Action Buttons -->
+                            <Button x:Name="BtnMobileOpenFile" Click="BtnMobileOpenFile_Click" Background="#38BDF8" Foreground="#0F172A" FontWeight="Bold" FontSize="13" Padding="12,8" Margin="0,0,0,8" HorizontalAlignment="Stretch" BorderThickness="0" Cursor="Hand">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <TextBlock Text="📂 " FontSize="13"/>
+                                    <TextBlock Text="Open Image..." Foreground="#0F172A" FontWeight="Bold"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Button x:Name="BtnMobileExportJson" Click="BtnMobileExportJson_Click" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13" Padding="12,8" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <TextBlock Text="📋 " FontSize="13"/>
+                                    <TextBlock Text="Copy JSON" Foreground="#F8FAFC"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Button x:Name="BtnMobileAbout" Click="BtnMobileAbout_Click" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13" Padding="12,8" HorizontalAlignment="Stretch" Cursor="Hand">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <TextBlock Text="ℹ️ " FontSize="13"/>
+                                    <TextBlock Text="About" Foreground="#F8FAFC"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </StackPanel>
         </Border>
 
         <!-- STATUS / ERROR BANNER -->
@@ -129,7 +180,7 @@
 
         <!-- MAIN SCROLLABLE CONTENT -->
         <ScrollViewer x:Name="MainScrollViewer" Grid.Row="2" Background="#0B0F19" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-            <StackPanel Background="Transparent" Margin="24,20,24,32">
+            <StackPanel x:Name="MainContentStackPanel" Background="Transparent" Margin="24,20,24,32">
 
                 <!-- TOP HERO SECTION: Preview Card + Camera Specs Card + Attribution Card (3 Equal Blocks) -->
                 <Grid x:Name="HeroSectionGrid" Background="Transparent" Margin="0,0,0,24">
@@ -305,7 +356,7 @@
                 </Grid>
 
                 <!-- LOCATION & LEAFLET MAP CARD (Full Width & Taller) -->
-                <Border x:Name="GpsCardBorder" Background="#161F30" BorderBrush="#273549" BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,0,24" HorizontalAlignment="Stretch">
+                <Border x:Name="GpsCardBorder" Visibility="Collapsed" Background="#161F30" BorderBrush="#273549" BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,0,24" HorizontalAlignment="Stretch">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -361,7 +412,7 @@
                 </Border>
 
                 <!-- METADATA TAGS SECTION -->
-                <Border Background="#161F30" BorderBrush="#273549" BorderThickness="1" CornerRadius="12" Padding="20">
+                <Border x:Name="TagsSectionBorder" Background="#161F30" BorderBrush="#273549" BorderThickness="1" CornerRadius="12" Padding="20">
                     <StackPanel>
                         <!-- Section Header & Search Box (Wraps on small screens) -->
                         <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,16">

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
 using System.Threading.Tasks;
 using OpenSilver.WebAssembly;
@@ -6,6 +6,8 @@ using OpenSilver.WebAssembly;
 namespace PwImageMetadataViewer.Browser.Pages
 {
     [Route("/")]
+    [Route("/index.html")]
+    [Route("/index.htm")]
     public class Index : ComponentBase
     {
         protected override void BuildRenderTree(RenderTreeBuilder __builder)

@@ -3,8 +3,23 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>PwImageMetadataViewer</title>
-    <base href="/" />
+    <title>Pointless Waymarks Image Metadata Viewer</title>
+    <meta name="author" content="Charles Miles">
+    <meta name="description" content="Pointless Waymarks Image Metadata Viewer">
+    <meta name="application-name" content="Pointless Waymarks Image Metadata Viewer">
+    <meta name="copyright" content="©2026 Charles Miles">
+    <base href="/PwImageMetadataViewer/" />
+    <script>
+        (function () {
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                if (!window.location.pathname.startsWith('/PwImageMetadataViewer')) {
+                    const baseEl = document.querySelector('base');
+                    if (baseEl) baseEl.setAttribute('href', '/');
+                }
+            }
+        })();
+    </script>
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
     <script>
         (function () {
             const style = document.createElement('link');
@@ -68,7 +83,7 @@
         (function () {
             const script = document.createElement('script');
             script.setAttribute('type', 'application/javascript');
-            script.setAttribute('src', 'libs/opensilver.js?date=' + new Date().toISOString());
+            script.setAttribute('src', 'libs/OpenSilver.js?date=' + new Date().toISOString());
             script.addEventListener('load', function () {
                 const scriptWebAssembly = document.createElement('script');
                 scriptWebAssembly.setAttribute('type', 'application/javascript');

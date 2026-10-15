@@ -854,7 +854,7 @@
                 window.pwExifBridge.onStatusUpdate('Loading sample Grandview Trail image...', true);
             }
             let base = document.baseURI || window.location.href;
-            let sampleUrl = new URL('Samples/1510-Rama-Shrine-from-the-Grandview-Trail.jpg', base).href;
+            let sampleUrl = new URL('Samples/1510-Rama-Shrine-from-the-Grandview-Trail.jpg?v=' + Date.now(), base).href;
             const resp = await fetch(sampleUrl);
             if (!resp.ok) throw new Error(`HTTP ${resp.status} fetching sample image`);
             const blob = await resp.blob();
