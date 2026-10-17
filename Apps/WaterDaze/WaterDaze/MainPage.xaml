@@ -6,13 +6,13 @@
       xmlns:controls="clr-namespace:WaterDaze.Controls"
       xmlns:viewmodels="clr-namespace:WaterDaze.ViewModels"
       mc:Ignorable="d"
-      Foreground="#111827">
+      Foreground="{StaticResource TextPrimaryBrush}">
 
     <Page.Resources>
         <!-- Card Style -->
         <Style x:Key="CardBorderStyle" TargetType="Border">
-            <Setter Property="Background" Value="White" />
-            <Setter Property="BorderBrush" Value="#E5E7EB" />
+            <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="18" />
@@ -24,22 +24,22 @@
             <Setter Property="FontSize" Value="18" />
             <Setter Property="TextWrapping" Value="Wrap" /> 
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="#1F2937" />
+            <Setter Property="Foreground" Value="{StaticResource TextHeadingBrush}" />
             <Setter Property="Margin" Value="0,0,0,4" />
         </Style>
 
         <!-- Section Subtitle Style -->
         <Style x:Key="SectionSubtitleStyle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="14" />
-            <Setter Property="Foreground" Value="#6B7280" />
+            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
             <Setter Property="TextWrapping" Value="Wrap" />
             <Setter Property="Margin" Value="0,0,0,14" />
         </Style>
 
         <!-- Ranking Card Style -->
         <Style x:Key="RankingCardBorderStyle" TargetType="Border">
-            <Setter Property="Background" Value="White" />
-            <Setter Property="BorderBrush" Value="#E5E7EB" />
+            <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="16" />
@@ -49,77 +49,119 @@
         <Style x:Key="RankingTitleStyle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="14" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="#111827" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
             <Setter Property="TextWrapping" Value="Wrap" />
             <Setter Property="Margin" Value="0,0,0,10" />
         </Style>
 
-        <!-- Visibility Converters / Template Helpers -->
+        <!-- Modern Action Button Style (no gradient overlay) -->
+        <Style x:Key="ActionButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource ActionButtonBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource ActionButtonBorderBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource ActionButtonForegroundBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Page.Resources>
 
-    <Grid>
-        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="#F9FAFB">
+    <Grid x:Name="LayoutRoot">
+        <ScrollViewer x:Name="MainScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="{StaticResource AppBackgroundBrush}">
             <StackPanel MaxWidth="1180" HorizontalAlignment="Center" Margin="8,16,8,40">
 
             <!-- 1. HEADER & GAUGE SELECTOR -->
-            <Border Style="{StaticResource CardBorderStyle}" Background="White">
+            <Border x:Name="HeaderCardBorder" Style="{StaticResource CardBorderStyle}">
                 <StackPanel>
-                    <!-- App Title -->
-                    <TextBlock Text="Tucson Area USGS Stream Gauges" FontSize="24" FontWeight="Bold" Foreground="#111827" TextWrapping="Wrap" Margin="0,0,0,6" />
+                    <!-- App Title & Author Branding -->
+                    <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,6">
+                        <TextBlock Text="Tucson Area USGS Stream Gauges" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Bottom" Margin="0,0,8,0" TextWrapping="Wrap" />
+                        <TextBlock Text="- " FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Bottom" Margin="0,0,2,2" />
+                        <HyperlinkButton x:Name="LnkAuthor" Content="Charles Miles" NavigateUri="https://cmiles.info" TargetName="_blank" Click="Hyperlink_Click"
+                                         FontSize="16" FontWeight="Bold" Foreground="{StaticResource HyperlinkBrush}"
+                                         Padding="0" Margin="0,0,0,2" Cursor="Hand" VerticalAlignment="Bottom" />
+                    </WrapPanel>
                     <TextBlock Text="Explore historical Daily Mean Flow values for USGS stream gauges across the Tucson basin. Analyzes days of flow, stream flow median and quantiles, maximum daily mean per month, run-length streaks, and annual runoff variability." 
-                               FontSize="13" Foreground="#4B5563" TextWrapping="Wrap" Margin="0,0,0,16" />
+                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,16" />
 
-                    <Border Height="1" Background="#E5E7EB" Margin="0,0,0,16" />
+                    <Border Height="1" Background="{StaticResource DividerBrush}" Margin="0,0,0,16" />
 
                     <!-- Site Selector & Action Bar (Fluid Wrap Layout) -->
                     <WrapPanel VerticalAlignment="Center" Margin="0,0,0,8">
-                        <TextBlock Text="Select USGS Gauge:" FontSize="13" FontWeight="SemiBold" Foreground="#374151" VerticalAlignment="Center" Margin="0,0,10,8" />
+                        <TextBlock Text="Select USGS Gauge:" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextLabelBrush}" VerticalAlignment="Center" Margin="0,0,10,8" />
                         <ComboBox x:Name="CmbSites" MinWidth="180" MaxWidth="420" Height="34"
+                                  Background="{StaticResource ControlBackgroundBrush}"
+                                  BorderBrush="{StaticResource ControlBorderBrush}"
+                                  Foreground="{StaticResource ControlForegroundBrush}"
                                   ItemsSource="{Binding AvailableSites}"
                                   SelectedItem="{Binding SelectedSite, Mode=TwoWay}"
                                   DisplayMemberPath="DisplayTitle"
                                   VerticalAlignment="Center" Margin="0,0,12,8" />
-                        <Button Content="Refresh Data" Command="{Binding RefreshCommand}" 
+                        <Button x:Name="BtnRefresh" Content="Refresh Data" Command="{Binding RefreshCommand}" 
+                                Style="{StaticResource ActionButtonStyle}"
                                 Height="34" Padding="14,0,14,0" 
-                                VerticalAlignment="Center" Margin="0,0,0,8" />
+                                VerticalAlignment="Center" Margin="0,0,12,8" />
+
+                        <!-- Theme Toggle Button -->
+                        <Button x:Name="BtnThemeToggle" Click="BtnThemeToggle_Click"
+                                Style="{StaticResource ActionButtonStyle}"
+                                Width="145" Height="34" Padding="8,0"
+                                HorizontalContentAlignment="Center"
+                                VerticalAlignment="Center" Margin="0,0,0,8"
+                                ToolTipService.ToolTip="Cycle theme: System (Auto) -> Dark -> Light">
+                            <TextBlock x:Name="TxtThemeToggle" Text="🌓 Theme" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                        </Button>
                     </WrapPanel>
 
                     <!-- Station Info Banner (Responsive Wrap Layout) -->
-                    <Border Background="#F3F4F6" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,8,0,0">
+                    <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,8,0,0">
                         <StackPanel>
                             <!-- Station Name, Description & Links -->
                             <WrapPanel Margin="0,0,0,4">
                                 <StackPanel Margin="0,0,24,8" MaxWidth="720">
-                                    <TextBlock Text="{Binding SelectedSite.SiteName}" FontSize="15" FontWeight="Bold" Foreground="#1F2937" TextWrapping="Wrap" />
-                                    <TextBlock Text="{Binding SelectedSite.Description}" FontSize="12" Foreground="#6B7280" Margin="0,2,0,0" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding SelectedSite.SiteName}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding SelectedSite.Description}" FontSize="12" Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,0" TextWrapping="Wrap" />
                                 </StackPanel>
 
                                 <!-- USGS Links -->
                                 <WrapPanel VerticalAlignment="Center" Margin="0,0,0,8">
                                     <HyperlinkButton Content="USGS Station Page ↗" 
                                                      NavigateUri="{Binding SelectedSite.UsgsInventoryUrl}" 
-                                                     TargetName="_blank" FontSize="12" Foreground="#2563EB" Margin="0,0,14,4" />
+                                                     TargetName="_blank" FontSize="12" Foreground="{StaticResource HyperlinkBrush}" Margin="0,0,14,4" />
                                     <HyperlinkButton Content="USGS NWIS Mapper ↗" 
                                                      NavigateUri="https://maps.waterdata.usgs.gov/mapper/index.html" 
-                                                     TargetName="_blank" FontSize="12" Foreground="#2563EB" Margin="0,0,0,0" />
+                                                     TargetName="_blank" FontSize="12" Foreground="{StaticResource HyperlinkBrush}" Margin="0,0,0,0" />
                                 </WrapPanel>
                             </WrapPanel>
 
                             <!-- Key Metrics WrapPanel -->
                             <WrapPanel Margin="0,0,0,0">
                                 <StackPanel Orientation="Horizontal" Margin="0,0,18,4">
-                                    <TextBlock Text="Site ID: " FontSize="12" FontWeight="SemiBold" Foreground="#4B5563" />
-                                    <TextBlock Text="{Binding SelectedSite.SiteCode}" FontSize="12" Foreground="#1D4ED8" />
+                                    <TextBlock Text="Site ID: " FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" />
+                                    <TextBlock Text="{Binding SelectedSite.SiteCode}" FontSize="12" Foreground="{StaticResource SiteCodeBrush}" FontWeight="SemiBold" />
                                 </StackPanel>
 
                                 <StackPanel Orientation="Horizontal" Margin="0,0,18,4">
-                                    <TextBlock Text="Total Data Days: " FontSize="12" FontWeight="SemiBold" Foreground="#4B5563" />
-                                    <TextBlock Text="{Binding DashboardData.TotalDaysWithData}" FontSize="12" Foreground="#111827" />
+                                    <TextBlock Text="Total Data Days: " FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" />
+                                    <TextBlock Text="{Binding DashboardData.TotalDaysWithData}" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" />
                                 </StackPanel>
 
                                 <StackPanel Orientation="Horizontal" Margin="0,0,18,4">
-                                    <TextBlock Text="Flow Days (>0 cfs): " FontSize="12" FontWeight="SemiBold" Foreground="#4B5563" />
-                                    <TextBlock Text="{Binding DashboardData.TotalDaysWithFlow}" FontSize="12" Foreground="#059669" />
+                                    <TextBlock Text="Flow Days (>0 cfs): " FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" />
+                                    <TextBlock Text="{Binding DashboardData.TotalDaysWithFlow}" FontSize="12" Foreground="{StaticResource FlowDaysBrush}" FontWeight="SemiBold" />
                                 </StackPanel>
                             </WrapPanel>
                         </StackPanel>
@@ -130,7 +172,7 @@
             <!-- 2. ERROR & WARNING STATUS BANNERS -->
             <StackPanel x:Name="StatusContainer" Margin="0,0,0,0">
                 <!-- Warning Banner (Cached Data Warning) -->
-                <Border x:Name="WarningBanner" Background="#FFFBEB" BorderBrush="#FCD34D" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,6,0,6">
+                <Border x:Name="WarningBanner" Background="{StaticResource WarningBannerBackgroundBrush}" BorderBrush="{StaticResource WarningBannerBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,6,0,6">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -138,7 +180,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="⚠️ " FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0" />
-                        <TextBlock Grid.Column="1" Text="{Binding WarningMessage}" FontSize="13" Foreground="#92400E" FontWeight="Medium" VerticalAlignment="Center" TextWrapping="Wrap" />
+                        <TextBlock Grid.Column="1" Text="{Binding WarningMessage}" FontSize="13" Foreground="{StaticResource WarningBannerTextBrush}" FontWeight="Medium" VerticalAlignment="Center" TextWrapping="Wrap" />
                         <Button Grid.Column="2" Content="Retry Live Update" Command="{Binding RefreshCommand}" 
                                 Height="28" Padding="12,0,12,0" 
                                 VerticalAlignment="Center" Margin="12,0,0,0" />
@@ -146,7 +188,7 @@
                 </Border>
 
                 <!-- Error Banner -->
-                <Border x:Name="ErrorBanner" Background="#FEF2F2" BorderBrush="#FECACA" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,6,0,6">
+                <Border x:Name="ErrorBanner" Background="{StaticResource ErrorBannerBackgroundBrush}" BorderBrush="{StaticResource ErrorBannerBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,6,0,6">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -154,7 +196,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="⚠️ " FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0" />
-                        <TextBlock Grid.Column="1" Text="{Binding ErrorMessage}" FontSize="13" Foreground="#DC2626" FontWeight="Medium" VerticalAlignment="Center" TextWrapping="Wrap" />
+                        <TextBlock Grid.Column="1" Text="{Binding ErrorMessage}" FontSize="13" Foreground="{StaticResource ErrorBannerTextBrush}" FontWeight="Medium" VerticalAlignment="Center" TextWrapping="Wrap" />
                         <Button Grid.Column="2" Content="Retry" Command="{Binding RefreshCommand}" 
                                 Height="28" Padding="12,0,12,0" 
                                 VerticalAlignment="Center" Margin="12,0,0,0" />
@@ -229,8 +271,8 @@
                     <!-- Top 10 Wet Streaks -->
                     <Border x:Name="CardWetStreaks" Grid.Row="0" Grid.Column="0" Style="{StaticResource RankingCardBorderStyle}">
                         <StackPanel>
-                            <TextBlock Text="Top 10 Wet Streaks (flow > 0)" Style="{StaticResource RankingTitleStyle}" Foreground="#047857" />
-                            <TextBlock Text="Continuous days with flow > 0 cfs. Missing data breaks the streak." FontSize="11" Foreground="#6B7280" Margin="0,-6,0,10" TextWrapping="Wrap" />
+                            <TextBlock Text="Top 10 Wet Streaks (flow > 0)" Style="{StaticResource RankingTitleStyle}" Foreground="{StaticResource RankingWetStreaksTitleBrush}" />
+                            <TextBlock Text="Continuous days with flow > 0 cfs. Missing data breaks the streak." FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,-6,0,10" TextWrapping="Wrap" />
                             <ItemsControl ItemsSource="{Binding TopWetStreaks}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -239,8 +281,8 @@
                                                 <ColumnDefinition Width="24" />
                                                 <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding Rank, StringFormat='{0}.'}" FontWeight="SemiBold" FontSize="12" Foreground="#6B7280" />
-                                            <TextBlock Grid.Column="1" Text="{Binding DisplayText}" FontSize="12" Foreground="#1F2937" TextWrapping="Wrap" />
+                                            <TextBlock Grid.Column="0" Text="{Binding Rank, StringFormat='{0}.'}" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
+                                            <TextBlock Grid.Column="1" Text="{Binding DisplayText}" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" />
                                         </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
@@ -251,8 +293,8 @@
                     <!-- Top 10 Dry Streaks -->
                     <Border x:Name="CardDryStreaks" Grid.Row="0" Grid.Column="1" Style="{StaticResource RankingCardBorderStyle}">
                         <StackPanel>
-                            <TextBlock Text="Top 10 Dry Streaks (flow = 0)" Style="{StaticResource RankingTitleStyle}" Foreground="#B45309" />
-                            <TextBlock Text="Continuous days with zero flow. Missing data breaks the streak." FontSize="11" Foreground="#6B7280" Margin="0,-6,0,10" TextWrapping="Wrap" />
+                            <TextBlock Text="Top 10 Dry Streaks (flow = 0)" Style="{StaticResource RankingTitleStyle}" Foreground="{StaticResource RankingDryStreaksTitleBrush}" />
+                            <TextBlock Text="Continuous days with zero flow. Missing data breaks the streak." FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,-6,0,10" TextWrapping="Wrap" />
                             <ItemsControl ItemsSource="{Binding TopDryStreaks}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -261,8 +303,8 @@
                                                 <ColumnDefinition Width="24" />
                                                 <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding Rank, StringFormat='{0}.'}" FontWeight="SemiBold" FontSize="12" Foreground="#6B7280" />
-                                            <TextBlock Grid.Column="1" Text="{Binding DisplayText}" FontSize="12" Foreground="#1F2937" TextWrapping="Wrap" />
+                                            <TextBlock Grid.Column="0" Text="{Binding Rank, StringFormat='{0}.'}" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
+                                            <TextBlock Grid.Column="1" Text="{Binding DisplayText}" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" />
                                         </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
@@ -273,8 +315,8 @@
                     <!-- Wettest & Driest Years -->
                     <Border x:Name="CardAnnualMeanFlow" Grid.Row="1" Grid.Column="0" Style="{StaticResource RankingCardBorderStyle}">
                         <StackPanel>
-                            <TextBlock Text="Annual Mean Flow (Full Coverage)" Style="{StaticResource RankingTitleStyle}" Foreground="#1D4ED8" />
-                            <TextBlock Text="Ranked annual mean discharge for eligible years with ≥ 1 data day in all 12 months." FontSize="11" Foreground="#6B7280" Margin="0,-6,0,10" TextWrapping="Wrap" />
+                            <TextBlock Text="Annual Mean Flow (Full Coverage)" Style="{StaticResource RankingTitleStyle}" Foreground="{StaticResource RankingAnnualMeanTitleBrush}" />
+                            <TextBlock Text="Ranked annual mean discharge for eligible years with ≥ 1 data day in all 12 months." FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,-6,0,10" TextWrapping="Wrap" />
 
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -284,7 +326,7 @@
 
                                 <!-- Wettest Sub-column -->
                                 <StackPanel Grid.Column="0" Margin="0,0,6,0">
-                                    <TextBlock Text="Wettest Years" FontSize="12" FontWeight="SemiBold" Foreground="#059669" Margin="0,0,0,6" TextWrapping="Wrap" />
+                                    <TextBlock Text="Wettest Years" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource RankingWettestHeaderBrush}" Margin="0,0,0,6" TextWrapping="Wrap" />
                                     <ItemsControl ItemsSource="{Binding TopWettestYears}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
@@ -293,8 +335,8 @@
                                                         <ColumnDefinition Width="20" />
                                                         <ColumnDefinition Width="*" />
                                                     </Grid.ColumnDefinitions>
-                                                    <TextBlock Grid.Column="0" Text="{Binding Rank, StringFormat='{0}.'}" FontSize="11" Foreground="#6B7280" />
-                                                    <TextBlock Grid.Column="1" Text="{Binding DisplayText}" FontSize="11" Foreground="#1F2937" TextWrapping="Wrap" />
+                                                    <TextBlock Grid.Column="0" Text="{Binding Rank, StringFormat='{0}.'}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" />
+                                                    <TextBlock Grid.Column="1" Text="{Binding DisplayText}" FontSize="11" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" />
                                                 </Grid>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
@@ -303,7 +345,7 @@
 
                                 <!-- Driest Sub-column -->
                                 <StackPanel Grid.Column="1" Margin="6,0,0,0">
-                                    <TextBlock Text="Driest Years" FontSize="12" FontWeight="SemiBold" Foreground="#D97706" Margin="0,0,0,6" TextWrapping="Wrap" />
+                                    <TextBlock Text="Driest Years" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource RankingDriestHeaderBrush}" Margin="0,0,0,6" TextWrapping="Wrap" />
                                     <ItemsControl ItemsSource="{Binding TopDriestYears}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
@@ -312,8 +354,8 @@
                                                         <ColumnDefinition Width="20" />
                                                         <ColumnDefinition Width="*" />
                                                     </Grid.ColumnDefinitions>
-                                                    <TextBlock Grid.Column="0" Text="{Binding Rank, StringFormat='{0}.'}" FontSize="11" Foreground="#6B7280" />
-                                                    <TextBlock Grid.Column="1" Text="{Binding DisplayText}" FontSize="11" Foreground="#1F2937" TextWrapping="Wrap" />
+                                                    <TextBlock Grid.Column="0" Text="{Binding Rank, StringFormat='{0}.'}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" />
+                                                    <TextBlock Grid.Column="1" Text="{Binding DisplayText}" FontSize="11" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" />
                                                 </Grid>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
@@ -326,8 +368,8 @@
                     <!-- Top 10 Peak Daily Mean Flow Days -->
                     <Border x:Name="CardPeakFlowDays" Grid.Row="1" Grid.Column="1" Style="{StaticResource RankingCardBorderStyle}">
                         <StackPanel>
-                            <TextBlock Text="Top 10 Daily Mean Flow Days" Style="{StaticResource RankingTitleStyle}" Foreground="#7C3AED" />
-                            <TextBlock Text="Single highest daily mean streamflow events in the historical record." FontSize="11" Foreground="#6B7280" Margin="0,-6,0,10" TextWrapping="Wrap" />
+                            <TextBlock Text="Top 10 Daily Mean Flow Days" Style="{StaticResource RankingTitleStyle}" Foreground="{StaticResource RankingPeakFlowTitleBrush}" />
+                            <TextBlock Text="Single highest daily mean streamflow events in the historical record." FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,-6,0,10" TextWrapping="Wrap" />
                             <ItemsControl ItemsSource="{Binding TopPeakFlowDays}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -336,8 +378,8 @@
                                                 <ColumnDefinition Width="24" />
                                                 <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding Rank, StringFormat='{0}.'}" FontWeight="SemiBold" FontSize="12" Foreground="#6B7280" />
-                                            <TextBlock Grid.Column="1" Text="{Binding DisplayText}" FontSize="12" Foreground="#1F2937" TextWrapping="Wrap" />
+                                            <TextBlock Grid.Column="0" Text="{Binding Rank, StringFormat='{0}.'}" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
+                                            <TextBlock Grid.Column="1" Text="{Binding DisplayText}" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" />
                                         </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
@@ -347,38 +389,38 @@
                 </Grid>
             </StackPanel>
 
-            <!-- 7. FOOTER -->
-            <Border Background="#F3F4F6" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,12,0,0">
+            <!-- 7. FOOTER: AUTHOR -->
+            <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,12,0,0">
                 <StackPanel>
-                    <TextBlock Text="App written and maintained by Charles Miles. A resident of the Tucson area since the late 1990s, I love getting outside to hike, run, and take photos. I have over two decades of experience in software development, data management, and inventory control, and I'm currently pursuing an AAS in Health Information Technology at Pima Community College to expand my skills into healthcare." FontSize="14" FontWeight="Medium" Foreground="#1F2937" Margin="0,0,0,12" TextWrapping="Wrap" />
-                    <TextBlock Text="Originally written as a Python Marimo notebook - transformed to .NET and OpenSilver with Rider, Junie/Gemini and by-human-hand coding." FontSize="14" Foreground="#1F2937" Margin="0,0,0,12" TextWrapping="Wrap" />                    
+                    <TextBlock Text="App written and maintained by Charles Miles. A resident of the Tucson area since the late 1990s, I love getting outside to hike, run, and take photos. I have over two decades of experience in software development, data management, and inventory control. I'm currently pursuing an AAS in Health Information Technology at Pima Community College to expand my skills into healthcare." FontSize="14" FontWeight="Medium" Foreground="{StaticResource TextHeadingBrush}" Margin="0,0,0,12" TextWrapping="Wrap" />
+                    <TextBlock Text="Originally written as a Python Marimo notebook - transformed to .NET and OpenSilver with Rider, Junie/Gemini and by-human-hand coding." FontSize="14" Foreground="{StaticResource TextHeadingBrush}" Margin="0,0,0,12" TextWrapping="Wrap" />                    
                     <HyperlinkButton NavigateUri="https://cmiles.info/Posts/Career/resume/resume.html"
-                                     TargetName="_blank" Foreground="#2563EB" Margin="0,0,0,4">
+                                     TargetName="_blank" Foreground="{StaticResource HyperlinkBrush}" Margin="0,0,0,4">
                         <TextBlock Text="Resume - Charles Miles" FontSize="14" Margin="0,0,0,8" TextWrapping="Wrap" />
                     </HyperlinkButton>
                     <HyperlinkButton NavigateUri="https://pointlesswaymarks.com/"
-                                     TargetName="_blank" Foreground="#2563EB" Margin="0,0,0,4">
+                                     TargetName="_blank" Foreground="{StaticResource HyperlinkBrush}" Margin="0,0,0,4">
                         <TextBlock Text="Pointless Waymarks - Ramblings, Questionable Geographics, Photographic Half-truths" FontSize="14" Margin="0,0,0,8" TextWrapping="Wrap" />
                     </HyperlinkButton>
                     <HyperlinkButton NavigateUri="https://cmiles.info/"
-                                     TargetName="_blank" Foreground="#2563EB" Margin="0,0,0,4">
+                                     TargetName="_blank" Foreground="{StaticResource HyperlinkBrush}" Margin="0,0,0,4">
                         <TextBlock Text="cmiles - info - Life, Tech and Unimportant Minutiae" FontSize="14" Margin="0,0,0,8" TextWrapping="Wrap" />
                     </HyperlinkButton>
 
                     <HyperlinkButton NavigateUri="https://www.linkedin.com/in/charlesamiles/"
-                                     TargetName="_blank" Foreground="#2563EB" Margin="0,0,0,4">
+                                     TargetName="_blank" Foreground="{StaticResource HyperlinkBrush}" Margin="0,0,0,4">
                         <TextBlock Text="LinkedIn" FontSize="14" Margin="0,0,0,0" TextWrapping="Wrap" />
                     </HyperlinkButton>
                 </StackPanel>
             </Border>
 
-            <!-- 7. FOOTER -->
-            <Border Background="#F3F4F6" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,12,0,0">
+            <!-- 8. FOOTER: METHODOLOGY -->
+            <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,12,0,0">
                 <StackPanel>
-                    <TextBlock Text="Data Source &amp; Methodology" FontSize="16" FontWeight="SemiBold" Foreground="#374151" Margin="0,0,0,8" />
-                    <TextBlock Text="{Binding DataSourceSummary}" FontSize="14" Foreground="#1F2937" Margin="0,0,0,8" TextWrapping="Wrap" />
+                    <TextBlock Text="Data Source &amp; Methodology" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextLabelBrush}" Margin="0,0,0,8" />
+                    <TextBlock Text="{Binding DataSourceSummary}" FontSize="14" Foreground="{StaticResource TextHeadingBrush}" Margin="0,0,0,8" TextWrapping="Wrap" />
                     <TextBlock Text="Streamflow statistics computed from USGS NWIS Daily Values REST API (https://waterservices.usgs.gov/nwis/dv/). Percentiles are evaluated via linear interpolation. Run-length streak analysis requires continuous positive or zero flow without missing data gaps." 
-                               FontSize="14" Foreground="#6B7280" TextWrapping="Wrap" />
+                               FontSize="14" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
 
@@ -386,15 +428,15 @@
     </ScrollViewer>
 
     <!-- Loading Banner -->
-    <Border x:Name="LoadingBanner" Background="#66000000" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Visibility="Collapsed">
-        <Border Background="#D9DBEAFE" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="8" Padding="24,16" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="24">
+    <Border x:Name="LoadingBanner" Background="{StaticResource LoadingOverlayBackgroundBrush}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Visibility="Collapsed">
+        <Border Background="{StaticResource LoadingCardBackgroundBrush}" BorderBrush="{StaticResource LoadingCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="24,16" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="24">
             <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
                 <TextBlock Text="⏳" Grid.Row="0" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="8" />
-                <TextBlock Text="{Binding LoadingStatus}" Grid.Row="1" FontSize="14" Foreground="#1D4ED8" FontWeight="Medium" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="8" />
+                <TextBlock Text="{Binding LoadingStatus}" Grid.Row="1" FontSize="14" Foreground="{StaticResource LoadingCardTextBrush}" FontWeight="Medium" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="8" />
             </Grid>
         </Border>
     </Border>

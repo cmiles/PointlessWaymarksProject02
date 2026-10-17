@@ -61,6 +61,7 @@
     <Compile Include="Models\WeatherRecordRankItem.cs" />
     <Compile Include="Services\IWeatherReportService.cs" />
     <Compile Include="Services\WeatherReportService.cs" />
+    <Compile Include="Services\ThemeManager.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
     <Compile Include="ViewModels\RelayCommand.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />

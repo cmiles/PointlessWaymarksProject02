@@ -6,13 +6,29 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using WaterDaze.Models;
+using WaterDaze.Services;
 
 namespace WaterDaze.Controls;
 
 public partial class YearFacetControl
 {
-    private static readonly SolidColorBrush BarBrush = new(Color.FromArgb(180, 200, 200, 200));
-    private static readonly SolidColorBrush LineBrush = new(Color.FromArgb(255, 0x33, 0x66, 0xCC));
+    private static SolidColorBrush? _fallbackBarBrush;
+    private static SolidColorBrush FallbackBarBrush => _fallbackBarBrush ??= new(Color.FromArgb(180, 200, 200, 200));
+
+    private static SolidColorBrush? _fallbackLineBrush;
+    private static SolidColorBrush FallbackLineBrush => _fallbackLineBrush ??= new(Color.FromArgb(255, 0x33, 0x66, 0xCC));
+
+    private static SolidColorBrush? _fallbackCardBg;
+    private static SolidColorBrush FallbackCardBg => _fallbackCardBg ??= new(Color.FromArgb(255, 255, 255, 255));
+
+    private static SolidColorBrush? _fallbackCardBorder;
+    private static SolidColorBrush FallbackCardBorder => _fallbackCardBorder ??= new(Color.FromArgb(255, 224, 224, 224));
+
+    private static SolidColorBrush? _fallbackTextBrush;
+    private static SolidColorBrush FallbackTextBrush => _fallbackTextBrush ??= new(Color.FromArgb(255, 112, 112, 112));
+
+    private SolidColorBrush BarBrush => ThemeManager.GetBrush("YearFacetBarBrush", FallbackBarBrush);
+    private SolidColorBrush LineBrush => ThemeManager.GetBrush("YearFacetLineBrush", FallbackLineBrush);
 
     public static readonly DependencyProperty YearProperty =
         DependencyProperty.Register(nameof(Year), typeof(int), typeof(YearFacetControl),
@@ -26,7 +42,29 @@ public partial class YearFacetControl
     public YearFacetControl()
     {
         InitializeComponent();
-        Loaded += (_, _) => RenderChart();
+        Loaded += (_, _) =>
+        {
+            UpdateThemeStyles();
+            RenderChart();
+        };
+        ThemeManager.ThemeChanged += (_, _) =>
+        {
+            UpdateThemeStyles();
+            RenderChart();
+        };
+    }
+
+    private void UpdateThemeStyles()
+    {
+        if (FacetCardBorder != null)
+        {
+            FacetCardBorder.Background = ThemeManager.GetBrush("YearFacetCardBackgroundBrush", FallbackCardBg);
+            FacetCardBorder.BorderBrush = ThemeManager.GetBrush("YearFacetCardBorderBrush", FallbackCardBorder);
+        }
+        if (TxtYear != null)
+        {
+            TxtYear.Foreground = ThemeManager.GetBrush("YearFacetTextBrush", FallbackTextBrush);
+        }
     }
 
     public IEnumerable<MonthlyFlowRecord>? MonthlyRecords

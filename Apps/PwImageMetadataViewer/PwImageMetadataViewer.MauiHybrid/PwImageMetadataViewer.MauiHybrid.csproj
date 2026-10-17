@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
 
     <PropertyGroup>
         <TargetFrameworks>net10.0-android</TargetFrameworks>
@@ -24,7 +24,7 @@
         <ApplicationTitle>PwImageMetadataViewer</ApplicationTitle>
 
         <!-- App Identifier -->
-        <ApplicationId>com.companyname.pwimagemetadataviewer</ApplicationId>
+        <ApplicationId>com.pointlesswaymarks.pwimagemetadataviewer</ApplicationId>
 
         <!-- Versions -->
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>

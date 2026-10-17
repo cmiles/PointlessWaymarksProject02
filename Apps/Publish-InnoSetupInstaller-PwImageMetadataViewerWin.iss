@@ -1,4 +1,4 @@
-#define Version GetDateTimeString('yyyy.mm.dd.hhnn', '', '')
+#define Version GetDateTimeString('yyyy-mm-dd-hh-nn', '', '')
 
 #define MyAppPublisher "Charles Miles"
 #define MyAppOutputDir "M:\PointlessWaymarksPublications"

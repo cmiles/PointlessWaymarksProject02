@@ -1,11 +1,12 @@
 # 1. Define your paths
-$projectPath = ".\WaterDaze\WaterDaze.Photino\WaterDaze.Photino.csproj"
-$targetDir = "M:\PointlessWaymarksPublications\WaterDazeWin"
+$projectPath = ".\HistoricTempests\HistoricTempests.Photino\HistoricTempests.Photino.csproj"
+$targetDir = "M:\PointlessWaymarksPublications\HistoricTempestsWin"
+# Define the source path for the icon
+$iconPath = ".\HistoricTempests\HistoricTempests.Photino\app.ico" 
 
 # 2. Clear the target directory if it exists, or create it if it doesn't
 if (Test-Path $targetDir) {
     Write-Host "Clearing existing files in $targetDir..." -ForegroundColor Yellow
-    # Deletes all contents inside the folder without deleting the folder itself
     Remove-Item -Path "$targetDir\*" -Recurse -Force -ErrorAction SilentlyContinue
 } else {
     Write-Host "Creating target directory $targetDir..." -ForegroundColor Yellow
@@ -20,4 +21,16 @@ dotnet publish $projectPath -c Release -r win-x64 --self-contained true `
     -p:DebugSymbols=false `
     -o $targetDir
 
-Write-Host "Success! App published to: $targetDir" -ForegroundColor Green
+# 4. Copy the icon to the publish target directory
+if (Test-Path $iconPath) {
+    Write-Host "Copying app.ico to publish target..." -ForegroundColor Cyan
+    Copy-Item -Path $iconPath -Destination $targetDir -Force
+} else {
+    Write-Host "Warning: app.ico not found at $iconPath" -ForegroundColor Red
+}
+
+# 5. Compile the Inno Setup Installer
+Write-Host "Compiling Inno Setup Installer..." -ForegroundColor Cyan
+& "C:\Program Files\Inno Setup 7\ISCC.exe" ".\Publish-InnoSetupInstaller-HistoricTempestsWin.iss"
+
+if ($lastexitcode -ne 0) { throw ("Exec failed with exit code: " + $lastexitcode) }

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
 
     <PropertyGroup>
         <TargetFrameworks>net10.0-android</TargetFrameworks>
@@ -24,7 +24,7 @@
         <ApplicationTitle>WaterDaze</ApplicationTitle>
 
         <!-- App Identifier -->
-        <ApplicationId>com.companyname.waterdaze</ApplicationId>
+        <ApplicationId>com.pointlesswaymarks.waterdaze</ApplicationId>
 
         <!-- Versions -->
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>

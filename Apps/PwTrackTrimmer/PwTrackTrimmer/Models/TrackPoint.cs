@@ -103,8 +103,8 @@ namespace PwTrackTrimmer.Models
             }
         }
 
-        public string RowBackground => IsSelected ? "#1E3A8A" : "Transparent";
-        public string RowBorderBrush => IsSelected ? "#38BDF8" : "Transparent";
+        public string RowBackground => IsSelected ? (Services.ThemeManager.Current.IsDark ? "#1E3A8A" : "#DBEAFE") : "Transparent";
+        public string RowBorderBrush => IsSelected ? (Services.ThemeManager.Current.IsDark ? "#38BDF8" : "#2563EB") : "Transparent";
 
         public bool IsTrimmed
         {

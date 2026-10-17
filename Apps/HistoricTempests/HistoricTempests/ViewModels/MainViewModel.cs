@@ -29,98 +29,116 @@ public class MainViewModel : ViewModelBase
     private OverviewReport? _overview;
 
     // 6-Month Comparison Properties
-    private string _sixMonthAvgTempThisYearText = "This Year 6-Mo Avg: 82.8°F";
+    private string _sixMonthAvgTempThisYearText = "Avg Temp: 82.8°F";
     private string _sixMonthAvgTempDeltaText = "+0.7°F vs 82.1°F prev yrs avg";
     private SolidColorBrush _sixMonthAvgTempDeltaBrush = new(Color.FromArgb(255, 220, 38, 38));
     private string _sixMonthTempAvgMonthly = "May: 76.2°F  |  Jun: 86.5°F  |  Jul: 86.0°F  |  Aug: 86.7°F  |  Sep: 79.9°F  |  Oct: 78.5°F";
 
-    private string _sixMonthAvgHighThisYearText = "This Year Avg Max: 92.8°F";
+    private string _sixMonthAvgHighThisYearText = "Avg Max: 92.8°F";
     private string _sixMonthAvgHighDeltaText = "+0.1°F vs 92.7°F prev yrs avg";
     private SolidColorBrush _sixMonthAvgHighDeltaBrush = new(Color.FromArgb(255, 220, 38, 38));
-    private string _sixMonthAvgLowThisYearText = "• Avg Min: 72.7°F";
+    private string _sixMonthAvgLowThisYearText = "Avg Min: 72.7°F";
     private string _sixMonthAvgLowDeltaText = "+1.3°F vs 71.4°F prev yrs avg";
     private SolidColorBrush _sixMonthAvgLowDeltaBrush = new(Color.FromArgb(255, 220, 38, 38));
     private string _sixMonthTempRangeMonthly = "May: 99.0° / 52.0°  |  Jun: 100.2° / 68.4°  |  Jul: 104.5° / 68.5°  |  Aug: 105.4° / 67.1°  |  Sep: 94.8° / 60.3°  |  Oct: 92.3° / 61.0°";
 
-    private string _sixMonthRainThisYearText = "This Year 6-Mo Total Rain: 7.93 in";
+    private string _sixMonthRainThisYearText = "Total Rain: 7.93 in";
     private string _sixMonthRainDeltaText = "-2.63 in vs 10.56 in prev yrs avg";
     private SolidColorBrush _sixMonthRainDeltaBrush = new(Color.FromArgb(255, 37, 99, 235));
-    private string _sixMonthRainDaysText = "• Rain Days: 51 (+11.7 vs 39.3 prev yrs avg)";
+    private string _sixMonthRainDaysText = "Rain Days: 51";
+    private string _sixMonthRainDaysDeltaText = "+11.7 vs 39.3 prev yrs avg";
+    private SolidColorBrush _sixMonthRainDaysDeltaBrush = new(Color.FromArgb(255, 5, 150, 105));
     private string _sixMonthRainMonthly = "May: 0.28\" (2d)  |  Jun: 0.45\" (6d)  |  Jul: 2.12\" (16d)  |  Aug: 3.15\" (17d)  |  Sep: 1.51\" (9d)  |  Oct: 0.42\" (1d)";
 
-    private string _sixMonthWindThisYearText = "This Year 6-Mo Avg Daily Gust: 23.4 mph";
+    private string _sixMonthWindThisYearText = "Avg Daily Gust: 23.4 mph";
     private string _sixMonthWindDeltaText = "+2.2 mph vs 21.2 mph prev yrs avg";
     private SolidColorBrush _sixMonthWindDeltaBrush = new(Color.FromArgb(255, 220, 38, 38));
-    private string _sixMonthWindPeakText = "• Peak Gust: 41.4 mph (Jun 29)";
+    private string _sixMonthWindPeakText = "Peak Gust: 41.4 mph (Jun 29)";
+    private string _sixMonthWindPeakDeltaText = "";
+    private SolidColorBrush _sixMonthWindPeakDeltaBrush = new(Color.FromArgb(255, 220, 38, 38));
     private string _sixMonthWindMonthly = "May: 39.4 mph  |  Jun: 41.4 mph  |  Jul: 35.2 mph  |  Aug: 30.6 mph  |  Sep: 31.9 mph  |  Oct: 29.6 mph";
 
-    private string _sixMonthLightningThisYearText = "This Year 6-Mo Total Strikes: 19,534";
+    private string _sixMonthLightningThisYearText = "Total Strikes: 19,534";
     private string _sixMonthLightningDeltaText = "+7,032 vs 12,502 prev yrs avg";
     private SolidColorBrush _sixMonthLightningDeltaBrush = new(Color.FromArgb(255, 124, 58, 237));
-    private string _sixMonthLightningDaysText = "• Storm Days: 74 (+9.0 vs 65.0 prev yrs avg)";
+    private string _sixMonthLightningDaysText = "Days with Lightning: 74";
+    private string _sixMonthLightningDaysDeltaText = "+9.0 vs 65.0 prev yrs avg";
+    private SolidColorBrush _sixMonthLightningDaysDeltaBrush = new(Color.FromArgb(255, 217, 119, 6));
     private string _sixMonthLightningMonthly = "May: 96 (2d)  |  Jun: 1,555 (9d)  |  Jul: 5,498 (22d)  |  Aug: 7,307 (24d)  |  Sep: 5,015 (15d)  |  Oct: 63 (2d)";
 
     // 6-Month Tab Dedicated Summaries
-    private string _sixMonthTabAvgTempThisYearText = "6-Mo Avg Temp: --";
+    private string _sixMonthTabAvgTempThisYearText = "Avg Temp: --";
     private string _sixMonthTabAvgTempDeltaText = "";
     private SolidColorBrush _sixMonthTabAvgTempDeltaBrush = new(Color.FromArgb(255, 220, 38, 38));
 
-    private string _sixMonthTabAvgHighThisYearText = "6-Mo Avg Max: --";
+    private string _sixMonthTabAvgHighThisYearText = "Avg Max: --";
     private string _sixMonthTabAvgHighDeltaText = "";
     private SolidColorBrush _sixMonthTabAvgHighDeltaBrush = new(Color.FromArgb(255, 220, 38, 38));
-    private string _sixMonthTabAvgLowThisYearText = "• Avg Min: --";
+    private string _sixMonthTabAvgLowThisYearText = "Avg Min: --";
     private string _sixMonthTabAvgLowDeltaText = "";
     private SolidColorBrush _sixMonthTabAvgLowDeltaBrush = new(Color.FromArgb(255, 220, 38, 38));
 
-    private string _sixMonthTabRainThisYearText = "6-Mo Total Rain: --";
+    private string _sixMonthTabRainThisYearText = "Total Rain: --";
     private string _sixMonthTabRainDeltaText = "";
     private SolidColorBrush _sixMonthTabRainDeltaBrush = new(Color.FromArgb(255, 37, 99, 235));
     private string _sixMonthTabRainDaysText = "";
+    private string _sixMonthTabRainDaysDeltaText = "";
+    private SolidColorBrush _sixMonthTabRainDaysDeltaBrush = new(Color.FromArgb(255, 5, 150, 105));
 
-    private string _sixMonthTabWindThisYearText = "6-Mo Avg Daily Gust: --";
+    private string _sixMonthTabWindThisYearText = "Avg Daily Gust: --";
     private string _sixMonthTabWindDeltaText = "";
     private SolidColorBrush _sixMonthTabWindDeltaBrush = new(Color.FromArgb(255, 220, 38, 38));
     private string _sixMonthTabWindPeakText = "";
+    private string _sixMonthTabWindPeakDeltaText = "";
+    private SolidColorBrush _sixMonthTabWindPeakDeltaBrush = new(Color.FromArgb(255, 220, 38, 38));
 
-    private string _sixMonthTabLightningThisYearText = "6-Mo Total Strikes: --";
+    private string _sixMonthTabLightningThisYearText = "Total Strikes: --";
     private string _sixMonthTabLightningDeltaText = "";
     private SolidColorBrush _sixMonthTabLightningDeltaBrush = new(Color.FromArgb(255, 124, 58, 237));
     private string _sixMonthTabLightningDaysText = "";
+    private string _sixMonthTabLightningDaysDeltaText = "";
+    private SolidColorBrush _sixMonthTabLightningDaysDeltaBrush = new(Color.FromArgb(255, 217, 119, 6));
 
     // Header Info Properties
     private string _lastDataDateText = "--";
     private string _archiveDaysText = "--";
 
     // 12-Month Tab Dedicated Summaries
-    private string _twelveMonthTabAvgTempThisYearText = "12-Mo Avg Temp: --";
+    private string _twelveMonthTabAvgTempThisYearText = "Avg Temp: --";
     private string _twelveMonthTabAvgTempDeltaText = "";
     private SolidColorBrush _twelveMonthTabAvgTempDeltaBrush = new(Color.FromArgb(255, 220, 38, 38));
     private string _twelveMonthTempAvgMonthly = "";
 
-    private string _twelveMonthTabAvgHighThisYearText = "12-Mo Avg Max: --";
+    private string _twelveMonthTabAvgHighThisYearText = "Avg Max: --";
     private string _twelveMonthTabAvgHighDeltaText = "";
     private SolidColorBrush _twelveMonthTabAvgHighDeltaBrush = new(Color.FromArgb(255, 220, 38, 38));
-    private string _twelveMonthTabAvgLowThisYearText = "• Avg Min: --";
+    private string _twelveMonthTabAvgLowThisYearText = "Avg Min: --";
     private string _twelveMonthTabAvgLowDeltaText = "";
     private SolidColorBrush _twelveMonthTabAvgLowDeltaBrush = new(Color.FromArgb(255, 220, 38, 38));
     private string _twelveMonthTempRangeMonthly = "";
 
-    private string _twelveMonthTabRainThisYearText = "12-Mo Total Rain: --";
+    private string _twelveMonthTabRainThisYearText = "Total Rain: --";
     private string _twelveMonthTabRainDeltaText = "";
     private SolidColorBrush _twelveMonthTabRainDeltaBrush = new(Color.FromArgb(255, 37, 99, 235));
     private string _twelveMonthTabRainDaysText = "";
+    private string _twelveMonthTabRainDaysDeltaText = "";
+    private SolidColorBrush _twelveMonthTabRainDaysDeltaBrush = new(Color.FromArgb(255, 5, 150, 105));
     private string _twelveMonthRainMonthly = "";
 
-    private string _twelveMonthTabWindThisYearText = "12-Mo Avg Daily Gust: --";
+    private string _twelveMonthTabWindThisYearText = "Avg Daily Gust: --";
     private string _twelveMonthTabWindDeltaText = "";
     private SolidColorBrush _twelveMonthTabWindDeltaBrush = new(Color.FromArgb(255, 220, 38, 38));
     private string _twelveMonthTabWindPeakText = "";
+    private string _twelveMonthTabWindPeakDeltaText = "";
+    private SolidColorBrush _twelveMonthTabWindPeakDeltaBrush = new(Color.FromArgb(255, 220, 38, 38));
     private string _twelveMonthWindMonthly = "";
 
-    private string _twelveMonthTabLightningThisYearText = "12-Mo Total Strikes: --";
+    private string _twelveMonthTabLightningThisYearText = "Total Strikes: --";
     private string _twelveMonthTabLightningDeltaText = "";
     private SolidColorBrush _twelveMonthTabLightningDeltaBrush = new(Color.FromArgb(255, 124, 58, 237));
     private string _twelveMonthTabLightningDaysText = "";
+    private string _twelveMonthTabLightningDaysDeltaText = "";
+    private SolidColorBrush _twelveMonthTabLightningDaysDeltaBrush = new(Color.FromArgb(255, 217, 119, 6));
     private string _twelveMonthLightningMonthly = "";
 
     // Executive Overview Glance Blocks (12-Month)
@@ -156,7 +174,7 @@ public class MainViewModel : ViewModelBase
         delta > 0.001 ? GreenGlanceBrush : delta < -0.001 ? RedGlanceBrush : SlateGlanceBrush;
 
     private static SolidColorBrush GetTempBrush(double delta) =>
-        delta > 0.001 ? RedGlanceBrush : delta < -0.001 ? BlueGlanceBrush : SlateGlanceBrush;
+        delta > 0.001 ? RedGlanceBrush : delta < -0.001 ? GreenGlanceBrush : SlateGlanceBrush;
 
     private static SolidColorBrush GetWindBrush(double delta) =>
         delta > 0.001 ? RedGlanceBrush : delta < -0.001 ? BlueGlanceBrush : SlateGlanceBrush;
@@ -220,11 +238,11 @@ public class MainViewModel : ViewModelBase
     private SolidColorBrush _glance12MonthSolarAvgBrush = SlateGlanceBrush;
 
     // Dedicated Solar Tab Summaries
-    private string _fourteenDayTabSolarThisYearText = "14-Day Avg Solar: --";
+    private string _fourteenDayTabSolarThisYearText = "Avg Solar: --";
     private string _fourteenDayTabSolarDeltaText = "";
     private SolidColorBrush _fourteenDayTabSolarDeltaBrush = SlateGlanceBrush;
 
-    private string _sixMonthTabSolarThisYearText = "6-Mo Avg Solar: --";
+    private string _sixMonthTabSolarThisYearText = "Avg Solar: --";
     private string _sixMonthTabSolarDeltaText = "";
     private SolidColorBrush _sixMonthTabSolarDeltaBrush = SlateGlanceBrush;
     private string _sixMonthSolarMonthly = "";
@@ -260,7 +278,11 @@ public class MainViewModel : ViewModelBase
         SelectTabCommand = new RelayCommand<string>(tab => { if (!string.IsNullOrEmpty(tab)) SelectedTab = tab; });
         SelectMetricCommand = new RelayCommand<string>(m => { if (!string.IsNullOrEmpty(m)) SelectedMetric = m; });
         SelectRecentDayCommand = new RelayCommand<RecentDayItem>(day => SelectedRecentDay = day);
+
+        ThemeManager.Current.ThemeChanged += (_, _) => OnPropertyChanged(nameof(Theme));
     }
+
+    public ThemeManager Theme => ThemeManager.Current;
 
     public ObservableCollection<DayTimelinePoint> DaysTimeline { get; }
     public ObservableCollection<MonthTimelinePoint> MonthsTimeline { get; }
@@ -372,10 +394,13 @@ public class MainViewModel : ViewModelBase
         {
             if (SetProperty(ref _selectedDailyYear, value))
             {
+                OnPropertyChanged(nameof(SelectedDailyYearDisplay));
                 ApplyDailyFilter();
             }
         }
     }
+
+    public string SelectedDailyYearDisplay => _selectedDailyYear == 0 ? "All Years" : _selectedDailyYear.ToString();
 
     // Formatted Overview Strings
     public string HottestDayDisplay
@@ -451,18 +476,24 @@ public class MainViewModel : ViewModelBase
     public string SixMonthRainDeltaText { get => _sixMonthRainDeltaText; private set => SetProperty(ref _sixMonthRainDeltaText, value); }
     public SolidColorBrush SixMonthRainDeltaBrush { get => _sixMonthRainDeltaBrush; private set => SetProperty(ref _sixMonthRainDeltaBrush, value); }
     public string SixMonthRainDaysText { get => _sixMonthRainDaysText; private set => SetProperty(ref _sixMonthRainDaysText, value); }
+    public string SixMonthRainDaysDeltaText { get => _sixMonthRainDaysDeltaText; private set => SetProperty(ref _sixMonthRainDaysDeltaText, value); }
+    public SolidColorBrush SixMonthRainDaysDeltaBrush { get => _sixMonthRainDaysDeltaBrush; private set => SetProperty(ref _sixMonthRainDaysDeltaBrush, value); }
     public string SixMonthRainMonthly { get => _sixMonthRainMonthly; private set => SetProperty(ref _sixMonthRainMonthly, value); }
 
     public string SixMonthWindThisYearText { get => _sixMonthWindThisYearText; private set => SetProperty(ref _sixMonthWindThisYearText, value); }
     public string SixMonthWindDeltaText { get => _sixMonthWindDeltaText; private set => SetProperty(ref _sixMonthWindDeltaText, value); }
     public SolidColorBrush SixMonthWindDeltaBrush { get => _sixMonthWindDeltaBrush; private set => SetProperty(ref _sixMonthWindDeltaBrush, value); }
     public string SixMonthWindPeakText { get => _sixMonthWindPeakText; private set => SetProperty(ref _sixMonthWindPeakText, value); }
+    public string SixMonthWindPeakDeltaText { get => _sixMonthWindPeakDeltaText; private set => SetProperty(ref _sixMonthWindPeakDeltaText, value); }
+    public SolidColorBrush SixMonthWindPeakDeltaBrush { get => _sixMonthWindPeakDeltaBrush; private set => SetProperty(ref _sixMonthWindPeakDeltaBrush, value); }
     public string SixMonthWindMonthly { get => _sixMonthWindMonthly; private set => SetProperty(ref _sixMonthWindMonthly, value); }
 
     public string SixMonthLightningThisYearText { get => _sixMonthLightningThisYearText; private set => SetProperty(ref _sixMonthLightningThisYearText, value); }
     public string SixMonthLightningDeltaText { get => _sixMonthLightningDeltaText; private set => SetProperty(ref _sixMonthLightningDeltaText, value); }
     public SolidColorBrush SixMonthLightningDeltaBrush { get => _sixMonthLightningDeltaBrush; private set => SetProperty(ref _sixMonthLightningDeltaBrush, value); }
     public string SixMonthLightningDaysText { get => _sixMonthLightningDaysText; private set => SetProperty(ref _sixMonthLightningDaysText, value); }
+    public string SixMonthLightningDaysDeltaText { get => _sixMonthLightningDaysDeltaText; private set => SetProperty(ref _sixMonthLightningDaysDeltaText, value); }
+    public SolidColorBrush SixMonthLightningDaysDeltaBrush { get => _sixMonthLightningDaysDeltaBrush; private set => SetProperty(ref _sixMonthLightningDaysDeltaBrush, value); }
     public string SixMonthLightningMonthly { get => _sixMonthLightningMonthly; private set => SetProperty(ref _sixMonthLightningMonthly, value); }
 
     // 6-Month Tab Dedicated Summaries
@@ -481,16 +512,22 @@ public class MainViewModel : ViewModelBase
     public string SixMonthTabRainDeltaText { get => _sixMonthTabRainDeltaText; private set => SetProperty(ref _sixMonthTabRainDeltaText, value); }
     public SolidColorBrush SixMonthTabRainDeltaBrush { get => _sixMonthTabRainDeltaBrush; private set => SetProperty(ref _sixMonthTabRainDeltaBrush, value); }
     public string SixMonthTabRainDaysText { get => _sixMonthTabRainDaysText; private set => SetProperty(ref _sixMonthTabRainDaysText, value); }
+    public string SixMonthTabRainDaysDeltaText { get => _sixMonthTabRainDaysDeltaText; private set => SetProperty(ref _sixMonthTabRainDaysDeltaText, value); }
+    public SolidColorBrush SixMonthTabRainDaysDeltaBrush { get => _sixMonthTabRainDaysDeltaBrush; private set => SetProperty(ref _sixMonthTabRainDaysDeltaBrush, value); }
 
     public string SixMonthTabWindThisYearText { get => _sixMonthTabWindThisYearText; private set => SetProperty(ref _sixMonthTabWindThisYearText, value); }
     public string SixMonthTabWindDeltaText { get => _sixMonthTabWindDeltaText; private set => SetProperty(ref _sixMonthTabWindDeltaText, value); }
     public SolidColorBrush SixMonthTabWindDeltaBrush { get => _sixMonthTabWindDeltaBrush; private set => SetProperty(ref _sixMonthTabWindDeltaBrush, value); }
     public string SixMonthTabWindPeakText { get => _sixMonthTabWindPeakText; private set => SetProperty(ref _sixMonthTabWindPeakText, value); }
+    public string SixMonthTabWindPeakDeltaText { get => _sixMonthTabWindPeakDeltaText; private set => SetProperty(ref _sixMonthTabWindPeakDeltaText, value); }
+    public SolidColorBrush SixMonthTabWindPeakDeltaBrush { get => _sixMonthTabWindPeakDeltaBrush; private set => SetProperty(ref _sixMonthTabWindPeakDeltaBrush, value); }
 
     public string SixMonthTabLightningThisYearText { get => _sixMonthTabLightningThisYearText; private set => SetProperty(ref _sixMonthTabLightningThisYearText, value); }
     public string SixMonthTabLightningDeltaText { get => _sixMonthTabLightningDeltaText; private set => SetProperty(ref _sixMonthTabLightningDeltaText, value); }
     public SolidColorBrush SixMonthTabLightningDeltaBrush { get => _sixMonthTabLightningDeltaBrush; private set => SetProperty(ref _sixMonthTabLightningDeltaBrush, value); }
     public string SixMonthTabLightningDaysText { get => _sixMonthTabLightningDaysText; private set => SetProperty(ref _sixMonthTabLightningDaysText, value); }
+    public string SixMonthTabLightningDaysDeltaText { get => _sixMonthTabLightningDaysDeltaText; private set => SetProperty(ref _sixMonthTabLightningDaysDeltaText, value); }
+    public SolidColorBrush SixMonthTabLightningDaysDeltaBrush { get => _sixMonthTabLightningDaysDeltaBrush; private set => SetProperty(ref _sixMonthTabLightningDaysDeltaBrush, value); }
 
     // Executive Overview Glance Blocks (14-Day)
     public string Glance14DayRainDaysText { get => _glance14DayRainDaysText; private set => SetProperty(ref _glance14DayRainDaysText, value); }
@@ -580,18 +617,24 @@ public class MainViewModel : ViewModelBase
     public string TwelveMonthTabWindDeltaText { get => _twelveMonthTabWindDeltaText; private set => SetProperty(ref _twelveMonthTabWindDeltaText, value); }
     public SolidColorBrush TwelveMonthTabWindDeltaBrush { get => _twelveMonthTabWindDeltaBrush; private set => SetProperty(ref _twelveMonthTabWindDeltaBrush, value); }
     public string TwelveMonthTabWindPeakText { get => _twelveMonthTabWindPeakText; private set => SetProperty(ref _twelveMonthTabWindPeakText, value); }
+    public string TwelveMonthTabWindPeakDeltaText { get => _twelveMonthTabWindPeakDeltaText; private set => SetProperty(ref _twelveMonthTabWindPeakDeltaText, value); }
+    public SolidColorBrush TwelveMonthTabWindPeakDeltaBrush { get => _twelveMonthTabWindPeakDeltaBrush; private set => SetProperty(ref _twelveMonthTabWindPeakDeltaBrush, value); }
     public string TwelveMonthWindMonthly { get => _twelveMonthWindMonthly; private set => SetProperty(ref _twelveMonthWindMonthly, value); }
 
     public string TwelveMonthTabRainThisYearText { get => _twelveMonthTabRainThisYearText; private set => SetProperty(ref _twelveMonthTabRainThisYearText, value); }
     public string TwelveMonthTabRainDeltaText { get => _twelveMonthTabRainDeltaText; private set => SetProperty(ref _twelveMonthTabRainDeltaText, value); }
     public SolidColorBrush TwelveMonthTabRainDeltaBrush { get => _twelveMonthTabRainDeltaBrush; private set => SetProperty(ref _twelveMonthTabRainDeltaBrush, value); }
     public string TwelveMonthTabRainDaysText { get => _twelveMonthTabRainDaysText; private set => SetProperty(ref _twelveMonthTabRainDaysText, value); }
+    public string TwelveMonthTabRainDaysDeltaText { get => _twelveMonthTabRainDaysDeltaText; private set => SetProperty(ref _twelveMonthTabRainDaysDeltaText, value); }
+    public SolidColorBrush TwelveMonthTabRainDaysDeltaBrush { get => _twelveMonthTabRainDaysDeltaBrush; private set => SetProperty(ref _twelveMonthTabRainDaysDeltaBrush, value); }
     public string TwelveMonthRainMonthly { get => _twelveMonthRainMonthly; private set => SetProperty(ref _twelveMonthRainMonthly, value); }
 
     public string TwelveMonthTabLightningThisYearText { get => _twelveMonthTabLightningThisYearText; private set => SetProperty(ref _twelveMonthTabLightningThisYearText, value); }
     public string TwelveMonthTabLightningDeltaText { get => _twelveMonthTabLightningDeltaText; private set => SetProperty(ref _twelveMonthTabLightningDeltaText, value); }
     public SolidColorBrush TwelveMonthTabLightningDeltaBrush { get => _twelveMonthTabLightningDeltaBrush; private set => SetProperty(ref _twelveMonthTabLightningDeltaBrush, value); }
     public string TwelveMonthTabLightningDaysText { get => _twelveMonthTabLightningDaysText; private set => SetProperty(ref _twelveMonthTabLightningDaysText, value); }
+    public string TwelveMonthTabLightningDaysDeltaText { get => _twelveMonthTabLightningDaysDeltaText; private set => SetProperty(ref _twelveMonthTabLightningDaysDeltaText, value); }
+    public SolidColorBrush TwelveMonthTabLightningDaysDeltaBrush { get => _twelveMonthTabLightningDaysDeltaBrush; private set => SetProperty(ref _twelveMonthTabLightningDaysDeltaBrush, value); }
     public string TwelveMonthLightningMonthly { get => _twelveMonthLightningMonthly; private set => SetProperty(ref _twelveMonthLightningMonthly, value); }
 
     // Executive Overview Solar Glance
@@ -1078,6 +1121,7 @@ public class MainViewModel : ViewModelBase
         var prevYearAvgHighs = new List<double>();
         var prevYearAvgLows = new List<double>();
         var prevYearAvgGusts = new List<double>();
+        var prevYearPeakGusts = new List<double>();
         var prevYearTotalRains = new List<double>();
         var prevYearRainDays = new List<int>();
         var prevYearTotalStrikes = new List<int>();
@@ -1099,7 +1143,11 @@ public class MainViewModel : ViewModelBase
                 if (lows.Count > 0) prevYearAvgLows.Add(lows.Average());
 
                 var gusts = pyPoints.Where(y => y!.GustMph.HasValue).Select(y => y!.GustMph!.Value).ToList();
-                if (gusts.Count > 0) prevYearAvgGusts.Add(gusts.Average());
+                if (gusts.Count > 0)
+                {
+                    prevYearAvgGusts.Add(gusts.Average());
+                    prevYearPeakGusts.Add(gusts.Max());
+                }
 
                 prevYearTotalRains.Add(pyPoints.Sum(y => y!.RainIn));
                 prevYearRainDays.Add(pyPoints.Count(y => y!.RainIn > 0.001));
@@ -1116,6 +1164,7 @@ public class MainViewModel : ViewModelBase
         double prevYears14DayAvgHigh = prevYearAvgHighs.Count > 0 ? prevYearAvgHighs.Average() : 0;
         double prevYears14DayAvgLow = prevYearAvgLows.Count > 0 ? prevYearAvgLows.Average() : 0;
         double prevYears14DayAvgGust = prevYearAvgGusts.Count > 0 ? prevYearAvgGusts.Average() : 0;
+        double prevYears14DayAvgPeakGust = prevYearPeakGusts.Count > 0 ? prevYearPeakGusts.Average() : 0;
         double prevYears14DayAvgRain = prevYearTotalRains.Count > 0 ? prevYearTotalRains.Average() : 0;
         double prevYears14DayAvgRainDays = prevYearRainDays.Count > 0 ? prevYearRainDays.Average() : 0;
         double prevYears14DayAvgStrikes = prevYearTotalStrikes.Count > 0 ? prevYearTotalStrikes.Average() : 0;
@@ -1127,6 +1176,7 @@ public class MainViewModel : ViewModelBase
         double deltaAvgHigh = thisYear14DayAvgHigh - prevYears14DayAvgHigh;
         double deltaAvgLow = thisYear14DayAvgLow - prevYears14DayAvgLow;
         double deltaGust = thisYear14DayAvgGust - prevYears14DayAvgGust;
+        double deltaPeakGust = thisYear14DayPeakGust - prevYears14DayAvgPeakGust;
         double deltaRain = thisYear14DayTotalRain - prevYears14DayAvgRain;
         double deltaRainDays = thisYear14DayRainDays - prevYears14DayAvgRainDays;
         double deltaStrikes = thisYear14DayTotalStrikes - prevYears14DayAvgStrikes;
@@ -1134,50 +1184,62 @@ public class MainViewModel : ViewModelBase
         double deltaSolar14 = thisYear14DayAvgSolar - prevYears14DayAvgSolar;
 
         // 1. Average Daily Temp:
-        SixMonthAvgTempThisYearText = $"14-Day Avg Temp: {thisYear14DayAvgTemp:F1}°F";
+        SixMonthAvgTempThisYearText = $"Avg Temp: {thisYear14DayAvgTemp:F1}°F";
         SixMonthAvgTempDeltaText = $"{(deltaAvgTemp >= 0 ? "+" : "")}{deltaAvgTemp:F1}°F vs {prevYears14DayAvgTemp:F1}°F prev yrs avg";
         SixMonthAvgTempDeltaBrush = deltaAvgTemp >= 0 
             ? new SolidColorBrush(Color.FromArgb(255, 220, 38, 38))  // Red (#DC2626)
-            : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235)); // Blue (#2563EB)
+            : new SolidColorBrush(Color.FromArgb(255, 22, 163, 74)); // Green (#16A34A)
 
         // 2. Max/Min Temperature Dual:
-        SixMonthAvgHighThisYearText = $"14-Day Avg Max: {thisYear14DayAvgHigh:F1}°F";
+        SixMonthAvgHighThisYearText = $"Avg Max: {thisYear14DayAvgHigh:F1}°F";
         SixMonthAvgHighDeltaText = $"{(deltaAvgHigh >= 0 ? "+" : "")}{deltaAvgHigh:F1}°F vs {prevYears14DayAvgHigh:F1}°F prev yrs avg";
         SixMonthAvgHighDeltaBrush = deltaAvgHigh >= 0 
             ? new SolidColorBrush(Color.FromArgb(255, 220, 38, 38))
-            : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
-        SixMonthAvgLowThisYearText = $"• Avg Min: {thisYear14DayAvgLow:F1}°F";
+            : new SolidColorBrush(Color.FromArgb(255, 22, 163, 74));
+        SixMonthAvgLowThisYearText = $"Avg Min: {thisYear14DayAvgLow:F1}°F";
         SixMonthAvgLowDeltaText = $"{(deltaAvgLow >= 0 ? "+" : "")}{deltaAvgLow:F1}°F vs {prevYears14DayAvgLow:F1}°F prev yrs avg";
         SixMonthAvgLowDeltaBrush = deltaAvgLow >= 0 
             ? new SolidColorBrush(Color.FromArgb(255, 220, 38, 38))
-            : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
+            : new SolidColorBrush(Color.FromArgb(255, 22, 163, 74));
 
         // 3. Peak Daily Wind Gust:
-        SixMonthWindThisYearText = $"14-Day Avg Daily Gust: {thisYear14DayAvgGust:F1} mph";
+        SixMonthWindThisYearText = $"Avg Daily Gust: {thisYear14DayAvgGust:F1} mph";
         SixMonthWindDeltaText = $"{(deltaGust >= 0 ? "+" : "")}{deltaGust:F1} mph vs {prevYears14DayAvgGust:F1} mph prev yrs avg";
         SixMonthWindDeltaBrush = deltaGust >= 0
             ? new SolidColorBrush(Color.FromArgb(255, 220, 38, 38))
             : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
-        SixMonthWindPeakText = !string.IsNullOrEmpty(peakGustDate) ? $"• Peak Gust: {thisYear14DayPeakGust:F1} mph ({peakGustDate})" : $"• Peak Gust: {thisYear14DayPeakGust:F1} mph";
+        SixMonthWindPeakText = !string.IsNullOrEmpty(peakGustDate) ? $"Peak Gust: {thisYear14DayPeakGust:F1} mph ({peakGustDate})" : $"Peak Gust: {thisYear14DayPeakGust:F1} mph";
+        SixMonthWindPeakDeltaText = $"{(deltaPeakGust >= 0 ? "+" : "")}{deltaPeakGust:F1} mph vs {prevYears14DayAvgPeakGust:F1} mph prev yrs peak";
+        SixMonthWindPeakDeltaBrush = deltaPeakGust >= 0
+            ? new SolidColorBrush(Color.FromArgb(255, 220, 38, 38))
+            : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
 
         // 4. Precipitation:
-        SixMonthRainThisYearText = $"14-Day Total Rain: {thisYear14DayTotalRain:F2} in";
+        SixMonthRainThisYearText = $"Total Rain: {thisYear14DayTotalRain:F2} in";
         SixMonthRainDeltaText = $"{(deltaRain >= 0 ? "+" : "")}{deltaRain:F2} in vs {prevYears14DayAvgRain:F2} in prev yrs avg";
         SixMonthRainDeltaBrush = deltaRain >= 0
             ? new SolidColorBrush(Color.FromArgb(255, 5, 150, 105))  // Green (#059669)
             : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235)); // Blue (#2563EB)
-        SixMonthRainDaysText = $"• Rain Days: {thisYear14DayRainDays} ({(deltaRainDays >= 0 ? "+" : "")}{deltaRainDays:F1} vs {prevYears14DayAvgRainDays:F1} prev yrs avg)";
+        SixMonthRainDaysText = $"Rain Days: {thisYear14DayRainDays}";
+        SixMonthRainDaysDeltaText = $"{(deltaRainDays >= 0 ? "+" : "")}{deltaRainDays:F1} vs {prevYears14DayAvgRainDays:F1} prev yrs avg";
+        SixMonthRainDaysDeltaBrush = deltaRainDays >= 0
+            ? new SolidColorBrush(Color.FromArgb(255, 5, 150, 105))
+            : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
 
         // 5. Lightning:
-        SixMonthLightningThisYearText = $"14-Day Total Strikes: {thisYear14DayTotalStrikes:N0}";
+        SixMonthLightningThisYearText = $"Total Strikes: {thisYear14DayTotalStrikes:N0}";
         SixMonthLightningDeltaText = $"{(deltaStrikes >= 0 ? "+" : "")}{deltaStrikes:N0} vs {prevYears14DayAvgStrikes:N0} prev yrs avg";
         SixMonthLightningDeltaBrush = deltaStrikes >= 0
             ? new SolidColorBrush(Color.FromArgb(255, 217, 119, 6)) // Amber 600 (#D97706)
             : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235)); // Blue (#2563EB)
-        SixMonthLightningDaysText = $"• Days with Lightning: {thisYear14DayStrikeDays} ({(deltaStrikeDays >= 0 ? "+" : "")}{deltaStrikeDays:F1} vs {prevYears14DayAvgStrikeDays:F1} prev yrs avg)";
+        SixMonthLightningDaysText = $"Days with Lightning: {thisYear14DayStrikeDays}";
+        SixMonthLightningDaysDeltaText = $"{(deltaStrikeDays >= 0 ? "+" : "")}{deltaStrikeDays:F1} vs {prevYears14DayAvgStrikeDays:F1} prev yrs avg";
+        SixMonthLightningDaysDeltaBrush = deltaStrikeDays >= 0
+            ? new SolidColorBrush(Color.FromArgb(255, 217, 119, 6))
+            : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
 
         // 6. Solar (14-Day Tab):
-        FourteenDayTabSolarThisYearText = $"14-Day Avg Solar: {thisYear14DayAvgSolar:F0} W/m²";
+        FourteenDayTabSolarThisYearText = $"Avg Solar: {thisYear14DayAvgSolar:F0} W/m²";
         FourteenDayTabSolarDeltaText = $"{(deltaSolar14 >= 0 ? "+" : "")}{deltaSolar14:F0} W/m² vs {prevYears14DayAvgSolar:F0} W/m² prev yrs avg";
         FourteenDayTabSolarDeltaBrush = GetSolarBrush(deltaSolar14);
 
@@ -1365,6 +1427,7 @@ public class MainViewModel : ViewModelBase
             var py6AvgHighs = new List<double>();
             var py6AvgLows = new List<double>();
             var py6AvgGusts = new List<double>();
+            var py6PeakGusts = new List<double>();
             var py6TotalRains = new List<double>();
             var py6RainDays = new List<int>();
             var py6TotalStrikes = new List<int>();
@@ -1386,7 +1449,11 @@ public class MainViewModel : ViewModelBase
                     if (l.Count > 0) py6AvgLows.Add(l.Average());
 
                     var g = pyRecs.Where(r => r.Record.WindGustMph.HasValue).Select(r => r.Record.WindGustMph!.Value).ToList();
-                    if (g.Count > 0) py6AvgGusts.Add(g.Average());
+                    if (g.Count > 0)
+                    {
+                        py6AvgGusts.Add(g.Average());
+                        py6PeakGusts.Add(g.Max());
+                    }
 
                     py6TotalRains.Add(pyRecs.Sum(r => r.Record.PrecipInches));
                     py6RainDays.Add(pyRecs.Count(r => r.Record.PrecipInches > 0.001));
@@ -1403,6 +1470,7 @@ public class MainViewModel : ViewModelBase
             double prevYears6MoAvgHigh = py6AvgHighs.Count > 0 ? py6AvgHighs.Average() : 0;
             double prevYears6MoAvgLow = py6AvgLows.Count > 0 ? py6AvgLows.Average() : 0;
             double prevYears6MoAvgGust = py6AvgGusts.Count > 0 ? py6AvgGusts.Average() : 0;
+            double prevYears6MoAvgPeakGust = py6PeakGusts.Count > 0 ? py6PeakGusts.Average() : 0;
             double prevYears6MoAvgRain = py6TotalRains.Count > 0 ? py6TotalRains.Average() : 0;
             double prevYears6MoAvgRainDays = py6RainDays.Count > 0 ? py6RainDays.Average() : 0;
             double prevYears6MoAvgStrikes = py6TotalStrikes.Count > 0 ? py6TotalStrikes.Average() : 0;
@@ -1413,51 +1481,64 @@ public class MainViewModel : ViewModelBase
             double delta6AvgHigh = thisYear6MoAvgHigh - prevYears6MoAvgHigh;
             double delta6AvgLow = thisYear6MoAvgLow - prevYears6MoAvgLow;
             double delta6Gust = thisYear6MoAvgGust - prevYears6MoAvgGust;
+            double delta6PeakGust = thisYear6MoPeakGust - prevYears6MoAvgPeakGust;
             double delta6Rain = thisYear6MoTotalRain - prevYears6MoAvgRain;
             double delta6RainDays = thisYear6MoRainDays - prevYears6MoAvgRainDays;
             double delta6Strikes = thisYear6MoTotalStrikes - prevYears6MoAvgStrikes;
             double delta6StrikeDays = thisYear6MoStrikeDays - prevYears6MoAvgStrikeDays;
             double delta6Solar = thisYear6MoAvgSolar - prevYears6MoAvgSolar;
 
-            SixMonthTabAvgTempThisYearText = $"6-Mo Avg Temp: {thisYear6MoAvgTemp:F1}°F";
+            SixMonthTabAvgTempThisYearText = $"Avg Temp: {thisYear6MoAvgTemp:F1}°F";
             SixMonthTabAvgTempDeltaText = $"{(delta6AvgTemp >= 0 ? "+" : "")}{delta6AvgTemp:F1}°F vs {prevYears6MoAvgTemp:F1}°F prev yrs avg";
             SixMonthTabAvgTempDeltaBrush = delta6AvgTemp >= 0
                 ? new SolidColorBrush(Color.FromArgb(255, 220, 38, 38))
-                : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
+                : new SolidColorBrush(Color.FromArgb(255, 22, 163, 74));
 
-            SixMonthTabAvgHighThisYearText = $"6-Mo Avg Max: {thisYear6MoAvgHigh:F1}°F";
+            SixMonthTabAvgHighThisYearText = $"Avg Max: {thisYear6MoAvgHigh:F1}°F";
             SixMonthTabAvgHighDeltaText = $"{(delta6AvgHigh >= 0 ? "+" : "")}{delta6AvgHigh:F1}°F vs {prevYears6MoAvgHigh:F1}°F prev yrs avg";
             SixMonthTabAvgHighDeltaBrush = delta6AvgHigh >= 0
                 ? new SolidColorBrush(Color.FromArgb(255, 220, 38, 38))
-                : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
-            SixMonthTabAvgLowThisYearText = $"• Avg Min: {thisYear6MoAvgLow:F1}°F";
+                : new SolidColorBrush(Color.FromArgb(255, 22, 163, 74));
+            SixMonthTabAvgLowThisYearText = $"Avg Min: {thisYear6MoAvgLow:F1}°F";
             SixMonthTabAvgLowDeltaText = $"{(delta6AvgLow >= 0 ? "+" : "")}{delta6AvgLow:F1}°F vs {prevYears6MoAvgLow:F1}°F prev yrs avg";
             SixMonthTabAvgLowDeltaBrush = delta6AvgLow >= 0
                 ? new SolidColorBrush(Color.FromArgb(255, 220, 38, 38))
-                : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
+                : new SolidColorBrush(Color.FromArgb(255, 22, 163, 74));
 
-            SixMonthTabWindThisYearText = $"6-Mo Avg Daily Gust: {thisYear6MoAvgGust:F1} mph";
+            SixMonthTabWindThisYearText = $"Avg Daily Gust: {thisYear6MoAvgGust:F1} mph";
             SixMonthTabWindDeltaText = $"{(delta6Gust >= 0 ? "+" : "")}{delta6Gust:F1} mph vs {prevYears6MoAvgGust:F1} mph prev yrs avg";
             SixMonthTabWindDeltaBrush = delta6Gust >= 0
                 ? new SolidColorBrush(Color.FromArgb(255, 220, 38, 38))
                 : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
-            SixMonthTabWindPeakText = !string.IsNullOrEmpty(peakGustDate6Mo) ? $"• Peak Gust: {thisYear6MoPeakGust:F1} mph ({peakGustDate6Mo})" : $"• Peak Gust: {thisYear6MoPeakGust:F1} mph";
+            SixMonthTabWindPeakText = !string.IsNullOrEmpty(peakGustDate6Mo) ? $"Peak Gust: {thisYear6MoPeakGust:F1} mph ({peakGustDate6Mo})" : $"Peak Gust: {thisYear6MoPeakGust:F1} mph";
+            SixMonthTabWindPeakDeltaText = $"{(delta6PeakGust >= 0 ? "+" : "")}{delta6PeakGust:F1} mph vs {prevYears6MoAvgPeakGust:F1} mph prev yrs peak";
+            SixMonthTabWindPeakDeltaBrush = delta6PeakGust >= 0
+                ? new SolidColorBrush(Color.FromArgb(255, 220, 38, 38))
+                : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
 
-            SixMonthTabRainThisYearText = $"6-Mo Total Rain: {thisYear6MoTotalRain:F2} in";
+            SixMonthTabRainThisYearText = $"Total Rain: {thisYear6MoTotalRain:F2} in";
             SixMonthTabRainDeltaText = $"{(delta6Rain >= 0 ? "+" : "")}{delta6Rain:F2} in vs {prevYears6MoAvgRain:F2} in prev yrs avg";
             SixMonthTabRainDeltaBrush = delta6Rain >= 0
                 ? new SolidColorBrush(Color.FromArgb(255, 5, 150, 105))
                 : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
-            SixMonthTabRainDaysText = $"• Rain Days: {thisYear6MoRainDays} ({(delta6RainDays >= 0 ? "+" : "")}{delta6RainDays:F1} vs {prevYears6MoAvgRainDays:F1} prev yrs avg)";
+            SixMonthTabRainDaysText = $"Rain Days: {thisYear6MoRainDays}";
+            SixMonthTabRainDaysDeltaText = $"{(delta6RainDays >= 0 ? "+" : "")}{delta6RainDays:F1} vs {prevYears6MoAvgRainDays:F1} prev yrs avg";
+            SixMonthTabRainDaysDeltaBrush = delta6RainDays >= 0
+                ? new SolidColorBrush(Color.FromArgb(255, 5, 150, 105))
+                : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
 
-            SixMonthTabLightningThisYearText = $"6-Mo Total Strikes: {thisYear6MoTotalStrikes:N0}";
+            SixMonthTabLightningThisYearText = $"Total Strikes: {thisYear6MoTotalStrikes:N0}";
             SixMonthTabLightningDeltaText = $"{(delta6Strikes >= 0 ? "+" : "")}{delta6Strikes:N0} vs {prevYears6MoAvgStrikes:N0} prev yrs avg";
             SixMonthTabLightningDeltaBrush = delta6Strikes >= 0
                 ? new SolidColorBrush(Color.FromArgb(255, 217, 119, 6))
                 : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
-            SixMonthTabLightningDaysText = $"• Days with Lightning: {thisYear6MoStrikeDays} ({(delta6StrikeDays >= 0 ? "+" : "")}{delta6StrikeDays:F1} vs {prevYears6MoAvgStrikeDays:F1} prev yrs avg)";
+            SixMonthTabLightningDaysText = $"Days with Lightning: {thisYear6MoStrikeDays}";
+            SixMonthTabLightningDaysDeltaText = $"{(delta6StrikeDays >= 0 ? "+" : "")}{delta6StrikeDays:F1} vs {prevYears6MoAvgStrikeDays:F1} prev yrs avg";
+            SixMonthTabLightningDaysDeltaBrush = delta6StrikeDays >= 0
+                ? new SolidColorBrush(Color.FromArgb(255, 217, 119, 6))
+                : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
 
-            SixMonthTabSolarThisYearText = $"6-Mo Avg Solar: {thisYear6MoAvgSolar:F0} W/m²";
+            SixMonthTabSolarThisYearText = $"Avg Solar: {thisYear6MoAvgSolar:F0} W/m²";
             SixMonthTabSolarDeltaText = $"{(delta6Solar >= 0 ? "+" : "")}{delta6Solar:F0} W/m² vs {prevYears6MoAvgSolar:F0} W/m² prev yrs avg";
             SixMonthTabSolarDeltaBrush = GetSolarBrush(delta6Solar);
 
@@ -1544,6 +1625,7 @@ public class MainViewModel : ViewModelBase
         var py12AvgHighs = new List<double>();
         var py12AvgLows = new List<double>();
         var py12AvgGusts = new List<double>();
+        var py12PeakGusts = new List<double>();
         var py12TotalRains = new List<double>();
         var py12RainDays = new List<int>();
         var py12TotalStrikes = new List<int>();
@@ -1565,7 +1647,11 @@ public class MainViewModel : ViewModelBase
                 if (l.Count > 0) py12AvgLows.Add(l.Average());
 
                 var g = pyRecs.Where(r => r.Record.WindGustMph.HasValue).Select(r => r.Record.WindGustMph!.Value).ToList();
-                if (g.Count > 0) py12AvgGusts.Add(g.Average());
+                if (g.Count > 0)
+                {
+                    py12AvgGusts.Add(g.Average());
+                    py12PeakGusts.Add(g.Max());
+                }
 
                 py12TotalRains.Add(pyRecs.Sum(r => r.Record.PrecipInches));
                 py12RainDays.Add(pyRecs.Count(r => r.Record.PrecipInches > 0.001));
@@ -1582,6 +1668,7 @@ public class MainViewModel : ViewModelBase
         double prevYears12MoAvgHigh = py12AvgHighs.Count > 0 ? py12AvgHighs.Average() : 0;
         double prevYears12MoAvgLow = py12AvgLows.Count > 0 ? py12AvgLows.Average() : 0;
         double prevYears12MoAvgGust = py12AvgGusts.Count > 0 ? py12AvgGusts.Average() : 0;
+        double prevYears12MoAvgPeakGust = py12PeakGusts.Count > 0 ? py12PeakGusts.Average() : 0;
         double prevYears12MoAvgRain = py12TotalRains.Count > 0 ? py12TotalRains.Average() : 0;
         double prevYears12MoAvgRainDays = py12RainDays.Count > 0 ? py12RainDays.Average() : 0;
         double prevYears12MoAvgStrikes = py12TotalStrikes.Count > 0 ? py12TotalStrikes.Average() : 0;
@@ -1592,49 +1679,62 @@ public class MainViewModel : ViewModelBase
         double delta12AvgHigh = thisYear12MoAvgHigh - prevYears12MoAvgHigh;
         double delta12AvgLow = thisYear12MoAvgLow - prevYears12MoAvgLow;
         double delta12Gust = thisYear12MoAvgGust - prevYears12MoAvgGust;
+        double delta12PeakGust = thisYear12MoPeakGust - prevYears12MoAvgPeakGust;
         double delta12Rain = thisYear12MoTotalRain - prevYears12MoAvgRain;
         double delta12RainDays = thisYear12MoRainDays - prevYears12MoAvgRainDays;
         double delta12Strikes = thisYear12MoTotalStrikes - prevYears12MoAvgStrikes;
         double delta12StrikeDays = thisYear12MoStrikeDays - prevYears12MoAvgStrikeDays;
         double delta12Solar = thisYear12MoAvgSolar - prevYears12MoAvgSolar;
 
-        TwelveMonthTabAvgTempThisYearText = $"12-Mo Avg Temp: {thisYear12MoAvgTemp:F1}°F";
+        TwelveMonthTabAvgTempThisYearText = $"Avg Temp: {thisYear12MoAvgTemp:F1}°F";
         TwelveMonthTabAvgTempDeltaText = $"{(delta12AvgTemp >= 0 ? "+" : "")}{delta12AvgTemp:F1}°F vs {prevYears12MoAvgTemp:F1}°F prev yrs avg";
         TwelveMonthTabAvgTempDeltaBrush = delta12AvgTemp >= 0
             ? new SolidColorBrush(Color.FromArgb(255, 220, 38, 38))
-            : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
+            : new SolidColorBrush(Color.FromArgb(255, 22, 163, 74));
 
-        TwelveMonthTabAvgHighThisYearText = $"12-Mo Avg Max: {thisYear12MoAvgHigh:F1}°F";
+        TwelveMonthTabAvgHighThisYearText = $"Avg Max: {thisYear12MoAvgHigh:F1}°F";
         TwelveMonthTabAvgHighDeltaText = $"{(delta12AvgHigh >= 0 ? "+" : "")}{delta12AvgHigh:F1}°F vs {prevYears12MoAvgHigh:F1}°F prev yrs avg";
         TwelveMonthTabAvgHighDeltaBrush = delta12AvgHigh >= 0
             ? new SolidColorBrush(Color.FromArgb(255, 220, 38, 38))
-            : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
-        TwelveMonthTabAvgLowThisYearText = $"• Avg Min: {thisYear12MoAvgLow:F1}°F";
+            : new SolidColorBrush(Color.FromArgb(255, 22, 163, 74));
+        TwelveMonthTabAvgLowThisYearText = $"Avg Min: {thisYear12MoAvgLow:F1}°F";
         TwelveMonthTabAvgLowDeltaText = $"{(delta12AvgLow >= 0 ? "+" : "")}{delta12AvgLow:F1}°F vs {prevYears12MoAvgLow:F1}°F prev yrs avg";
         TwelveMonthTabAvgLowDeltaBrush = delta12AvgLow >= 0
             ? new SolidColorBrush(Color.FromArgb(255, 220, 38, 38))
-            : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
+            : new SolidColorBrush(Color.FromArgb(255, 22, 163, 74));
 
-        TwelveMonthTabWindThisYearText = $"12-Mo Avg Daily Gust: {thisYear12MoAvgGust:F1} mph";
+        TwelveMonthTabWindThisYearText = $"Avg Daily Gust: {thisYear12MoAvgGust:F1} mph";
         TwelveMonthTabWindDeltaText = $"{(delta12Gust >= 0 ? "+" : "")}{delta12Gust:F1} mph vs {prevYears12MoAvgGust:F1} mph prev yrs avg";
         TwelveMonthTabWindDeltaBrush = delta12Gust >= 0
             ? new SolidColorBrush(Color.FromArgb(255, 220, 38, 38))
             : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
-        TwelveMonthTabWindPeakText = !string.IsNullOrEmpty(peakGustDate12Mo) ? $"• Peak Gust: {thisYear12MoPeakGust:F1} mph ({peakGustDate12Mo})" : $"• Peak Gust: {thisYear12MoPeakGust:F1} mph";
+        TwelveMonthTabWindPeakText = !string.IsNullOrEmpty(peakGustDate12Mo) ? $"Peak Gust: {thisYear12MoPeakGust:F1} mph ({peakGustDate12Mo})" : $"Peak Gust: {thisYear12MoPeakGust:F1} mph";
+        TwelveMonthTabWindPeakDeltaText = $"{(delta12PeakGust >= 0 ? "+" : "")}{delta12PeakGust:F1} mph vs {prevYears12MoAvgPeakGust:F1} mph prev yrs peak";
+        TwelveMonthTabWindPeakDeltaBrush = delta12PeakGust >= 0
+            ? new SolidColorBrush(Color.FromArgb(255, 220, 38, 38))
+            : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
 
-        TwelveMonthTabRainThisYearText = $"12-Mo Total Rain: {thisYear12MoTotalRain:F2} in";
+        TwelveMonthTabRainThisYearText = $"Total Rain: {thisYear12MoTotalRain:F2} in";
         TwelveMonthTabRainDeltaText = $"{(delta12Rain >= 0 ? "+" : "")}{delta12Rain:F2} in vs {prevYears12MoAvgRain:F2} in prev yrs avg";
         TwelveMonthTabRainDeltaBrush = delta12Rain >= 0
             ? new SolidColorBrush(Color.FromArgb(255, 5, 150, 105))
             : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
-        TwelveMonthTabRainDaysText = $"• Rain Days: {thisYear12MoRainDays} ({(delta12RainDays >= 0 ? "+" : "")}{delta12RainDays:F1} vs {prevYears12MoAvgRainDays:F1} prev yrs avg)";
+        TwelveMonthTabRainDaysText = $"Rain Days: {thisYear12MoRainDays}";
+        TwelveMonthTabRainDaysDeltaText = $"{(delta12RainDays >= 0 ? "+" : "")}{delta12RainDays:F1} vs {prevYears12MoAvgRainDays:F1} prev yrs avg";
+        TwelveMonthTabRainDaysDeltaBrush = delta12RainDays >= 0
+            ? new SolidColorBrush(Color.FromArgb(255, 5, 150, 105))
+            : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
 
-        TwelveMonthTabLightningThisYearText = $"12-Mo Total Strikes: {thisYear12MoTotalStrikes:N0}";
+        TwelveMonthTabLightningThisYearText = $"Total Strikes: {thisYear12MoTotalStrikes:N0}";
         TwelveMonthTabLightningDeltaText = $"{(delta12Strikes >= 0 ? "+" : "")}{delta12Strikes:N0} vs {prevYears12MoAvgStrikes:N0} prev yrs avg";
         TwelveMonthTabLightningDeltaBrush = delta12Strikes >= 0
             ? new SolidColorBrush(Color.FromArgb(255, 217, 119, 6))
             : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
-        TwelveMonthTabLightningDaysText = $"• Days with Lightning: {thisYear12MoStrikeDays} ({(delta12StrikeDays >= 0 ? "+" : "")}{delta12StrikeDays:F1} vs {prevYears12MoAvgStrikeDays:F1} prev yrs avg)";
+        TwelveMonthTabLightningDaysText = $"Days with Lightning: {thisYear12MoStrikeDays}";
+        TwelveMonthTabLightningDaysDeltaText = $"{(delta12StrikeDays >= 0 ? "+" : "")}{delta12StrikeDays:F1} vs {prevYears12MoAvgStrikeDays:F1} prev yrs avg";
+        TwelveMonthTabLightningDaysDeltaBrush = delta12StrikeDays >= 0
+            ? new SolidColorBrush(Color.FromArgb(255, 217, 119, 6))
+            : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
 
         // Glance Overview (12-Month)
         Glance12MonthRainDaysText = $"{(delta12RainDays >= 0 ? "+" : "")}{delta12RainDays:F1} days";

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
@@ -96,6 +96,9 @@ namespace PwTrackTrimmer.Controls
             double paddingY = 16;
             double usableHeight = _chartHeight - (paddingY * 2);
 
+            bool isDark = Services.ThemeManager.Current.IsDark;
+            ChartArea.Background = isDark ? Services.ThemeManager.BrushDarkChartBg : Services.ThemeManager.BrushLightChartBg;
+
             // Draw horizontal elevation grid lines (3 lines)
             for (int i = 0; i <= 3; i++)
             {
@@ -109,7 +112,7 @@ namespace PwTrackTrimmer.Controls
                     Y1 = y,
                     X2 = _chartWidth,
                     Y2 = y,
-                    Stroke = new SolidColorBrush(Color.FromArgb(50, 148, 163, 184)),
+                    Stroke = isDark ? new SolidColorBrush(Color.FromArgb(50, 148, 163, 184)) : new SolidColorBrush(Color.FromArgb(90, 148, 163, 184)),
                     StrokeThickness = 1,
                     StrokeDashArray = new DoubleCollection { 2, 4 }
                 };
@@ -119,7 +122,7 @@ namespace PwTrackTrimmer.Controls
                 {
                     Text = $"{eleVal * 3.280839895:F0} ft",
                     FontSize = 10,
-                    Foreground = new SolidColorBrush(Color.FromArgb(140, 148, 163, 184))
+                    Foreground = isDark ? new SolidColorBrush(Color.FromArgb(140, 148, 163, 184)) : new SolidColorBrush(Color.FromArgb(200, 71, 85, 105))
                 };
                 Canvas.SetLeft(txt, 8);
                 Canvas.SetTop(txt, Math.Max(0, y - 14));
@@ -160,9 +163,9 @@ namespace PwTrackTrimmer.Controls
                     EndPoint = new Point(0, 1),
                     GradientStops = new GradientStopCollection
                     {
-                        new GradientStop { Color = Color.FromArgb(160, 14, 165, 233), Offset = 0.0 },
-                        new GradientStop { Color = Color.FromArgb(50, 3, 105, 161), Offset = 0.7 },
-                        new GradientStop { Color = Color.FromArgb(10, 15, 23, 42), Offset = 1.0 }
+                        new GradientStop { Color = isDark ? Color.FromArgb(160, 14, 165, 233) : Color.FromArgb(140, 14, 165, 233), Offset = 0.0 },
+                        new GradientStop { Color = isDark ? Color.FromArgb(50, 3, 105, 161) : Color.FromArgb(40, 3, 105, 161), Offset = 0.7 },
+                        new GradientStop { Color = isDark ? Color.FromArgb(10, 15, 23, 42) : Color.FromArgb(20, 241, 245, 249), Offset = 1.0 }
                     }
                 }
             };
@@ -172,7 +175,7 @@ namespace PwTrackTrimmer.Controls
             var polyline = new Polyline
             {
                 Points = polylinePoints,
-                Stroke = new SolidColorBrush(Color.FromArgb(255, 56, 189, 248)),
+                Stroke = isDark ? new SolidColorBrush(Color.FromArgb(255, 56, 189, 248)) : new SolidColorBrush(Color.FromArgb(255, 2, 132, 199)),
                 StrokeThickness = 2
             };
             ProfileCanvas.Children.Add(polyline);
@@ -266,6 +269,11 @@ namespace PwTrackTrimmer.Controls
             EndMarkerLine.Y2 = _chartHeight;
             Canvas.SetLeft(EndHandle, Math.Min(_chartWidth - 20, endX - 10));
             Canvas.SetTop(EndHandle, 4);
+
+            bool isDark = Services.ThemeManager.Current.IsDark;
+            var dimBrush = isDark ? new SolidColorBrush(Color.FromArgb(179, 15, 23, 42)) : new SolidColorBrush(Color.FromArgb(179, 241, 245, 249));
+            LeftDimOverlay.Background = dimBrush;
+            RightDimOverlay.Background = dimBrush;
 
             // Dim Overlays
             if (startX > 1)

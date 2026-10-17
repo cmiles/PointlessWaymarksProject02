@@ -13,7 +13,7 @@ namespace WaterDaze
         {
             this.InitializeComponent();
 
-            // Enter construction logic here...
+            WaterDaze.Services.ThemeManager.Initialize();
 
             var mainPage = new MainPage();
             this.RootVisual = mainPage;

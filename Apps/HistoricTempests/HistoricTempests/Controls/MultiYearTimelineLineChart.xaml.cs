@@ -24,9 +24,9 @@ public partial class MultiYearTimelineLineChart : UserControl
     private static readonly SolidColorBrush Pale2024Brush = new(Color.FromArgb(200, 252, 211, 77));  // Pale Amber
     private static readonly SolidColorBrush Pale2023Brush = new(Color.FromArgb(200, 148, 163, 184)); // Pale Slate
 
-    private static readonly SolidColorBrush GridBrush = new(Color.FromArgb(255, 241, 245, 249));
-    private static readonly SolidColorBrush AxisTextBrush = new(Color.FromArgb(255, 100, 116, 139));
-    private static readonly SolidColorBrush ForwardBandBrush = new(Color.FromArgb(12, 100, 116, 139)); // Subtle grey tint for forward span
+    private static SolidColorBrush GridBrush => Services.ThemeManager.Current.GridLineBrush;
+    private static SolidColorBrush AxisTextBrush => Services.ThemeManager.Current.AxisTextBrush;
+    private static SolidColorBrush ForwardBandBrush => Services.ThemeManager.Current.FutureBandBrush;
 
     public static readonly DependencyProperty DayDataProperty =
         DependencyProperty.Register(nameof(DayData), typeof(IEnumerable<DayTimelinePoint>),
@@ -64,7 +64,17 @@ public partial class MultiYearTimelineLineChart : UserControl
             RenderChart();
         };
 
-        Loaded += (_, _) => RenderChart();
+        Services.ThemeManager.Current.ThemeChanged += (_, _) =>
+        {
+            ApplyTheme();
+            RenderChart();
+        };
+
+        Loaded += (_, _) =>
+        {
+            ApplyTheme();
+            RenderChart();
+        };
         SizeChanged += (_, _) =>
         {
             _resizeTimer.Stop();
@@ -73,6 +83,23 @@ public partial class MultiYearTimelineLineChart : UserControl
 
         ChartGrid.MouseMove += OnChartGridMouseMove;
         ChartGrid.MouseLeave += OnChartGridMouseLeave;
+    }
+
+    public void ApplyTheme()
+    {
+        if (ChartCardBorder != null)
+        {
+            ChartCardBorder.Background = Services.ThemeManager.Current.CardBackground;
+            ChartCardBorder.BorderBrush = Services.ThemeManager.Current.CardBorder;
+        }
+        if (ChartTitleBlock != null)
+        {
+            ChartTitleBlock.Foreground = Services.ThemeManager.Current.TextPrimary;
+        }
+        if (ChartUnitBlock != null)
+        {
+            ChartUnitBlock.Foreground = Services.ThemeManager.Current.TextSecondary;
+        }
     }
 
     public IEnumerable<DayTimelinePoint>? DayData
@@ -373,7 +400,7 @@ public partial class MultiYearTimelineLineChart : UserControl
                 {
                     Width = width - splitX,
                     Height = height,
-                    Fill = new SolidColorBrush(Color.FromArgb(255, 241, 245, 249)) // #F1F5F9 Slate 100
+                    Fill = ForwardBandBrush
                 };
                 Canvas.SetLeft(forwardRect, splitX);
                 Canvas.SetTop(forwardRect, 0);
@@ -383,7 +410,7 @@ public partial class MultiYearTimelineLineChart : UserControl
                 {
                     Width = 1.5,
                     Height = height,
-                    Fill = new SolidColorBrush(Color.FromArgb(255, 203, 213, 225)) // Slate 300
+                    Fill = Services.ThemeManager.Current.DividerBrush
                 };
                 Canvas.SetLeft(splitLine, splitX);
                 Canvas.SetTop(splitLine, 0);
@@ -759,22 +786,48 @@ public partial class MultiYearTimelineLineChart : UserControl
         if (LegendContainer == null) return;
         LegendContainer.Children.Clear();
 
+        string currentYear = "2026";
+        if (DayData != null)
+        {
+            var firstWithPy = DayData.FirstOrDefault(d => d.PrevYears != null && d.PrevYears.Any());
+            if (firstWithPy != null)
+            {
+                int maxPrevYear = firstWithPy.PrevYears.Max(y => y.Year);
+                if (maxPrevYear > 2000)
+                {
+                    currentYear = (maxPrevYear + 1).ToString();
+                }
+            }
+        }
+        else if (MonthData != null)
+        {
+            var firstWithPy = MonthData.FirstOrDefault(m => m.PrevYears != null && m.PrevYears.Any());
+            if (firstWithPy != null)
+            {
+                int maxPrevYear = firstWithPy.PrevYears.Max(y => y.Year);
+                if (maxPrevYear > 2000)
+                {
+                    currentYear = (maxPrevYear + 1).ToString();
+                }
+            }
+        }
+
         if (mode == "TemperatureDual")
         {
-            AddLegendItem(BrightRedBrush, "This Year Max", true);
-            AddLegendItem(BrightBlueBrush, "This Year Min", true);
+            AddLegendItem(BrightRedBrush, $"{currentYear} Max", true);
+            AddLegendItem(BrightBlueBrush, $"{currentYear} Min", true);
         }
         else if (mode == "WindGust")
         {
-            AddLegendItem(BoldWindBrush, "This Year Peak Gust", true);
+            AddLegendItem(BoldWindBrush, currentYear, true);
         }
         else if (mode == "SolarRadiation")
         {
-            AddLegendItem(BoldSolarBrush, "This Year Solar", true);
+            AddLegendItem(BoldSolarBrush, currentYear, true);
         }
         else
         {
-            AddLegendItem(BoldIndigoBrush, "This Year Avg", true);
+            AddLegendItem(BoldIndigoBrush, currentYear, true);
         }
 
         AddLegendItem(Pale2025Brush, "2025", false);
@@ -799,7 +852,7 @@ public partial class MultiYearTimelineLineChart : UserControl
             Text = text,
             FontSize = 10,
             FontWeight = isBold ? FontWeights.SemiBold : FontWeights.Normal,
-            Foreground = new SolidColorBrush(Color.FromArgb(255, 71, 85, 105)),
+            Foreground = Services.ThemeManager.Current.TextSecondary,
             VerticalAlignment = VerticalAlignment.Center
         };
         sp.Children.Add(box);

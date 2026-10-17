@@ -16,10 +16,25 @@
             padding: 0;
             background-color: #F8FAFC;
         }
+
+        body.dark-theme select,
+        body.dark-theme option {
+            background-color: #0F172A !important;
+            color: #F8FAFC !important;
+            border-color: #334155 !important;
+        }
+
+        body.light-theme select,
+        body.light-theme option {
+            background-color: #FFFFFF !important;
+            color: #0F172A !important;
+            border-color: #CBD5E1 !important;
+        }
     </style>
 </head>
 <body>
     <div id="opensilver-root" style="position: relative; width: 100%; height: 100%; overflow-x: hidden; overflow-y: hidden"></div>
     <script src="libs/photino.js" onerror="alert('Error: photino.js failed to load!');"></script>
+    <script src="rain-days-canvas.js"></script>
 </body>
 </html>

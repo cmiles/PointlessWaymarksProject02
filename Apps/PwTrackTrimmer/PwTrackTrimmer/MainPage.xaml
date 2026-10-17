@@ -8,7 +8,7 @@
       mc:Ignorable="d"
       Foreground="#F8FAFC">
 
-    <Grid Background="#0F172A">
+    <Grid x:Name="OuterRootGrid" Background="#0F172A">
         <!-- Main Scrollable App Content -->
         <ScrollViewer x:Name="RootScrollViewer"
                       HorizontalScrollBarVisibility="Disabled"
@@ -108,6 +108,15 @@
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <TextBlock Text="ℹ️ About" FontSize="11" FontWeight="SemiBold" Foreground="#E2E8F0"/>
                                 </StackPanel>
+                            </Button>
+
+                            <!-- Theme Toggle Button -->
+                            <Button x:Name="BtnThemeToggle" Click="BtnThemeToggle_Click"
+                                    Width="135" HorizontalContentAlignment="Center"
+                                    Background="#1E293B" BorderBrush="#334155" BorderThickness="1"
+                                    CornerRadius="4" Padding="6,5" Margin="8,0,0,0" Cursor="Hand"
+                                    ToolTipService.ToolTip="Toggle theme (System / Dark / Light)">
+                                <TextBlock x:Name="TxtThemeToggle" Text="🌓 Theme" FontSize="11" FontWeight="SemiBold" Foreground="#E2E8F0" HorizontalAlignment="Center"/>
                             </Button>
                         </StackPanel>
                     </controls:WrapPanel>

@@ -54,7 +54,6 @@ namespace PwTrackTrimmer.Photino
                 PwTrackTrimmer.Services.HostDialogService.IsDialogMode = true;
                 PwTrackTrimmer.Services.HostDialogService.OutputFilePath = outputPath ?? inputPath ?? string.Empty;
                 PwTrackTrimmer.Services.HostDialogService.ExitCode = 1; // Default to cancel unless confirmed
-                windowTitle = "PwTrackTrimmer · Edit Track (Host Dialog)";
             }
 
             // Creating a new PhotinoWindow instance with the fluent API

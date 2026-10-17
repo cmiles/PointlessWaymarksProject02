@@ -12,12 +12,14 @@ namespace HistoricTempests.Controls;
 
 public partial class MultiYearDayHeatmapGrid : UserControl
 {
-    private static readonly SolidColorBrush NeutralEmptyBg = new(Color.FromArgb(255, 248, 250, 252));
-    private static readonly SolidColorBrush NeutralBorder = new(Color.FromArgb(255, 226, 232, 240));
-    private static readonly SolidColorBrush FutureBg = new(Color.FromArgb(255, 241, 245, 249));
-    private static readonly SolidColorBrush FutureBorder = new(Color.FromArgb(255, 203, 213, 225));
-    private static readonly SolidColorBrush ForwardBandBrush = new(Color.FromArgb(12, 100, 116, 139));
-    private static readonly SolidColorBrush AxisTextBrush = new(Color.FromArgb(255, 100, 116, 139));
+    private static SolidColorBrush NeutralEmptyBg => Services.ThemeManager.Current.IsDark
+        ? new SolidColorBrush(Color.FromArgb(255, 15, 23, 42))  // Slate 900 (#0F172A)
+        : new SolidColorBrush(Color.FromArgb(255, 248, 250, 252)); // Slate 50 (#F8FAFC)
+    private static SolidColorBrush NeutralBorder => Services.ThemeManager.Current.CardBorder;
+    private static SolidColorBrush FutureBg => Services.ThemeManager.Current.FutureBandBrush;
+    private static SolidColorBrush FutureBorder => Services.ThemeManager.Current.CardBorder;
+    private static SolidColorBrush ForwardBandBrush => Services.ThemeManager.Current.FutureBandBrush;
+    private static SolidColorBrush AxisTextBrush => Services.ThemeManager.Current.AxisTextBrush;
     private static readonly SolidColorBrush TodayAccentBrush = new(Color.FromArgb(255, 2, 132, 199));
 
     public static readonly DependencyProperty DayDataProperty =
@@ -50,6 +52,12 @@ public partial class MultiYearDayHeatmapGrid : UserControl
 
     private readonly System.Windows.Threading.DispatcherTimer _resizeTimer;
 
+    private string? _cachedLegendMetric;
+    private bool? _cachedLegendIsMetric;
+    private double _cachedLegendMaxRain = -1;
+    private double _cachedLegendMaxLight = -1;
+    private bool? _cachedLegendStack;
+
     public MultiYearDayHeatmapGrid()
     {
         InitializeComponent();
@@ -65,12 +73,56 @@ public partial class MultiYearDayHeatmapGrid : UserControl
             RenderChart();
         };
 
-        Loaded += (_, _) => RenderChart();
+        Services.ThemeManager.Current.ThemeChanged += (_, _) =>
+        {
+            ApplyTheme();
+            _cachedLegendMetric = null;
+            RenderChart();
+        };
+
+        Loaded += (_, _) =>
+        {
+            ApplyTheme();
+            RenderChart();
+        };
         SizeChanged += (s, e) =>
         {
             _resizeTimer.Stop();
             _resizeTimer.Start();
         };
+
+        if (GridCanvas != null)
+        {
+            GridCanvas.SizeChanged += (s, e) =>
+            {
+                if (GridCanvas.ActualWidth > 10 && GridCanvas.ActualHeight > 10)
+                {
+                    _resizeTimer.Stop();
+                    _resizeTimer.Start();
+                }
+            };
+        }
+    }
+
+    public void ApplyTheme()
+    {
+        if (GridCardBorder != null)
+        {
+            GridCardBorder.Background = Services.ThemeManager.Current.CardBackground;
+            GridCardBorder.BorderBrush = Services.ThemeManager.Current.CardBorder;
+        }
+        if (ChartTitleBlock != null)
+        {
+            ChartTitleBlock.Foreground = Services.ThemeManager.Current.TextPrimary;
+        }
+        if (ChartUnitBlock != null)
+        {
+            ChartUnitBlock.Foreground = Services.ThemeManager.Current.TextSecondary;
+        }
+        if (InvertedCanvasContainer != null)
+        {
+            InvertedCanvasContainer.Background = Services.ThemeManager.Current.CardBackground;
+        }
     }
 
     public IEnumerable<DayTimelinePoint>? DayData
@@ -137,15 +189,6 @@ public partial class MultiYearDayHeatmapGrid : UserControl
         if (InvertedLayoutGrid != null) InvertedLayoutGrid.Visibility = Visibility.Collapsed;
 
         if (GridCanvas == null || YAxisCanvas == null || XAxisCanvas == null) return;
-
-        GridCanvas.Children.Clear();
-        YAxisCanvas.Children.Clear();
-        XAxisCanvas.Children.Clear();
-        if (LegendContainer != null) LegendContainer.Children.Clear();
-
-        double width = GridCanvas.ActualWidth;
-        double height = GridCanvas.ActualHeight;
-        if (width <= 10 || height <= 10) return;
 
         bool isMetric = IsMetric;
         string metric = Metric ?? "Rain";
@@ -232,13 +275,26 @@ public partial class MultiYearDayHeatmapGrid : UserControl
         if (maxRainVal <= 0.001) maxRainVal = isMetric ? 10.0 : 0.5;
         if (maxLightningVal <= 0.001) maxLightningVal = 50.0;
 
-        // Render Legend
+        // Render Legend FIRST so that Header/Legend wrapping is in place before measuring canvas
         RenderLegend(metric, isMetric, maxRainVal, maxLightningVal);
 
+        double width = GridCanvas.ActualWidth;
+        double height = GridCanvas.ActualHeight;
+        if (width <= 10 || height <= 10) return;
+
+        GridCanvas.Children.Clear();
+        YAxisCanvas.Children.Clear();
+        XAxisCanvas.Children.Clear();
+
         // Dimensions & Gaps
+        bool isSmallScreen = width < 450;
         double colGap = 2.0;
         double subRowGap = 2.0;
-        double yearGap = 24.0;
+        double yearGap = isSmallScreen ? 14.0 : 24.0;
+        if (YAxisCol != null)
+        {
+            YAxisCol.Width = new GridLength(isSmallScreen ? 70.0 : 80.0);
+        }
         int numYears = years.Length;
         int rowsPerYear = metric == "Combined" ? 2 : 1;
         int totalRows = numYears * rowsPerYear;
@@ -248,16 +304,16 @@ public partial class MultiYearDayHeatmapGrid : UserControl
         double rowHeight = Math.Max(16.0, availableHeight / totalRows);
         double colWidth = (width - (totalSlots - 1) * colGap) / totalSlots;
 
-        // Full chart background (Pure White)
-        var whiteBand = new Rectangle
+        // Full chart background (matches CardBackground)
+        var backgroundBand = new Rectangle
         {
             Width = width,
             Height = height,
-            Fill = Brushes.White
+            Fill = Services.ThemeManager.Current.CardBackground
         };
-        Canvas.SetLeft(whiteBand, 0);
-        Canvas.SetTop(whiteBand, 0);
-        GridCanvas.Children.Add(whiteBand);
+        Canvas.SetLeft(backgroundBand, 0);
+        Canvas.SetTop(backgroundBand, 0);
+        GridCanvas.Children.Add(backgroundBand);
 
         // Draw Past vs Future background shading if enabled (14 Days and 6 Months)
         if (ShowFutureShading && refIdx >= 0 && refIdx < totalSlots)
@@ -269,7 +325,7 @@ public partial class MultiYearDayHeatmapGrid : UserControl
                 {
                     Width = width - splitX,
                     Height = height,
-                    Fill = new SolidColorBrush(Color.FromArgb(255, 241, 245, 249)) // #F1F5F9 Slate 100
+                    Fill = ForwardBandBrush
                 };
                 Canvas.SetLeft(forwardRect, splitX);
                 Canvas.SetTop(forwardRect, 0);
@@ -279,7 +335,7 @@ public partial class MultiYearDayHeatmapGrid : UserControl
                 {
                     Width = 1.5,
                     Height = height,
-                    Fill = new SolidColorBrush(Color.FromArgb(255, 203, 213, 225)) // Slate 300
+                    Fill = Services.ThemeManager.Current.DividerBrush
                 };
                 Canvas.SetLeft(splitLine, splitX);
                 Canvas.SetTop(splitLine, 0);
@@ -323,12 +379,13 @@ public partial class MultiYearDayHeatmapGrid : UserControl
                 Text = yr.ToString(),
                 FontSize = 11.5,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Color.FromArgb(255, 30, 41, 59)), // Slate 800 (#1E293B) - neutral
+                Foreground = Services.ThemeManager.Current.TextPrimary,
                 VerticalAlignment = VerticalAlignment.Center,
                 TextAlignment = TextAlignment.Left
             };
             double yrTextTop = yearStartY + (yearTotalHeight - 16) / 2.0;
-            Canvas.SetLeft(yrText, 4);
+            double yrTextLeft = isSmallScreen ? 2.0 : 4.0;
+            Canvas.SetLeft(yrText, yrTextLeft);
             Canvas.SetTop(yrText, Math.Max(0, yrTextTop));
             YAxisCanvas.Children.Add(yrText);
 
@@ -366,7 +423,8 @@ public partial class MultiYearDayHeatmapGrid : UserControl
                 ToolTipService.SetToolTip(symbolBorder, isRain ? $"{yr} Precipitation (Rain)" : $"{yr} Lightning Strikes");
 
                 double symbolTop = subY + (rowHeight - symbolBorder.Height) / 2.0;
-                Canvas.SetLeft(symbolBorder, 44);
+                double symbolLeft = isSmallScreen ? 38.0 : 44.0;
+                Canvas.SetLeft(symbolBorder, symbolLeft);
                 Canvas.SetTop(symbolBorder, symbolTop);
                 YAxisCanvas.Children.Add(symbolBorder);
             }
@@ -381,7 +439,7 @@ public partial class MultiYearDayHeatmapGrid : UserControl
                 {
                     Width = width,
                     Height = 1.0,
-                    Fill = new SolidColorBrush(Color.FromArgb(255, 203, 213, 225)) // Slate 300
+                    Fill = Services.ThemeManager.Current.DividerBrush
                 };
                 Canvas.SetLeft(gridDivider, 0);
                 Canvas.SetTop(gridDivider, Math.Round(dividerY));
@@ -390,11 +448,11 @@ public partial class MultiYearDayHeatmapGrid : UserControl
                 // Horizontal line on YAxisCanvas
                 var yAxisDivider = new Rectangle
                 {
-                    Width = 68,
+                    Width = isSmallScreen ? 60 : 68,
                     Height = 1.0,
-                    Fill = new SolidColorBrush(Color.FromArgb(255, 203, 213, 225)) // Slate 300
+                    Fill = Services.ThemeManager.Current.DividerBrush
                 };
-                Canvas.SetLeft(yAxisDivider, 4);
+                Canvas.SetLeft(yAxisDivider, yrTextLeft);
                 Canvas.SetTop(yAxisDivider, Math.Round(dividerY));
                 YAxisCanvas.Children.Add(yAxisDivider);
 
@@ -431,7 +489,7 @@ public partial class MultiYearDayHeatmapGrid : UserControl
                     }
                 }
 
-                // If data is missing (e.g. today or future or unrecorded), do not show any square
+                // If data is missing (e.g. unrecorded or future), do not draw any square
                 if (!val.HasValue)
                 {
                     continue;
@@ -446,12 +504,12 @@ public partial class MultiYearDayHeatmapGrid : UserControl
 
                 bool isForward = (c > refIdx);
 
-                if (!val.HasValue || val.Value <= 0.0001)
+                if (val.Value <= 0.0001)
                 {
                     cellBorder.Background = (ShowFutureShading && isForward)
-                        ? new SolidColorBrush(Color.FromArgb(255, 241, 245, 249))
-                        : Brushes.White;
-                    cellBorder.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 226, 232, 240));
+                        ? FutureBg
+                        : NeutralEmptyBg;
+                    cellBorder.BorderBrush = NeutralBorder;
                     cellBorder.BorderThickness = new Thickness(1);
                     string zeroLabel = subMetric == "Rain" ? $"0 {(isMetric ? "mm" : "in")}" : "0 strikes";
                     ToolTipService.SetToolTip(cellBorder, $"{s.SubLabel}, {s.DisplayLabel} ({yr}) {subMetric}: {zeroLabel}");
@@ -661,10 +719,27 @@ public partial class MultiYearDayHeatmapGrid : UserControl
     private void RenderLegend(string metric, bool isMetric, double maxRainVal, double maxLightningVal)
     {
         if (LegendContainer == null) return;
-        LegendContainer.Children.Clear();
 
         double availableWidth = ActualWidth > 0 ? ActualWidth : (Parent is FrameworkElement p && p.ActualWidth > 0 ? p.ActualWidth : 1000);
         bool stackVertically = IsInverted && availableWidth < 720;
+
+        if (_cachedLegendMetric == metric &&
+            _cachedLegendIsMetric == isMetric &&
+            Math.Abs(_cachedLegendMaxRain - maxRainVal) < 0.001 &&
+            Math.Abs(_cachedLegendMaxLight - maxLightningVal) < 0.001 &&
+            _cachedLegendStack == stackVertically &&
+            LegendContainer.Children.Count > 0)
+        {
+            return;
+        }
+
+        _cachedLegendMetric = metric;
+        _cachedLegendIsMetric = isMetric;
+        _cachedLegendMaxRain = maxRainVal;
+        _cachedLegendMaxLight = maxLightningVal;
+        _cachedLegendStack = stackVertically;
+
+        LegendContainer.Children.Clear();
         LegendContainer.Orientation = stackVertically ? Orientation.Vertical : Orientation.Horizontal;
 
         if (metric == "Combined")
@@ -891,8 +966,8 @@ public partial class MultiYearDayHeatmapGrid : UserControl
         // Build compact JSON payload for hardware-accelerated canvas
         var sb = new System.Text.StringBuilder(16384);
         sb.Append("{\"years\":[2026,2025,2024,2023],");
-        sb.AppendFormat(CultureInfo.InvariantCulture, "\"isMetric\":{0},\"maxRain\":{1:F2},\"maxLight\":{2:F0},\"slots\":[",
-            isMetric ? "true" : "false", maxRainVal, maxLightningVal);
+        sb.AppendFormat(CultureInfo.InvariantCulture, "\"isMetric\":{0},\"isDark\":{1},\"maxRain\":{2:F2},\"maxLight\":{3:F0},\"slots\":[",
+            isMetric ? "true" : "false", Services.ThemeManager.Current.IsDark ? "true" : "false", maxRainVal, maxLightningVal);
 
         for (int i = 0; i < slotList.Count; i++)
         {

@@ -1,7 +1,10 @@
+#nullable enable
+using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using PwTrackTrimmer.Services;
 using PwTrackTrimmer.ViewModels;
 
@@ -24,7 +27,14 @@ namespace PwTrackTrimmer
             {
                 SetupFileDragAndDrop();
                 InjectGlobalCaretStyles();
-                UpdateResponsiveLayout(this.ActualWidth);
+                ThemeManager.Current.ThemeChanged += (_, _) => ApplyTheme();
+                ThemeManager.Current.Initialize();
+                ApplyTheme();
+                Dispatcher.BeginInvoke(() =>
+                {
+                    ApplyTheme();
+                    UpdateResponsiveLayout(this.ActualWidth);
+                });
             };
         }
 
@@ -274,6 +284,199 @@ namespace PwTrackTrimmer
                     : 46;
                 ToolsMenuCard.Margin = new Thickness(0, topOffset, 14, 0);
             }
+        }
+
+        private readonly Dictionary<DependencyObject, (Brush? Background, Brush? BorderBrush, Brush? Foreground)> _originalDarkBrushes = new();
+
+        private void BtnThemeToggle_Click(object sender, RoutedEventArgs e)
+        {
+            ThemeManager.Current.CycleTheme();
+        }
+
+        private void ApplyTheme()
+        {
+            if (TxtThemeToggle != null)
+            {
+                TxtThemeToggle.Text = ThemeManager.Current.ThemeButtonLabel;
+            }
+
+            bool isDark = ThemeManager.Current.IsDark;
+
+            this.Background = ThemeManager.Current.PageBackground;
+
+            if (OuterRootGrid != null)
+            {
+                OuterRootGrid.Background = ThemeManager.Current.PageBackground;
+            }
+
+            if (RootScrollViewer != null)
+            {
+                RootScrollViewer.Background = ThemeManager.Current.PageBackground;
+            }
+
+            if (TopBarBorder != null)
+            {
+                TopBarBorder.Background = isDark ? ThemeManager.BrushDarkTopBarBg : ThemeManager.BrushLightTopBarBg;
+                TopBarBorder.BorderBrush = isDark ? ThemeManager.BrushDarkDivider : ThemeManager.BrushLightDivider;
+            }
+
+            if (RootLayoutGrid != null)
+            {
+                RootLayoutGrid.Background = ThemeManager.Current.PageBackground;
+                ApplyThemeToTree(RootLayoutGrid, isDark);
+            }
+
+            if (ToolsMenuCard != null)
+            {
+                ApplyThemeToTree(ToolsMenuCard, isDark);
+            }
+
+            ElevationChartControlElement?.Redraw();
+        }
+
+        private void ApplyThemeToTree(DependencyObject obj, bool isDark)
+        {
+            if (obj is Controls.MapControl)
+            {
+                return;
+            }
+
+            if (obj == OuterRootGrid || obj == RootLayoutGrid || obj == RootScrollViewer || obj == TopBarBorder)
+            {
+                int count = VisualTreeHelper.GetChildrenCount(obj);
+                for (int i = 0; i < count; i++)
+                {
+                    var child = VisualTreeHelper.GetChild(obj, i);
+                    if (child != null)
+                    {
+                        ApplyThemeToTree(child, isDark);
+                    }
+                }
+                return;
+            }
+
+            if (!_originalDarkBrushes.ContainsKey(obj))
+            {
+                Brush? origBg = (obj as Control)?.Background ?? (obj as Border)?.Background ?? (obj as Panel)?.Background;
+                Brush? origBorder = (obj as Control)?.BorderBrush ?? (obj as Border)?.BorderBrush;
+                Brush? origFg = (obj as Control)?.Foreground ?? (obj as TextBlock)?.Foreground;
+                _originalDarkBrushes[obj] = (origBg, origBorder, origFg);
+            }
+
+            var (darkBg, darkBorder, darkFg) = _originalDarkBrushes[obj];
+
+            if (!isDark)
+            {
+                // Applying LIGHT mode
+                if (obj is Border b)
+                {
+                    if (darkBg is SolidColorBrush scbBg)
+                    {
+                        if (IsColor(scbBg, 15, 23, 42))        // #0F172A
+                            b.Background = ThemeManager.BrushLightSubCardBg;
+                        else if (IsColor(scbBg, 9, 13, 22))    // #090D16
+                            b.Background = ThemeManager.BrushLightTopBarBg;
+                        else if (IsColor(scbBg, 30, 41, 59))   // #1E293B
+                            b.Background = ThemeManager.BrushLightCardBg;
+                        else if (IsColor(scbBg, 11, 15, 25))   // #0B0F19
+                            b.Background = ThemeManager.BrushLightChartBg;
+                        else if (IsColor(scbBg, 11, 17, 32))   // #0B1120
+                            b.Background = ThemeManager.BrushLightPageBg;
+                        else if (IsColor(scbBg, 51, 65, 85))   // #334155
+                            b.Background = ThemeManager.BrushLightSubCardBg;
+                        else if (IsColor(scbBg, 6, 9, 17))     // #060911
+                            b.Background = ThemeManager.BrushLightSubCardBg;
+                        else if (IsColor(scbBg, 9, 14, 23))    // #090E17
+                            b.Background = ThemeManager.BrushLightSubCardBg;
+                    }
+
+                    if (darkBorder is SolidColorBrush scbBd)
+                    {
+                        if (IsColor(scbBd, 51, 65, 85) || IsColor(scbBd, 30, 41, 59)) // #334155 or #1E293B
+                            b.BorderBrush = ThemeManager.BrushLightCardBorder;
+                        else if (IsColor(scbBd, 71, 85, 105)) // #475569
+                            b.BorderBrush = ThemeManager.BrushLightControlBorder;
+                    }
+                }
+                else if (obj is GridSplitter gs)
+                {
+                    gs.Background = ThemeManager.BrushLightDivider;
+                }
+                else if (obj is Button btn)
+                {
+                    if (darkBg is SolidColorBrush scbBtnBg)
+                    {
+                        if (IsColor(scbBtnBg, 30, 41, 59) || IsColor(scbBtnBg, 51, 65, 85)) // #1E293B or #334155
+                        {
+                            btn.Background = ThemeManager.BrushLightSubCardBg;
+                            btn.BorderBrush = ThemeManager.BrushLightControlBorder;
+                            btn.Foreground = ThemeManager.BrushLightControlFg;
+                        }
+                    }
+                }
+                else if (obj is TextBlock tb)
+                {
+                    if (darkFg is SolidColorBrush scbFg)
+                    {
+                        if (IsColor(scbFg, 248, 250, 252) || IsColor(scbFg, 226, 232, 240) || IsColor(scbFg, 241, 245, 249)) // #F8FAFC / #E2E8F0
+                            tb.Foreground = ThemeManager.BrushLightTextPrimary;
+                        else if (IsColor(scbFg, 203, 213, 225)) // #CBD5E1
+                            tb.Foreground = ThemeManager.BrushLightTextSecondary;
+                        else if (IsColor(scbFg, 148, 163, 184) || IsColor(scbFg, 100, 116, 139)) // #94A3B8 / #64748B
+                            tb.Foreground = ThemeManager.BrushLightTextMuted;
+                        else if (IsColor(scbFg, 56, 189, 248)) // #38BDF8
+                            tb.Foreground = ThemeManager.BrushSkyAccentDark;
+                        else if (IsColor(scbFg, 52, 211, 153)) // #34D399
+                            tb.Foreground = ThemeManager.BrushEmeraldAccent;
+                    }
+                }
+                else if (obj is TextBox txtBox)
+                {
+                    txtBox.Foreground = ThemeManager.BrushLightTextPrimary;
+                }
+            }
+            else
+            {
+                // Restoring DARK mode
+                if (obj is Border b)
+                {
+                    b.Background = darkBg;
+                    b.BorderBrush = darkBorder;
+                }
+                else if (obj is GridSplitter gs)
+                {
+                    gs.Background = darkBg;
+                }
+                else if (obj is Button btn)
+                {
+                    btn.Background = darkBg;
+                    btn.BorderBrush = darkBorder;
+                    btn.Foreground = darkFg;
+                }
+                else if (obj is TextBlock tb)
+                {
+                    tb.Foreground = darkFg;
+                }
+                else if (obj is TextBox txtBox)
+                {
+                    txtBox.Foreground = darkFg;
+                }
+            }
+
+            int childCount = VisualTreeHelper.GetChildrenCount(obj);
+            for (int i = 0; i < childCount; i++)
+            {
+                var child = VisualTreeHelper.GetChild(obj, i);
+                if (child != null)
+                {
+                    ApplyThemeToTree(child, isDark);
+                }
+            }
+        }
+
+        private static bool IsColor(SolidColorBrush brush, byte r, byte g, byte b)
+        {
+            return brush.Color.R == r && brush.Color.G == g && brush.Color.B == b;
         }
     }
 }

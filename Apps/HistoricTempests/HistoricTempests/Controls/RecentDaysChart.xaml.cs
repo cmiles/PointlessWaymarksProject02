@@ -18,8 +18,8 @@ public partial class RecentDaysChart : UserControl
     private static readonly SolidColorBrush TempRangeBrush = new(Color.FromArgb(50, 244, 63, 94));
     private static readonly SolidColorBrush NormalBrush = new(Color.FromArgb(255, 148, 163, 184)); // Slate
     private static readonly SolidColorBrush RainBrush = new(Color.FromArgb(200, 2, 132, 199));     // Ocean Blue
-    private static readonly SolidColorBrush GridBrush = new(Color.FromArgb(255, 241, 245, 249));
-    private static readonly SolidColorBrush AxisBrush = new(Color.FromArgb(255, 100, 116, 139));
+    private static SolidColorBrush GridBrush => Services.ThemeManager.Current.GridLineBrush;
+    private static SolidColorBrush AxisBrush => Services.ThemeManager.Current.AxisTextBrush;
 
     public static readonly DependencyProperty RecentDaysProperty =
         DependencyProperty.Register(nameof(RecentDays), typeof(IEnumerable<RecentDayItem>),
@@ -47,12 +47,35 @@ public partial class RecentDaysChart : UserControl
             RenderChart();
         };
 
-        Loaded += (_, _) => RenderChart();
+        Services.ThemeManager.Current.ThemeChanged += (_, _) =>
+        {
+            ApplyTheme();
+            RenderChart();
+        };
+
+        Loaded += (_, _) =>
+        {
+            ApplyTheme();
+            RenderChart();
+        };
         SizeChanged += (_, _) =>
         {
             _resizeTimer.Stop();
             _resizeTimer.Start();
         };
+    }
+
+    public void ApplyTheme()
+    {
+        if (ChartCardBorder != null)
+        {
+            ChartCardBorder.Background = Services.ThemeManager.Current.CardBackground;
+            ChartCardBorder.BorderBrush = Services.ThemeManager.Current.CardBorder;
+        }
+        if (UnitSubtitle != null)
+        {
+            UnitSubtitle.Foreground = Services.ThemeManager.Current.TextSecondary;
+        }
     }
 
     public IEnumerable<RecentDayItem>? RecentDays

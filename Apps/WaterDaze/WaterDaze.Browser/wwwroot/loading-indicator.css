@@ -163,3 +163,17 @@ body {
 		font-size: 1.2rem;
 		font-family: 'Arial', sans-serif;
 	}
+
+@media (prefers-color-scheme: dark) {
+	.loading-indicator-wrapper {
+		background-color: #0f172a;
+	}
+
+	.loading-indicator-ball {
+		background: #60a5fa;
+	}
+
+	.loading-indicator-text:after {
+		color: #cbd5e1;
+	}
+}

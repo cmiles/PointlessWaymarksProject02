@@ -234,6 +234,15 @@ namespace PwImageMetadataViewer
 
                 // 5. Initial image loading: check command line argument or load default sample
                 LoadInitialImage();
+
+                // 6. Initialize ThemeManager
+                ThemeManager.Current.ThemeChanged += (_, _) => ApplyTheme();
+                ThemeManager.Current.Initialize();
+                ApplyTheme();
+                Dispatcher.BeginInvoke(() =>
+                {
+                    ApplyTheme();
+                });
             }
             catch (Exception ex)
             {
@@ -551,6 +560,14 @@ namespace PwImageMetadataViewer
 
             TagsItemsControl.ItemsSource = filtered;
             TxtTagCount.Text = $"{filtered.Count} of {_allTags.Count} tags";
+
+            Dispatcher.BeginInvoke(() =>
+            {
+                if (TagsItemsControl != null)
+                {
+                    ApplyThemeToTree(TagsItemsControl, ThemeManager.Current.IsDark);
+                }
+            });
         }
 
         private void ShowError(string message)
@@ -746,10 +763,11 @@ namespace PwImageMetadataViewer
 
         private void UpdateFilterButtonsVisuals()
         {
-            var activeBg = new SolidColorBrush(Color.FromArgb(255, 56, 189, 248)); // #38BDF8
-            var activeFg = new SolidColorBrush(Color.FromArgb(255, 15, 23, 42)); // #0F172A
-            var inactiveBg = new SolidColorBrush(Color.FromArgb(255, 30, 41, 59)); // #1E293B
-            var inactiveFg = new SolidColorBrush(Color.FromArgb(255, 248, 250, 252)); // #F8FAFC
+            bool isDark = ThemeManager.Current.IsDark;
+            var activeBg = isDark ? new SolidColorBrush(Color.FromArgb(255, 56, 189, 248)) : new SolidColorBrush(Color.FromArgb(255, 2, 132, 199)); // #38BDF8 / #0284C7
+            var activeFg = isDark ? new SolidColorBrush(Color.FromArgb(255, 15, 23, 42)) : new SolidColorBrush(Colors.White);                       // #0F172A / White
+            var inactiveBg = isDark ? new SolidColorBrush(Color.FromArgb(255, 30, 41, 59)) : ThemeManager.BrushLightSubCardBg;                       // #1E293B / #F1F5F9
+            var inactiveFg = isDark ? new SolidColorBrush(Color.FromArgb(255, 248, 250, 252)) : ThemeManager.BrushLightTextPrimary;                  // #F8FAFC / #0F172A
 
             SetButtonActive(BtnFilterAll, _activeGroupFilter == "All", activeBg, activeFg, inactiveBg, inactiveFg);
             SetButtonActive(BtnFilterExif, _activeGroupFilter == "EXIF", activeBg, activeFg, inactiveBg, inactiveFg);
@@ -780,10 +798,14 @@ namespace PwImageMetadataViewer
             {
                 if (mBtn == null) continue;
                 bool isSelected = (mBtn.Tag as string) == _activeGroupFilter;
-                mBtn.Background = isSelected ? new SolidColorBrush(Color.FromArgb(255, 30, 41, 59)) : new SolidColorBrush(Color.FromArgb(255, 15, 23, 42));
+                mBtn.Background = isSelected 
+                    ? (isDark ? new SolidColorBrush(Color.FromArgb(255, 30, 41, 59)) : new SolidColorBrush(Color.FromArgb(255, 226, 232, 240)))
+                    : (isDark ? new SolidColorBrush(Color.FromArgb(255, 15, 23, 42)) : new SolidColorBrush(Color.FromArgb(255, 255, 255, 255)));
                 if (mBtn.Content is TextBlock tb)
                 {
-                    tb.Foreground = isSelected ? new SolidColorBrush(Color.FromArgb(255, 56, 189, 248)) : new SolidColorBrush(Color.FromArgb(255, 248, 250, 252));
+                    tb.Foreground = isSelected 
+                        ? (isDark ? new SolidColorBrush(Color.FromArgb(255, 56, 189, 248)) : new SolidColorBrush(Color.FromArgb(255, 2, 132, 199)))
+                        : (isDark ? new SolidColorBrush(Color.FromArgb(255, 248, 250, 252)) : ThemeManager.BrushLightTextPrimary);
                     tb.FontWeight = isSelected ? FontWeights.Bold : FontWeights.Normal;
                 }
             }
@@ -794,12 +816,228 @@ namespace PwImageMetadataViewer
             if (btn == null) return;
             btn.Background = isActive ? activeBg : inactiveBg;
             btn.Foreground = isActive ? activeFg : inactiveFg;
-            btn.BorderBrush = isActive ? activeBg : new SolidColorBrush(Color.FromArgb(255, 71, 85, 105)); // #475569
+            btn.BorderBrush = isActive ? activeBg : (ThemeManager.Current.IsDark ? new SolidColorBrush(Color.FromArgb(255, 71, 85, 105)) : ThemeManager.BrushLightControlBorder);
             if (btn.Content is TextBlock tb)
             {
                 tb.Foreground = isActive ? activeFg : inactiveFg;
                 tb.FontWeight = isActive ? FontWeights.Bold : FontWeights.SemiBold;
             }
+        }
+
+        private readonly Dictionary<DependencyObject, (Brush? Background, Brush? BorderBrush, Brush? Foreground)> _originalDarkBrushes = new();
+
+        private void BtnThemeToggle_Click(object sender, RoutedEventArgs e)
+        {
+            ThemeManager.Current.CycleTheme();
+        }
+
+        private void BtnMobileThemeToggle_Click(object sender, RoutedEventArgs e)
+        {
+            ThemeManager.Current.CycleTheme();
+        }
+
+        private void Hyperlink_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is HyperlinkButton btn && btn.NavigateUri != null)
+            {
+                try
+                {
+                    OpenSilver.Interop.ExecuteJavaScriptVoid($"window.open('{btn.NavigateUri.AbsoluteUri}', '_blank');");
+                }
+                catch { }
+            }
+        }
+
+        private void ApplyTheme()
+        {
+            if (TxtThemeToggle != null)
+            {
+                TxtThemeToggle.Text = ThemeManager.Current.ThemeButtonLabel;
+            }
+            if (TxtMobileThemeToggle != null)
+            {
+                TxtMobileThemeToggle.Text = ThemeManager.Current.ThemeButtonLabel;
+            }
+
+            bool isDark = ThemeManager.Current.IsDark;
+
+            this.Background = ThemeManager.Current.PageBackground;
+
+            if (RootLayoutGrid != null)
+            {
+                RootLayoutGrid.Background = ThemeManager.Current.PageBackground;
+            }
+
+            if (MainScrollViewer != null)
+            {
+                MainScrollViewer.Background = ThemeManager.Current.PageBackground;
+            }
+
+            if (TopHeaderBorder != null)
+            {
+                TopHeaderBorder.Background = ThemeManager.Current.HeaderBackground;
+                TopHeaderBorder.BorderBrush = isDark ? ThemeManager.BrushDarkDivider : ThemeManager.BrushLightDivider;
+            }
+
+            if (LnkAuthor != null)
+            {
+                LnkAuthor.Foreground = isDark ? ThemeManager.BrushSkyAccentDark : ThemeManager.BrushSkyAccentLight;
+            }
+            if (TxtSmallAuthor != null)
+            {
+                TxtSmallAuthor.Foreground = isDark ? ThemeManager.BrushSkyAccentDark : ThemeManager.BrushSkyAccentLight;
+            }
+
+            var root = (DependencyObject?)RootLayoutGrid ?? this.Content as DependencyObject ?? this;
+            ApplyThemeToTree(root, isDark);
+            if (TagsItemsControl != null)
+            {
+                ApplyThemeToTree(TagsItemsControl, isDark);
+            }
+            UpdateFilterButtonsVisuals();
+        }
+
+        private void ApplyThemeToTree(DependencyObject obj, bool isDark)
+        {
+            // Do not traverse into Leaflet DOM container
+            if (obj == MapContainerBorder)
+            {
+                return;
+            }
+
+            // Explicitly styled root and header containers: do not cache or alter their backgrounds/borders, but recurse to children
+            if (obj == TopHeaderBorder || obj == RootLayoutGrid || obj == MainScrollViewer)
+            {
+                int count = VisualTreeHelper.GetChildrenCount(obj);
+                for (int i = 0; i < count; i++)
+                {
+                    var child = VisualTreeHelper.GetChild(obj, i);
+                    if (child != null)
+                    {
+                        ApplyThemeToTree(child, isDark);
+                    }
+                }
+                return;
+            }
+
+            if (!_originalDarkBrushes.ContainsKey(obj))
+            {
+                Brush? origBg = (obj as Control)?.Background ?? (obj as Border)?.Background ?? (obj as Panel)?.Background;
+                Brush? origBorder = (obj as Control)?.BorderBrush ?? (obj as Border)?.BorderBrush;
+                Brush? origFg = (obj as Control)?.Foreground ?? (obj as TextBlock)?.Foreground;
+                _originalDarkBrushes[obj] = (origBg, origBorder, origFg);
+            }
+
+            var (darkBg, darkBorder, darkFg) = _originalDarkBrushes[obj];
+
+            if (!isDark)
+            {
+                // Applying LIGHT mode
+                if (obj is Border b)
+                {
+                    if (darkBg is SolidColorBrush scbBg)
+                    {
+                        if (IsColor(scbBg, 11, 15, 25))        // #0B0F19
+                            b.Background = ThemeManager.BrushLightPageBg;
+                        else if (IsColor(scbBg, 17, 24, 39))   // #111827
+                            b.Background = ThemeManager.BrushLightHeaderBg;
+                        else if (IsColor(scbBg, 22, 31, 48))   // #161F30
+                            b.Background = ThemeManager.BrushLightCardBg;
+                        else if (IsColor(scbBg, 15, 23, 42))   // #0F172A
+                            b.Background = ThemeManager.BrushLightSubCardBg;
+                        else if (IsColor(scbBg, 30, 41, 59))   // #1E293B
+                            b.Background = ThemeManager.BrushLightSubCardBg;
+                        else if (IsColor(scbBg, 11, 17, 32))   // #0B1120
+                            b.Background = ThemeManager.BrushLightPageBg;
+                        else if (IsColor(scbBg, 12, 74, 110))  // #0C4A6E
+                            b.Background = ThemeManager.BrushLightStatusBg;
+                    }
+
+                    if (darkBorder is SolidColorBrush scbBd)
+                    {
+                        if (IsColor(scbBd, 31, 41, 55))        // #1F2937
+                            b.BorderBrush = ThemeManager.BrushLightDivider;
+                        else if (IsColor(scbBd, 39, 53, 73) || IsColor(scbBd, 51, 65, 85) || IsColor(scbBd, 30, 41, 59)) // #273549, #334155, #1E293B
+                            b.BorderBrush = ThemeManager.BrushLightCardBorder;
+                        else if (IsColor(scbBd, 71, 85, 105))  // #475569
+                            b.BorderBrush = ThemeManager.BrushLightControlBorder;
+                        else if (IsColor(scbBd, 2, 132, 199))   // #0284C7
+                            b.BorderBrush = ThemeManager.BrushLightStatusBorder;
+                    }
+                }
+                else if (obj is Button btn)
+                {
+                    if (darkBg is SolidColorBrush scbBtnBg)
+                    {
+                        if (IsColor(scbBtnBg, 30, 41, 59) || IsColor(scbBtnBg, 15, 23, 42) || IsColor(scbBtnBg, 51, 65, 85)) // #1E293B, #0F172A, #334155
+                        {
+                            btn.Background = ThemeManager.BrushLightSubCardBg;
+                            btn.BorderBrush = ThemeManager.BrushLightControlBorder;
+                            btn.Foreground = ThemeManager.BrushLightControlFg;
+                        }
+                    }
+                }
+                else if (obj is TextBlock tb)
+                {
+                    if (darkFg is SolidColorBrush scbFg)
+                    {
+                        if (IsColor(scbFg, 248, 250, 252) || IsColor(scbFg, 226, 232, 240)) // #F8FAFC / #E2E8F0
+                            tb.Foreground = ThemeManager.BrushLightTextPrimary;
+                        else if (IsColor(scbFg, 241, 245, 249)) // #F1F5F9
+                            tb.Foreground = ThemeManager.BrushLightTextHeading;
+                        else if (IsColor(scbFg, 203, 213, 225)) // #CBD5E1
+                            tb.Foreground = ThemeManager.BrushLightTextSecondary;
+                        else if (IsColor(scbFg, 148, 163, 184) || IsColor(scbFg, 100, 116, 139)) // #94A3B8 / #64748B
+                            tb.Foreground = ThemeManager.BrushLightTextMuted;
+                        else if (IsColor(scbFg, 56, 189, 248)) // #38BDF8
+                            tb.Foreground = ThemeManager.BrushSkyAccentLight;
+                        else if (IsColor(scbFg, 240, 249, 255)) // #F0F9FF
+                            tb.Foreground = new SolidColorBrush(Color.FromArgb(255, 3, 105, 161)); // #0369A1
+                    }
+                }
+                else if (obj is TextBox txtBox)
+                {
+                    txtBox.Foreground = ThemeManager.BrushLightTextPrimary;
+                }
+            }
+            else
+            {
+                // Restoring DARK mode
+                if (obj is Border b)
+                {
+                    b.Background = darkBg;
+                    b.BorderBrush = darkBorder;
+                }
+                else if (obj is Button btn)
+                {
+                    btn.Background = darkBg;
+                    btn.BorderBrush = darkBorder;
+                    btn.Foreground = darkFg;
+                }
+                else if (obj is TextBlock tb)
+                {
+                    tb.Foreground = darkFg;
+                }
+                else if (obj is TextBox txtBox)
+                {
+                    txtBox.Foreground = darkFg;
+                }
+            }
+
+            int childCount = VisualTreeHelper.GetChildrenCount(obj);
+            for (int i = 0; i < childCount; i++)
+            {
+                var child = VisualTreeHelper.GetChild(obj, i);
+                if (child != null)
+                {
+                    ApplyThemeToTree(child, isDark);
+                }
+            }
+        }
+
+        private static bool IsColor(SolidColorBrush brush, byte r, byte g, byte b)
+        {
+            return brush.Color.R == r && brush.Color.G == g && brush.Color.B == b;
         }
     }
 }

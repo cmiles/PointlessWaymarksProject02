@@ -52,8 +52,7 @@ public partial class ScriptJobListListItem : ISelectedTextTracker
         var db = await PowerShellRunnerDbContext.CreateInstance(databaseFile);
         var recentRuns = await db.ScriptJobRuns
             .Where(x => x.ScriptJobPersistentId == dbEntry.PersistentId)
-            .OrderBy(x => x.CompletedOnUtc == null)
-            .ThenByDescending(x => x.CompletedOnUtc)
+            .OrderByDescending(x => x.StartedOnUtc)
             .Take(5)
             .ToListAsync();
 
@@ -143,7 +142,12 @@ public partial class ScriptJobListListItem : ISelectedTextTracker
         if (Items.Count < _numberOfRunsToShow)
         {
             await ThreadSwitcher.ResumeForegroundAsync();
-            Items.Add(newDbEntry);
+            var insertIndex = 0;
+            while (insertIndex < Items.Count && Items[insertIndex].StartedOnUtc > newDbEntry.StartedOnUtc)
+            {
+                insertIndex++;
+            }
+            Items.Insert(insertIndex, newDbEntry);
             Owner.StatusContext.RunFireAndForgetNonBlockingTask(Owner.FilterList);
             return;
         }
@@ -153,7 +157,12 @@ public partial class ScriptJobListListItem : ISelectedTextTracker
         {
             await ThreadSwitcher.ResumeForegroundAsync();
             Items.Remove(currentMin);
-            Items.Add(newDbEntry);
+            var insertIndex = 0;
+            while (insertIndex < Items.Count && Items[insertIndex].StartedOnUtc > newDbEntry.StartedOnUtc)
+            {
+                insertIndex++;
+            }
+            Items.Insert(insertIndex, newDbEntry);
             Owner.StatusContext.RunFireAndForgetNonBlockingTask(Owner.FilterList);
         }
     }

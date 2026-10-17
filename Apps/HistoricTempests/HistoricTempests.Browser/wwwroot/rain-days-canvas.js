@@ -44,6 +44,8 @@
         }
 
         let hitZones = [];
+        let isDark = false;
+        let isMetric = false;
 
         function render() {
             const rect = container.getBoundingClientRect();
@@ -51,7 +53,8 @@
 
             const years = data.years || [2026, 2025, 2024, 2023];
             const slots = data.slots || [];
-            const isMetric = !!data.isMetric;
+            isMetric = !!data.isMetric;
+            isDark = !!data.isDark;
             const maxRain = data.maxRain || (isMetric ? 10.0 : 0.5);
             const maxLight = data.maxLight || 50.0;
 
@@ -104,8 +107,10 @@
             canvas.height = Math.round(totalCanvasHeight * dpr);
             canvas.style.width = totalContentWidth + 'px';
             canvas.style.height = totalCanvasHeight + 'px';
+            canvas.style.background = isDark ? '#1E293B' : '#FFFFFF';
             container.style.height = totalCanvasHeight + 'px';
             container.style.minHeight = totalCanvasHeight + 'px';
+            container.style.background = isDark ? '#1E293B' : '#FFFFFF';
 
             const ctx = canvas.getContext('2d');
             ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -152,34 +157,34 @@
                 const yrFontSize = yearWidth >= 64 ? 10.5 : (yearWidth >= 42 ? 9.0 : (yearWidth >= 30 ? 7.5 : 6.5));
 
                 // Year Label at Top
-                ctx.fillStyle = '#F1F5F9';
-                ctx.strokeStyle = '#CBD5E1';
+                ctx.fillStyle = isDark ? '#0F172A' : '#F1F5F9';
+                ctx.strokeStyle = isDark ? '#334155' : '#CBD5E1';
                 ctx.lineWidth = 1;
                 drawRoundedRect(ctx, yrX, 2, yearWidth, yearBoxH, 3, true, true);
 
-                ctx.fillStyle = '#1E293B';
+                ctx.fillStyle = isDark ? '#F8FAFC' : '#1E293B';
                 ctx.font = `bold ${yrFontSize}px Inter, sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(yrLabel, yrX + yearWidth / 2, 2 + yearBoxH / 2);
 
                 // Rain sub-header
-                ctx.fillStyle = '#EFF6FF';
-                ctx.strokeStyle = '#BFDBFE';
+                ctx.fillStyle = isDark ? '#1E3A8A' : '#EFF6FF';
+                ctx.strokeStyle = isDark ? '#3B82F6' : '#BFDBFE';
                 drawRoundedRect(ctx, yrX, subHeaderY, colWidth, subHeaderBoxH, 2.5, true, true);
                 if (rainLabel) {
-                    ctx.fillStyle = '#1D4ED8';
+                    ctx.fillStyle = isDark ? '#93C5FD' : '#1D4ED8';
                     ctx.font = `600 ${subHeaderFontSize}px Inter, sans-serif`;
                     ctx.fillText(rainLabel, yrX + colWidth / 2, subHeaderY + subHeaderBoxH / 2);
                 }
 
                 // Lightning sub-header
                 const ltX = yrX + colWidth + subColGap;
-                ctx.fillStyle = '#FEF3C7';
-                ctx.strokeStyle = '#FDE68A';
+                ctx.fillStyle = isDark ? '#78350F' : '#FEF3C7';
+                ctx.strokeStyle = isDark ? '#B45309' : '#FDE68A';
                 drawRoundedRect(ctx, ltX, subHeaderY, colWidth, subHeaderBoxH, 2.5, true, true);
                 if (ltLabel) {
-                    ctx.fillStyle = '#B45309';
+                    ctx.fillStyle = isDark ? '#FDE68A' : '#B45309';
                     ctx.font = `600 ${subHeaderFontSize}px Inter, sans-serif`;
                     ctx.fillText(ltLabel, ltX + colWidth / 2, subHeaderY + subHeaderBoxH / 2);
                 }
@@ -187,7 +192,7 @@
                 // Vertical divider line between years in header
                 if (yi < years.length - 1) {
                     const dividerX = Math.round(yrX + yearWidth + (yearColGap / 2.0));
-                    ctx.strokeStyle = '#CBD5E1';
+                    ctx.strokeStyle = isDark ? '#334155' : '#CBD5E1';
                     ctx.lineWidth = 1;
                     ctx.beginPath();
                     ctx.moveTo(dividerX + 0.5, 1);
@@ -197,7 +202,7 @@
             }
 
             // Header bottom divider line
-            ctx.strokeStyle = '#CBD5E1';
+            ctx.strokeStyle = isDark ? '#334155' : '#CBD5E1';
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(0, headerHeight - 0.5);
@@ -216,10 +221,10 @@
                     lastMonth = monthPart;
 
                     // Month Banner
-                    ctx.fillStyle = '#F1F5F9';
+                    ctx.fillStyle = isDark ? '#0F172A' : '#F1F5F9';
                     ctx.fillRect(0, currentY, totalContentWidth, monthBannerHeight);
 
-                    ctx.strokeStyle = '#E2E8F0';
+                    ctx.strokeStyle = isDark ? '#334155' : '#E2E8F0';
                     ctx.lineWidth = 1;
                     ctx.beginPath();
                     ctx.moveTo(0, currentY + 0.5);
@@ -230,7 +235,7 @@
 
                     const monthNames = { 'Jan': 'JANUARY', 'Feb': 'FEBRUARY', 'Mar': 'MARCH', 'Apr': 'APRIL', 'May': 'MAY', 'Jun': 'JUNE', 'Jul': 'JULY', 'Aug': 'AUGUST', 'Sep': 'SEPTEMBER', 'Oct': 'OCTOBER', 'Nov': 'NOVEMBER', 'Dec': 'DECEMBER' };
                     const bannerText = usableWidth >= 550 ? (monthNames[monthPart] || monthPart.toUpperCase()) : monthPart.toUpperCase();
-                    ctx.fillStyle = '#475569';
+                    ctx.fillStyle = isDark ? '#CBD5E1' : '#475569';
                     ctx.font = `bold ${isCompact ? 9 : 10}px Inter, sans-serif`;
                     ctx.textAlign = 'left';
                     ctx.textBaseline = 'middle';
@@ -242,7 +247,7 @@
                 // Date label: just day number (1..31) - month is handled by horizontal month bar!
                 const dayNum = s.d.indexOf(' ') > 0 ? s.d.split(' ')[1] : s.d;
                 const dateFontSize = dateColWidth >= 28 ? 9.5 : (dateColWidth >= 24 ? 8.5 : 7.5);
-                ctx.fillStyle = s.ref ? '#0284C7' : '#64748B';
+                ctx.fillStyle = s.ref ? '#38BDF8' : (isDark ? '#94A3B8' : '#64748B');
                 ctx.font = `${s.ref ? 'bold' : 'normal'} ${dateFontSize}px Inter, sans-serif`;
                 ctx.textAlign = 'right';
                 ctx.textBaseline = 'middle';
@@ -258,9 +263,9 @@
                     const ltVal = yrData ? yrData.l : null;
 
                     // Rain cell
-                    renderCell(ctx, yrX, currentY, colWidth, rowHeight, yr, 'Rain', rainVal, maxRain, isMetric, s, dayNum, isVerySmall);
+                    renderCell(ctx, yrX, currentY, colWidth, rowHeight, yr, 'Rain', rainVal, maxRain, isMetric, isDark, s, dayNum, isVerySmall);
                     // Lightning cell
-                    renderCell(ctx, yrX + colWidth + subColGap, currentY, colWidth, rowHeight, yr, 'Lightning', ltVal, maxLight, isMetric, s, dayNum, isVerySmall);
+                    renderCell(ctx, yrX + colWidth + subColGap, currentY, colWidth, rowHeight, yr, 'Lightning', ltVal, maxLight, isMetric, isDark, s, dayNum, isVerySmall);
                 }
 
                 currentY += rowHeight + rowGap;
@@ -270,7 +275,7 @@
             for (let yi = 0; yi < years.length - 1; yi++) {
                 const yrX = dateColWidth + yi * (yearWidth + yearColGap);
                 const dividerX = Math.round(yrX + yearWidth + (yearColGap / 2.0));
-                ctx.strokeStyle = '#E2E8F0';
+                ctx.strokeStyle = isDark ? '#334155' : '#E2E8F0';
                 ctx.lineWidth = 1;
                 ctx.beginPath();
                 ctx.moveTo(dividerX + 0.5, headerHeight);
@@ -279,16 +284,20 @@
             }
         }
 
-        function renderCell(ctx, x, y, w, h, yr, metric, val, maxVal, isMetric, s, dayNum, isVerySmall) {
+        function renderCell(ctx, x, y, w, h, yr, metric, val, maxVal, isMetric, isDark, s, dayNum, isVerySmall) {
             if (val === null || val === undefined) {
+                ctx.fillStyle = isDark ? '#0F172A' : '#F8FAFC';
+                ctx.strokeStyle = isDark ? '#1E293B' : '#F1F5F9';
+                ctx.lineWidth = 0.8;
+                drawRoundedRect(ctx, x, y, w, h, 2.5, true, true);
                 return;
             }
 
             const isZero = val <= 0.0001;
 
             if (isZero) {
-                ctx.fillStyle = '#FFFFFF';
-                ctx.strokeStyle = '#E2E8F0';
+                ctx.fillStyle = isDark ? '#0F172A' : '#F8FAFC';
+                ctx.strokeStyle = isDark ? '#334155' : '#E2E8F0';
                 ctx.lineWidth = 1;
                 drawRoundedRect(ctx, x, y, w, h, 2.5, true, true);
             } else {
@@ -381,10 +390,10 @@
             if (stroke) ctx.stroke();
         }
 
-        canvas.onmousemove = function (e) {
+        function handlePointer(clientX, clientY) {
             const rect = canvas.getBoundingClientRect();
-            const mx = e.clientX - rect.left;
-            const my = e.clientY - rect.top;
+            const mx = clientX - rect.left;
+            const my = clientY - rect.top;
 
             let found = null;
             for (let i = 0; i < hitZones.length; i++) {
@@ -398,15 +407,37 @@
             if (found) {
                 tooltip.textContent = found.tip;
                 tooltip.style.display = 'block';
-                tooltip.style.left = Math.min(window.innerWidth - 220, e.clientX + 14) + 'px';
-                tooltip.style.top = (e.clientY + 14) + 'px';
+                tooltip.style.left = Math.min(window.innerWidth - 220, clientX + 14) + 'px';
+                tooltip.style.top = (clientY + 14) + 'px';
             } else {
                 tooltip.style.display = 'none';
             }
+        }
+
+        canvas.onmousemove = function (e) {
+            handlePointer(e.clientX, e.clientY);
         };
 
         canvas.onmouseleave = function () {
             tooltip.style.display = 'none';
+        };
+
+        canvas.ontouchstart = function (e) {
+            if (e.touches && e.touches.length > 0) {
+                handlePointer(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        };
+
+        canvas.ontouchmove = function (e) {
+            if (e.touches && e.touches.length > 0) {
+                handlePointer(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        };
+
+        canvas.ontouchend = function () {
+            setTimeout(function () {
+                tooltip.style.display = 'none';
+            }, 2500);
         };
 
         // Attach ResizeObserver to container for instant re-render on resize

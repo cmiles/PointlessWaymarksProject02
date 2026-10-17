@@ -22,7 +22,7 @@
             </controls:WrapPanel>
 
             <!-- Standard Horizontal Container (14 Days, 6 Months, 12 Months) -->
-            <Grid x:Name="HorizontalLayoutGrid" Grid.Row="1">
+            <Grid x:Name="HorizontalLayoutGrid" Grid.Row="1" ClipToBounds="True">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
                     <RowDefinition Height="24" />
@@ -33,10 +33,10 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Y Axis container (Years) -->
-                <Canvas x:Name="YAxisCanvas" Grid.Row="0" Grid.Column="0" Margin="0,0,6,0" />
+                <Canvas x:Name="YAxisCanvas" Grid.Row="0" Grid.Column="0" Margin="0,0,6,0" ClipToBounds="True" />
 
                 <!-- Main Canvas Area (Cells) -->
-                <Canvas x:Name="GridCanvas" Grid.Row="0" Grid.Column="1" Background="Transparent" />
+                <Canvas x:Name="GridCanvas" Grid.Row="0" Grid.Column="1" Background="Transparent" ClipToBounds="True" />
 
                 <!-- X Axis Labels Canvas (Dates) -->
                 <Canvas x:Name="XAxisCanvas" Grid.Row="1" Grid.Column="1" Margin="0,4,0,0" />

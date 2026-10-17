@@ -1,0 +1,79 @@
+<ResourceDictionary x:Class="WaterDaze.Themes.DarkTheme"
+                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Core App Surfaces & Text -->
+    <SolidColorBrush x:Key="AppBackgroundBrush" Color="#0F172A" />
+    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#1E293B" />
+    <SolidColorBrush x:Key="CardBorderBrush" Color="#334155" />
+    <SolidColorBrush x:Key="SubtleCardBackgroundBrush" Color="#162032" />
+    <SolidColorBrush x:Key="SubtleCardBorderBrush" Color="#334155" />
+    <SolidColorBrush x:Key="DividerBrush" Color="#334155" />
+
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F8FAFC" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#CBD5E1" />
+    <SolidColorBrush x:Key="TextMutedBrush" Color="#94A3B8" />
+    <SolidColorBrush x:Key="TextHeadingBrush" Color="#F1F5F9" />
+    <SolidColorBrush x:Key="TextLabelBrush" Color="#E2E8F0" />
+
+    <!-- Links & Accents -->
+    <SolidColorBrush x:Key="HyperlinkBrush" Color="#60A5FA" />
+    <SolidColorBrush x:Key="SiteCodeBrush" Color="#60A5FA" />
+    <SolidColorBrush x:Key="FlowDaysBrush" Color="#34D399" />
+
+    <!-- Status Banners -->
+    <SolidColorBrush x:Key="WarningBannerBackgroundBrush" Color="#2D1D03" />
+    <SolidColorBrush x:Key="WarningBannerBorderBrush" Color="#78350F" />
+    <SolidColorBrush x:Key="WarningBannerTextBrush" Color="#FDE68A" />
+
+    <SolidColorBrush x:Key="ErrorBannerBackgroundBrush" Color="#310B0B" />
+    <SolidColorBrush x:Key="ErrorBannerBorderBrush" Color="#7F1D1D" />
+    <SolidColorBrush x:Key="ErrorBannerTextBrush" Color="#FCA5A5" />
+
+    <!-- Loading Overlay -->
+    <SolidColorBrush x:Key="LoadingOverlayBackgroundBrush" Color="#99000000" />
+    <SolidColorBrush x:Key="LoadingCardBackgroundBrush" Color="#1E293B" />
+    <SolidColorBrush x:Key="LoadingCardBorderBrush" Color="#3B82F6" />
+    <SolidColorBrush x:Key="LoadingCardTextBrush" Color="#60A5FA" />
+
+    <!-- Rankings Section -->
+    <SolidColorBrush x:Key="RankingWetStreaksTitleBrush" Color="#34D399" />
+    <SolidColorBrush x:Key="RankingDryStreaksTitleBrush" Color="#FBBF24" />
+    <SolidColorBrush x:Key="RankingAnnualMeanTitleBrush" Color="#60A5FA" />
+    <SolidColorBrush x:Key="RankingPeakFlowTitleBrush" Color="#C084FC" />
+    <SolidColorBrush x:Key="RankingWettestHeaderBrush" Color="#34D399" />
+    <SolidColorBrush x:Key="RankingDriestHeaderBrush" Color="#FBBF24" />
+
+    <!-- Chart: Monthly Flow Band -->
+    <SolidColorBrush x:Key="ChartGridLineBrush" Color="#334155" />
+    <SolidColorBrush x:Key="ChartBandFillBrush" Color="#4060A5FA" />
+    <SolidColorBrush x:Key="ChartBandBorderBrush" Color="#8060A5FA" />
+    <SolidColorBrush x:Key="ChartMedianLineBrush" Color="#60A5FA" />
+    <SolidColorBrush x:Key="ChartMarkerFillBrush" Color="#60A5FA" />
+    <SolidColorBrush x:Key="ChartMarkerStrokeBrush" Color="#1E293B" />
+
+    <!-- Heatmap Matrix -->
+    <SolidColorBrush x:Key="HeatmapNoDataBrush" Color="#131D2D" />
+    <SolidColorBrush x:Key="HeatmapCellBorderBrush" Color="#1E293B" />
+    <SolidColorBrush x:Key="HeatmapHeaderTextBrush" Color="#94A3B8" />
+    <SolidColorBrush x:Key="HeatmapLegendBorderBrush" Color="#475569" />
+
+    <!-- Year Facet Mini Sparklines -->
+    <SolidColorBrush x:Key="YearFacetCardBackgroundBrush" Color="#1E293B" />
+    <SolidColorBrush x:Key="YearFacetCardBorderBrush" Color="#334155" />
+    <SolidColorBrush x:Key="YearFacetTextBrush" Color="#94A3B8" />
+    <SolidColorBrush x:Key="YearFacetBarBrush" Color="#8064748B" />
+    <SolidColorBrush x:Key="YearFacetLineBrush" Color="#60A5FA" />
+
+    <!-- Form Controls & Buttons -->
+    <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#1E293B" />
+    <SolidColorBrush x:Key="ControlBorderBrush" Color="#475569" />
+    <SolidColorBrush x:Key="ControlForegroundBrush" Color="#F8FAFC" />
+    <SolidColorBrush x:Key="ButtonBackgroundBrush" Color="#334155" />
+    <SolidColorBrush x:Key="ButtonForegroundBrush" Color="#F8FAFC" />
+    <SolidColorBrush x:Key="ButtonBorderBrush" Color="#475569" />
+    <SolidColorBrush x:Key="ActionButtonBackgroundBrush" Color="#2563EB" />
+    <SolidColorBrush x:Key="ActionButtonForegroundBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="ActionButtonBorderBrush" Color="#3B82F6" />
+
+</ResourceDictionary>

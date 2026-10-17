@@ -18,8 +18,8 @@ public partial class ComparisonBarBandChart : UserControl
     private static readonly SolidColorBrush Brush2025 = new(Color.FromArgb(255, 16, 185, 129));  // Emerald
     private static readonly SolidColorBrush Brush2026 = new(Color.FromArgb(255, 244, 63, 94));   // Rose
     private static readonly SolidColorBrush BrushNormal = new(Color.FromArgb(255, 148, 163, 184)); // Slate
-    private static readonly SolidColorBrush GridBrush = new(Color.FromArgb(255, 241, 245, 249));
-    private static readonly SolidColorBrush AxisTextBrush = new(Color.FromArgb(255, 100, 116, 139));
+    private static SolidColorBrush GridBrush => Services.ThemeManager.Current.GridLineBrush;
+    private static SolidColorBrush AxisTextBrush => Services.ThemeManager.Current.AxisTextBrush;
 
     public static readonly DependencyProperty MonthDataProperty =
         DependencyProperty.Register(nameof(MonthData), typeof(IEnumerable<MonthMatrixItem>),
@@ -45,12 +45,39 @@ public partial class ComparisonBarBandChart : UserControl
             RenderChart();
         };
 
-        Loaded += (_, _) => RenderChart();
+        Services.ThemeManager.Current.ThemeChanged += (_, _) =>
+        {
+            ApplyTheme();
+            RenderChart();
+        };
+
+        Loaded += (_, _) =>
+        {
+            ApplyTheme();
+            RenderChart();
+        };
         SizeChanged += (_, _) =>
         {
             _resizeTimer.Stop();
             _resizeTimer.Start();
         };
+    }
+
+    public void ApplyTheme()
+    {
+        if (ChartCardBorder != null)
+        {
+            ChartCardBorder.Background = Services.ThemeManager.Current.CardBackground;
+            ChartCardBorder.BorderBrush = Services.ThemeManager.Current.CardBorder;
+        }
+        if (ChartTitleBlock != null)
+        {
+            ChartTitleBlock.Foreground = Services.ThemeManager.Current.TextPrimary;
+        }
+        if (ChartSubtitleBlock != null)
+        {
+            ChartSubtitleBlock.Foreground = Services.ThemeManager.Current.TextSecondary;
+        }
     }
 
     public IEnumerable<MonthMatrixItem>? MonthData

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
 
     <PropertyGroup>
         <TargetFrameworks>net10.0-android</TargetFrameworks>
@@ -24,7 +24,7 @@
         <ApplicationTitle>HistoricTempests</ApplicationTitle>
 
         <!-- App Identifier -->
-        <ApplicationId>com.companyname.historictempests</ApplicationId>
+        <ApplicationId>com.pointlesswaymarks.historictempests</ApplicationId>
 
         <!-- Versions -->
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>

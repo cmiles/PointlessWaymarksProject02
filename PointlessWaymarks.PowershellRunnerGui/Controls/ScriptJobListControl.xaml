@@ -479,36 +479,21 @@
                                         Margin="6,4,2,4"
                                         VerticalAlignment="Top"
                                         Header="Recent Runs">
-                                        <GroupBox.Resources>
-                                            <CollectionViewSource
-                                                xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
-                                                x:Key="SortedRunItems"
-                                                Source="{Binding Items}">
-                                                <CollectionViewSource.SortDescriptions>
-                                                    <scm:SortDescription Direction="Descending"
-                                                                         PropertyName="StartedOnUtc" />
-                                                </CollectionViewSource.SortDescriptions>
-                                            </CollectionViewSource>
-                                        </GroupBox.Resources>
-                                        <ListBox
+                                        <ItemsControl
                                             HorizontalContentAlignment="Stretch"
                                             BorderThickness="0"
-                                            ItemsSource="{Binding Source={StaticResource SortedRunItems}}"
-                                            ScrollViewer.VerticalScrollBarVisibility="Visible"
-                                            SelectedItem="{Binding SelectedItem}"
-                                            SelectionMode="Single">
-                                            <ListBox.ContextMenu>
-                                                <ContextMenu>
-                                                    <MenuItem
-                                                        Command="{Binding Data.ViewJobRunCommand, Source={StaticResource Proxy}}"
-                                                        CommandParameter="{Binding SelectedItem}"
-                                                        Header="View Run" />
-                                                </ContextMenu>
-                                            </ListBox.ContextMenu>
-                                            <ListBox.ItemTemplate>
+                                            ItemsSource="{Binding Items}">
+                                            <ItemsControl.ItemTemplate>
                                                 <DataTemplate DataType="{x:Type models:ScriptJobRun}">
-                                                    <Border BorderThickness="1" CornerRadius="2"
-                                                            behaviors:SelectGrandParentListItemOnChildClick.IsEnabled="True">
+                                                    <Border BorderThickness="1" CornerRadius="2">
+                                                        <Border.ContextMenu>
+                                                            <ContextMenu>
+                                                                <MenuItem
+                                                                    Command="{Binding Data.ViewJobRunCommand, Source={StaticResource Proxy}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Header="View Run" />
+                                                            </ContextMenu>
+                                                        </Border.ContextMenu>
                                                         <Border.Style>
                                                             <Style TargetType="Border">
                                                                 <Setter Property="BorderBrush" Value="LightGray" />
@@ -546,12 +531,12 @@
                                                                 <StackPanel Orientation="Horizontal">
                                                                     <TextBlock Margin="16,2,2,0"
                                                                                Text="{Binding CompletedOnUtc, StringFormat='{}{0:g}', FallbackValue='(Not Complete)', Converter={StaticResource UtcTimeToLocalTime}}">
-                                                                        <TextBlock.InputBindings>
-                                                                            <MouseBinding
-                                                                                Command="{Binding Data.ViewJobRunCommand, Source={StaticResource Proxy}}"
-                                                                                CommandParameter="{Binding}"
-                                                                                Gesture="LeftDoubleClick" />
-                                                                        </TextBlock.InputBindings>
+                                                                    <TextBlock.InputBindings>
+                                                                        <MouseBinding
+                                                                            Command="{Binding Data.ViewJobRunCommand, Source={StaticResource Proxy}}"
+                                                                            CommandParameter="{Binding}"
+                                                                            Gesture="LeftDoubleClick" />
+                                                                    </TextBlock.InputBindings>
                                                                     </TextBlock>
                                                                     <TextBlock Margin="8,2,2,0"
                                                                                Text="{Binding LengthInSeconds, Converter={StaticResource LengthInSecondsToHumanReadable}}">
@@ -580,8 +565,8 @@
                                                         </Grid>
                                                     </Border>
                                                 </DataTemplate>
-                                            </ListBox.ItemTemplate>
-                                        </ListBox>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
                                     </GroupBox>
                                 </Grid>
                             </Border>

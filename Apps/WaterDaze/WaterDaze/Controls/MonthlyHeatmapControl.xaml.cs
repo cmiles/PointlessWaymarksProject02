@@ -23,14 +23,27 @@ public partial class MonthlyHeatmapControl
         "J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"
     ];
 
-    private static SolidColorBrush? _noDataBrush;
-    private static SolidColorBrush NoDataBrush => _noDataBrush ??= new(Color.FromArgb(255, 245, 247, 250));
+    private static SolidColorBrush? _fallbackNoDataBrush;
+    private static SolidColorBrush FallbackNoDataBrush => _fallbackNoDataBrush ??= new(Color.FromArgb(255, 245, 247, 250));
 
-    private static SolidColorBrush? _headerTextBrush;
-    private static SolidColorBrush HeaderTextBrush => _headerTextBrush ??= new(Color.FromArgb(255, 75, 85, 99));
+    private static SolidColorBrush? _fallbackHeaderTextBrush;
+    private static SolidColorBrush FallbackHeaderTextBrush => _fallbackHeaderTextBrush ??= new(Color.FromArgb(255, 75, 85, 99));
 
-    private static SolidColorBrush? _cellBorderBrush;
-    private static SolidColorBrush CellBorderBrush => _cellBorderBrush ??= new(Color.FromArgb(255, 235, 238, 242));
+    private static SolidColorBrush? _fallbackCellBorderBrush;
+    private static SolidColorBrush FallbackCellBorderBrush => _fallbackCellBorderBrush ??= new(Color.FromArgb(255, 235, 238, 242));
+
+    private static SolidColorBrush? _fallbackCardBg;
+    private static SolidColorBrush FallbackCardBg => _fallbackCardBg ??= new(Color.FromArgb(255, 255, 255, 255));
+
+    private static SolidColorBrush? _fallbackCardBorder;
+    private static SolidColorBrush FallbackCardBorder => _fallbackCardBorder ??= new(Color.FromArgb(255, 229, 231, 235));
+
+    private static SolidColorBrush? _fallbackTextMuted;
+    private static SolidColorBrush FallbackTextMuted => _fallbackTextMuted ??= new(Color.FromArgb(255, 107, 114, 128));
+
+    private SolidColorBrush NoDataBrush => ThemeManager.GetBrush("HeatmapNoDataBrush", FallbackNoDataBrush);
+    private SolidColorBrush HeaderTextBrush => ThemeManager.GetBrush("HeatmapHeaderTextBrush", FallbackHeaderTextBrush);
+    private SolidColorBrush CellBorderBrush => ThemeManager.GetBrush("HeatmapCellBorderBrush", FallbackCellBorderBrush);
 
     private bool? _lastIsCompact;
 
@@ -46,8 +59,34 @@ public partial class MonthlyHeatmapControl
     public MonthlyHeatmapControl()
     {
         InitializeComponent();
-        Loaded += (_, _) => RenderHeatmap();
+        Loaded += (_, _) =>
+        {
+            UpdateThemeStyles();
+            RenderHeatmap();
+        };
         SizeChanged += OnSizeChanged;
+        ThemeManager.ThemeChanged += (_, _) =>
+        {
+            UpdateThemeStyles();
+            RenderHeatmap();
+        };
+    }
+
+    private void UpdateThemeStyles()
+    {
+        if (HeatmapCardBorder != null)
+        {
+            HeatmapCardBorder.Background = ThemeManager.GetBrush("CardBackgroundBrush", FallbackCardBg);
+            HeatmapCardBorder.BorderBrush = ThemeManager.GetBrush("CardBorderBrush", FallbackCardBorder);
+        }
+        if (TxtChartTitle != null)
+        {
+            TxtChartTitle.Foreground = ThemeManager.GetBrush("TextLabelBrush", FallbackHeaderTextBrush);
+        }
+        if (TxtMaxLog != null)
+        {
+            TxtMaxLog.Foreground = ThemeManager.GetBrush("TextMutedBrush", FallbackTextMuted);
+        }
     }
 
     public IEnumerable<MonthlyFlowRecord>? MonthlyRecords
@@ -135,41 +174,74 @@ public partial class MonthlyHeatmapControl
         return grid;
     }
 
-    private static SolidColorBrush GetPuBuColorBrush(double t)
+    private static SolidColorBrush GetSequentialColorBrush(double t, bool isDark)
     {
-        // PuBu Sequential Color Scale Interpolation
-        // 0.0: #fff7fb (255, 247, 251)
-        // 0.2: #ece7f2 (236, 231, 242)
-        // 0.4: #d0d1e6 (208, 209, 230)
-        // 0.6: #a6bddb (166, 189, 219)
-        // 0.8: #67a9cf (103, 169, 207)
-        // 1.0: #014636 (1, 70, 54) or deep teal/navy #02818a
-        var stops = new (double pos, byte r, byte g, byte b)[]
+        if (isDark)
         {
-            (0.00, 255, 247, 251),
-            (0.15, 236, 231, 242),
-            (0.30, 208, 209, 230),
-            (0.45, 166, 189, 219),
-            (0.60, 103, 169, 207),
-            (0.75, 54, 144, 192),
-            (0.90, 2, 129, 138),
-            (1.00, 1, 70, 54)
-        };
-
-        for (var i = 0; i < stops.Length - 1; i++)
-            if (t <= stops[i + 1].pos)
+            // Dark Mode sequential scale: deep navy -> cyan -> vibrant mint/emerald for high flow
+            var stops = new (double pos, byte r, byte g, byte b)[]
             {
-                var range = stops[i + 1].pos - stops[i].pos;
-                var factor = range > 0 ? (t - stops[i].pos) / range : 0;
+                (0.00, 30, 58, 95),     // #1E3A5F
+                (0.15, 23, 78, 122),    // #174E7A
+                (0.30, 14, 107, 148),   // #0E6B94
+                (0.45, 14, 142, 173),   // #0E8EAD
+                (0.60, 34, 178, 184),   // #22B2B8
+                (0.75, 56, 189, 248),   // #38BDF8
+                (0.90, 45, 212, 191),   // #2DD4BF
+                (1.00, 110, 231, 183)   // #6EE7B7
+            };
 
-                var r = (byte)(stops[i].r + factor * (stops[i + 1].r - stops[i].r));
-                var g = (byte)(stops[i].g + factor * (stops[i + 1].g - stops[i].g));
-                var b = (byte)(stops[i].b + factor * (stops[i + 1].b - stops[i].b));
+            for (var i = 0; i < stops.Length - 1; i++)
+                if (t <= stops[i + 1].pos)
+                {
+                    var range = stops[i + 1].pos - stops[i].pos;
+                    var factor = range > 0 ? (t - stops[i].pos) / range : 0;
 
-                return new SolidColorBrush(Color.FromArgb(255, r, g, b));
-            }
+                    var r = (byte)(stops[i].r + factor * (stops[i + 1].r - stops[i].r));
+                    var g = (byte)(stops[i].g + factor * (stops[i + 1].g - stops[i].g));
+                    var b = (byte)(stops[i].b + factor * (stops[i + 1].b - stops[i].b));
 
-        return new SolidColorBrush(Color.FromArgb(255, stops[^1].r, stops[^1].g, stops[^1].b));
+                    return new SolidColorBrush(Color.FromArgb(255, r, g, b));
+                }
+
+            return new SolidColorBrush(Color.FromArgb(255, stops[^1].r, stops[^1].g, stops[^1].b));
+        }
+        else
+        {
+            // PuBu Sequential Color Scale Interpolation
+            // 0.0: #fff7fb (255, 247, 251)
+            // 0.2: #ece7f2 (236, 231, 242)
+            // 0.4: #d0d1e6 (208, 209, 230)
+            // 0.6: #a6bddb (166, 189, 219)
+            // 0.8: #67a9cf (103, 169, 207)
+            // 1.0: #014636 (1, 70, 54) or deep teal/navy #02818a
+            var stops = new (double pos, byte r, byte g, byte b)[]
+            {
+                (0.00, 255, 247, 251),
+                (0.15, 236, 231, 242),
+                (0.30, 208, 209, 230),
+                (0.45, 166, 189, 219),
+                (0.60, 103, 169, 207),
+                (0.75, 54, 144, 192),
+                (0.90, 2, 129, 138),
+                (1.00, 1, 70, 54)
+            };
+
+            for (var i = 0; i < stops.Length - 1; i++)
+                if (t <= stops[i + 1].pos)
+                {
+                    var range = stops[i + 1].pos - stops[i].pos;
+                    var factor = range > 0 ? (t - stops[i].pos) / range : 0;
+
+                    var r = (byte)(stops[i].r + factor * (stops[i + 1].r - stops[i].r));
+                    var g = (byte)(stops[i].g + factor * (stops[i + 1].g - stops[i].g));
+                    var b = (byte)(stops[i].b + factor * (stops[i + 1].b - stops[i].b));
+
+                    return new SolidColorBrush(Color.FromArgb(255, r, g, b));
+                }
+
+            return new SolidColorBrush(Color.FromArgb(255, stops[^1].r, stops[^1].g, stops[^1].b));
+        }
     }
 
     private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -294,7 +366,7 @@ public partial class MonthlyHeatmapControl
                 {
                     var logVal = Math.Log10(flow + 1.0);
                     var normalized = Math.Max(0.0, Math.Min(1.0, logVal / maxLog));
-                    cellBorder.Background = GetPuBuColorBrush(normalized);
+                    cellBorder.Background = GetSequentialColorBrush(normalized, ThemeManager.IsDark);
 
                     var tooltip =
                         $"Year: {year}\nMonth: {FullMonthNames[m - 1]}\nMax Daily Mean Flow: {GaugeAnalyticsService.FormatCfs(flow)} cfs";

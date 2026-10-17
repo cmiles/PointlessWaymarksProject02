@@ -15,12 +15,40 @@ namespace WaterDaze.Controls;
 
 public partial class MonthlyFlowBandChart
 {
-    private static readonly SolidColorBrush BandFillBrush = new(Color.FromArgb(50, 31, 119, 180));
-    private static readonly SolidColorBrush BandBorderBrush = new(Color.FromArgb(100, 31, 119, 180));
-    private static readonly SolidColorBrush MedianLineBrush = new(Color.FromArgb(255, 31, 119, 180));
-    private static readonly SolidColorBrush MarkerFillBrush = new(Color.FromArgb(255, 31, 119, 180));
-    private static readonly SolidColorBrush GridLineBrush = new(Color.FromArgb(255, 240, 240, 240));
-    private static readonly SolidColorBrush TextBrush = new(Color.FromArgb(255, 107, 114, 128));
+    private static SolidColorBrush? _fallbackBandFillBrush;
+    private static SolidColorBrush FallbackBandFillBrush => _fallbackBandFillBrush ??= new(Color.FromArgb(50, 31, 119, 180));
+
+    private static SolidColorBrush? _fallbackBandBorderBrush;
+    private static SolidColorBrush FallbackBandBorderBrush => _fallbackBandBorderBrush ??= new(Color.FromArgb(100, 31, 119, 180));
+
+    private static SolidColorBrush? _fallbackMedianLineBrush;
+    private static SolidColorBrush FallbackMedianLineBrush => _fallbackMedianLineBrush ??= new(Color.FromArgb(255, 31, 119, 180));
+
+    private static SolidColorBrush? _fallbackMarkerFillBrush;
+    private static SolidColorBrush FallbackMarkerFillBrush => _fallbackMarkerFillBrush ??= new(Color.FromArgb(255, 31, 119, 180));
+
+    private static SolidColorBrush? _fallbackGridLineBrush;
+    private static SolidColorBrush FallbackGridLineBrush => _fallbackGridLineBrush ??= new(Color.FromArgb(255, 240, 240, 240));
+
+    private static SolidColorBrush? _fallbackTextBrush;
+    private static SolidColorBrush FallbackTextBrush => _fallbackTextBrush ??= new(Color.FromArgb(255, 107, 114, 128));
+
+    private static SolidColorBrush? _fallbackMarkerStrokeBrush;
+    private static SolidColorBrush FallbackMarkerStrokeBrush => _fallbackMarkerStrokeBrush ??= new(Color.FromArgb(255, 255, 255, 255));
+
+    private static SolidColorBrush? _fallbackCardBg;
+    private static SolidColorBrush FallbackCardBg => _fallbackCardBg ??= new(Color.FromArgb(255, 255, 255, 255));
+
+    private static SolidColorBrush? _fallbackCardBorder;
+    private static SolidColorBrush FallbackCardBorder => _fallbackCardBorder ??= new(Color.FromArgb(255, 229, 231, 235));
+
+    private SolidColorBrush BandFillBrush => ThemeManager.GetBrush("ChartBandFillBrush", FallbackBandFillBrush);
+    private SolidColorBrush BandBorderBrush => ThemeManager.GetBrush("ChartBandBorderBrush", FallbackBandBorderBrush);
+    private SolidColorBrush MedianLineBrush => ThemeManager.GetBrush("ChartMedianLineBrush", FallbackMedianLineBrush);
+    private SolidColorBrush MarkerFillBrush => ThemeManager.GetBrush("ChartMarkerFillBrush", FallbackMarkerFillBrush);
+    private SolidColorBrush GridLineBrush => ThemeManager.GetBrush("ChartGridLineBrush", FallbackGridLineBrush);
+    private SolidColorBrush TextBrush => ThemeManager.GetBrush("TextMutedBrush", FallbackTextBrush);
+    private SolidColorBrush MarkerStrokeBrush => ThemeManager.GetBrush("ChartMarkerStrokeBrush", FallbackMarkerStrokeBrush);
 
     public static readonly DependencyProperty SummaryRecordsProperty =
         DependencyProperty.Register(nameof(SummaryRecords), typeof(IEnumerable<MonthSummaryRecord>),
@@ -30,8 +58,48 @@ public partial class MonthlyFlowBandChart
     public MonthlyFlowBandChart()
     {
         InitializeComponent();
-        Loaded += (_, _) => RenderChart();
+        Loaded += (_, _) =>
+        {
+            UpdateThemeStyles();
+            RenderChart();
+        };
         SizeChanged += (_, _) => RenderChart();
+        ThemeManager.ThemeChanged += (_, _) =>
+        {
+            UpdateThemeStyles();
+            RenderChart();
+        };
+    }
+
+    private void UpdateThemeStyles()
+    {
+        if (ChartCardBorder != null)
+        {
+            ChartCardBorder.Background = ThemeManager.GetBrush("CardBackgroundBrush", FallbackCardBg);
+            ChartCardBorder.BorderBrush = ThemeManager.GetBrush("CardBorderBrush", FallbackCardBorder);
+        }
+
+        var textMuted = ThemeManager.GetBrush("TextMutedBrush", FallbackTextBrush);
+        var textSecondary = ThemeManager.GetBrush("TextSecondaryBrush", FallbackTextBrush);
+
+        if (YAxisTitle != null) YAxisTitle.Foreground = textMuted;
+        if (LegendBandText != null) LegendBandText.Foreground = textSecondary;
+        if (LegendMedianText != null) LegendMedianText.Foreground = textSecondary;
+        if (LegendBandRect != null)
+        {
+            LegendBandRect.Fill = BandFillBrush;
+            LegendBandRect.Stroke = BandBorderBrush;
+        }
+        if (LegendMedianLine != null) LegendMedianLine.Stroke = MedianLineBrush;
+        if (LegendMedianDot != null) LegendMedianDot.Fill = MedianLineBrush;
+
+        if (XAxisGrid != null)
+        {
+            foreach (var child in XAxisGrid.Children)
+            {
+                if (child is TextBlock tb) tb.Foreground = textMuted;
+            }
+        }
     }
 
     public IEnumerable<MonthSummaryRecord>? SummaryRecords
@@ -302,7 +370,7 @@ public partial class MonthlyFlowBandChart
                 Width = 7,
                 Height = 7,
                 Fill = MarkerFillBrush,
-                Stroke = Brushes.White,
+                Stroke = MarkerStrokeBrush,
                 StrokeThickness = 1.5
             };
 

@@ -29,6 +29,7 @@
     <Compile Include="Controls\WrapPanel.cs" />
     <Compile Include="Services\LeafletScrollIsolationHelper.cs" />
     <Compile Include="Services\FlexibleStringConverter.cs" />
+    <Compile Include="Services\ThemeManager.cs" />
     <Compile Include="Models\MetadataItem.cs" />
     <Compile Include="Models\ImageMetadataReport.cs" />
   </ItemGroup>

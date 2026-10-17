@@ -22,9 +22,9 @@ public partial class MultiYearTimelineBarChart : UserControl
     private static readonly SolidColorBrush Pale2024Brush = new(Color.FromArgb(200, 252, 211, 77));  // Pale Amber
     private static readonly SolidColorBrush Pale2023Brush = new(Color.FromArgb(200, 148, 163, 184)); // Pale Slate
 
-    private static readonly SolidColorBrush GridBrush = new(Color.FromArgb(255, 241, 245, 249));
-    private static readonly SolidColorBrush AxisTextBrush = new(Color.FromArgb(255, 100, 116, 139));
-    private static readonly SolidColorBrush ForwardBandBrush = new(Color.FromArgb(12, 100, 116, 139));
+    private static SolidColorBrush GridBrush => Services.ThemeManager.Current.GridLineBrush;
+    private static SolidColorBrush AxisTextBrush => Services.ThemeManager.Current.AxisTextBrush;
+    private static SolidColorBrush ForwardBandBrush => Services.ThemeManager.Current.FutureBandBrush;
 
     public static readonly DependencyProperty DayDataProperty =
         DependencyProperty.Register(nameof(DayData), typeof(IEnumerable<DayTimelinePoint>),
@@ -62,12 +62,39 @@ public partial class MultiYearTimelineBarChart : UserControl
             RenderChart();
         };
 
-        Loaded += (_, _) => RenderChart();
+        Services.ThemeManager.Current.ThemeChanged += (_, _) =>
+        {
+            ApplyTheme();
+            RenderChart();
+        };
+
+        Loaded += (_, _) =>
+        {
+            ApplyTheme();
+            RenderChart();
+        };
         SizeChanged += (_, _) =>
         {
             _resizeTimer.Stop();
             _resizeTimer.Start();
         };
+    }
+
+    public void ApplyTheme()
+    {
+        if (ChartCardBorder != null)
+        {
+            ChartCardBorder.Background = Services.ThemeManager.Current.CardBackground;
+            ChartCardBorder.BorderBrush = Services.ThemeManager.Current.CardBorder;
+        }
+        if (ChartTitleBlock != null)
+        {
+            ChartTitleBlock.Foreground = Services.ThemeManager.Current.TextPrimary;
+        }
+        if (ChartUnitBlock != null)
+        {
+            ChartUnitBlock.Foreground = Services.ThemeManager.Current.TextSecondary;
+        }
     }
 
     public IEnumerable<DayTimelinePoint>? DayData
@@ -248,7 +275,7 @@ public partial class MultiYearTimelineBarChart : UserControl
                 {
                     Width = width - splitX,
                     Height = height,
-                    Fill = new SolidColorBrush(Color.FromArgb(255, 241, 245, 249)) // #F1F5F9 Slate 100
+                    Fill = ForwardBandBrush
                 };
                 Canvas.SetLeft(forwardRect, splitX);
                 Canvas.SetTop(forwardRect, 0);
@@ -258,7 +285,7 @@ public partial class MultiYearTimelineBarChart : UserControl
                 {
                     Width = 1.5,
                     Height = height,
-                    Fill = new SolidColorBrush(Color.FromArgb(255, 203, 213, 225)) // Slate 300
+                    Fill = Services.ThemeManager.Current.DividerBrush
                 };
                 Canvas.SetLeft(splitLine, splitX);
                 Canvas.SetTop(splitLine, 0);
@@ -445,7 +472,7 @@ public partial class MultiYearTimelineBarChart : UserControl
             Text = text,
             FontSize = 10,
             FontWeight = isBold ? FontWeights.SemiBold : FontWeights.Normal,
-            Foreground = new SolidColorBrush(Color.FromArgb(255, 71, 85, 105)),
+            Foreground = Services.ThemeManager.Current.TextSecondary,
             VerticalAlignment = VerticalAlignment.Center
         };
         sp.Children.Add(box);

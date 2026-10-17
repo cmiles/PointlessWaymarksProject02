@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6,6 +6,140 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'></svg>">
     <title>WaterDaze</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #F9FAFB;
+        }
+        @media (prefers-color-scheme: dark) {
+            html, body {
+                background-color: #0F172A;
+            }
+        }
+
+        /* Dark theme controls */
+        body.dark-theme [dataid="BackgroundGradient"],
+        body.dark-theme [dataid="BackgroundGradient2"] {
+            background: transparent !important;
+            border-color: transparent !important;
+        }
+        body.dark-theme [dataid="BackgroundOverlay"],
+        body.dark-theme [dataid="BackgroundOverlay2"],
+        body.dark-theme [dataid="BackgroundOverlay3"] {
+            background: #334155 !important;
+            border-color: #475569 !important;
+        }
+        body.dark-theme .System\.Windows\.Controls\.ComboBox {
+            background-color: #1E293B !important;
+            border-color: #475569 !important;
+            color: #F8FAFC !important;
+        }
+        body.dark-theme .System\.Windows\.Controls\.ComboBox [dataid="Background"] {
+            background: #1E293B !important;
+            border-color: #475569 !important;
+            border-radius: 6px !important;
+        }
+        body.dark-theme .System\.Windows\.Controls\.ComboBox svg path,
+        body.dark-theme .System\.Windows\.Controls\.ComboBox [dataid="BtnArrow"] path,
+        body.dark-theme .System\.Windows\.Controls\.ComboBox [dataid="BtnArrow"] {
+            fill: #CBD5E1 !important;
+            stroke: #CBD5E1 !important;
+        }
+        body.dark-theme .System\.Windows\.Controls\.ComboBox div,
+        body.dark-theme .System\.Windows\.Controls\.ComboBox span,
+        body.dark-theme .System\.Windows\.Controls\.ComboBox text,
+        body.dark-theme .System\.Windows\.Controls\.ComboBox .System\.Windows\.Controls\.TextBlock {
+            color: #F8FAFC !important;
+        }
+        body.dark-theme .System\.Windows\.Controls\.Primitives\.Popup,
+        body.dark-theme [dataid="Popup"] {
+            background: transparent !important;
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        body.dark-theme [dataid="PopupBorder"] {
+            background-color: #1E293B !important;
+            border: 1px solid #475569 !important;
+            border-radius: 6px !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+        }
+        body.dark-theme .System\.Windows\.Controls\.Primitives\.Popup [dataid="Background"] {
+            background: #1E293B !important;
+            border-color: #475569 !important;
+        }
+        body.dark-theme .System\.Windows\.Controls\.ComboBoxItem {
+            background-color: #1E293B !important;
+            color: #F8FAFC !important;
+        }
+        body.dark-theme .System\.Windows\.Controls\.ComboBoxItem div,
+        body.dark-theme .System\.Windows\.Controls\.ComboBoxItem span,
+        body.dark-theme .System\.Windows\.Controls\.ComboBoxItem .System\.Windows\.Controls\.TextBlock {
+            color: #F8FAFC !important;
+        }
+        body.dark-theme .System\.Windows\.Controls\.ComboBoxItem:hover {
+            background-color: #334155 !important;
+            color: #FFFFFF !important;
+        }
+
+        /* Light theme controls */
+        body.light-theme [dataid="BackgroundGradient"] {
+            display: block !important;
+            visibility: visible !important;
+        }
+        body.light-theme .System\.Windows\.Controls\.ComboBox {
+            background-color: #FFFFFF !important;
+            border-color: #D1D5DB !important;
+            color: #111827 !important;
+        }
+        body.light-theme .System\.Windows\.Controls\.ComboBox [dataid="Background"] {
+            background: #FFFFFF !important;
+            border-color: #D1D5DB !important;
+            border-radius: 6px !important;
+        }
+        body.light-theme .System\.Windows\.Controls\.ComboBox svg path,
+        body.light-theme .System\.Windows\.Controls\.ComboBox [dataid="BtnArrow"] path,
+        body.light-theme .System\.Windows\.Controls\.ComboBox [dataid="BtnArrow"] {
+            fill: #374151 !important;
+            stroke: #374151 !important;
+        }
+        body.light-theme .System\.Windows\.Controls\.ComboBox div,
+        body.light-theme .System\.Windows\.Controls\.ComboBox span,
+        body.light-theme .System\.Windows\.Controls\.ComboBox text,
+        body.light-theme .System\.Windows\.Controls\.ComboBox .System\.Windows\.Controls\.TextBlock {
+            color: #111827 !important;
+        }
+        body.light-theme .System\.Windows\.Controls\.Primitives\.Popup,
+        body.light-theme [dataid="Popup"] {
+            background: transparent !important;
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        body.light-theme [dataid="PopupBorder"] {
+            background-color: #FFFFFF !important;
+            border: 1px solid #D1D5DB !important;
+            border-radius: 6px !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+        }
+        body.light-theme .System\.Windows\.Controls\.ComboBoxItem {
+            background-color: #FFFFFF !important;
+            color: #111827 !important;
+        }
+        body.light-theme .System\.Windows\.Controls\.ComboBoxItem div,
+        body.light-theme .System\.Windows\.Controls\.ComboBoxItem span,
+        body.light-theme .System\.Windows\.Controls\.ComboBoxItem .System\.Windows\.Controls\.TextBlock {
+            color: #111827 !important;
+        }
+        body.light-theme .System\.Windows\.Controls\.ComboBoxItem:hover {
+            background-color: #F3F4F6 !important;
+            color: #111827 !important;
+        }
+    </style>
 </head>
 <body>
     <div id="opensilver-root" style="position: relative; width: 100%; height: 100%; overflow-x: hidden; overflow-y: hidden"></div>
