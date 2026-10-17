@@ -8,7 +8,8 @@ $iconPath = ".\PwTrackTrimmer\PwTrackTrimmer.Photino\app.ico"
 if (Test-Path $targetDir) {
     Write-Host "Clearing existing files in $targetDir..." -ForegroundColor Yellow
     Remove-Item -Path "$targetDir\*" -Recurse -Force -ErrorAction SilentlyContinue
-} else {
+}
+else {
     Write-Host "Creating target directory $targetDir..." -ForegroundColor Yellow
     New-Item -ItemType Directory -Path $targetDir | Out-Null
 }
@@ -24,8 +25,9 @@ dotnet publish $projectPath -c Release -r win-x64 --self-contained true `
 # 4. Copy the icon to the publish target directory
 if (Test-Path $iconPath) {
     Write-Host "Copying app.ico to publish target..." -ForegroundColor Cyan
-    Copy-Item -Path $iconPath -Destination$targetDir -Force
-} else {
+    Copy-Item -Path $iconPath -Destination $targetDir -Force
+}
+else {
     Write-Host "Warning: app.ico not found at $iconPath" -ForegroundColor Red
 }
 
