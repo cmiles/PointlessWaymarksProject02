@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows;
@@ -20,6 +21,14 @@ namespace PwTrackTrimmer
 
             ViewModel = new TrackTrimmerViewModel();
             this.DataContext = ViewModel;
+            ViewModel.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(TrackTrimmerViewModel.IsToolsMenuOpen) && ViewModel.IsToolsMenuOpen)
+                {
+                    UpdateToolsMenuCardPosition();
+                    Dispatcher.BeginInvoke(() => UpdateToolsMenuCardPosition());
+                }
+            };
 
             this.KeyDown += MainPage_KeyDown;
             this.SizeChanged += (s, e) => UpdateResponsiveLayout(e.NewSize.Width);
@@ -131,6 +140,7 @@ namespace PwTrackTrimmer
         private void ToolsButton_Click(object sender, RoutedEventArgs e)
         {
             UpdateToolsMenuCardPosition();
+            Dispatcher.BeginInvoke(() => UpdateToolsMenuCardPosition());
         }
 
         private void MenuItem_Click(object sender, System.Windows.RoutedEventArgs e)
@@ -277,13 +287,52 @@ namespace PwTrackTrimmer
 
         private void UpdateToolsMenuCardPosition()
         {
-            if (ToolsMenuCard != null)
+            if (ToolsMenuCard == null) return;
+
+            double left = 14;
+            double top = 46;
+
+            try
             {
-                double topOffset = TopBarBorder != null && TopBarBorder.ActualHeight > 0
-                    ? TopBarBorder.ActualHeight + 4
-                    : 46;
-                ToolsMenuCard.Margin = new Thickness(0, topOffset, 14, 0);
+                if (BtnTools != null && OuterRootGrid != null)
+                {
+                    GeneralTransform transform = BtnTools.TransformToVisual(OuterRootGrid);
+                    Point btnPos = transform.TransformPoint(new Point(0, 0));
+                    double btnWidth = BtnTools.ActualWidth > 0 ? BtnTools.ActualWidth : 75;
+                    double btnHeight = BtnTools.ActualHeight > 0 ? BtnTools.ActualHeight : 30;
+
+                    top = btnPos.Y + btnHeight + 4;
+                    left = btnPos.X;
+
+                    double menuWidth = ToolsMenuCard.ActualWidth > 0 ? ToolsMenuCard.ActualWidth : 330;
+                    double windowWidth = OuterRootGrid.ActualWidth > 0 ? OuterRootGrid.ActualWidth : this.ActualWidth;
+
+                    // If aligning with the left edge of the button causes menu to overflow the right edge of the screen,
+                    // right-align it with the button instead (or clamp to screen padding).
+                    if (windowWidth > 0 && left + menuWidth > windowWidth - 14)
+                    {
+                        double rightAlignedLeft = btnPos.X + btnWidth - menuWidth;
+                        left = Math.Max(14, Math.Min(rightAlignedLeft, windowWidth - menuWidth - 14));
+                    }
+                    else
+                    {
+                        left = Math.Max(14, left);
+                    }
+                }
+                else if (TopBarBorder != null && TopBarBorder.ActualHeight > 0)
+                {
+                    top = TopBarBorder.ActualHeight + 4;
+                }
             }
+            catch
+            {
+                if (TopBarBorder != null && TopBarBorder.ActualHeight > 0)
+                {
+                    top = TopBarBorder.ActualHeight + 4;
+                }
+            }
+
+            ToolsMenuCard.Margin = new Thickness(Math.Max(0, left), Math.Max(0, top), 0, 0);
         }
 
         private readonly Dictionary<DependencyObject, (Brush? Background, Brush? BorderBrush, Brush? Foreground)> _originalDarkBrushes = new();

@@ -12,6 +12,16 @@
     <title>Water Days</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon" />
     <base href="/WaterDaze/" />
+    <meta name="theme-color" content="#0288D1" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="WaterDaze" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <script>
         (function () {
             if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
@@ -191,6 +201,17 @@
             });
             document.body.appendChild(script);
         })();
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('sw.js').then(function (reg) {
+                    console.log('WaterDaze Service Worker registered with scope:', reg.scope);
+                }).catch(function (err) {
+                    console.warn('WaterDaze Service Worker registration failed:', err);
+                });
+            });
+        }
     </script>
 </body>
 </html>

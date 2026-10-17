@@ -9,6 +9,16 @@
     <meta name="application-name" content="Pointless Waymarks Track Trimmer">
     <meta name="copyright" content="©2026 Charles Miles">
     <base href="/PwTrackTrimmer/" />
+    <meta name="theme-color" content="#00838F" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Track Trimmer" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <script>
         (function () {
             if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
@@ -19,7 +29,6 @@
             }
         })();
     </script>
-    <link rel="icon" href="favicon.ico" type="image/x-icon" />
     <script>
         (function () {
             const style = document.createElement('link');
@@ -80,6 +89,17 @@
             });
             document.body.appendChild(script);
         })();
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('sw.js').then(function (reg) {
+                    console.log('PwTrackTrimmer Service Worker registered with scope:', reg.scope);
+                }).catch(function (err) {
+                    console.warn('PwTrackTrimmer Service Worker registration failed:', err);
+                });
+            });
+        }
     </script>
 </body>
 </html>
