@@ -20,16 +20,22 @@
     <Page Include="Controls\AboutWindowControl.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\AppUpdateWindowControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="App.xaml.cs" />
     <Compile Include="MainPage.xaml.cs" />
     <Compile Include="Controls\AboutWindowControl.xaml.cs" />
+    <Compile Include="Controls\AppUpdateWindowControl.xaml.cs" />
     <Compile Include="Controls\WrapPanel.cs" />
     <Compile Include="Services\LeafletScrollIsolationHelper.cs" />
     <Compile Include="Services\FlexibleStringConverter.cs" />
     <Compile Include="Services\ThemeManager.cs" />
+    <Compile Include="Services\AppUpdateService.cs" />
+    <Compile Include="ViewModels\UpdateViewModel.cs" />
     <Compile Include="Models\MetadataItem.cs" />
     <Compile Include="Models\ImageMetadataReport.cs" />
   </ItemGroup>

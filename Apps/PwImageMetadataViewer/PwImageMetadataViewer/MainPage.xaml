@@ -12,7 +12,7 @@
     <Page.Resources>
         <!-- Wide Screen 3-Column Table Row Template -->
         <DataTemplate x:Key="WideTagTemplate">
-            <Border BorderBrush="#1F2937" BorderThickness="0,0,0,1" Padding="16,9">
+            <Border BorderBrush="{Binding RowBorderBrush}" BorderThickness="0,0,0,1" Padding="16,9">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="130"/>
@@ -22,34 +22,34 @@
 
                     <!-- Group Badge -->
                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                        <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="4" Padding="7,2" HorizontalAlignment="Left">
-                            <TextBlock Text="{Binding Group}" Style="{StaticResource BadgeTextStyle}" Foreground="#38BDF8"/>
+                        <Border Background="{Binding GroupBadgeBackground}" BorderBrush="{Binding GroupBadgeBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="7,2" HorizontalAlignment="Left">
+                            <TextBlock Text="{Binding Group}" Style="{StaticResource BadgeTextStyle}" Foreground="{Binding GroupBadgeForeground}"/>
                         </Border>
                     </StackPanel>
 
                     <!-- Tag Name (monospace) -->
-                    <TextBlock Grid.Column="1" Text="{Binding Tag}" Style="{StaticResource MonoTagKeyTextStyle}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,12,0"/>
+                    <TextBlock Grid.Column="1" Text="{Binding Tag}" Foreground="{Binding TagForeground}" Style="{StaticResource MonoTagKeyTextStyle}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,12,0"/>
 
                     <!-- Value -->
-                    <TextBlock Grid.Column="2" Text="{Binding Value}" Style="{StaticResource StandardDataValueTextStyle}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                    <TextBlock Grid.Column="2" Text="{Binding Value}" Foreground="{Binding ValueForeground}" Style="{StaticResource StandardDataValueTextStyle}" VerticalAlignment="Center" TextWrapping="Wrap"/>
                 </Grid>
             </Border>
         </DataTemplate>
 
         <!-- Small Screen Collapsed Card Template (Group, Tag Name, Value stacked under each other) -->
         <DataTemplate x:Key="SmallScreenTagTemplate">
-            <Border BorderBrush="#1F2937" BorderThickness="0,0,0,1" Padding="14,10">
+            <Border BorderBrush="{Binding RowBorderBrush}" BorderThickness="0,0,0,1" Padding="14,10">
                 <StackPanel>
                     <!-- 1. Group Badge -->
-                    <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="4" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,5">
-                        <TextBlock Text="{Binding Group}" Style="{StaticResource BadgeTextStyle}" Foreground="#38BDF8"/>
+                    <Border Background="{Binding GroupBadgeBackground}" BorderBrush="{Binding GroupBadgeBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,5">
+                        <TextBlock Text="{Binding Group}" Style="{StaticResource BadgeTextStyle}" Foreground="{Binding GroupBadgeForeground}"/>
                     </Border>
 
                     <!-- 2. Tag Name -->
-                    <TextBlock Text="{Binding Tag}" Style="{StaticResource MonoTagKeyTextStyle}" FontWeight="Bold" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                    <TextBlock Text="{Binding Tag}" Foreground="{Binding TagForeground}" Style="{StaticResource MonoTagKeyTextStyle}" FontWeight="Bold" TextWrapping="Wrap" Margin="0,0,0,4"/>
 
                     <!-- 3. Value -->
-                    <TextBlock Text="{Binding Value}" Style="{StaticResource StandardDataValueTextStyle}" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding Value}" Foreground="{Binding ValueForeground}" Style="{StaticResource StandardDataValueTextStyle}" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
         </DataTemplate>
@@ -94,19 +94,26 @@
                         <Button x:Name="BtnExportJson" Click="BtnExportJson_Click" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" Margin="0,0,8,6" Cursor="Hand">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="📋 " FontSize="13.5"/>
-                                <TextBlock Text="Copy JSON" Foreground="#F8FAFC"/>
+                                <TextBlock Text="Copy JSON"/>
                             </StackPanel>
                         </Button>
 
                         <Button x:Name="BtnAbout" Click="BtnAbout_Click" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" Margin="0,0,0,6" Cursor="Hand">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="ℹ️ " FontSize="13.5"/>
-                                <TextBlock Text="About" Foreground="#F8FAFC"/>
+                                <TextBlock Text="About"/>
                             </StackPanel>
                         </Button>
 
                         <Button x:Name="BtnThemeToggle" Click="BtnThemeToggle_Click" Width="145" HorizontalContentAlignment="Center" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13.5" Padding="6,8" Margin="8,0,0,6" Cursor="Hand" ToolTipService.ToolTip="Toggle theme (System / Dark / Light)">
-                            <TextBlock x:Name="TxtThemeToggle" Text="🌓 Theme" Foreground="#F8FAFC" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TxtThemeToggle" Text="🌓 Theme" HorizontalAlignment="Center"/>
+                        </Button>
+
+                        <Button x:Name="BtnUpdates" Click="BtnUpdates_Click" Background="#059669" BorderBrush="#047857" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" Margin="8,0,0,6" Cursor="Hand" ToolTipService.ToolTip="Check online catalog for software updates">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🚀 " FontSize="13.5"/>
+                                <TextBlock Text="Updates"/>
+                            </StackPanel>
                         </Button>
                     </controls:WrapPanel>
                 </controls:WrapPanel>
@@ -151,19 +158,26 @@
                             <Button x:Name="BtnMobileExportJson" Click="BtnMobileExportJson_Click" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                     <TextBlock Text="📋 " FontSize="13.5"/>
-                                    <TextBlock Text="Copy JSON" Foreground="#F8FAFC"/>
+                                    <TextBlock Text="Copy JSON"/>
                                 </StackPanel>
                             </Button>
 
                             <Button x:Name="BtnMobileAbout" Click="BtnMobileAbout_Click" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                     <TextBlock Text="ℹ️ " FontSize="13.5"/>
-                                    <TextBlock Text="About" Foreground="#F8FAFC"/>
+                                    <TextBlock Text="About"/>
                                 </StackPanel>
                             </Button>
 
-                            <Button x:Name="BtnMobileThemeToggle" Click="BtnMobileThemeToggle_Click" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" HorizontalAlignment="Stretch" Cursor="Hand">
-                                <TextBlock x:Name="TxtMobileThemeToggle" Text="🌓 Theme" Foreground="#F8FAFC" HorizontalAlignment="Center"/>
+                            <Button x:Name="BtnMobileThemeToggle" Click="BtnMobileThemeToggle_Click" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand">
+                                <TextBlock x:Name="TxtMobileThemeToggle" Text="🌓 Theme" HorizontalAlignment="Center"/>
+                            </Button>
+
+                            <Button x:Name="BtnMobileUpdates" Click="BtnMobileUpdates_Click" Background="#059669" BorderBrush="#047857" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" HorizontalAlignment="Stretch" Cursor="Hand">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <TextBlock Text="🚀 " FontSize="13.5"/>
+                                    <TextBlock Text="Check for Updates"/>
+                                </StackPanel>
                             </Button>
                         </StackPanel>
                     </Border>
@@ -455,25 +469,25 @@
                         <!-- Group Filter Chips (Wide Screens >= 850px) -->
                         <controls:WrapPanel x:Name="PnlCategoryChips" Orientation="Horizontal" Margin="0,0,0,16">
                             <Button x:Name="BtnFilterAll" Click="BtnFilter_Click" Tag="All" Background="#38BDF8" Foreground="#0F172A" FontSize="12" FontWeight="Bold" Padding="11,5" Margin="0,0,6,6" BorderThickness="0" Cursor="Hand">
-                                <TextBlock Text="All Tags" Foreground="#0F172A" FontWeight="Bold"/>
+                                <TextBlock Text="All Tags" FontWeight="Bold"/>
                             </Button>
                             <Button x:Name="BtnFilterExif" Click="BtnFilter_Click" Tag="EXIF" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontSize="12" FontWeight="SemiBold" Padding="11,5" Margin="0,0,6,6" Cursor="Hand">
-                                <TextBlock Text="Camera / EXIF" Foreground="#F8FAFC"/>
+                                <TextBlock Text="Camera / EXIF"/>
                             </Button>
                             <Button x:Name="BtnFilterFile" Click="BtnFilter_Click" Tag="File" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontSize="12" FontWeight="SemiBold" Padding="11,5" Margin="0,0,6,6" Cursor="Hand">
-                                <TextBlock Text="File &amp; Image" Foreground="#F8FAFC"/>
+                                <TextBlock Text="File &amp; Image"/>
                             </Button>
                             <Button x:Name="BtnFilterGps" Click="BtnFilter_Click" Tag="GPS" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontSize="12" FontWeight="SemiBold" Padding="11,5" Margin="0,0,6,6" Cursor="Hand">
-                                <TextBlock Text="GPS / Location" Foreground="#F8FAFC"/>
+                                <TextBlock Text="GPS / Location"/>
                             </Button>
                             <Button x:Name="BtnFilterComposite" Click="BtnFilter_Click" Tag="Composite" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontSize="12" FontWeight="SemiBold" Padding="11,5" Margin="0,0,6,6" Cursor="Hand">
-                                <TextBlock Text="Composite" Foreground="#F8FAFC"/>
+                                <TextBlock Text="Composite"/>
                             </Button>
                             <Button x:Name="BtnFilterMakerNotes" Click="BtnFilter_Click" Tag="MakerNotes" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontSize="12" FontWeight="SemiBold" Padding="11,5" Margin="0,0,6,6" Cursor="Hand">
-                                <TextBlock Text="MakerNotes" Foreground="#F8FAFC"/>
+                                <TextBlock Text="MakerNotes"/>
                             </Button>
                             <Button x:Name="BtnFilterXmp" Click="BtnFilter_Click" Tag="XMP" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontSize="12" FontWeight="SemiBold" Padding="11,5" Margin="0,0,0,6" Cursor="Hand">
-                                <TextBlock Text="XMP / IPTC" Foreground="#F8FAFC"/>
+                                <TextBlock Text="XMP / IPTC"/>
                             </Button>
                         </controls:WrapPanel>
 
@@ -553,6 +567,13 @@
               Background="#B3090D16" Canvas.ZIndex="900">
             <controls:AboutWindowControl x:Name="AboutWindow" MaxWidth="680" MaxHeight="540" Margin="16"
                                          HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Grid>
+
+        <!-- FLOATING IN-APP UPDATE WINDOW OVERLAY -->
+        <Grid x:Name="UpdateWindowOverlayGrid" Grid.Row="0" Grid.RowSpan="3" Visibility="Collapsed"
+              Background="#B3090D16" Canvas.ZIndex="950">
+            <controls:AppUpdateWindowControl x:Name="UpdateWindowControlElement" MaxWidth="600" MaxHeight="480" Margin="16"
+                                             HorizontalAlignment="Center" VerticalAlignment="Center" />
         </Grid>
     </Grid>
 </Page>

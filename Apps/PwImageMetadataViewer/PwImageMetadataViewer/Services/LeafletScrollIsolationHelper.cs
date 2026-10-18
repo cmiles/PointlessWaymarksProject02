@@ -102,8 +102,46 @@ namespace PwImageMetadataViewer.Services
                         options = options || {};
 
                         // 1. Ensure leaflet-gesture-handling is enabled on the map instance
-                        if (map.gestureHandling && !map.gestureHandling.enabled()) {
-                            map.gestureHandling.enable();
+                        if (map.gestureHandling) {
+                            if (!map.gestureHandling.enabled()) {
+                                map.gestureHandling.enable();
+                            }
+                            // Prevent leaflet-gesture-handling from disabling mouse dragging on mouseout.
+                            // On desktop, mouse dragging must always be enabled so users can pan the map with left-click drag.
+                            // Touch devices are already cleanly handled by gesture-handling's _handleTouch (requiring two fingers).
+                            map.gestureHandling._handleMouseOut = function() {
+                                // Do not disable dragging on mouseout - prevents premature drag disabling on desktop
+                            };
+                            var origRemoveHooks = map.gestureHandling.removeHooks;
+                            map.gestureHandling.removeHooks = function() {
+                                this._enableInteractions = function() {};
+                                if (origRemoveHooks) origRemoveHooks.call(this);
+                            };
+                        }
+
+                        // Ensure map dragging is enabled for mouse interactions
+                        if (map.dragging && !map.dragging.enabled()) {
+                            map.dragging.enable();
+                        }
+
+                        var mapEl = (map.getContainer && map.getContainer()) || container;
+
+                        // Ensure mouse drag starts with dragging enabled on mousedown/pointerdown
+                        function onPointerDown(e) {
+                            if (!map || !map.dragging) return;
+                            var c = (map.getContainer && map.getContainer()) || map._container;
+                            if (!c) return;
+                            if (!e.touches && (e.pointerType === 'mouse' || !e.pointerType)) {
+                                if (!map.dragging.enabled()) {
+                                    map.dragging.enable();
+                                }
+                            }
+                        }
+                        mapEl.addEventListener('pointerdown', onPointerDown, { capture: true });
+                        mapEl.addEventListener('mousedown', onPointerDown, { capture: true });
+                        if (container !== mapEl) {
+                            container.addEventListener('pointerdown', onPointerDown, { capture: true });
+                            container.addEventListener('mousedown', onPointerDown, { capture: true });
                         }
 
                         // 2. Discover parent scroll container in OpenSilver
@@ -222,6 +260,12 @@ namespace PwImageMetadataViewer.Services
                         // 5. Teardown / Cleanup Handle
                         return {
                             destroy: function() {
+                                mapEl.removeEventListener('pointerdown', onPointerDown, { capture: true });
+                                mapEl.removeEventListener('mousedown', onPointerDown, { capture: true });
+                                if (container !== mapEl) {
+                                    container.removeEventListener('pointerdown', onPointerDown, { capture: true });
+                                    container.removeEventListener('mousedown', onPointerDown, { capture: true });
+                                }
                                 container.removeEventListener('wheel', onWheel);
                                 container.removeEventListener('touchstart', onTouchStart);
                                 container.removeEventListener('touchmove', onTouchMove);

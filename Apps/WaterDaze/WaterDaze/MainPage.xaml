@@ -115,6 +115,18 @@
                                 Height="34" Padding="14,0,14,0" 
                                 VerticalAlignment="Center" Margin="0,0,12,8" />
 
+                        <!-- Updates Button -->
+                        <Button x:Name="BtnUpdates" Command="{Binding CheckForUpdatesManualCommand}" Click="BtnUpdates_Click"
+                                Style="{StaticResource ActionButtonStyle}"
+                                Height="34" Padding="12,0"
+                                VerticalAlignment="Center" Margin="0,0,12,8"
+                                ToolTipService.ToolTip="Check online catalog for software updates">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="🚀 " FontSize="12" VerticalAlignment="Center" />
+                                <TextBlock Text="Updates" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
                         <!-- Theme Toggle Button -->
                         <Button x:Name="BtnThemeToggle" Click="BtnThemeToggle_Click"
                                 Style="{StaticResource ActionButtonStyle}"
@@ -440,5 +452,12 @@
             </Grid>
         </Border>
     </Border>
+
+    <!-- FLOATING IN-APP UPDATE WINDOW OVERLAY -->
+    <Grid x:Name="UpdateWindowOverlayGrid" Visibility="{Binding UpdateWindowVisibility}" 
+          Background="#99090D16" Canvas.ZIndex="850">
+        <controls:AppUpdateWindowControl x:Name="UpdateWindowControlElement" MaxWidth="600" MaxHeight="480" Margin="12"
+                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+    </Grid>
 </Grid>
 </Page>

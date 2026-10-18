@@ -54,6 +54,7 @@ public partial class MainPage : Page
                 ApplyThemeToTree(LayoutRoot, ThemeManager.Current.IsDark);
             }
             RenderActiveTabCharts(ViewModel.SelectedTab ?? "Timeline14Days");
+            _ = ViewModel.CheckForUpdatesAsync(silent: true);
         });
     }
 
@@ -235,6 +236,11 @@ public partial class MainPage : Page
     {
         await ViewModel.LoadDataAsync();
         UpdateAllViews();
+    }
+
+    private void BtnUpdates_Click(object sender, RoutedEventArgs e)
+    {
+        _ = ViewModel.CheckForUpdatesAsync(silent: false);
     }
 
     private void TabBtn_Click(object sender, RoutedEventArgs e)
@@ -493,6 +499,7 @@ public partial class MainPage : Page
         }
 
         RenderActiveTabCharts(ViewModel.SelectedTab ?? "Timeline14Days");
+        UpdateWindowControlElement?.ApplyTheme(isDark);
     }
 
     private void BorderYearFilter_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)

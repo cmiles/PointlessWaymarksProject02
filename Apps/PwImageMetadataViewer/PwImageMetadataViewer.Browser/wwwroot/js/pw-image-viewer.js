@@ -514,7 +514,6 @@
     }
 
     // Helper to safely mount or retrieve map container DOM element
-    // Helper to safely mount or retrieve map container DOM element
     function ensureMapContainer(containerElement) {
         if (!containerElement) return document.getElementById('pw-leaflet-map');
         var mapDiv = containerElement.querySelector('.pw-leaflet-div') || document.getElementById('pw-leaflet-map');
@@ -529,9 +528,11 @@
             mapDiv.style.overflow = 'hidden';
             mapDiv.style.zIndex = '1';
             mapDiv.style.borderRadius = '8px';
-            if (getComputedStyle(containerElement).position === 'static') {
-                containerElement.style.position = 'relative';
-            }
+        }
+        if (getComputedStyle(containerElement).position === 'static') {
+            containerElement.style.position = 'relative';
+        }
+        if (mapDiv.parentElement !== containerElement) {
             containerElement.appendChild(mapDiv);
         }
         return mapDiv;
@@ -556,6 +557,47 @@
         var s = document.createElement('script');
         s.src = src;
         document.head.appendChild(s);
+    }
+
+    function safeRemoveMap(map) {
+        if (!map) return;
+        try {
+            if (map.gestureHandling) {
+                map.gestureHandling._enableInteractions = function () { };
+                try { map.gestureHandling.disable(); } catch (e) { }
+            }
+            if (map.dragging) {
+                try { map.dragging.disable(); } catch (e) { }
+            }
+            if (map.scrollWheelZoom) {
+                if (map.scrollWheelZoom._timer) {
+                    clearTimeout(map.scrollWheelZoom._timer);
+                    map.scrollWheelZoom._timer = null;
+                }
+                try { map.scrollWheelZoom.disable(); } catch (e) { }
+            }
+            if (map.touchZoom) {
+                try { map.touchZoom.disable(); } catch (e) { }
+            }
+            map.remove();
+        } catch (e) {
+            console.warn('[PwExifBridge] Error removing map instance:', e);
+        }
+    }
+
+    function cleanMapContainer(container) {
+        if (!container) return;
+        if (typeof L !== 'undefined' && L.DomEvent && L.DomEvent.off) {
+            try { L.DomEvent.off(container); } catch (e) { }
+        }
+        container.innerHTML = '';
+        try {
+            delete container._leaflet_events;
+            delete container._leaflet_id;
+        } catch (e) {
+            container._leaflet_events = undefined;
+            container._leaflet_id = undefined;
+        }
     }
 
     // Leaflet Map Rendering & Gesture Isolation (Matching LeafletScrollIsolationHelper)
@@ -623,15 +665,14 @@
                 leafletIsolationHandle = null;
             }
 
-            if (leafletMapInstance) {
-                try {
-                    leafletMapInstance.remove();
-                } catch (e) {
-                    console.warn('[PwExifBridge] Error removing previous map instance:', e);
-                }
+            var oldMap = leafletMapInstance || window.leafletMapInstance;
+            if (oldMap) {
+                safeRemoveMap(oldMap);
                 leafletMapInstance = null;
                 window.leafletMapInstance = null;
             }
+
+            cleanMapContainer(container);
 
             try {
                 // 1. Initialize Leaflet Map with gestureHandling: true
@@ -649,6 +690,11 @@
                     leafletIsolationHandle = window.pwLeafletGestureIsolation.install(leafletMapInstance, container, {
                         scrollParent: window.pwMainScrollViewerElement
                     });
+                }
+
+                // Ensure map dragging is enabled for mouse interactions
+                if (leafletMapInstance.dragging && !leafletMapInstance.dragging.enabled()) {
+                    leafletMapInstance.dragging.enable();
                 }
 
                 // 3. Add L.Control.Locate
@@ -721,13 +767,15 @@
             } catch (e) { }
             leafletIsolationHandle = null;
         }
-        if (leafletMapInstance) {
-            try {
-                leafletMapInstance.remove();
-            } catch (e) { }
+        var oldMap = leafletMapInstance || window.leafletMapInstance;
+        if (oldMap) {
+            safeRemoveMap(oldMap);
             leafletMapInstance = null;
+            window.leafletMapInstance = null;
         }
-        window.leafletMapInstance = null;
+        if (container) {
+            cleanMapContainer(container);
+        }
     }
 
     function invalidateMapSize() {

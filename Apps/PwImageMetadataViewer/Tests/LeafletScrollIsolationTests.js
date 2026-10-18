@@ -293,11 +293,21 @@ globalThis.document.addEventListener('touchmove', (e) => {
     }
 });
 
+let mapDraggingEnabled = false;
 const mockMap = {
     gestureHandling: {
-        enabled: () => true,
-        enable: () => {}
-    }
+        _enabled: true,
+        enabled: () => mockMap.gestureHandling._enabled,
+        enable: () => { mockMap.gestureHandling._enabled = true; },
+        _disableInteractions: function() { mapDraggingEnabled = false; },
+        _handleMouseOut: function() { mockMap.gestureHandling._disableInteractions(); }
+    },
+    dragging: {
+        enabled: () => mapDraggingEnabled,
+        enable: () => { mapDraggingEnabled = true; },
+        disable: () => { mapDraggingEnabled = false; }
+    },
+    getContainer: () => mapDivEl
 };
 
 // --- 2. Load C# & JS Implementation ---
@@ -401,11 +411,29 @@ assert('Test 6: Touch drag outside the map DOES scroll the app normally (offset 
 outsidePanelEl.dispatchEvent(new MockPointerEvent('pointerup', { pointerId: 6, pointerType: 'touch' }));
 outsidePanelEl.dispatchEvent(new MockTouchEvent('touchend', { touches: [] }));
 
-// Test 7: Teardown
+// Test 7: Desktop Mouse Drag Preservation (Click & Drag Pan)
+assert('Test 7a: Map dragging is enabled after isolation install',
+    mockMap.dragging.enabled() === true);
+
+// Simulate mouseout event that leaflet-gesture-handling previously used to disable dragging
+mockMap.gestureHandling._handleMouseOut();
+assert('Test 7b: Leaflet gesture-handling _handleMouseOut does not disable map dragging',
+    mockMap.dragging.enabled() === true);
+
+// Simulate disabling and ensuring mouse/pointerdown re-enables map dragging
+mockMap.dragging.disable();
+assert('Test 7c: Dragging can be temporarily disabled for testing',
+    mockMap.dragging.enabled() === false);
+
+mapDivEl.dispatchEvent(new MockPointerEvent('pointerdown', { pointerId: 1, pointerType: 'mouse', clientY: 100 }));
+assert('Test 7d: Pointerdown (mouse) immediately re-enables map dragging for left-click pan',
+    mockMap.dragging.enabled() === true);
+
+// Test 8: Teardown
 isolation.destroy();
 silverlightScrollViewer.verticalOffset = 0;
 outsidePanelEl.dispatchEvent(new MockWheelEvent('wheel', { deltaY: 80, ctrlKey: false }));
-assert('Test 7: Teardown cleanly unbinds', silverlightScrollViewer.verticalOffset > 0);
+assert('Test 8: Teardown cleanly unbinds', silverlightScrollViewer.verticalOffset > 0);
 
 console.log(`\nRESULTS: ${passed} passed, ${failed} failed.\n`);
 if (failed > 0) process.exit(1);

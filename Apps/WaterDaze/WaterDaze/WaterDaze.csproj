@@ -27,6 +27,9 @@
     <Page Include="Controls\MonthlyHeatmapControl.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\AppUpdateWindowControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Themes\LightTheme.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -41,6 +44,7 @@
     <Compile Include="Controls\YearFacetControl.xaml.cs" />
     <Compile Include="Controls\MonthlyFlowBandChart.xaml.cs" />
     <Compile Include="Controls\MonthlyHeatmapControl.xaml.cs" />
+    <Compile Include="Controls\AppUpdateWindowControl.xaml.cs" />
     <Compile Include="Models\DailyFlowRecord.cs" />
     <Compile Include="Models\DailyPeakFlowRecord.cs" />
     <Compile Include="Models\GaugeDashboardData.cs" />
@@ -50,6 +54,7 @@
     <Compile Include="Models\StreakRecord.cs" />
     <Compile Include="Models\UsgsDailyValueResponse.cs" />
     <Compile Include="Models\YearlyFlowRecord.cs" />
+    <Compile Include="Services\AppUpdateService.cs" />
     <Compile Include="Services\GaugeAnalyticsService.cs" />
     <Compile Include="Services\IUsgsService.cs" />
     <Compile Include="Services\ThemeManager.cs" />

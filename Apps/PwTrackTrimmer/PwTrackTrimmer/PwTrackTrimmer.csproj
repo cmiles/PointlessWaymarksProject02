@@ -40,6 +40,9 @@
     <Page Include="Controls\BusyOverlayControl.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\AppUpdateWindowControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 
   <ItemGroup>

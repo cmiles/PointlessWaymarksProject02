@@ -33,6 +33,7 @@ public partial class MainPage
                 {
                     ApplyThemeToTree(LayoutRoot, ThemeManager.IsDark);
                 }
+                _ = ViewModel.CheckForUpdatesAsync(silent: true);
             });
         };
 
@@ -59,6 +60,8 @@ public partial class MainPage
 
         SyncThemeSelector();
 
+        UpdateWindowControlElement?.ApplyTheme(isDark);
+
         if (LayoutRoot != null)
         {
             ApplyThemeToTree(LayoutRoot, isDark);
@@ -84,7 +87,7 @@ public partial class MainPage
 
         if (obj is Button btn)
         {
-            if (btn == BtnRefresh || btn == BtnThemeToggle)
+            if (btn == BtnRefresh || btn == BtnThemeToggle || btn == BtnUpdates)
             {
                 btn.Background = ThemeManager.ActionButtonBackground;
                 btn.BorderBrush = ThemeManager.ActionButtonBorder;
@@ -326,11 +329,18 @@ public partial class MainPage
         if (WarningBanner != null)
             WarningBanner.Visibility = ViewModel.HasWarning ? Visibility.Visible : Visibility.Collapsed;
     }
-
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName is nameof(MainViewModel.IsLoading) or nameof(MainViewModel.HasError) or nameof(MainViewModel.HasWarning))
             UpdateBannerVisibilities();
+
+        if (e.PropertyName == nameof(MainViewModel.UpdateWindowVisibility))
+        {
+            if (ViewModel.UpdateWindowVisibility == Visibility.Visible)
+            {
+                UpdateWindowControlElement?.ApplyTheme(ThemeManager.IsDark);
+            }
+        }
 
         if (e.PropertyName is nameof(MainViewModel.DashboardData) or nameof(MainViewModel.SelectedSite))
         {
@@ -342,5 +352,10 @@ public partial class MainPage
                 }
             });
         }
+    }
+
+    private void BtnUpdates_Click(object sender, RoutedEventArgs e)
+    {
+        _ = ViewModel.CheckForUpdatesAsync(silent: false);
     }
 }

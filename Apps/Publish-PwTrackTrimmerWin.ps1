@@ -1,8 +1,12 @@
-﻿# 1. Define your paths
+# 1. Define your paths
 $projectPath = ".\PwTrackTrimmer\PwTrackTrimmer.Photino\PwTrackTrimmer.Photino.csproj"
 $targetDir = "M:\PointlessWaymarksPublications\PwTrackTrimmerWin"
 # Define the source path for the icon
 $iconPath = ".\PwTrackTrimmer\PwTrackTrimmer.Photino\app.ico" 
+
+# Capture start timestamp for publication versioning
+$version = Get-Date -Format "yyyy-MM-dd-HH-mm"
+Write-Host "Publish Version Timestamp: $version" -ForegroundColor Green
 
 # 2. Clear the target directory if it exists, or create it if it doesn't
 if (Test-Path $targetDir) {
@@ -31,8 +35,8 @@ else {
     Write-Host "Warning: app.ico not found at $iconPath" -ForegroundColor Red
 }
 
-# 5. Compile the Inno Setup Installer
-Write-Host "Compiling Inno Setup Installer..." -ForegroundColor Cyan
-& "C:\Program Files\Inno Setup 7\ISCC.exe" ".\Publish-InnoSetupInstaller-PwTrackTrimmerWin.iss"
+# 5. Compile the Inno Setup Installer with Version definition
+Write-Host "Compiling Inno Setup Installer with Version $version..." -ForegroundColor Cyan
+& "C:\Program Files\Inno Setup 7\ISCC.exe" "/DVersion=$version" ".\Publish-InnoSetupInstaller-PwTrackTrimmerWin.iss"
 
 if ($lastexitcode -ne 0) { throw ("Exec failed with exit code: " + $lastexitcode) }

@@ -24,6 +24,8 @@ namespace PwImageMetadataViewer
         private bool? _isSingleColumn;
         private bool? _isSmallScreen;
 
+        public ViewModels.UpdateViewModel UpdateVm { get; } = new();
+
         public MainPage()
         {
             this.InitializeComponent();
@@ -44,6 +46,27 @@ namespace PwImageMetadataViewer
                 if (e.OriginalSource == AboutOverlayGrid)
                 {
                     AboutOverlayGrid.Visibility = Visibility.Collapsed;
+                }
+            };
+
+            UpdateWindowControlElement.DataContext = UpdateVm;
+            UpdateVm.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(ViewModels.UpdateViewModel.IsUpdateWindowOpen))
+                {
+                    UpdateWindowOverlayGrid.Visibility = UpdateVm.IsUpdateWindowOpen ? Visibility.Visible : Visibility.Collapsed;
+                }
+            };
+            UpdateVm.OnStatusNotification = (msg, isError) =>
+            {
+                if (isError) ShowError(msg);
+                else ShowInfo(msg);
+            };
+            UpdateWindowOverlayGrid.MouseLeftButtonDown += (s, e) =>
+            {
+                if (e.OriginalSource == UpdateWindowOverlayGrid && !UpdateVm.IsDownloadingUpdate)
+                {
+                    UpdateVm.IsUpdateWindowOpen = false;
                 }
             };
         }
@@ -242,6 +265,7 @@ namespace PwImageMetadataViewer
                 Dispatcher.BeginInvoke(() =>
                 {
                     ApplyTheme();
+                    _ = UpdateVm.CheckForUpdatesAsync(silent: true);
                 });
             }
             catch (Exception ex)
@@ -570,6 +594,19 @@ namespace PwImageMetadataViewer
             });
         }
 
+        private void ShowInfo(string message)
+        {
+            TxtStatusIcon.Text = "ℹ️ ";
+            TxtStatusMessage.Text = message;
+            StatusBannerBorder.Background = new SolidColorBrush(Color.FromArgb(255, 12, 74, 110)); // sky-900
+            StatusBannerBorder.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 2, 132, 199)); // sky-600
+            StatusBannerBorder.Visibility = Visibility.Visible;
+            if (BtnCopyError != null)
+            {
+                BtnCopyError.Visibility = Visibility.Collapsed;
+            }
+        }
+
         private void ShowError(string message)
         {
             TxtStatusIcon.Text = "⚠️ ";
@@ -670,6 +707,17 @@ namespace PwImageMetadataViewer
         private void BtnAbout_Click(object sender, RoutedEventArgs e)
         {
             AboutOverlayGrid.Visibility = Visibility.Visible;
+        }
+
+        private void BtnUpdates_Click(object sender, RoutedEventArgs e)
+        {
+            _ = UpdateVm.CheckForUpdatesAsync(silent: false);
+        }
+
+        private void BtnMobileUpdates_Click(object sender, RoutedEventArgs e)
+        {
+            CloseHamburgerMenu();
+            _ = UpdateVm.CheckForUpdatesAsync(silent: false);
         }
 
         private static string FormatFocalLength(string? rawFocalLength)
@@ -817,9 +865,9 @@ namespace PwImageMetadataViewer
             btn.Background = isActive ? activeBg : inactiveBg;
             btn.Foreground = isActive ? activeFg : inactiveFg;
             btn.BorderBrush = isActive ? activeBg : (ThemeManager.Current.IsDark ? new SolidColorBrush(Color.FromArgb(255, 71, 85, 105)) : ThemeManager.BrushLightControlBorder);
+            UpdateChildTextBlocks(btn.Content as DependencyObject, isActive ? activeFg : inactiveFg);
             if (btn.Content is TextBlock tb)
             {
-                tb.Foreground = isActive ? activeFg : inactiveFg;
                 tb.FontWeight = isActive ? FontWeights.Bold : FontWeights.SemiBold;
             }
         }
@@ -890,18 +938,107 @@ namespace PwImageMetadataViewer
 
             var root = (DependencyObject?)RootLayoutGrid ?? this.Content as DependencyObject ?? this;
             ApplyThemeToTree(root, isDark);
-            if (TagsItemsControl != null)
+            if (_allTags != null)
             {
-                ApplyThemeToTree(TagsItemsControl, isDark);
+                foreach (var tag in _allTags)
+                {
+                    tag.RefreshTheme();
+                }
             }
             UpdateFilterButtonsVisuals();
+            UpdateWindowControlElement?.ApplyTheme(isDark);
+        }
+
+        private void ApplyThemeToButton(Button btn, bool isDark)
+        {
+            if (btn == BtnUpdates || btn == BtnMobileUpdates)
+            {
+                return;
+            }
+            // Filter buttons and dropdown menu buttons are fully managed by UpdateFilterButtonsVisuals()
+            if (btn == BtnFilterAll || btn == BtnFilterExif || btn == BtnFilterFile ||
+                btn == BtnFilterGps || btn == BtnFilterComposite || btn == BtnFilterMakerNotes ||
+                btn == BtnFilterXmp || btn == BtnMenuAll || btn == BtnMenuExif ||
+                btn == BtnMenuFile || btn == BtnMenuGps || btn == BtnMenuComposite ||
+                btn == BtnMenuMakerNotes || btn == BtnMenuXmp)
+            {
+                return;
+            }
+
+            if (btn == BtnOpenFile || btn == BtnMobileOpenFile)
+            {
+                btn.Background = isDark ? ThemeManager.BrushSkyAccentDark : ThemeManager.BrushSkyAccentLight;
+                btn.Foreground = isDark ? new SolidColorBrush(Color.FromArgb(255, 15, 23, 42)) : new SolidColorBrush(Colors.White);
+                UpdateChildTextBlocks(btn.Content as DependencyObject, btn.Foreground);
+                return;
+            }
+
+            if (btn == BtnOpenOsm)
+            {
+                btn.Background = isDark ? ThemeManager.BrushDarkControlBg : ThemeManager.BrushLightSubCardBg;
+                btn.BorderBrush = isDark ? ThemeManager.BrushSkyAccentDark : ThemeManager.BrushSkyAccentLight;
+                btn.Foreground = isDark ? ThemeManager.BrushSkyAccentDark : ThemeManager.BrushSkyAccentLight;
+                UpdateChildTextBlocks(btn.Content as DependencyObject, btn.Foreground);
+                return;
+            }
+
+            if (btn == BtnOpenPeakFinder)
+            {
+                var emerald = isDark ? new SolidColorBrush(Color.FromArgb(255, 16, 185, 129)) : new SolidColorBrush(Color.FromArgb(255, 5, 150, 105));
+                btn.Background = isDark ? ThemeManager.BrushDarkControlBg : ThemeManager.BrushLightSubCardBg;
+                btn.BorderBrush = emerald;
+                btn.Foreground = emerald;
+                UpdateChildTextBlocks(btn.Content as DependencyObject, btn.Foreground);
+                return;
+            }
+
+            // Standard buttons (BtnExportJson, BtnAbout, BtnThemeToggle, BtnHamburgerMenu, BtnMobileExportJson, etc.)
+            btn.Background = isDark ? ThemeManager.BrushDarkControlBg : ThemeManager.BrushLightSubCardBg;
+            btn.BorderBrush = isDark ? ThemeManager.BrushDarkControlBorder : ThemeManager.BrushLightControlBorder;
+            btn.Foreground = isDark ? ThemeManager.BrushDarkControlFg : ThemeManager.BrushLightControlFg;
+            UpdateChildTextBlocks(btn.Content as DependencyObject, btn.Foreground);
+        }
+
+        private static void UpdateChildTextBlocks(DependencyObject? obj, Brush foreground)
+        {
+            if (obj == null) return;
+            if (obj is TextBlock tb)
+            {
+                tb.Foreground = foreground;
+            }
+            int count = VisualTreeHelper.GetChildrenCount(obj);
+            if (count > 0)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    UpdateChildTextBlocks(VisualTreeHelper.GetChild(obj, i), foreground);
+                }
+            }
+            else if (obj is Panel panel)
+            {
+                foreach (UIElement child in panel.Children)
+                {
+                    UpdateChildTextBlocks(child, foreground);
+                }
+            }
+            else if (obj is ContentControl cc && cc.Content is DependencyObject contentDep)
+            {
+                UpdateChildTextBlocks(contentDep, foreground);
+            }
         }
 
         private void ApplyThemeToTree(DependencyObject obj, bool isDark)
         {
-            // Do not traverse into Leaflet DOM container
-            if (obj == MapContainerBorder)
+            // Do not traverse into Leaflet DOM container, data-bound tags control, or dialog overlays
+            if (obj == MapContainerBorder || obj == TagsItemsControl || obj == AboutOverlayGrid || obj == UpdateWindowOverlayGrid)
             {
+                return;
+            }
+
+            // Buttons: style directly and style their content descendants, but DO NOT recurse into control template
+            if (obj is Button btn)
+            {
+                ApplyThemeToButton(btn, isDark);
                 return;
             }
 
@@ -965,18 +1102,6 @@ namespace PwImageMetadataViewer
                             b.BorderBrush = ThemeManager.BrushLightStatusBorder;
                     }
                 }
-                else if (obj is Button btn)
-                {
-                    if (darkBg is SolidColorBrush scbBtnBg)
-                    {
-                        if (IsColor(scbBtnBg, 30, 41, 59) || IsColor(scbBtnBg, 15, 23, 42) || IsColor(scbBtnBg, 51, 65, 85)) // #1E293B, #0F172A, #334155
-                        {
-                            btn.Background = ThemeManager.BrushLightSubCardBg;
-                            btn.BorderBrush = ThemeManager.BrushLightControlBorder;
-                            btn.Foreground = ThemeManager.BrushLightControlFg;
-                        }
-                    }
-                }
                 else if (obj is TextBlock tb)
                 {
                     if (darkFg is SolidColorBrush scbFg)
@@ -1007,12 +1132,6 @@ namespace PwImageMetadataViewer
                 {
                     b.Background = darkBg;
                     b.BorderBrush = darkBorder;
-                }
-                else if (obj is Button btn)
-                {
-                    btn.Background = darkBg;
-                    btn.BorderBrush = darkBorder;
-                    btn.Foreground = darkFg;
                 }
                 else if (obj is TextBlock tb)
                 {

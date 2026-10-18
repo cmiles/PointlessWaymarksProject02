@@ -81,6 +81,18 @@
                                     <TextBlock x:Name="TxtThemeToggle" Text="🌓 Theme" VerticalAlignment="Center" HorizontalAlignment="Center" />
                                 </Button>
 
+                                <!-- Updates Button -->
+                                <Button x:Name="BtnUpdates" Command="{Binding CheckForUpdatesManualCommand}" Click="BtnUpdates_Click" Style="{StaticResource TabNavButtonStyle}"
+                                        Background="#059669" BorderBrush="#047857" BorderThickness="1"
+                                        Foreground="White" FontWeight="SemiBold" FontSize="12"
+                                        Padding="12,8" Margin="0,0,10,0" Cursor="Hand"
+                                        ToolTipService.ToolTip="Check online catalog for software updates">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="🚀 " FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Text="Updates" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+
                                 <!-- Refresh Button -->
                                 <Button x:Name="BtnRefresh" Click="BtnRefresh_Click" Style="{StaticResource TabNavButtonStyle}"
                                         Background="#2563EB" BorderBrush="#1D4ED8" BorderThickness="1"
@@ -1197,5 +1209,12 @@
             </StackPanel>
             </Grid>
         </ScrollViewer>
+
+        <!-- FLOATING IN-APP UPDATE WINDOW OVERLAY -->
+        <Grid x:Name="UpdateWindowOverlayGrid" Visibility="{Binding UpdateWindowVisibility}" 
+              Background="#99090D16" Canvas.ZIndex="850">
+            <controls:AppUpdateWindowControl x:Name="UpdateWindowControlElement" MaxWidth="600" MaxHeight="480" Margin="12"
+                                             HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Grid>
     </Grid>
 </Page>
