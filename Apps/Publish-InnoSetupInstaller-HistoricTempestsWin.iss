@@ -7,7 +7,7 @@
 
 #define MyAppDefaultGroupName "Pointless Waymarks"
 
-#define MyAppName "Pointless Waymarks Historic Tempests"
+#define MyAppName "Rincon Valley Weather"
 #define MyAppDefaultDirName "PointlessWaymarksHistoricTempestsWin"
 #define MyAppExeName "HistoricTempests.Photino.exe"
 #define MyAppOutputBaseFilename "PointlessWaymarks-HistoricTempestsWin-Setup--"

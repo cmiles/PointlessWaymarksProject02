@@ -62,7 +62,10 @@
             border: none !important;
             box-shadow: none !important;
         }
-        body.dark-theme [dataid="PopupBorder"] {
+        body.dark-theme [dataid="PopupBorder"],
+        body.dark-theme [dataid="ContentPresenterBorder"],
+        body.dark-theme .System\.Windows\.Controls\.Primitives\.Popup div,
+        body.dark-theme .System\.Windows\.Controls\.Primitives\.Popup .System\.Windows\.Controls\.ScrollViewer {
             background-color: #1E293B !important;
             border: 1px solid #475569 !important;
             border-radius: 6px !important;
@@ -78,11 +81,17 @@
         }
         body.dark-theme .System\.Windows\.Controls\.ComboBoxItem div,
         body.dark-theme .System\.Windows\.Controls\.ComboBoxItem span,
+        body.dark-theme .System\.Windows\.Controls\.ComboBoxItem text,
         body.dark-theme .System\.Windows\.Controls\.ComboBoxItem .System\.Windows\.Controls\.TextBlock {
             color: #F8FAFC !important;
         }
         body.dark-theme .System\.Windows\.Controls\.ComboBoxItem:hover {
             background-color: #334155 !important;
+            color: #FFFFFF !important;
+        }
+        body.dark-theme .System\.Windows\.Controls\.ComboBoxItem[data-selected="true"],
+        body.dark-theme .System\.Windows\.Controls\.ComboBoxItem.Selected {
+            background-color: #2563EB !important;
             color: #FFFFFF !important;
         }
 
@@ -120,7 +129,10 @@
             border: none !important;
             box-shadow: none !important;
         }
-        body.light-theme [dataid="PopupBorder"] {
+        body.light-theme [dataid="PopupBorder"],
+        body.light-theme [dataid="ContentPresenterBorder"],
+        body.light-theme .System\.Windows\.Controls\.Primitives\.Popup div,
+        body.light-theme .System\.Windows\.Controls\.Primitives\.Popup .System\.Windows\.Controls\.ScrollViewer {
             background-color: #FFFFFF !important;
             border: 1px solid #D1D5DB !important;
             border-radius: 6px !important;
@@ -132,6 +144,7 @@
         }
         body.light-theme .System\.Windows\.Controls\.ComboBoxItem div,
         body.light-theme .System\.Windows\.Controls\.ComboBoxItem span,
+        body.light-theme .System\.Windows\.Controls\.ComboBoxItem text,
         body.light-theme .System\.Windows\.Controls\.ComboBoxItem .System\.Windows\.Controls\.TextBlock {
             color: #111827 !important;
         }
@@ -139,10 +152,15 @@
             background-color: #F3F4F6 !important;
             color: #111827 !important;
         }
+        body.light-theme .System\.Windows\.Controls\.ComboBoxItem[data-selected="true"],
+        body.light-theme .System\.Windows\.Controls\.ComboBoxItem.Selected {
+            background-color: #DBEAFE !important;
+            color: #1D4ED8 !important;
+        }
     </style>
 </head>
 
-<body>
+<body class="light-theme">
     <div id="app">
     </div>
     <div id="opensilver-root" style="position: relative; width: 100%; height: 100%; overflow-x: hidden; overflow-y: hidden">

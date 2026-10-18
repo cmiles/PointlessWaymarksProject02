@@ -901,7 +901,7 @@
                                 </Border>
 
                                 <!-- 2. Top 10 Coldest Days Card -->
-                                <Border MaxWidth="570" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,0,16">
+                                <Border MaxWidth="570" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,16,16">
                                     <StackPanel>
                                         <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,10">
                                             <TextBlock Text="❄" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
@@ -997,7 +997,7 @@
                                 </Border>
 
                                 <!-- 4. Top 10 Rainiest Days Card -->
-                                <Border MaxWidth="570" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,0,16">
+                                <Border MaxWidth="570" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,16,16">
                                     <StackPanel>
                                         <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,10">
                                             <TextBlock Text="🌧" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />

@@ -26,7 +26,7 @@
 
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Text="🚀" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                        <TextBlock x:Name="HeaderTitleText" Text="Water Daze Update Available" FontWeight="Bold" FontSize="14" Foreground="#F8FAFC" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="HeaderTitleText" Text="{Binding UpdateWindowTitle, FallbackValue='Water Daze Updates'}" FontWeight="Bold" FontSize="14" Foreground="#F8FAFC" VerticalAlignment="Center"/>
                     </StackPanel>
 
                     <Button x:Name="BtnCloseHeader" Grid.Column="1" Content="✕" Command="{Binding CloseUpdateWindowCommand}" Click="Dismiss_Click"
@@ -78,7 +78,8 @@
                     </Border>
 
                     <!-- Installer Info -->
-                    <Border x:Name="InfoCardBorder" Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,0,12">
+                    <Border x:Name="InfoCardBorder" Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,0,12"
+                            Visibility="{Binding UpdateInstallerInfoVisibility, FallbackValue='Visible'}">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                                 <TextBlock x:Name="InfoPackageLabelText" Text="Installer Package: " FontSize="11" Foreground="#94A3B8"/>
@@ -139,7 +140,7 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Later / Not Now -->
-                    <Button x:Name="BtnDismiss" Grid.Column="0" Content="Later / Dismiss" Command="{Binding CloseUpdateWindowCommand}" Click="Dismiss_Click"
+                    <Button x:Name="BtnDismiss" Grid.Column="0" Content="{Binding UpdateDismissButtonText, FallbackValue='Close'}" Command="{Binding CloseUpdateWindowCommand}" Click="Dismiss_Click"
                             IsEnabled="{Binding IsNotDownloadingUpdate}"
                             Background="#334155" Foreground="#E2E8F0" BorderThickness="1" BorderBrush="#475569" CornerRadius="4"
                             Padding="12,6" FontSize="11" FontWeight="SemiBold" Cursor="Hand"/>
@@ -148,6 +149,7 @@
                     <Button x:Name="BtnUpdate" Grid.Column="2" Content="{Binding UpdateActionButtonText, FallbackValue='Download &amp; Install Now'}" 
                             Command="{Binding StartUpdateCommand}" Click="UpdateNow_Click"
                             IsEnabled="{Binding IsNotDownloadingUpdate}"
+                            Visibility="{Binding UpdateButtonVisibility, FallbackValue='Visible'}"
                             Background="#0284C7" Foreground="#FFFFFF" BorderThickness="0" CornerRadius="4"
                             Padding="14,6" FontSize="11" FontWeight="Bold" Cursor="Hand"/>
                 </Grid>

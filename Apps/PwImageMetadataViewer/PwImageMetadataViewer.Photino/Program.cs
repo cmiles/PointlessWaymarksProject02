@@ -63,7 +63,7 @@ namespace PwImageMetadataViewer.Photino
                 }
             }
 
-            string windowTitle = "ExifTool Image Metadata Viewer";
+            string windowTitle = "Pointless Waymarks Image Metadata Viewer";
 
             var window = new PhotinoWindow()
                 .SetTitle(windowTitle)

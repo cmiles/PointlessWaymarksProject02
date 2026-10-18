@@ -109,7 +109,14 @@
                                   ItemsSource="{Binding AvailableSites}"
                                   SelectedItem="{Binding SelectedSite, Mode=TwoWay}"
                                   DisplayMemberPath="DisplayTitle"
-                                  VerticalAlignment="Center" Margin="0,0,12,8" />
+                                  VerticalAlignment="Center" Margin="0,0,12,8">
+                            <ComboBox.ItemContainerStyle>
+                                <Style TargetType="ComboBoxItem">
+                                    <Setter Property="Background" Value="{StaticResource ControlBackgroundBrush}" />
+                                    <Setter Property="Foreground" Value="{StaticResource ControlForegroundBrush}" />
+                                </Style>
+                            </ComboBox.ItemContainerStyle>
+                        </ComboBox>
                         <Button x:Name="BtnRefresh" Content="Refresh Data" Command="{Binding RefreshCommand}" 
                                 Style="{StaticResource ActionButtonStyle}"
                                 Height="34" Padding="14,0,14,0" 

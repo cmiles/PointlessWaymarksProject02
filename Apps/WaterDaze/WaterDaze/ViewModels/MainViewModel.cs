@@ -126,6 +126,34 @@ public class MainViewModel : ViewModelBase
         set => SetProperty(ref _updateInstallerFileName, value);
     }
 
+    private string _updateWindowTitle = "Water Daze Updates";
+    public string UpdateWindowTitle
+    {
+        get => _updateWindowTitle;
+        set => SetProperty(ref _updateWindowTitle, value);
+    }
+
+    private string _updateDismissButtonText = "Close";
+    public string UpdateDismissButtonText
+    {
+        get => _updateDismissButtonText;
+        set => SetProperty(ref _updateDismissButtonText, value);
+    }
+
+    private System.Windows.Visibility _updateButtonVisibility = System.Windows.Visibility.Visible;
+    public System.Windows.Visibility UpdateButtonVisibility
+    {
+        get => _updateButtonVisibility;
+        set => SetProperty(ref _updateButtonVisibility, value);
+    }
+
+    private System.Windows.Visibility _updateInstallerInfoVisibility = System.Windows.Visibility.Visible;
+    public System.Windows.Visibility UpdateInstallerInfoVisibility
+    {
+        get => _updateInstallerInfoVisibility;
+        set => SetProperty(ref _updateInstallerInfoVisibility, value);
+    }
+
     private string _updateStatusMessage = "A newer version of Pointless Waymarks Water Daze is available.";
     public string UpdateStatusMessage
     {
@@ -152,7 +180,12 @@ public class MainViewModel : ViewModelBase
 
     public bool IsNotDownloadingUpdate => !IsDownloadingUpdate;
     public System.Windows.Visibility DownloadSectionVisibility => IsDownloadingUpdate ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
-    public string UpdateActionButtonText => IsDownloadingUpdate ? "Downloading..." : "Download & Install Now";
+    private string _updateActionButtonText = "Download & Install Now";
+    public string UpdateActionButtonText
+    {
+        get => IsDownloadingUpdate ? "Downloading..." : _updateActionButtonText;
+        set => SetProperty(ref _updateActionButtonText, value);
+    }
 
     private double _updateDownloadPercent;
     public double UpdateDownloadPercent
@@ -377,7 +410,23 @@ public class MainViewModel : ViewModelBase
     {
         try
         {
-            System.Diagnostics.Debug.WriteLine("[Update] Checking online catalog for application updates...");
+            if (!silent)
+            {
+                System.Diagnostics.Debug.WriteLine("[Update] Checking online catalog for application updates...");
+                UpdateWindowTitle = "Checking for Updates...";
+                UpdateStatusMessage = "Connecting to update server and checking installed version...";
+                UpdateCurrentVersion = "Checking...";
+                UpdateNewVersion = "...";
+                UpdateInstallerFileName = string.Empty;
+                UpdateInstallerInfoVisibility = System.Windows.Visibility.Collapsed;
+                UpdateButtonVisibility = System.Windows.Visibility.Collapsed;
+                UpdateDismissButtonText = "Close";
+                IsUpdateFailed = false;
+                UpdateErrorMessage = string.Empty;
+                IsDownloadingUpdate = false;
+                IsUpdateWindowOpen = true;
+            }
+
             var result = await AppUpdateService.CheckForUpdatesAsync();
 
             string probeSummary = result.ProbedDirectories.Count > 0
@@ -393,18 +442,24 @@ public class MainViewModel : ViewModelBase
                 System.Diagnostics.Debug.WriteLine($"[Update] Probed [{probeSummary}] for pattern '{result.SearchPattern}'. No matching version file found. Application running in development or unversioned standalone mode.");
             }
 
+            AvailableRelease = result.AvailableRelease;
+            UpdateCurrentVersion = !string.IsNullOrEmpty(result.InstalledVersionString) ? result.InstalledVersionString : "Unversioned / Dev";
+            UpdateNewVersion = result.AvailableRelease?.ApplicationVersion ?? "Unavailable";
+            UpdateInstallerFileName = result.AvailableRelease?.InstallerFileName ?? string.Empty;
+            IsUpdateFailed = false;
+            UpdateErrorMessage = string.Empty;
+            IsDownloadingUpdate = false;
+            UpdateDownloadPercent = 0;
+            UpdateDownloadProgressText = "0%";
+
             if (result.HasUpdate && result.AvailableRelease != null)
             {
-                AvailableRelease = result.AvailableRelease;
-                UpdateCurrentVersion = result.InstalledVersionString ?? "Unknown";
-                UpdateNewVersion = result.AvailableRelease.ApplicationVersion ?? "Latest";
-                UpdateInstallerFileName = result.AvailableRelease.InstallerFileName ?? "Installer.exe";
+                UpdateWindowTitle = "Water Daze Update Available";
                 UpdateStatusMessage = "A newer version of Pointless Waymarks Water Daze is available.";
-                IsUpdateFailed = false;
-                UpdateErrorMessage = string.Empty;
-                IsDownloadingUpdate = false;
-                UpdateDownloadPercent = 0;
-                UpdateDownloadProgressText = "0%";
+                UpdateInstallerInfoVisibility = System.Windows.Visibility.Visible;
+                UpdateButtonVisibility = System.Windows.Visibility.Visible;
+                UpdateActionButtonText = "Download & Install Now";
+                UpdateDismissButtonText = "Later / Dismiss";
 
                 ((RelayCommand)StartUpdateCommand)?.RaiseCanExecuteChanged();
                 ((RelayCommand)CloseUpdateWindowCommand)?.RaiseCanExecuteChanged();
@@ -412,22 +467,61 @@ public class MainViewModel : ViewModelBase
                 IsUpdateWindowOpen = true;
                 System.Diagnostics.Debug.WriteLine($"[Update] Update available: {UpdateNewVersion} (Installed: {UpdateCurrentVersion}).");
             }
-            else
+            else if (result.IsDevelopmentOrPortableMode)
             {
-                string status = result.Message ?? "Water Daze is up to date.";
+                UpdateWindowTitle = "Water Daze Version Status";
+                UpdateStatusMessage = $"No installed version marker ({result.SearchPattern}) was found in probed directories:\n{probeSummary}\n\n" +
+                    (result.AvailableRelease != null
+                        ? $"The latest online release is {result.AvailableRelease.ApplicationVersion}."
+                        : "Could not find compatible releases in the online catalog.");
+
+                UpdateInstallerInfoVisibility = result.AvailableRelease != null ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+                UpdateButtonVisibility = result.AvailableRelease != null ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+                UpdateActionButtonText = "Download & Install Latest";
+                UpdateDismissButtonText = "Close";
+
+                ((RelayCommand)StartUpdateCommand)?.RaiseCanExecuteChanged();
+                ((RelayCommand)CloseUpdateWindowCommand)?.RaiseCanExecuteChanged();
+
                 if (!silent)
                 {
-                    LoadingStatus = status;
+                    IsUpdateWindowOpen = true;
                 }
-                System.Diagnostics.Debug.WriteLine($"[Update] {status}");
+                System.Diagnostics.Debug.WriteLine($"[Update] {result.Message ?? "Running in unversioned development mode."}");
+            }
+            else
+            {
+                UpdateWindowTitle = "Water Daze is Up to Date";
+                UpdateStatusMessage = $"You are running the latest version of Pointless Waymarks Water Daze ({result.InstalledVersionString}). No update is required.";
+                UpdateInstallerInfoVisibility = System.Windows.Visibility.Collapsed;
+                UpdateButtonVisibility = System.Windows.Visibility.Collapsed;
+                UpdateDismissButtonText = "Close";
+
+                ((RelayCommand)CloseUpdateWindowCommand)?.RaiseCanExecuteChanged();
+
+                if (!silent)
+                {
+                    IsUpdateWindowOpen = true;
+                }
+                System.Diagnostics.Debug.WriteLine($"[Update] {result.Message ?? "Water Daze is up to date."}");
             }
         }
         catch (Exception ex)
         {
             string errMsg = $"Update check failed: {ex.Message}";
+            UpdateWindowTitle = "Update Check Failed";
+            UpdateStatusMessage = errMsg;
+            UpdateCurrentVersion = UpdateCurrentVersion ?? "Unknown";
+            UpdateNewVersion = "Unavailable";
+            UpdateInstallerInfoVisibility = System.Windows.Visibility.Collapsed;
+            UpdateButtonVisibility = System.Windows.Visibility.Collapsed;
+            UpdateDismissButtonText = "Close";
+            IsUpdateFailed = true;
+            UpdateErrorMessage = ex.Message;
+
             if (!silent)
             {
-                LoadingStatus = errMsg;
+                IsUpdateWindowOpen = true;
             }
             System.Diagnostics.Debug.WriteLine($"[Update] Error: {errMsg}");
         }

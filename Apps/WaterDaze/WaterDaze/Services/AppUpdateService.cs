@@ -227,20 +227,7 @@ namespace WaterDaze.Services
                 ? string.Join("; ", installed.ProbedDirectories)
                 : "(none)";
 
-            if (string.IsNullOrEmpty(installed.VersionString) || !installed.VersionDate.HasValue)
-            {
-                return new AppUpdateCheckResult
-                {
-                    HasUpdate = false,
-                    IsDevelopmentOrPortableMode = true,
-                    InstalledVersionString = installed.VersionString ?? "Development / Portable",
-                    FoundVersionFilePath = installed.FoundFilePath,
-                    FoundDirectory = installed.FoundDirectory,
-                    ProbedDirectories = installed.ProbedDirectories,
-                    SearchPattern = installed.SearchPattern,
-                    Message = $"No version marker matching '{installed.SearchPattern}' found in probed directories: [{probeSummary}]."
-                };
-            }
+            bool isDevMode = string.IsNullOrEmpty(installed.VersionString) || !installed.VersionDate.HasValue;
 
             var result = new AppUpdateCheckResult
             {
@@ -249,7 +236,8 @@ namespace WaterDaze.Services
                 FoundVersionFilePath = installed.FoundFilePath,
                 FoundDirectory = installed.FoundDirectory,
                 ProbedDirectories = installed.ProbedDirectories,
-                SearchPattern = installed.SearchPattern
+                SearchPattern = installed.SearchPattern,
+                IsDevelopmentOrPortableMode = isDevMode
             };
 
             try
@@ -261,7 +249,9 @@ namespace WaterDaze.Services
                 if (releases == null || releases.Count == 0)
                 {
                     result.HasUpdate = false;
-                    result.Message = "Could not retrieve software releases list from server.";
+                    result.Message = isDevMode
+                        ? $"No version marker matching '{installed.SearchPattern}' found in probed directories: [{probeSummary}]. Could not retrieve releases from update catalog."
+                        : "Could not retrieve software releases list from server.";
                     return result;
                 }
 
@@ -277,14 +267,21 @@ namespace WaterDaze.Services
                 if (latest == null)
                 {
                     result.HasUpdate = false;
-                    result.Message = "No compatible releases found in the online catalog.";
+                    result.Message = isDevMode
+                        ? $"No version marker matching '{installed.SearchPattern}' found in probed directories: [{probeSummary}]. No compatible releases found in the online catalog."
+                        : "No compatible releases found in the online catalog.";
                     return result;
                 }
 
                 result.AvailableRelease = latest.Release;
                 result.RemoteVersionDate = latest.ParsedDate!.Value;
 
-                if (latest.ParsedDate!.Value > installed.VersionDate.Value)
+                if (isDevMode)
+                {
+                    result.HasUpdate = false;
+                    result.Message = $"No version marker matching '{installed.SearchPattern}' found in probed directories: [{probeSummary}]. Latest online version is {latest.Release.ApplicationVersion}.";
+                }
+                else if (latest.ParsedDate!.Value > installed.VersionDate!.Value)
                 {
                     result.HasUpdate = true;
                     result.Message = $"Update available: {latest.Release.InstallerFileName}";
@@ -300,7 +297,9 @@ namespace WaterDaze.Services
             catch (Exception ex)
             {
                 result.HasUpdate = false;
-                result.Message = $"Error checking for updates: {ex.Message}";
+                result.Message = isDevMode
+                    ? $"No version marker matching '{installed.SearchPattern}' found in probed directories: [{probeSummary}]. Error contacting update catalog: {ex.Message}"
+                    : $"Error checking for updates: {ex.Message}";
                 return result;
             }
         }

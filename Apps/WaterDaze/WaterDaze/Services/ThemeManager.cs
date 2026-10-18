@@ -63,7 +63,7 @@ public static class ThemeManager
         }
 
         _isInitialized = true;
-        ApplyThemeInternal(_isDark, notify: false);
+        ApplyThemeInternal(_isDark, notify: true);
     }
 
     public static void SetTheme(AppTheme theme)
@@ -184,10 +184,16 @@ public static class ThemeManager
             string hostBg = isDark ? "#0F172A" : "#F9FAFB";
             string themeClass = isDark ? "dark-theme" : "light-theme";
             OpenSilver.Interop.ExecuteJavaScriptVoid($@"
-                if (document && document.body) {{
-                    document.body.style.backgroundColor = '{hostBg}';
-                    document.body.classList.remove('dark-theme', 'light-theme');
-                    document.body.classList.add('{themeClass}');
+                if (document) {{
+                    if (document.documentElement) {{
+                        document.documentElement.style.backgroundColor = '{hostBg}';
+                    }}
+                    if (document.body) {{
+                        document.body.style.backgroundColor = '{hostBg}';
+                        document.body.classList.remove('dark-theme', 'light-theme');
+                        document.body.classList.add('{themeClass}');
+                    }}
+                }}
 
                     var styleEl = document.getElementById('waterdaze-theme-controls');
                     if (!styleEl) {{
@@ -237,14 +243,18 @@ public static class ThemeManager
                             border: none !important;
                             box-shadow: none !important;
                         }}
-                        body.dark-theme [dataid=""PopupBorder""] {{
+                        body.dark-theme [dataid=""PopupBorder""],
+                        body.dark-theme [dataid=""ContentPresenterBorder""] {{
                             background-color: #1E293B !important;
                             border: 1px solid #475569 !important;
                             border-radius: 6px !important;
                             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
                         }}
-                        body.dark-theme .System\\.Windows\\.Controls\\.Primitives\\.Popup [dataid=""Background""] {{
-                            background: #1E293B !important;
+                        body.dark-theme .System\\.Windows\\.Controls\\.Primitives\\.Popup [dataid=""Background""],
+                        body.dark-theme .System\\.Windows\\.Controls\\.Primitives\\.Popup [dataid=""ContentPresenterBorder""],
+                        body.dark-theme .System\\.Windows\\.Controls\\.Primitives\\.Popup [dataid=""ScrollViewer""],
+                        body.dark-theme .System\\.Windows\\.Controls\\.Primitives\\.Popup div {{
+                            background-color: #1E293B !important;
                             border-color: #475569 !important;
                         }}
                         body.dark-theme .System\\.Windows\\.Controls\\.ComboBoxItem {{
@@ -253,11 +263,19 @@ public static class ThemeManager
                         }}
                         body.dark-theme .System\\.Windows\\.Controls\\.ComboBoxItem div,
                         body.dark-theme .System\\.Windows\\.Controls\\.ComboBoxItem span,
+                        body.dark-theme .System\\.Windows\\.Controls\\.ComboBoxItem text,
                         body.dark-theme .System\\.Windows\\.Controls\\.ComboBoxItem .System\\.Windows\\.Controls\\.TextBlock {{
                             color: #F8FAFC !important;
+                            background-color: transparent !important;
                         }}
-                        body.dark-theme .System\\.Windows\\.Controls\\.ComboBoxItem:hover {{
+                        body.dark-theme .System\\.Windows\\.Controls\\.ComboBoxItem:hover,
+                        body.dark-theme .System\\.Windows\\.Controls\\.ComboBoxItem:focus {{
                             background-color: #334155 !important;
+                            color: #FFFFFF !important;
+                        }}
+                        body.dark-theme .System\\.Windows\\.Controls\\.ComboBoxItem[data-selected=""true""],
+                        body.dark-theme .System\\.Windows\\.Controls\\.ComboBoxItem.Selected {{
+                            background-color: #2563EB !important;
                             color: #FFFFFF !important;
                         }}
 
@@ -295,11 +313,19 @@ public static class ThemeManager
                             border: none !important;
                             box-shadow: none !important;
                         }}
-                        body.light-theme [dataid=""PopupBorder""] {{
+                        body.light-theme [dataid=""PopupBorder""],
+                        body.light-theme [dataid=""ContentPresenterBorder""] {{
                             background-color: #FFFFFF !important;
                             border: 1px solid #D1D5DB !important;
                             border-radius: 6px !important;
                             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+                        }}
+                        body.light-theme .System\\.Windows\\.Controls\\.Primitives\\.Popup [dataid=""Background""],
+                        body.light-theme .System\\.Windows\\.Controls\\.Primitives\\.Popup [dataid=""ContentPresenterBorder""],
+                        body.light-theme .System\\.Windows\\.Controls\\.Primitives\\.Popup [dataid=""ScrollViewer""],
+                        body.light-theme .System\\.Windows\\.Controls\\.Primitives\\.Popup div {{
+                            background-color: #FFFFFF !important;
+                            border-color: #D1D5DB !important;
                         }}
                         body.light-theme .System\\.Windows\\.Controls\\.ComboBoxItem {{
                             background-color: #FFFFFF !important;
@@ -307,12 +333,20 @@ public static class ThemeManager
                         }}
                         body.light-theme .System\\.Windows\\.Controls\\.ComboBoxItem div,
                         body.light-theme .System\\.Windows\\.Controls\\.ComboBoxItem span,
+                        body.light-theme .System\\.Windows\\.Controls\\.ComboBoxItem text,
                         body.light-theme .System\\.Windows\\.Controls\\.ComboBoxItem .System\\.Windows\\.Controls\\.TextBlock {{
                             color: #111827 !important;
+                            background-color: transparent !important;
                         }}
-                        body.light-theme .System\\.Windows\\.Controls\\.ComboBoxItem:hover {{
+                        body.light-theme .System\\.Windows\\.Controls\\.ComboBoxItem:hover,
+                        body.light-theme .System\\.Windows\\.Controls\\.ComboBoxItem:focus {{
                             background-color: #F3F4F6 !important;
                             color: #111827 !important;
+                        }}
+                        body.light-theme .System\\.Windows\\.Controls\\.ComboBoxItem[data-selected=""true""],
+                        body.light-theme .System\\.Windows\\.Controls\\.ComboBoxItem.Selected {{
+                            background-color: #DBEAFE !important;
+                            color: #1D4ED8 !important;
                         }}
                     `;
                 }}
@@ -320,9 +354,35 @@ public static class ThemeManager
         }
         catch { }
 
+        UpdateApplicationResources(isDark);
+
         if (notify)
         {
             ThemeChanged?.Invoke(null, isDark);
+        }
+    }
+
+    public static void UpdateApplicationResources(bool isDark)
+    {
+        try
+        {
+            var app = Application.Current;
+            if (app?.Resources?.MergedDictionaries != null)
+            {
+                app.Resources.MergedDictionaries.Clear();
+                if (isDark)
+                {
+                    app.Resources.MergedDictionaries.Add(new Themes.DarkTheme());
+                }
+                else
+                {
+                    app.Resources.MergedDictionaries.Add(new Themes.LightTheme());
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine("UpdateApplicationResources error: " + ex.Message);
         }
     }
 
