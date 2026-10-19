@@ -1,5 +1,5 @@
 // Service Worker for WaterDaze PWA installability
-const CACHE_NAME = 'waterdaze-pwa-v1';
+const CACHE_NAME = 'waterdaze-pwa-v2';
 
 self.addEventListener('install', (event) => {
     event.waitUntil(

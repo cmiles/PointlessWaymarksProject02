@@ -13,10 +13,10 @@ namespace WaterDaze
         {
             this.InitializeComponent();
 
+            WaterDaze.Services.ThemeManager.Initialize();
+
             var mainPage = new MainPage();
             this.RootVisual = mainPage;
-
-            WaterDaze.Services.ThemeManager.Initialize();
         }
     }
 }

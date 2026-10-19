@@ -1607,6 +1607,8 @@ namespace PwTrackTrimmer.ViewModels
 
         public async Task CheckForUpdatesAsync(bool silent = true)
         {
+            if (IsDialogMode) return;
+
             try
             {
                 if (!silent)

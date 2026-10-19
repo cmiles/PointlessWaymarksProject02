@@ -157,6 +157,43 @@
             background-color: #DBEAFE !important;
             color: #1D4ED8 !important;
         }
+
+        /* HyperlinkButton Styling */
+        .System\.Windows\.Controls\.HyperlinkButton,
+        .System\.Windows\.Controls\.HyperlinkButton [dataid="Background"],
+        .System\.Windows\.Controls\.HyperlinkButton .System\.Windows\.Controls\.Grid,
+        .System\.Windows\.Controls\.HyperlinkButton .opensilver-border,
+        .System\.Windows\.Controls\.HyperlinkButton .opensilver-uielement {
+            background: transparent !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+            border-color: transparent !important;
+        }
+
+        .System\.Windows\.Controls\.HyperlinkButton,
+        .System\.Windows\.Controls\.HyperlinkButton .System\.Windows\.Controls\.TextBlock,
+        .System\.Windows\.Controls\.HyperlinkButton .opensilver-textblock,
+        .System\.Windows\.Controls\.HyperlinkButton .opensilver-inline,
+        .System\.Windows\.Controls\.HyperlinkButton .System\.Windows\.Documents\.Run,
+        .System\.Windows\.Controls\.HyperlinkButton span,
+        .System\.Windows\.Controls\.HyperlinkButton text {
+            text-decoration: underline !important;
+            cursor: pointer !important;
+        }
+
+        body.light-theme .System\.Windows\.Controls\.HyperlinkButton:hover,
+        body.light-theme .System\.Windows\.Controls\.HyperlinkButton:hover span,
+        body.light-theme .System\.Windows\.Controls\.HyperlinkButton:hover text,
+        body.light-theme .System\.Windows\.Controls\.HyperlinkButton:hover .System\.Windows\.Controls\.TextBlock {
+            color: #1D4ED8 !important;
+        }
+
+        body.dark-theme .System\.Windows\.Controls\.HyperlinkButton:hover,
+        body.dark-theme .System\.Windows\.Controls\.HyperlinkButton:hover span,
+        body.dark-theme .System\.Windows\.Controls\.HyperlinkButton:hover text,
+        body.dark-theme .System\.Windows\.Controls\.HyperlinkButton:hover .System\.Windows\.Controls\.TextBlock {
+            color: #93C5FD !important;
+        }
     </style>
 </head>
 

@@ -77,6 +77,13 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- HyperlinkButton Style -->
+        <Style TargetType="HyperlinkButton">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="{StaticResource HyperlinkBrush}" />
+        </Style>
     </Page.Resources>
 
     <Grid x:Name="LayoutRoot">
@@ -117,33 +124,75 @@
                                 </Style>
                             </ComboBox.ItemContainerStyle>
                         </ComboBox>
-                        <Button x:Name="BtnRefresh" Content="Refresh Data" Command="{Binding RefreshCommand}" 
-                                Style="{StaticResource ActionButtonStyle}"
-                                Height="34" Padding="14,0,14,0" 
-                                VerticalAlignment="Center" Margin="0,0,12,8" />
+                        <!-- Desktop Action Buttons -->
+                        <WrapPanel x:Name="PanelDesktopActions" VerticalAlignment="Center">
+                            <Button x:Name="BtnRefresh" Content="Refresh Data" Command="{Binding RefreshCommand}" 
+                                    Style="{StaticResource ActionButtonStyle}"
+                                    Height="34" Padding="14,0,14,0" 
+                                    VerticalAlignment="Center" Margin="0,0,12,8" />
 
-                        <!-- Updates Button -->
-                        <Button x:Name="BtnUpdates" Command="{Binding CheckForUpdatesManualCommand}" Click="BtnUpdates_Click"
-                                Style="{StaticResource ActionButtonStyle}"
-                                Height="34" Padding="12,0"
-                                VerticalAlignment="Center" Margin="0,0,12,8"
-                                ToolTipService.ToolTip="Check online catalog for software updates">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="🚀 " FontSize="12" VerticalAlignment="Center" />
-                                <TextBlock Text="Updates" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
+                            <!-- Updates Button -->
+                            <Button x:Name="BtnUpdates" Command="{Binding CheckForUpdatesManualCommand}" Click="BtnUpdates_Click"
+                                    Style="{StaticResource ActionButtonStyle}"
+                                    Height="34" Padding="12,0"
+                                    VerticalAlignment="Center" Margin="0,0,12,8"
+                                    ToolTipService.ToolTip="Check online catalog for software updates">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="🚀 " FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock Text="Updates" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
 
-                        <!-- Theme Toggle Button -->
-                        <Button x:Name="BtnThemeToggle" Click="BtnThemeToggle_Click"
+                            <!-- Theme Toggle Button -->
+                            <Button x:Name="BtnThemeToggle" Click="BtnThemeToggle_Click"
+                                    Style="{StaticResource ActionButtonStyle}"
+                                    Width="145" Height="34" Padding="8,0"
+                                    HorizontalContentAlignment="Center"
+                                    VerticalAlignment="Center" Margin="0,0,0,8"
+                                    ToolTipService.ToolTip="Cycle theme: System (Auto) -> Dark -> Light">
+                                <TextBlock x:Name="TxtThemeToggle" Text="🌓 Theme" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                            </Button>
+                        </WrapPanel>
+
+                        <!-- Mobile Hamburger Button -->
+                        <Button x:Name="BtnHamburger" Click="BtnHamburger_Click"
                                 Style="{StaticResource ActionButtonStyle}"
-                                Width="145" Height="34" Padding="8,0"
+                                Width="44" Height="34" Padding="0"
                                 HorizontalContentAlignment="Center"
                                 VerticalAlignment="Center" Margin="0,0,0,8"
-                                ToolTipService.ToolTip="Cycle theme: System (Auto) -> Dark -> Light">
-                            <TextBlock x:Name="TxtThemeToggle" Text="🌓 Theme" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                Visibility="Collapsed"
+                                ToolTipService.ToolTip="Menu">
+                            <TextBlock Text="☰" FontSize="16" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center" />
                         </Button>
                     </WrapPanel>
+
+                    <!-- Mobile Hamburger Dropdown Menu -->
+                    <Border x:Name="MobileMenuDropdown" 
+                            Background="{StaticResource SubtleCardBackgroundBrush}" 
+                            BorderBrush="{StaticResource SubtleCardBorderBrush}" 
+                            BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,12" 
+                            Visibility="Collapsed">
+                        <StackPanel>
+                            <Button x:Name="BtnRefreshMobile" Content="↻ Refresh Data" Command="{Binding RefreshCommand}" Click="MobileMenuAction_Click"
+                                    Style="{StaticResource ActionButtonStyle}"
+                                    Height="36" Margin="0,0,0,8" HorizontalContentAlignment="Center" />
+                            <Button x:Name="BtnUpdatesMobile" Command="{Binding CheckForUpdatesManualCommand}" Click="BtnUpdatesMobile_Click"
+                                    Style="{StaticResource ActionButtonStyle}"
+                                    Height="36" Margin="0,0,0,8" HorizontalContentAlignment="Center"
+                                    ToolTipService.ToolTip="Check online catalog for software updates">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <TextBlock Text="🚀 " FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock Text="Updates" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="BtnThemeToggleMobile" Click="BtnThemeToggle_Click"
+                                    Style="{StaticResource ActionButtonStyle}"
+                                    Height="36" Margin="0,0,0,0" HorizontalContentAlignment="Center"
+                                    ToolTipService.ToolTip="Cycle theme: System (Auto) -> Dark -> Light">
+                                <TextBlock x:Name="TxtThemeToggleMobile" Text="🌓 Theme" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                            </Button>
+                        </StackPanel>
+                    </Border>
 
                     <!-- Station Info Banner (Responsive Wrap Layout) -->
                     <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,8,0,0">

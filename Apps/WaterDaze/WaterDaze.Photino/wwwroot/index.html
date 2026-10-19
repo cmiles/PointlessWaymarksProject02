@@ -33,22 +33,37 @@
             background: #334155 !important;
             border-color: #475569 !important;
         }
+        body.dark-theme [style*="540deg"],
+        body.dark-theme [style*="linear-gradient(540deg"],
+        body.dark-theme .waterdaze-combobox [style*="gradient"],
+        body.dark-theme .waterdaze-combobox [style*="linear-gradient"] {
+            background: none !important;
+            background-image: none !important;
+            border-color: transparent !important;
+        }
+        body.dark-theme .waterdaze-combobox,
         body.dark-theme .System\.Windows\.Controls\.ComboBox {
             background-color: #1E293B !important;
             border-color: #475569 !important;
             color: #F8FAFC !important;
         }
+        body.dark-theme .waterdaze-combobox [dataid="Background"],
         body.dark-theme .System\.Windows\.Controls\.ComboBox [dataid="Background"] {
             background: #1E293B !important;
             border-color: #475569 !important;
             border-radius: 6px !important;
         }
+        body.dark-theme .waterdaze-combobox svg path,
+        body.dark-theme .waterdaze-combobox path,
         body.dark-theme .System\.Windows\.Controls\.ComboBox svg path,
         body.dark-theme .System\.Windows\.Controls\.ComboBox [dataid="BtnArrow"] path,
         body.dark-theme .System\.Windows\.Controls\.ComboBox [dataid="BtnArrow"] {
             fill: #CBD5E1 !important;
             stroke: #CBD5E1 !important;
         }
+        body.dark-theme .waterdaze-combobox div,
+        body.dark-theme .waterdaze-combobox span,
+        body.dark-theme .waterdaze-combobox text,
         body.dark-theme .System\.Windows\.Controls\.ComboBox div,
         body.dark-theme .System\.Windows\.Controls\.ComboBox span,
         body.dark-theme .System\.Windows\.Controls\.ComboBox text,
@@ -156,6 +171,43 @@
         body.light-theme .System\.Windows\.Controls\.ComboBoxItem.Selected {
             background-color: #DBEAFE !important;
             color: #1D4ED8 !important;
+        }
+
+        /* HyperlinkButton Styling */
+        .System\.Windows\.Controls\.HyperlinkButton,
+        .System\.Windows\.Controls\.HyperlinkButton [dataid="Background"],
+        .System\.Windows\.Controls\.HyperlinkButton .System\.Windows\.Controls\.Grid,
+        .System\.Windows\.Controls\.HyperlinkButton .opensilver-border,
+        .System\.Windows\.Controls\.HyperlinkButton .opensilver-uielement {
+            background: transparent !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+            border-color: transparent !important;
+        }
+
+        .System\.Windows\.Controls\.HyperlinkButton,
+        .System\.Windows\.Controls\.HyperlinkButton .System\.Windows\.Controls\.TextBlock,
+        .System\.Windows\.Controls\.HyperlinkButton .opensilver-textblock,
+        .System\.Windows\.Controls\.HyperlinkButton .opensilver-inline,
+        .System\.Windows\.Controls\.HyperlinkButton .System\.Windows\.Documents\.Run,
+        .System\.Windows\.Controls\.HyperlinkButton span,
+        .System\.Windows\.Controls\.HyperlinkButton text {
+            text-decoration: underline !important;
+            cursor: pointer !important;
+        }
+
+        body.light-theme .System\.Windows\.Controls\.HyperlinkButton:hover,
+        body.light-theme .System\.Windows\.Controls\.HyperlinkButton:hover span,
+        body.light-theme .System\.Windows\.Controls\.HyperlinkButton:hover text,
+        body.light-theme .System\.Windows\.Controls\.HyperlinkButton:hover .System\.Windows\.Controls\.TextBlock {
+            color: #1D4ED8 !important;
+        }
+
+        body.dark-theme .System\.Windows\.Controls\.HyperlinkButton:hover,
+        body.dark-theme .System\.Windows\.Controls\.HyperlinkButton:hover span,
+        body.dark-theme .System\.Windows\.Controls\.HyperlinkButton:hover text,
+        body.dark-theme .System\.Windows\.Controls\.HyperlinkButton:hover .System\.Windows\.Controls\.TextBlock {
+            color: #93C5FD !important;
         }
     </style>
 </head>

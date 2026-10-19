@@ -31,6 +31,15 @@ public partial class MainPage
                 {
                     ApplyThemeToTree(LayoutRoot, ThemeManager.IsDark);
                 }
+                if (CmbSites != null)
+                {
+                    try
+                    {
+                        OpenSilver.Interop.ExecuteJavaScriptVoid("$0.classList.add('waterdaze-combobox')", CmbSites);
+                    }
+                    catch { }
+                    ApplyThemeToComboBox(CmbSites, ThemeManager.IsDark);
+                }
                 _ = ViewModel.CheckForUpdatesAsync(silent: true);
             });
         };
@@ -74,6 +83,12 @@ public partial class MainPage
             LayoutRoot.Background = isDark ? ThemeManager.BrushDarkPageBg : ThemeManager.BrushLightPageBg;
         }
 
+        if (MobileMenuDropdown != null)
+        {
+            MobileMenuDropdown.Background = isDark ? ThemeManager.BrushDarkSubCardBg : ThemeManager.BrushLightSubCardBg;
+            MobileMenuDropdown.BorderBrush = isDark ? ThemeManager.BrushDarkSubCardBorder : ThemeManager.BrushLightSubCardBorder;
+        }
+
         SyncThemeSelector();
 
         UpdateWindowControlElement?.ApplyTheme(isDark);
@@ -89,6 +104,10 @@ public partial class MainPage
         if (TxtThemeToggle != null)
         {
             TxtThemeToggle.Text = ThemeManager.ThemeButtonLabel;
+        }
+        if (TxtThemeToggleMobile != null)
+        {
+            TxtThemeToggleMobile.Text = ThemeManager.ThemeButtonLabel;
         }
     }
 
@@ -107,12 +126,22 @@ public partial class MainPage
 
         if (obj is Button btn)
         {
-            if (btn == BtnRefresh || btn == BtnThemeToggle || btn == BtnUpdates)
+            if (btn == BtnRefresh || btn == BtnThemeToggle || btn == BtnUpdates ||
+                btn == BtnRefreshMobile || btn == BtnThemeToggleMobile || btn == BtnUpdatesMobile || btn == BtnHamburger)
             {
                 btn.Background = ThemeManager.ActionButtonBackground;
                 btn.BorderBrush = ThemeManager.ActionButtonBorder;
                 btn.Foreground = ThemeManager.ActionButtonForeground;
             }
+            TraverseTree(obj, isDark, visited);
+            return;
+        }
+
+        if (obj is System.Windows.Controls.Primitives.ToggleButton tgb)
+        {
+            tgb.Background = ThemeManager.ControlBackground;
+            tgb.BorderBrush = ThemeManager.ControlBorder;
+            tgb.Foreground = ThemeManager.ControlForeground;
             TraverseTree(obj, isDark, visited);
             return;
         }
@@ -130,7 +159,12 @@ public partial class MainPage
             {
                 if (obj is Border b)
                 {
-                    if (b.Background is SolidColorBrush scbBg)
+                    if (b.Background is LinearGradientBrush)
+                    {
+                        b.Background = new SolidColorBrush(Colors.Transparent);
+                        b.BorderBrush = new SolidColorBrush(Colors.Transparent);
+                    }
+                    else if (b.Background is SolidColorBrush scbBg)
                     {
                         if (IsColor(scbBg, 255, 255, 255))
                             b.Background = ThemeManager.BrushDarkCardBg;
@@ -349,15 +383,13 @@ public partial class MainPage
         cmb.BorderBrush = ThemeManager.ControlBorder;
         cmb.Foreground = ThemeManager.ControlForeground;
 
-        int childCount = VisualTreeHelper.GetChildrenCount(cmb);
-        for (int i = 0; i < childCount; i++)
+        try
         {
-            var child = VisualTreeHelper.GetChild(cmb, i);
-            if (child != null)
-            {
-                ApplyThemeToTree(child, isDark);
-            }
+            OpenSilver.Interop.ExecuteJavaScriptVoid("$0.classList.add('waterdaze-combobox')", cmb);
         }
+        catch { }
+
+        ApplyComboBoxSubtree(cmb, isDark);
 
         try
         {
@@ -381,6 +413,45 @@ public partial class MainPage
             }
         }
         catch { }
+    }
+
+    private void ApplyComboBoxSubtree(DependencyObject obj, bool isDark)
+    {
+        if (obj == null) return;
+
+        if (obj is Border b)
+        {
+            if (b.Background is LinearGradientBrush)
+            {
+                b.Background = new SolidColorBrush(Colors.Transparent);
+                b.BorderBrush = new SolidColorBrush(Colors.Transparent);
+            }
+            else if (isDark && b.Background is SolidColorBrush scb && (IsColor(scb, 255, 255, 255) || IsColor(scb, 243, 244, 246)))
+            {
+                b.Background = ThemeManager.BrushDarkCardBg;
+                b.BorderBrush = ThemeManager.BrushDarkControlBorder;
+            }
+        }
+        else if (obj is System.Windows.Controls.Primitives.ToggleButton tb)
+        {
+            tb.Background = ThemeManager.ControlBackground;
+            tb.BorderBrush = ThemeManager.ControlBorder;
+            tb.Foreground = ThemeManager.ControlForeground;
+        }
+        else if (obj is TextBlock textBlock)
+        {
+            textBlock.Foreground = isDark ? ThemeManager.BrushDarkControlFg : ThemeManager.BrushLightControlFg;
+        }
+
+        int count = VisualTreeHelper.GetChildrenCount(obj);
+        for (int i = 0; i < count; i++)
+        {
+            var child = VisualTreeHelper.GetChild(obj, i);
+            if (child != null)
+            {
+                ApplyComboBoxSubtree(child, isDark);
+            }
+        }
     }
 
     private static bool IsColor(SolidColorBrush? brush, byte r, byte g, byte b)
@@ -419,6 +490,15 @@ public partial class MainPage
             return;
 
         var isCompact = width is > 0 and < 720;
+
+        if (PanelDesktopActions != null)
+            PanelDesktopActions.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+
+        if (BtnHamburger != null)
+            BtnHamburger.Visibility = isCompact ? Visibility.Visible : Visibility.Collapsed;
+
+        if (!isCompact && MobileMenuDropdown != null)
+            MobileMenuDropdown.Visibility = Visibility.Collapsed;
 
         if (isCompact)
         {
@@ -510,6 +590,33 @@ public partial class MainPage
 
     private void BtnUpdates_Click(object sender, RoutedEventArgs e)
     {
+        _ = ViewModel.CheckForUpdatesAsync(silent: false);
+    }
+
+    private void BtnHamburger_Click(object sender, RoutedEventArgs e)
+    {
+        if (MobileMenuDropdown != null)
+        {
+            MobileMenuDropdown.Visibility = MobileMenuDropdown.Visibility == Visibility.Visible
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+        }
+    }
+
+    private void MobileMenuAction_Click(object sender, RoutedEventArgs e)
+    {
+        if (MobileMenuDropdown != null)
+        {
+            MobileMenuDropdown.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void BtnUpdatesMobile_Click(object sender, RoutedEventArgs e)
+    {
+        if (MobileMenuDropdown != null)
+        {
+            MobileMenuDropdown.Visibility = Visibility.Collapsed;
+        }
         _ = ViewModel.CheckForUpdatesAsync(silent: false);
     }
 }
