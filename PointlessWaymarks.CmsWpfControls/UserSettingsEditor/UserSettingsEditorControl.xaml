@@ -467,6 +467,7 @@
                                 <behaviors:IgnoreMouseWheelBehavior />
                             </b:Interaction.Behaviors>
                         </wpf:MarkdownViewer>
+                        <TextBox Margin="24,0,0,0" Style="{StaticResource ReadOnlyTextBoxStyle}" Text="{Binding FeatureIntersectFileDefault, StringFormat='Default Feature Intersect File: {0}'}"></TextBox>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
                         <stringMultiSelectDataEntry:StringMultiSelectDataEntryControl

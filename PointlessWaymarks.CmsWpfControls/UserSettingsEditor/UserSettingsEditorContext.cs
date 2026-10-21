@@ -37,6 +37,7 @@ public partial class UserSettingsEditorContext
         RegionChoices = RegionEndpoint.EnumerableAllRegions.Select(x => x.SystemName).ToList();
         EditorSettings = toLoad;
         FeatureIntersectionTagOnImportTypesContext = featureIntersectionTagOnImportTypesContext;
+        FeatureIntersectFileDefault = FileLocationTools.DefaultFeatureIntersectSettingsFile().FullName;
     }
 
     public List<string> CloudProviderChoices { get; set; }
@@ -59,8 +60,10 @@ public partial class UserSettingsEditorContext
         "prepend protocol and append paths to this.";
 
     public static string HelpMarkdownFeatureIntersectionSettingsFile =>
-        "This program can check a Point or Line against a set of GeoJson files to generate tags. The settings file for that feature must be specified here.";
+        "This program can check a Point or Line against a set of GeoJson files to generate tags. A settings file for that feature can be specified here - if this is blank the default settings file will be used.";
 
+    public string FeatureIntersectFileDefault { get; set; } = string.Empty;
+    
     public static string HelpMarkdownFeatureIntersectionTagOnImport =>
         "Select the types here that - when the Feature Intersection Settings File is set/valid and there is position information - will have feature intersect tags added on import.";
 
