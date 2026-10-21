@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="220" d:DesignWidth="1100">
 
-    <Border Background="#0F172A" BorderBrush="#334155" BorderThickness="0,1,0,0">
+    <Border Background="{StaticResource Theme_BackgroundBrush}" BorderBrush="{StaticResource Theme_BorderBrush}" BorderThickness="0,1,0,0">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -16,34 +16,36 @@
             </Grid.RowDefinitions>
 
             <!-- Chart Header & Controls Ribbon -->
-            <Border Grid.Row="0" Background="#1E293B" Padding="12,6" BorderBrush="#334155" BorderThickness="0,0,0,1">
+            <Border Grid.Row="0" Background="{StaticResource Theme_ContainerBackgroundBrush}" Padding="12,6" BorderBrush="{StaticResource Theme_BorderBrush}" BorderThickness="0,0,0,1">
                 <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <!-- Title & Hover Info -->
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,3,16,3">
-                        <TextBlock Text="ELEVATION PROFILE" FontWeight="Bold" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center"/>
-                        <TextBlock Text=" · " FontSize="11" Foreground="#64748B" VerticalAlignment="Center"/>
-                        <TextBlock x:Name="TxtHoverInfo" Text="Hover over graph to inspect" FontSize="11" Foreground="#38BDF8" VerticalAlignment="Center"/>
+                        <TextBlock Text="ELEVATION PROFILE" FontWeight="Bold" FontSize="11" Foreground="{StaticResource Theme_TextBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text=" · " FontSize="11" Foreground="{StaticResource Theme_WatermarkBrush}" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="TxtHoverInfo" Text="Hover over graph to inspect" FontSize="11" Foreground="{StaticResource SkyAccentBrush}" VerticalAlignment="Center"/>
                     </StackPanel>
 
                     <!-- Trim Range Information -->
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,3,16,3">
-                        <Border Background="#064E3B" CornerRadius="4" Padding="6,2" Margin="0,0,8,0" VerticalAlignment="Center">
-                            <TextBlock x:Name="TxtStartTrimLabel" Text="Start: 0.00 mi" FontSize="11" FontWeight="SemiBold" Foreground="#34D399"/>
+                        <Border Background="#10B981" CornerRadius="4" Padding="6,2" Margin="0,0,8,0" VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtStartTrimLabel" Text="Start: 0.00 mi" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
                         </Border>
-                        <TextBlock Text="➔" FontSize="11" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <Border Background="#7F1D1D" CornerRadius="4" Padding="6,2" Margin="0,0,0,0" VerticalAlignment="Center">
-                            <TextBlock x:Name="TxtEndTrimLabel" Text="End: 0.00 mi" FontSize="11" FontWeight="SemiBold" Foreground="#F87171"/>
+                        <TextBlock Text="➔" FontSize="11" Foreground="{StaticResource Theme_WatermarkBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <Border Background="#EF4444" CornerRadius="4" Padding="6,2" Margin="0,0,0,0" VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtEndTrimLabel" Text="End: 0.00 mi" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
                         </Border>
                     </StackPanel>
 
                     <!-- Action Buttons -->
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,3,0,3">
                         <Button Content="Reset Trim" Command="{Binding ResetTrimCommand}"
-                                Background="#334155" Foreground="#E2E8F0" BorderThickness="0" Padding="10,4" Margin="0,0,8,0"
+                                Background="{StaticResource Theme_ControlBackgroundBrush}" Foreground="{StaticResource Theme_TextBrush}"
+                                BorderBrush="{StaticResource Theme_BorderBrush}" BorderThickness="1"
+                                Padding="10,4" Margin="0,0,8,0"
                                 CornerRadius="4" FontSize="11" FontWeight="SemiBold" Cursor="Hand"
                                 ToolTipService.ToolTip="Reset trim handles to encompass the entire track"/>
                         <Button Content="✂ Apply Trim" Command="{Binding TrimTrackCommand}"
-                                Background="#0284C7" Foreground="#FFFFFF" BorderThickness="0" Padding="12,4"
+                                Background="{StaticResource Theme_PrimaryBrush}" Foreground="{StaticResource Theme_TextOnPrimaryBrush}" BorderThickness="0" Padding="12,4"
                                 CornerRadius="4" FontSize="11" FontWeight="Bold" Cursor="Hand"
                                 ToolTipService.ToolTip="Trim track to points between the start and end markers"/>
                     </StackPanel>
@@ -51,7 +53,7 @@
             </Border>
 
             <!-- Interactive Chart Area -->
-            <Grid Grid.Row="1" x:Name="ChartArea" Background="#0B0F19"
+            <Grid Grid.Row="1" x:Name="ChartArea" Background="{StaticResource Theme_BackgroundBrush}"
                   MouseMove="ChartArea_MouseMove" MouseLeftButtonDown="ChartArea_MouseLeftButtonDown"
                   SizeChanged="ChartArea_SizeChanged">
 
@@ -61,10 +63,10 @@
                 </Canvas>
 
                 <!-- Left Trim Dimmed Overlay -->
-                <Border x:Name="LeftDimOverlay" HorizontalAlignment="Left" Background="#B30F172A" Visibility="Collapsed" IsHitTestVisible="False"/>
+                <Border x:Name="LeftDimOverlay" HorizontalAlignment="Left" Background="{StaticResource Theme_BackgroundBrush}" Opacity="0.75" Visibility="Collapsed" IsHitTestVisible="False"/>
 
                 <!-- Right Trim Dimmed Overlay -->
-                <Border x:Name="RightDimOverlay" HorizontalAlignment="Right" Background="#B30F172A" Visibility="Collapsed" IsHitTestVisible="False"/>
+                <Border x:Name="RightDimOverlay" HorizontalAlignment="Right" Background="{StaticResource Theme_BackgroundBrush}" Opacity="0.75" Visibility="Collapsed" IsHitTestVisible="False"/>
 
                 <!-- Selected Range Highlight Box on Elevation Chart -->
                 <Canvas x:Name="SelectionRangeCanvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" IsHitTestVisible="False">
@@ -101,7 +103,7 @@
             </Grid>
 
             <!-- Combined Dual-Thumb Range Slider for Trimming -->
-            <Border Grid.Row="2" Background="#1E293B" Padding="10,4,10,6" BorderBrush="#334155" BorderThickness="0,1,0,0">
+            <Border Grid.Row="2" Background="{StaticResource Theme_ContainerBackgroundBrush}" Padding="10,4,10,6" BorderBrush="{StaticResource Theme_BorderBrush}" BorderThickness="0,1,0,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -114,11 +116,11 @@
                           MouseLeftButtonDown="RangeSlider_Track_MouseDown"
                           Background="Transparent" Cursor="Hand">
                         <!-- Inactive Track Bar -->
-                        <Border Height="6" Background="#334155" CornerRadius="3" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                        <Border Height="6" Background="{StaticResource Theme_BorderBrush}" CornerRadius="3" VerticalAlignment="Center" IsHitTestVisible="False"/>
 
                         <!-- Active Range Highlight Bar (between Start and End thumbs) -->
                         <Canvas Height="26" VerticalAlignment="Center" IsHitTestVisible="True">
-                            <Border x:Name="RangeActiveHighlight" Height="6" Background="#2563EB" CornerRadius="3"
+                            <Border x:Name="RangeActiveHighlight" Height="6" Background="{StaticResource Theme_PrimaryBrush}" CornerRadius="3"
                                     Cursor="Hand"
                                     MouseLeftButtonDown="RangeActiveHighlight_MouseDown"
                                     MouseMove="RangeActiveHighlight_MouseMove"
@@ -160,19 +162,19 @@
                             <Border Background="#10B981" CornerRadius="3" Padding="5,1" Margin="0,0,6,0">
                                 <TextBlock Text="START" FontSize="9" FontWeight="Bold" Foreground="White"/>
                             </Border>
-                            <TextBlock x:Name="TxtTrimStartInfo" Text="#1 (0.00 mi)" FontSize="11" Foreground="#34D399" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="TxtTrimStartInfo" Text="#1 (0.00 mi)" FontSize="11" Foreground="#10B981" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         </StackPanel>
 
                         <!-- Center Hint -->
                         <TextBlock Grid.Column="1" Text="Drag thumbs or middle bar to trim · Double-click profile to move nearest marker" 
-                                   HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10" Foreground="#64748B"/>
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10" Foreground="{StaticResource Theme_WatermarkBrush}"/>
 
                         <!-- End Trim Info Badge -->
                         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                             <Border Background="#EF4444" CornerRadius="3" Padding="5,1" Margin="0,0,6,0">
                                 <TextBlock Text="END" FontSize="9" FontWeight="Bold" Foreground="White"/>
                             </Border>
-                            <TextBlock x:Name="TxtTrimEndInfo" Text="#1 (0.00 mi)" FontSize="11" Foreground="#F87171" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="TxtTrimEndInfo" Text="#1 (0.00 mi)" FontSize="11" Foreground="#EF4444" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Grid>
                 </Grid>

@@ -29,8 +29,34 @@ namespace PwTrackTrimmer.Controls
         public ElevationChartControl()
         {
             this.InitializeComponent();
+            this.Loaded += (s, e) => UpdateThemeVisuals();
+            Services.ThemeManager.Current.ThemeChanged += (s, e) =>
+            {
+                UpdateThemeVisuals();
+                Redraw();
+            };
             this.DataContextChanged += ElevationChartControl_DataContextChanged;
             this.KeyDown += ElevationChartControl_KeyDown;
+        }
+
+        public void UpdateThemeVisuals()
+        {
+            bool isDark = Services.ThemeManager.Current.IsDark;
+            var chartBg = Services.ThemeManager.GetBrush(
+                "Theme_BackgroundBrush",
+                isDark ? Services.ThemeManager.BrushDarkChartBg : Services.ThemeManager.BrushLightChartBg);
+
+            if (ChartArea != null)
+            {
+                ChartArea.Background = chartBg;
+            }
+
+            var dimBrush = isDark
+                ? new SolidColorBrush(Color.FromArgb(179, 15, 23, 42))
+                : new SolidColorBrush(Color.FromArgb(179, 241, 245, 249));
+
+            if (LeftDimOverlay != null) LeftDimOverlay.Background = dimBrush;
+            if (RightDimOverlay != null) RightDimOverlay.Background = dimBrush;
         }
 
         private void ElevationChartControl_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -62,6 +88,7 @@ namespace PwTrackTrimmer.Controls
 
         public void Redraw()
         {
+            UpdateThemeVisuals();
             ProfileCanvas.Children.Clear();
             if (ViewModel?.Document == null || ViewModel.Document.Points.Count < 2 || _chartWidth <= 0 || _chartHeight <= 0)
             {
@@ -97,7 +124,14 @@ namespace PwTrackTrimmer.Controls
             double usableHeight = _chartHeight - (paddingY * 2);
 
             bool isDark = Services.ThemeManager.Current.IsDark;
-            ChartArea.Background = isDark ? Services.ThemeManager.BrushDarkChartBg : Services.ThemeManager.BrushLightChartBg;
+
+            var gridLineBrush = Services.ThemeManager.GetBrush(
+                "Theme_ChartGridLineBrush",
+                isDark ? Services.ThemeManager.BrushDarkChartGrid : Services.ThemeManager.BrushLightChartGrid);
+
+            var axisTextBrush = Services.ThemeManager.GetBrush(
+                "Theme_ChartAxisTextForegroundBrush",
+                isDark ? Services.ThemeManager.BrushDarkChartAxisText : Services.ThemeManager.BrushLightChartAxisText);
 
             // Draw horizontal elevation grid lines (3 lines)
             for (int i = 0; i <= 3; i++)
@@ -112,7 +146,7 @@ namespace PwTrackTrimmer.Controls
                     Y1 = y,
                     X2 = _chartWidth,
                     Y2 = y,
-                    Stroke = isDark ? new SolidColorBrush(Color.FromArgb(50, 148, 163, 184)) : new SolidColorBrush(Color.FromArgb(90, 148, 163, 184)),
+                    Stroke = gridLineBrush,
                     StrokeThickness = 1,
                     StrokeDashArray = new DoubleCollection { 2, 4 }
                 };
@@ -122,7 +156,7 @@ namespace PwTrackTrimmer.Controls
                 {
                     Text = $"{eleVal * 3.280839895:F0} ft",
                     FontSize = 10,
-                    Foreground = isDark ? new SolidColorBrush(Color.FromArgb(140, 148, 163, 184)) : new SolidColorBrush(Color.FromArgb(200, 71, 85, 105))
+                    Foreground = axisTextBrush
                 };
                 Canvas.SetLeft(txt, 8);
                 Canvas.SetTop(txt, Math.Max(0, y - 14));

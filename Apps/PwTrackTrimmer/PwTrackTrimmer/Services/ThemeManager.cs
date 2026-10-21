@@ -230,12 +230,15 @@ public sealed class ThemeManager : INotifyPropertyChanged
     public static SolidColorBrush BrushRedAccent => GetOrCreateBrush("RedAccent", 255, 239, 68, 68);         // #EF4444
     public static SolidColorBrush BrushWhite => GetOrCreateBrush("White", 255, 255, 255, 255);
 
-    // Chart Palette values
+    // Chart Palette values (leaning on OpenSilver.Themes.Modern default colors)
     public static SolidColorBrush BrushLightChartBg => GetOrCreateBrush("LightChartBg", 255, 255, 255, 255);
     public static SolidColorBrush BrushDarkChartBg => GetOrCreateBrush("DarkChartBg", 255, 11, 15, 25);     // #0B0F19
 
-    public static SolidColorBrush BrushLightChartGrid => GetOrCreateBrush("LightChartGrid", 100, 203, 213, 225);
-    public static SolidColorBrush BrushDarkChartGrid => GetOrCreateBrush("DarkChartGrid", 50, 148, 163, 184);
+    public static SolidColorBrush BrushLightChartGrid => GetOrCreateBrush("LightChartGrid", 90, 153, 153, 153); // #5A999999 (Modern LightPalette)
+    public static SolidColorBrush BrushDarkChartGrid => GetOrCreateBrush("DarkChartGrid", 255, 43, 43, 43);     // #FF2B2B2B (Modern DarkPalette)
+
+    public static SolidColorBrush BrushLightChartAxisText => GetOrCreateBrush("LightChartAxisText", 255, 119, 119, 119); // #FF777777 (Modern LightPalette)
+    public static SolidColorBrush BrushDarkChartAxisText => GetOrCreateBrush("DarkChartAxisText", 255, 119, 119, 119);   // #FF777777 (Modern DarkPalette)
 
     // Dynamic semantic brushes
     public SolidColorBrush PageBackground => IsDark ? BrushDarkPageBg : BrushLightPageBg;
@@ -302,6 +305,19 @@ public sealed class ThemeManager : INotifyPropertyChanged
 
     public static SolidColorBrush GetBrush(string resourceKey, SolidColorBrush fallback)
     {
+        try
+        {
+            if (Application.Current != null)
+            {
+                var res = Application.Current.TryFindResource(resourceKey);
+                if (res is SolidColorBrush brush)
+                {
+                    return brush;
+                }
+            }
+        }
+        catch { }
+
         try
         {
             if (Application.Current?.Resources != null &&

@@ -32,4 +32,19 @@
     <SolidColorBrush x:Key="ControlBorderBrush" Color="#475569" />
     <SolidColorBrush x:Key="ControlForegroundBrush" Color="#F8FAFC" />
 
+    <!-- OpenSilver.Themes.Modern Default Palette Brushes (Dark) -->
+    <SolidColorBrush x:Key="Theme_BackgroundBrush" Color="#0B0F19" />
+    <SolidColorBrush x:Key="Theme_ContainerBackgroundBrush" Color="#1E293B" />
+    <SolidColorBrush x:Key="Theme_ControlBackgroundBrush" Color="#141414" />
+    <SolidColorBrush x:Key="Theme_BorderBrush" Color="#334155" />
+    <SolidColorBrush x:Key="Theme_AlternateRowBrush" Color="#212121" />
+    <SolidColorBrush x:Key="Theme_TextBrush" Color="#F8FAFC" />
+    <SolidColorBrush x:Key="Theme_TextOnPrimaryBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="Theme_WatermarkBrush" Color="#94A3B8" />
+    <SolidColorBrush x:Key="Theme_ErrorBrush" Color="#FF5963" />
+    <SolidColorBrush x:Key="Theme_ChartGridLineBrush" Color="#FF2B2B2B" />
+    <SolidColorBrush x:Key="Theme_ChartLegendForegroundBrush" Color="#E5E5E5" />
+    <SolidColorBrush x:Key="Theme_ChartAxisTextForegroundBrush" Color="#777777" />
+    <SolidColorBrush x:Key="Theme_PrimaryBrush" Color="#3B82F6" />
+
 </ResourceDictionary>
