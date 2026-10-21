@@ -1773,19 +1773,7 @@ public static class UserSettingsUtilities
             readResult.SitePictureSizes = PictureResizing.SrcSetSizeAndQualityDefaultSettingsList();
             hasUpdates = true;
         }
-
-        if (!readResult.FeatureIntersectionTagOnImportTypes.Any())
-        {
-            readResult.FeatureIntersectionTagOnImportTypes = [];
-            hasUpdates = true;
-        }
-
-        if (hasUpdates)
-        {
-            progress?.Report("Found missing values - writing defaults back to settings.");
-            await WriteSettings(readResult).ConfigureAwait(false);
-        }
-
+        
         try
         {
             readResult.CalTopoApiKey = (await IntersectSettingTools.ReadSettings(readResult.FeatureIntersectionTagSettingsFile)).CalTopoApiKey;
@@ -1796,6 +1784,12 @@ public static class UserSettingsUtilities
             Log.Error($"Error trying to read CalTopoApiKey from {readResult.FeatureIntersectionTagSettingsFile} - {e}");
         }
         
+        if (hasUpdates)
+        {
+            progress?.Report("Found missing values - writing defaults back to settings.");
+            await WriteSettings(readResult).ConfigureAwait(false);
+        }
+
         ElevationService.StaticDemAddress = readResult.DemStaticFilesAddress;
 
         return readResult;

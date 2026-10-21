@@ -530,7 +530,7 @@
                             Name="StaticDemAddressTextBox"
                             Style="{StaticResource DataEntryTextBoxSingleLineStyle}"
                             Text="{Binding EditorSettings.DemStaticFilesAddress, UpdateSourceTrigger=PropertyChanged}" />
-                        <wpf:MarkdownViewer Markdown="{Binding HelpMarkdownCalTopoMapsApiKey}">
+                        <wpf:MarkdownViewer Markdown="{Binding HelpMarkdownStaticDemAddressApiKey}">
                             <b:Interaction.Behaviors>
                                 <behaviors:IgnoreMouseWheelBehavior />
                             </b:Interaction.Behaviors>
