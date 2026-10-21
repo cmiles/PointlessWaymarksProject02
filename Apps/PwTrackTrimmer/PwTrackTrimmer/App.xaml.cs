@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -15,8 +15,16 @@ namespace PwTrackTrimmer
 
             // Enter construction logic here...
 
-            var mainPage = new MainPage();
-            this.RootVisual = mainPage;
+            var mainGrid = new Grid();
+            this.RootVisual = mainGrid;
+
+            // Initialize theme before instantiating MainPage so that initial static resources and palettes match system/saved preference
+            Services.ThemeManager.Current.Initialize();
+
+            if (mainGrid.Children.Count == 0)
+            {
+                mainGrid.Children.Add(new MainPage());
+            }
         }
     }
 }

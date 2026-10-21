@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace PwImageMetadataViewer.Services;
@@ -257,8 +259,71 @@ public sealed class ThemeManager : INotifyPropertyChanged
     public SolidColorBrush StatusBackground => IsDark ? BrushDarkStatusBg : BrushLightStatusBg;
     public SolidColorBrush StatusBorder => IsDark ? BrushDarkStatusBorder : BrushLightStatusBorder;
 
+    public static void UpdateApplicationResources(bool isDark)
+    {
+        try
+        {
+            var app = Application.Current;
+            if (app?.Resources?.MergedDictionaries != null)
+            {
+                app.Resources.MergedDictionaries.Clear();
+                if (isDark)
+                {
+                    app.Resources.MergedDictionaries.Add(new Themes.DarkTheme());
+                }
+                else
+                {
+                    app.Resources.MergedDictionaries.Add(new Themes.LightTheme());
+                }
+            }
+
+            if (app?.Theme is OpenSilver.Themes.Modern.ModernTheme modernTheme)
+            {
+                var targetPalette = isDark 
+                    ? OpenSilver.Themes.Modern.ModernTheme.Palettes.Dark 
+                    : OpenSilver.Themes.Modern.ModernTheme.Palettes.Light;
+
+                if (modernTheme.CurrentPalette != targetPalette)
+                {
+                    modernTheme.CurrentPalette = targetPalette;
+                    app.Theme = modernTheme;
+
+                    if (app.RootVisual is Grid mainGrid)
+                    {
+                        var existingPage = mainGrid.Children.FirstOrDefault() as MainPage;
+                        var existingReport = existingPage?.CurrentReport;
+                        mainGrid.Children.Clear();
+                        mainGrid.Children.Add(new MainPage(existingReport));
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine("UpdateApplicationResources error: " + ex.Message);
+        }
+    }
+
+    public static SolidColorBrush GetBrush(string resourceKey, SolidColorBrush fallback)
+    {
+        try
+        {
+            if (Application.Current?.Resources != null &&
+                Application.Current.Resources.Contains(resourceKey) &&
+                Application.Current.Resources[resourceKey] is SolidColorBrush brush)
+            {
+                return brush;
+            }
+        }
+        catch { }
+
+        return fallback;
+    }
+
     private void NotifyThemeChanged()
     {
+        UpdateApplicationResources(IsDark);
+
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
         ThemeChanged?.Invoke(this, EventArgs.Empty);
 

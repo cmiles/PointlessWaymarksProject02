@@ -21,6 +21,12 @@
     <SolidColorBrush x:Key="SiteCodeBrush" Color="#1D4ED8" />
     <SolidColorBrush x:Key="FlowDaysBrush" Color="#059669" />
 
+    <!-- ScrollBar -->
+    <SolidColorBrush x:Key="ScrollBarTrackBrush" Color="#FFE6E6E6" />
+    <SolidColorBrush x:Key="ScrollBarButtonBackgroundBrush" Color="#FFE7E8E9" />
+    <SolidColorBrush x:Key="ScrollBarButtonForegroundBrush" Color="#FFC9C9C9" />
+    <SolidColorBrush x:Key="ScrollBarThumbBrush" Color="#FFC9C9C9" />
+
     <!-- Status Banners -->
     <SolidColorBrush x:Key="WarningBannerBackgroundBrush" Color="#FFFBEB" />
     <SolidColorBrush x:Key="WarningBannerBorderBrush" Color="#FCD34D" />
@@ -64,16 +70,5 @@
     <SolidColorBrush x:Key="YearFacetTextBrush" Color="#707070" />
     <SolidColorBrush x:Key="YearFacetBarBrush" Color="#B4C8C8C8" />
     <SolidColorBrush x:Key="YearFacetLineBrush" Color="#3366CC" />
-
-    <!-- Form Controls & Buttons -->
-    <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#FFFFFF" />
-    <SolidColorBrush x:Key="ControlBorderBrush" Color="#D1D5DB" />
-    <SolidColorBrush x:Key="ControlForegroundBrush" Color="#111827" />
-    <SolidColorBrush x:Key="ButtonBackgroundBrush" Color="#F3F4F6" />
-    <SolidColorBrush x:Key="ButtonForegroundBrush" Color="#1F2937" />
-    <SolidColorBrush x:Key="ButtonBorderBrush" Color="#D1D5DB" />
-    <SolidColorBrush x:Key="ActionButtonBackgroundBrush" Color="#2563EB" />
-    <SolidColorBrush x:Key="ActionButtonForegroundBrush" Color="#FFFFFF" />
-    <SolidColorBrush x:Key="ActionButtonBorderBrush" Color="#1D4ED8" />
 
 </ResourceDictionary>

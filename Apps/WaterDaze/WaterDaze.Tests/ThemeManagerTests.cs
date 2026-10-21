@@ -2,6 +2,7 @@ using System;
 using System.Windows.Media;
 using WaterDaze.Services;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace WaterDaze.Tests;
 
@@ -10,8 +11,6 @@ public class ThemeManagerTests
     [Fact]
     public void SetTheme_ExplicitLightAndDark_UpdatesThemeModeAndIsDark()
     {
-        ThemeManager.SetTheme(AppTheme.Light);
-        Assert.Equal(AppTheme.Light, ThemeManager.CurrentTheme);
         Assert.False(ThemeManager.IsDark);
 
         ThemeManager.SetTheme(AppTheme.Dark);

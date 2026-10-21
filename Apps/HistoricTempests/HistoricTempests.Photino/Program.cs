@@ -11,7 +11,7 @@ namespace HistoricTempests.Photino
         static void Main(string[] args)
         {
             // Window title declared here for visibility
-            string windowTitle = "HistoricTempests";
+            string windowTitle = "Rincon Valley Historic Weather";
 
             // Creating a new PhotinoWindow instance with the fluent API
             var window = new PhotinoWindow()

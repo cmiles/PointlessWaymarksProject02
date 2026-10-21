@@ -6,7 +6,7 @@
       xmlns:controls="clr-namespace:PwImageMetadataViewer.Controls"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       mc:Ignorable="d"
-      Foreground="#F8FAFC"
+      Foreground="{StaticResource TextPrimaryBrush}"
       FontFamily="Segoe UI, -apple-system, BlinkMacSystemFont, Roboto, sans-serif">
 
     <Page.Resources>
@@ -55,7 +55,7 @@
         </DataTemplate>
     </Page.Resources>
 
-    <Grid x:Name="RootLayoutGrid" Background="#0B0F19">
+    <Grid x:Name="RootLayoutGrid" Background="{StaticResource AppBackgroundBrush}">
         <Grid.RowDefinitions>
             <!-- Top Header -->
             <RowDefinition Height="Auto"/>
@@ -66,50 +66,50 @@
         </Grid.RowDefinitions>
 
         <!-- TOP HEADER BAR -->
-        <Border x:Name="TopHeaderBorder" Grid.Row="0" Background="#111827" BorderBrush="#1F2937" BorderThickness="0,0,0,1" Padding="18,12">
+        <Border x:Name="TopHeaderBorder" Grid.Row="0" Background="{StaticResource HeaderBackgroundBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,0,0,1" Padding="18,12">
             <StackPanel>
                 <!-- WIDE SCREEN HEADER (>= 850px) -->
                 <controls:WrapPanel x:Name="PnlWideHeader" Orientation="Horizontal" VerticalAlignment="Center">
                     <!-- Brand & Title Block -->
                     <StackPanel VerticalAlignment="Center" Margin="0,0,20,6">
                         <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Image Metadata Viewer - " FontSize="18" FontWeight="Bold" Foreground="#F8FAFC" VerticalAlignment="Center"/>
+                            <TextBlock Text="Image Metadata Viewer - " FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" VerticalAlignment="Center"/>
                             <HyperlinkButton x:Name="LnkAuthor" Content="Charles Miles" NavigateUri="https://cmiles.info" TargetName="_blank"
                                              Click="Hyperlink_Click"
-                                             FontSize="15" FontWeight="Bold" Foreground="#38BDF8"
+                                             FontSize="15" FontWeight="Bold" Foreground="{StaticResource HyperlinkBrush}"
                                              Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
                         </controls:WrapPanel>
-                        <TextBlock x:Name="TxtCurrentFileName" Text="1510-Rama-Shrine-from-the-Grandview-Trail.jpg" FontSize="13" Foreground="#94A3B8" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                        <TextBlock x:Name="TxtCurrentFileName" Text="1510-Rama-Shrine-from-the-Grandview-Trail.jpg" FontSize="13" Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,0" TextWrapping="Wrap"/>
                     </StackPanel>
 
                     <!-- Action Buttons -->
                     <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,6">
-                        <Button x:Name="BtnOpenFile" Click="BtnOpenFile_Click" Background="#38BDF8" Foreground="#0F172A" FontWeight="Bold" FontSize="13.5" Padding="14,8" Margin="0,0,8,6" BorderThickness="0" Cursor="Hand">
+                        <Button x:Name="BtnOpenFile" Click="BtnOpenFile_Click" FontWeight="SemiBold" FontSize="13.5" Padding="14,8" Margin="0,0,8,6" Cursor="Hand">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="📂 " FontSize="13.5"/>
-                                <TextBlock Text="Open Image..." Foreground="#0F172A" FontWeight="Bold"/>
+                                <TextBlock Text="Open Image..." FontWeight="SemiBold"/>
                             </StackPanel>
                         </Button>
 
-                        <Button x:Name="BtnExportJson" Click="BtnExportJson_Click" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" Margin="0,0,8,6" Cursor="Hand">
+                        <Button x:Name="BtnExportJson" Click="BtnExportJson_Click" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" Margin="0,0,8,6" Cursor="Hand">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="📋 " FontSize="13.5"/>
                                 <TextBlock Text="Copy JSON"/>
                             </StackPanel>
                         </Button>
 
-                        <Button x:Name="BtnAbout" Click="BtnAbout_Click" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" Margin="0,0,0,6" Cursor="Hand">
+                        <Button x:Name="BtnAbout" Click="BtnAbout_Click" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" Margin="0,0,0,6" Cursor="Hand">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="ℹ️ " FontSize="13.5"/>
                                 <TextBlock Text="About"/>
                             </StackPanel>
                         </Button>
 
-                        <Button x:Name="BtnThemeToggle" Click="BtnThemeToggle_Click" Width="145" HorizontalContentAlignment="Center" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13.5" Padding="6,8" Margin="8,0,0,6" Cursor="Hand" ToolTipService.ToolTip="Toggle theme (System / Dark / Light)">
+                        <Button x:Name="BtnThemeToggle" Click="BtnThemeToggle_Click" Width="145" HorizontalContentAlignment="Center" FontWeight="SemiBold" FontSize="13.5" Padding="6,8" Margin="8,0,0,6" Cursor="Hand" ToolTipService.ToolTip="Toggle theme (System / Dark / Light)">
                             <TextBlock x:Name="TxtThemeToggle" Text="🌓 Theme" HorizontalAlignment="Center"/>
                         </Button>
 
-                        <Button x:Name="BtnUpdates" Click="BtnUpdates_Click" Background="#059669" BorderBrush="#047857" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" Margin="8,0,0,6" Cursor="Hand" ToolTipService.ToolTip="Check online catalog for software updates">
+                        <Button x:Name="BtnUpdates" Click="BtnUpdates_Click" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" Margin="8,0,0,6" Cursor="Hand" ToolTipService.ToolTip="Check online catalog for software updates">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="🚀 " FontSize="13.5"/>
                                 <TextBlock Text="Updates"/>
@@ -128,52 +128,52 @@
 
                         <!-- Collapsed Title & Author -->
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0">
-                            <TextBlock Text="Metadata Viewer" FontSize="16" FontWeight="Bold" Foreground="#F8FAFC" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                            <TextBlock x:Name="TxtSmallAuthor" Text="Charles Miles" FontSize="11" Foreground="#38BDF8" FontWeight="SemiBold" Margin="0,1,0,0"/>
+                            <TextBlock Text="Metadata Viewer" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock x:Name="TxtSmallAuthor" Text="Charles Miles" FontSize="11" Foreground="{StaticResource HyperlinkBrush}" FontWeight="SemiBold" Margin="0,1,0,0"/>
                         </StackPanel>
 
                         <!-- Hamburger Menu Button -->
-                        <Button x:Name="BtnHamburgerMenu" Grid.Column="1" Click="BtnHamburgerMenu_Click" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="10,6" Cursor="Hand" VerticalAlignment="Center">
-                            <TextBlock x:Name="TxtHamburgerIcon" Text="☰" FontSize="18" Foreground="#F8FAFC" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Button x:Name="BtnHamburgerMenu" Grid.Column="1" Click="BtnHamburgerMenu_Click" CornerRadius="6" Padding="10,6" Cursor="Hand" VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtHamburgerIcon" Text="☰" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Button>
                     </Grid>
 
                     <!-- Collapsible Hamburger Menu Dropdown -->
-                    <Border x:Name="PnlHamburgerDropdown" Visibility="Collapsed" Background="#0F172A" BorderBrush="#273549" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,10,0,0">
+                    <Border x:Name="PnlHamburgerDropdown" Visibility="Collapsed" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,10,0,0">
                         <StackPanel>
                             <!-- Current Loaded File -->
                             <StackPanel Margin="0,0,0,10">
                                 <TextBlock Text="CURRENT FILE" Style="{StaticResource FieldLabelTextStyle}" Margin="0,0,0,2"/>
-                                <TextBlock x:Name="TxtMobileCurrentFileName" Text="1510-Rama-Shrine-from-the-Grandview-Trail.jpg" FontSize="13" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                                <TextBlock x:Name="TxtMobileCurrentFileName" Text="1510-Rama-Shrine-from-the-Grandview-Trail.jpg" FontSize="13" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap"/>
                             </StackPanel>
 
                             <!-- Mobile Action Buttons -->
-                            <Button x:Name="BtnMobileOpenFile" Click="BtnMobileOpenFile_Click" Background="#38BDF8" Foreground="#0F172A" FontWeight="Bold" FontSize="13.5" Padding="12,8" Margin="0,0,0,8" HorizontalAlignment="Stretch" BorderThickness="0" Cursor="Hand">
+                            <Button x:Name="BtnMobileOpenFile" Click="BtnMobileOpenFile_Click" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                     <TextBlock Text="📂 " FontSize="13.5"/>
-                                    <TextBlock Text="Open Image..." Foreground="#0F172A" FontWeight="Bold"/>
+                                    <TextBlock Text="Open Image..." FontWeight="SemiBold"/>
                                 </StackPanel>
                             </Button>
 
-                            <Button x:Name="BtnMobileExportJson" Click="BtnMobileExportJson_Click" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand">
+                            <Button x:Name="BtnMobileExportJson" Click="BtnMobileExportJson_Click" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                     <TextBlock Text="📋 " FontSize="13.5"/>
                                     <TextBlock Text="Copy JSON"/>
                                 </StackPanel>
                             </Button>
 
-                            <Button x:Name="BtnMobileAbout" Click="BtnMobileAbout_Click" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand">
+                            <Button x:Name="BtnMobileAbout" Click="BtnMobileAbout_Click" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                     <TextBlock Text="ℹ️ " FontSize="13.5"/>
                                     <TextBlock Text="About"/>
                                 </StackPanel>
                             </Button>
 
-                            <Button x:Name="BtnMobileThemeToggle" Click="BtnMobileThemeToggle_Click" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand">
+                            <Button x:Name="BtnMobileThemeToggle" Click="BtnMobileThemeToggle_Click" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand">
                                 <TextBlock x:Name="TxtMobileThemeToggle" Text="🌓 Theme" HorizontalAlignment="Center"/>
                             </Button>
 
-                            <Button x:Name="BtnMobileUpdates" Click="BtnMobileUpdates_Click" Background="#059669" BorderBrush="#047857" BorderThickness="1" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" HorizontalAlignment="Stretch" Cursor="Hand">
+                            <Button x:Name="BtnMobileUpdates" Click="BtnMobileUpdates_Click" FontWeight="SemiBold" FontSize="13.5" Padding="12,8" HorizontalAlignment="Stretch" Cursor="Hand">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                     <TextBlock Text="🚀 " FontSize="13.5"/>
                                     <TextBlock Text="Check for Updates"/>
@@ -186,7 +186,7 @@
         </Border>
 
         <!-- STATUS / ERROR BANNER -->
-        <Border x:Name="StatusBannerBorder" Grid.Row="1" Background="#0C4A6E" BorderBrush="#0284C7" BorderThickness="0,0,0,1" Padding="16,8" Visibility="Collapsed">
+        <Border x:Name="StatusBannerBorder" Grid.Row="1" Background="{StaticResource StatusBannerBackgroundBrush}" BorderBrush="{StaticResource StatusBannerBorderBrush}" BorderThickness="0,0,0,1" Padding="16,8" Visibility="Collapsed">
             <Grid HorizontalAlignment="Stretch">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -196,19 +196,19 @@
 
                 <TextBlock x:Name="TxtStatusIcon" Grid.Column="0" Text="ℹ️ " FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
 
-                <TextBox x:Name="TxtStatusMessage" Grid.Column="1" Text="Extracting metadata with WebAssembly ExifTool..." FontSize="14" FontWeight="SemiBold" Foreground="#F0F9FF" VerticalAlignment="Center" IsReadOnly="True" BorderThickness="0" Background="Transparent" TextWrapping="Wrap"/>
+                <TextBox x:Name="TxtStatusMessage" Grid.Column="1" Text="Extracting metadata with WebAssembly ExifTool..." FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource StatusBannerTextBrush}" VerticalAlignment="Center" IsReadOnly="True" BorderThickness="0" Background="Transparent" TextWrapping="Wrap"/>
 
-                <Button x:Name="BtnCopyError" Grid.Column="2" Click="BtnCopyError_Click" Background="#1E293B" BorderBrush="#EF4444" BorderThickness="1" Foreground="#FCA5A5" FontWeight="SemiBold" FontSize="13" Padding="10,4" Margin="12,0,0,0" Cursor="Hand" VerticalAlignment="Center" Visibility="Collapsed">
+                <Button x:Name="BtnCopyError" Grid.Column="2" Click="BtnCopyError_Click" FontWeight="SemiBold" FontSize="13" Padding="10,4" Margin="12,0,0,0" Cursor="Hand" VerticalAlignment="Center" Visibility="Collapsed">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="📋 " FontSize="13"/>
-                        <TextBlock x:Name="BtnCopyErrorText" Text="Copy Error" Foreground="#FCA5A5" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="BtnCopyErrorText" Text="Copy Error" FontWeight="SemiBold"/>
                     </StackPanel>
                 </Button>
             </Grid>
         </Border>
 
         <!-- MAIN SCROLLABLE CONTENT -->
-        <ScrollViewer x:Name="MainScrollViewer" Grid.Row="2" Background="#0B0F19" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <controls:ResponsiveScrollViewer x:Name="MainScrollViewer" Grid.Row="2" Background="{StaticResource AppBackgroundBrush}" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel x:Name="MainContentStackPanel" Background="Transparent" Margin="24,20,24,32">
 
                 <!-- TOP HERO SECTION: Preview Card + Camera Specs Card + Attribution Card (3 Equal Blocks) -->
@@ -223,7 +223,7 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- 1. IMAGE PREVIEW CARD -->
-                    <Border x:Name="PreviewCardBorder" Grid.Column="0" Background="#161F30" BorderBrush="#273549" BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,16,0">
+                    <Border x:Name="PreviewCardBorder" Grid.Column="0" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,16,0">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -234,32 +234,32 @@
                             <TextBlock Grid.Row="0" Text="Image Preview" Style="{StaticResource CardTitleTextStyle}" Margin="0,0,0,12"/>
 
                             <!-- Container for Preview (dual native OpenSilver Image and robust DOM mounting) -->
-                            <Border x:Name="ImagePreviewContainer" Grid.Row="1" Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="8" Height="250" MinHeight="250">
+                            <Border x:Name="ImagePreviewContainer" Grid.Row="1" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Height="250" MinHeight="250">
                                 <Grid>
                                     <!-- Native OpenSilver Image control -->
                                     <Image x:Name="ImgPreview" MaxHeight="240" MaxWidth="308" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" />
                                     <!-- Fallback text shown before image loads -->
-                                    <TextBlock x:Name="TxtPreviewPlaceholder" Text="Preview Loading..." FontSize="13" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtPreviewPlaceholder" Text="Preview Loading..." FontSize="13" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Grid>
                             </Border>
 
                             <!-- Dimension & format pills -->
                             <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,12,0,0" HorizontalAlignment="Center">
-                                <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="4" Padding="7,2.5" Margin="0,0,6,0">
-                                    <TextBlock x:Name="TxtDimensionBadge" Text="-- x --" Style="{StaticResource BadgeTextStyle}" Foreground="#38BDF8"/>
+                                <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="7,2.5" Margin="0,0,6,0">
+                                    <TextBlock x:Name="TxtDimensionBadge" Text="-- x --" Style="{StaticResource BadgeTextStyle}" Foreground="{StaticResource HyperlinkBrush}"/>
                                 </Border>
-                                <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="4" Padding="7,2.5" Margin="0,0,6,0">
-                                    <TextBlock x:Name="TxtMegapixelBadge" Text="-- MP" Style="{StaticResource BadgeTextStyle}" Foreground="#F8FAFC"/>
+                                <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="7,2.5" Margin="0,0,6,0">
+                                    <TextBlock x:Name="TxtMegapixelBadge" Text="-- MP" Style="{StaticResource BadgeTextStyle}" Foreground="{StaticResource TextPrimaryBrush}"/>
                                 </Border>
-                                <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="4" Padding="7,2.5">
-                                    <TextBlock x:Name="TxtFileTypeBadge" Text="--" Style="{StaticResource BadgeTextStyle}" Foreground="#94A3B8"/>
+                                <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="7,2.5">
+                                    <TextBlock x:Name="TxtFileTypeBadge" Text="--" Style="{StaticResource BadgeTextStyle}" Foreground="{StaticResource TextMutedBrush}"/>
                                 </Border>
                             </StackPanel>
                         </Grid>
                     </Border>
 
                     <!-- 2. CAMERA & EXPOSURE SPECS CARD -->
-                    <Border x:Name="SpecsCardBorder" Grid.Column="1" Background="#161F30" BorderBrush="#273549" BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,16,0">
+                    <Border x:Name="SpecsCardBorder" Grid.Column="1" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,16,0">
                         <StackPanel>
                             <TextBlock Text="Camera &amp; Shooting Data" Style="{StaticResource CardTitleTextStyle}" Margin="0,0,0,14"/>
 
@@ -272,19 +272,19 @@
                             <!-- Lens Model -->
                             <StackPanel Margin="0,0,0,10">
                                 <TextBlock Text="LENS" Style="{StaticResource FieldLabelTextStyle}"/>
-                                <TextBlock x:Name="TxtLensModel" Text="--" FontSize="14" Foreground="#E2E8F0" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                <TextBlock x:Name="TxtLensModel" Text="--" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
                             </StackPanel>
 
                             <!-- Date & Time Taken -->
                             <StackPanel Margin="0,0,0,10">
                                 <TextBlock Text="DATE TAKEN" Style="{StaticResource FieldLabelTextStyle}"/>
-                                <TextBlock x:Name="TxtDateTimeTaken" Text="--" FontSize="14" Foreground="#E2E8F0" Margin="0,2,0,0"/>
+                                <TextBlock x:Name="TxtDateTimeTaken" Text="--" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
                             </StackPanel>
 
                             <!-- Exposure Specs Blocks (WrapPanel wraps on small screens) -->
                             <controls:WrapPanel Orientation="Horizontal" Margin="0,4,0,0">
                                 <!-- Shutter Speed Block -->
-                                <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,8,8" MinWidth="70">
+                                <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,8,8" MinWidth="70">
                                     <StackPanel>
                                         <TextBlock Text="SHUTTER" Style="{StaticResource FieldLabelTextStyle}" FontSize="10.5"/>
                                         <TextBlock x:Name="TxtShutter" Text="--" Style="{StaticResource AccentDataValueTextStyle}" Margin="0,2,0,0"/>
@@ -292,7 +292,7 @@
                                 </Border>
 
                                 <!-- Aperture Block -->
-                                <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,8,8" MinWidth="70">
+                                <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,8,8" MinWidth="70">
                                     <StackPanel>
                                         <TextBlock Text="APERTURE" Style="{StaticResource FieldLabelTextStyle}" FontSize="10.5"/>
                                         <TextBlock x:Name="TxtAperture" Text="--" Style="{StaticResource AccentDataValueTextStyle}" Margin="0,2,0,0"/>
@@ -300,7 +300,7 @@
                                 </Border>
 
                                 <!-- ISO Block -->
-                                <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,8,8" MinWidth="70">
+                                <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,8,8" MinWidth="70">
                                     <StackPanel>
                                         <TextBlock Text="ISO" Style="{StaticResource FieldLabelTextStyle}" FontSize="10.5"/>
                                         <TextBlock x:Name="TxtIso" Text="--" Style="{StaticResource AccentDataValueTextStyle}" Margin="0,2,0,0"/>
@@ -308,7 +308,7 @@
                                 </Border>
 
                                 <!-- Focal Length Block -->
-                                <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,8,8" MinWidth="70">
+                                <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,8,8" MinWidth="70">
                                     <StackPanel>
                                         <TextBlock Text="FOCAL" Style="{StaticResource FieldLabelTextStyle}" FontSize="10.5"/>
                                         <TextBlock x:Name="TxtFocalLength" Text="--" Style="{StaticResource AccentDataValueTextStyle}" Margin="0,2,0,0"/>
@@ -318,16 +318,16 @@
 
                             <!-- File Details Footer -->
                             <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                                <TextBlock Text="Size: " FontSize="12" Foreground="#64748B"/>
-                                <TextBlock x:Name="TxtFileSize" Text="--" FontSize="12.5" Foreground="#E2E8F0" Margin="0,0,12,0"/>
-                                <TextBlock Text="MIME: " FontSize="12" Foreground="#64748B"/>
-                                <TextBlock x:Name="TxtMimeType" Text="--" FontSize="12.5" Foreground="#E2E8F0"/>
+                                <TextBlock Text="Size: " FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
+                                <TextBlock x:Name="TxtFileSize" Text="--" FontSize="12.5" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,12,0"/>
+                                <TextBlock Text="MIME: " FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
+                                <TextBlock x:Name="TxtMimeType" Text="--" FontSize="12.5" Foreground="{StaticResource TextSecondaryBrush}"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
 
                     <!-- 3. ATTRIBUTION, COPYRIGHT & CAPTION CARD -->
-                    <Border x:Name="AttributionCardBorder" Grid.Column="2" Background="#161F30" BorderBrush="#273549" BorderThickness="1" CornerRadius="12" Padding="16">
+                    <Border x:Name="AttributionCardBorder" Grid.Column="2" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="16">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -341,8 +341,8 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="Attribution &amp; Copyright" Style="{StaticResource CardTitleTextStyle}" VerticalAlignment="Center"/>
-                                <Border Grid.Column="1" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="4" Padding="7,2" VerticalAlignment="Center">
-                                    <TextBlock Text="IPTC / XMP" Style="{StaticResource BadgeTextStyle}" Foreground="#38BDF8"/>
+                                <Border Grid.Column="1" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="7,2" VerticalAlignment="Center">
+                                    <TextBlock Text="IPTC / XMP" Style="{StaticResource BadgeTextStyle}" Foreground="{StaticResource HyperlinkBrush}"/>
                                 </Border>
                             </Grid>
 
@@ -352,7 +352,7 @@
                                     <!-- Artist / Creator -->
                                     <StackPanel Margin="0,0,0,10">
                                         <TextBlock Text="ARTIST / CREATOR" Style="{StaticResource FieldLabelTextStyle}"/>
-                                        <TextBlock x:Name="TxtArtist" Text="--" FontSize="14.5" FontWeight="SemiBold" Foreground="#F8FAFC" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        <TextBlock x:Name="TxtArtist" Text="--" FontSize="14.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
                                     </StackPanel>
 
                                     <!-- Copyright / Rights -->
@@ -364,13 +364,13 @@
                                     <!-- Attribution / Credit / Source -->
                                     <StackPanel Margin="0,0,0,10">
                                         <TextBlock Text="CREDIT / ATTRIBUTION" Style="{StaticResource FieldLabelTextStyle}"/>
-                                        <TextBlock x:Name="TxtCredit" Text="--" FontSize="13.5" Foreground="#CBD5E1" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        <TextBlock x:Name="TxtCredit" Text="--" FontSize="13.5" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
                                     </StackPanel>
 
                                     <!-- Caption / Description -->
                                     <StackPanel Margin="0,0,0,10">
                                         <TextBlock Text="CAPTION / DESCRIPTION" Style="{StaticResource FieldLabelTextStyle}"/>
-                                        <TextBlock x:Name="TxtCaption" Text="--" FontSize="13.5" Foreground="#CBD5E1" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        <TextBlock x:Name="TxtCaption" Text="--" FontSize="13.5" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
                                     </StackPanel>
 
                                     <!-- Tags / Keywords -->
@@ -385,7 +385,7 @@
                 </Grid>
 
                 <!-- LOCATION & LEAFLET MAP CARD (Full Width & Taller) -->
-                <Border x:Name="GpsCardBorder" Visibility="Collapsed" Background="#161F30" BorderBrush="#273549" BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,0,24" HorizontalAlignment="Stretch">
+                <Border x:Name="GpsCardBorder" Visibility="Collapsed" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,0,24" HorizontalAlignment="Stretch">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -404,36 +404,36 @@
 
                             <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
                                 <TextBlock x:Name="TxtCoordinatesSummary" Text="No GPS Data" Style="{StaticResource AccentDataValueTextStyle}" FontSize="13" HorizontalAlignment="Right"/>
-                                <TextBlock x:Name="TxtAltitudeSummary" Text="" FontSize="12" Foreground="#94A3B8" HorizontalAlignment="Right"/>
+                                <TextBlock x:Name="TxtAltitudeSummary" Text="" FontSize="12" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Right"/>
                             </StackPanel>
                         </Grid>
 
                         <!-- Map Container / Placeholder -->
                         <Grid Grid.Row="1" MinHeight="380" Height="380">
                             <!-- Leaflet Map container (populated via JS #pw-leaflet-map) -->
-                            <Border x:Name="MapContainerBorder" CornerRadius="8" Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1">
+                            <Border x:Name="MapContainerBorder" CornerRadius="8" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1">
                                 <!-- Fallback message shown when no GPS is available -->
                                 <StackPanel x:Name="PnlNoGpsPlaceholder" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="16">
                                     <TextBlock Text="📍" FontSize="36" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                                    <TextBlock Text="No Location Data in Image" FontSize="15" FontWeight="SemiBold" Foreground="#94A3B8" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="This image does not contain embedded GPS coordinates." FontSize="12.5" Foreground="#64748B" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                    <TextBlock Text="No Location Data in Image" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="This image does not contain embedded GPS coordinates." FontSize="12.5" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                 </StackPanel>
                             </Border>
                         </Grid>
 
                         <!-- Map Action Buttons (OpenStreetMap & PeakFinderWeb) -->
                         <controls:WrapPanel x:Name="PnlMapActions" Grid.Row="2" Orientation="Horizontal" Margin="0,12,0,0" HorizontalAlignment="Right">
-                            <Button x:Name="BtnOpenOsm" Click="BtnOpenOsm_Click" Background="#1E293B" BorderBrush="#38BDF8" BorderThickness="1" Foreground="#38BDF8" FontWeight="SemiBold" FontSize="13" Padding="12,6" Margin="0,0,8,6" Cursor="Hand">
+                            <Button x:Name="BtnOpenOsm" Click="BtnOpenOsm_Click" FontWeight="SemiBold" FontSize="13" Padding="12,6" Margin="0,0,8,6" Cursor="Hand">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="🗺️ " FontSize="13"/>
-                                    <TextBlock Text="OpenStreetMap" Foreground="#38BDF8" FontWeight="SemiBold"/>
+                                    <TextBlock Text="OpenStreetMap" FontWeight="SemiBold"/>
                                 </StackPanel>
                             </Button>
 
-                            <Button x:Name="BtnOpenPeakFinder" Click="BtnOpenPeakFinder_Click" Background="#1E293B" BorderBrush="#10B981" BorderThickness="1" Foreground="#10B981" FontWeight="SemiBold" FontSize="13" Padding="12,6" Margin="0,0,0,6" Cursor="Hand">
+                            <Button x:Name="BtnOpenPeakFinder" Click="BtnOpenPeakFinder_Click" FontWeight="SemiBold" FontSize="13" Padding="12,6" Margin="0,0,0,6" Cursor="Hand">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="🏔️ " FontSize="13"/>
-                                    <TextBlock Text="PeakFinderWeb" Foreground="#10B981" FontWeight="SemiBold"/>
+                                    <TextBlock Text="PeakFinderWeb" FontWeight="SemiBold"/>
                                 </StackPanel>
                             </Button>
                         </controls:WrapPanel>
@@ -441,60 +441,60 @@
                 </Border>
 
                 <!-- METADATA TAGS SECTION -->
-                <Border x:Name="TagsSectionBorder" Background="#161F30" BorderBrush="#273549" BorderThickness="1" CornerRadius="12" Padding="20">
+                <Border x:Name="TagsSectionBorder" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
                     <StackPanel>
                         <!-- Section Header & Search Box (Wraps on small screens) -->
                         <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,16">
                             <!-- Section Title & Count -->
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,8">
                                 <TextBlock Text="Metadata Tags" Style="{StaticResource SectionHeaderTextStyle}" VerticalAlignment="Center"/>
-                                <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="12" Margin="10,0,0,0" Padding="8,2.5" VerticalAlignment="Center">
-                                    <TextBlock x:Name="TxtTagCount" Text="0 tags" Style="{StaticResource BadgeTextStyle}" Foreground="#94A3B8"/>
+                                <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="12" Margin="10,0,0,0" Padding="8,2.5" VerticalAlignment="Center">
+                                    <TextBlock x:Name="TxtTagCount" Text="0 tags" Style="{StaticResource BadgeTextStyle}" Foreground="{StaticResource TextMutedBrush}"/>
                                 </Border>
                             </StackPanel>
 
                             <!-- Search Filter Box -->
-                            <Border Background="#0F172A" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="4,2" MinWidth="220" MaxWidth="320" Margin="0,0,0,8" VerticalAlignment="Center">
+                            <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="4,2" MinWidth="220" MaxWidth="320" Margin="0,0,0,8" VerticalAlignment="Center">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="🔍 " FontSize="13" Foreground="#64748B" VerticalAlignment="Center" Margin="6,0,2,0"/>
-                                    <TextBox x:Name="TxtSearchQuery" Grid.Column="1" TextChanged="TxtSearchQuery_TextChanged" BorderThickness="0" Background="Transparent" Foreground="#F8FAFC" FontSize="13.5" Padding="4,4"/>
+                                    <TextBlock Grid.Column="0" Text="🔍 " FontSize="13" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="6,0,2,0"/>
+                                    <TextBox x:Name="TxtSearchQuery" Grid.Column="1" TextChanged="TxtSearchQuery_TextChanged" BorderThickness="0" Background="Transparent" Foreground="{StaticResource TextPrimaryBrush}" FontSize="13.5" Padding="4,4"/>
                                 </Grid>
                             </Border>
                         </controls:WrapPanel>
 
                         <!-- Group Filter Chips (Wide Screens >= 850px) -->
                         <controls:WrapPanel x:Name="PnlCategoryChips" Orientation="Horizontal" Margin="0,0,0,16">
-                            <Button x:Name="BtnFilterAll" Click="BtnFilter_Click" Tag="All" Background="#38BDF8" Foreground="#0F172A" FontSize="12" FontWeight="Bold" Padding="11,5" Margin="0,0,6,6" BorderThickness="0" Cursor="Hand">
+                            <Button x:Name="BtnFilterAll" Click="BtnFilter_Click" Tag="All" FontSize="12" FontWeight="Bold" Padding="11,5" Margin="0,0,6,6" Cursor="Hand">
                                 <TextBlock Text="All Tags" FontWeight="Bold"/>
                             </Button>
-                            <Button x:Name="BtnFilterExif" Click="BtnFilter_Click" Tag="EXIF" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontSize="12" FontWeight="SemiBold" Padding="11,5" Margin="0,0,6,6" Cursor="Hand">
+                            <Button x:Name="BtnFilterExif" Click="BtnFilter_Click" Tag="EXIF" FontSize="12" FontWeight="SemiBold" Padding="11,5" Margin="0,0,6,6" Cursor="Hand">
                                 <TextBlock Text="Camera / EXIF"/>
                             </Button>
-                            <Button x:Name="BtnFilterFile" Click="BtnFilter_Click" Tag="File" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontSize="12" FontWeight="SemiBold" Padding="11,5" Margin="0,0,6,6" Cursor="Hand">
+                            <Button x:Name="BtnFilterFile" Click="BtnFilter_Click" Tag="File" FontSize="12" FontWeight="SemiBold" Padding="11,5" Margin="0,0,6,6" Cursor="Hand">
                                 <TextBlock Text="File &amp; Image"/>
                             </Button>
-                            <Button x:Name="BtnFilterGps" Click="BtnFilter_Click" Tag="GPS" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontSize="12" FontWeight="SemiBold" Padding="11,5" Margin="0,0,6,6" Cursor="Hand">
+                            <Button x:Name="BtnFilterGps" Click="BtnFilter_Click" Tag="GPS" FontSize="12" FontWeight="SemiBold" Padding="11,5" Margin="0,0,6,6" Cursor="Hand">
                                 <TextBlock Text="GPS / Location"/>
                             </Button>
-                            <Button x:Name="BtnFilterComposite" Click="BtnFilter_Click" Tag="Composite" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontSize="12" FontWeight="SemiBold" Padding="11,5" Margin="0,0,6,6" Cursor="Hand">
+                            <Button x:Name="BtnFilterComposite" Click="BtnFilter_Click" Tag="Composite" FontSize="12" FontWeight="SemiBold" Padding="11,5" Margin="0,0,6,6" Cursor="Hand">
                                 <TextBlock Text="Composite"/>
                             </Button>
-                            <Button x:Name="BtnFilterMakerNotes" Click="BtnFilter_Click" Tag="MakerNotes" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontSize="12" FontWeight="SemiBold" Padding="11,5" Margin="0,0,6,6" Cursor="Hand">
+                            <Button x:Name="BtnFilterMakerNotes" Click="BtnFilter_Click" Tag="MakerNotes" FontSize="12" FontWeight="SemiBold" Padding="11,5" Margin="0,0,6,6" Cursor="Hand">
                                 <TextBlock Text="MakerNotes"/>
                             </Button>
-                            <Button x:Name="BtnFilterXmp" Click="BtnFilter_Click" Tag="XMP" Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Foreground="#F8FAFC" FontSize="12" FontWeight="SemiBold" Padding="11,5" Margin="0,0,0,6" Cursor="Hand">
+                            <Button x:Name="BtnFilterXmp" Click="BtnFilter_Click" Tag="XMP" FontSize="12" FontWeight="SemiBold" Padding="11,5" Margin="0,0,0,6" Cursor="Hand">
                                 <TextBlock Text="XMP / IPTC"/>
                             </Button>
                         </controls:WrapPanel>
 
                         <!-- Group Filter Menu (Small Screens < 850px) -->
-                        <Border x:Name="PnlCategoryMenu" Visibility="Collapsed" Background="#0F172A" BorderBrush="#334155" BorderThickness="1" CornerRadius="8" Padding="2" Margin="0,0,0,16">
+                        <Border x:Name="PnlCategoryMenu" Visibility="Collapsed" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="2" Margin="0,0,0,16">
                             <StackPanel>
-                                <Button x:Name="BtnCategoryMenuToggle" Click="BtnCategoryMenuToggle_Click" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="12,10" HorizontalAlignment="Stretch" Cursor="Hand">
+                                <Button x:Name="BtnCategoryMenuToggle" Click="BtnCategoryMenuToggle_Click" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,10" HorizontalAlignment="Stretch" Cursor="Hand">
                                     <Grid HorizontalAlignment="Stretch">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
@@ -503,35 +503,35 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Text="🏷️ " FontSize="13.5" VerticalAlignment="Center" Margin="0,0,6,0"/>
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="Category: " FontSize="13" Foreground="#94A3B8"/>
-                                            <TextBlock x:Name="TxtSelectedCategoryLabel" Text="All Tags" FontSize="13" FontWeight="Bold" Foreground="#38BDF8"/>
+                                            <TextBlock Text="Category: " FontSize="13" Foreground="{StaticResource TextMutedBrush}"/>
+                                            <TextBlock x:Name="TxtSelectedCategoryLabel" Text="All Tags" FontSize="13" FontWeight="Bold" Foreground="{StaticResource HyperlinkBrush}"/>
                                         </StackPanel>
-                                        <TextBlock x:Name="TxtCategoryMenuChevron" Grid.Column="2" Text="▼" FontSize="12" Foreground="#94A3B8" VerticalAlignment="Center" Margin="8,0,4,0"/>
+                                        <TextBlock x:Name="TxtCategoryMenuChevron" Grid.Column="2" Text="▼" FontSize="12" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="8,0,4,0"/>
                                     </Grid>
                                 </Button>
 
-                                <Border x:Name="PnlCategoryDropdownList" Visibility="Collapsed" Background="#0F172A" BorderThickness="0,1,0,0" BorderBrush="#273549" Padding="6,6,6,6" Margin="0,2,0,0">
+                                <Border x:Name="PnlCategoryDropdownList" Visibility="Collapsed" Background="{StaticResource SubtleCardBackgroundBrush}" BorderThickness="0,1,0,0" BorderBrush="{StaticResource SubtleCardBorderBrush}" Padding="6" Margin="0,2,0,0">
                                     <StackPanel>
-                                        <Button x:Name="BtnMenuAll" Click="BtnMenuCategory_Click" Tag="All" Background="#1E293B" BorderThickness="0" Padding="10,8" Margin="0,0,0,4" HorizontalAlignment="Stretch" Cursor="Hand">
-                                            <TextBlock Text="🌐  All Tags" Foreground="#38BDF8" FontWeight="Bold" FontSize="13" HorizontalAlignment="Left"/>
+                                        <Button x:Name="BtnMenuAll" Click="BtnMenuCategory_Click" Tag="All" BorderThickness="0" Padding="10,8" Margin="0,0,0,4" HorizontalAlignment="Stretch" Cursor="Hand">
+                                            <TextBlock Text="🌐  All Tags" FontSize="13" HorizontalAlignment="Left"/>
                                         </Button>
-                                        <Button x:Name="BtnMenuExif" Click="BtnMenuCategory_Click" Tag="EXIF" Background="#0F172A" BorderThickness="0" Padding="10,8" Margin="0,0,0,4" HorizontalAlignment="Stretch" Cursor="Hand">
-                                            <TextBlock Text="📷  Camera / EXIF" Foreground="#F8FAFC" FontSize="13" HorizontalAlignment="Left"/>
+                                        <Button x:Name="BtnMenuExif" Click="BtnMenuCategory_Click" Tag="EXIF" BorderThickness="0" Padding="10,8" Margin="0,0,0,4" HorizontalAlignment="Stretch" Cursor="Hand">
+                                            <TextBlock Text="📷  Camera / EXIF" FontSize="13" HorizontalAlignment="Left"/>
                                         </Button>
-                                        <Button x:Name="BtnMenuFile" Click="BtnMenuCategory_Click" Tag="File" Background="#0F172A" BorderThickness="0" Padding="10,8" Margin="0,0,0,4" HorizontalAlignment="Stretch" Cursor="Hand">
-                                            <TextBlock Text="📁  File &amp; Image" Foreground="#F8FAFC" FontSize="13" HorizontalAlignment="Left"/>
+                                        <Button x:Name="BtnMenuFile" Click="BtnMenuCategory_Click" Tag="File" BorderThickness="0" Padding="10,8" Margin="0,0,0,4" HorizontalAlignment="Stretch" Cursor="Hand">
+                                            <TextBlock Text="📁  File &amp; Image" FontSize="13" HorizontalAlignment="Left"/>
                                         </Button>
-                                        <Button x:Name="BtnMenuGps" Click="BtnMenuCategory_Click" Tag="GPS" Background="#0F172A" BorderThickness="0" Padding="10,8" Margin="0,0,0,4" HorizontalAlignment="Stretch" Cursor="Hand">
-                                            <TextBlock Text="📍  GPS / Location" Foreground="#F8FAFC" FontSize="13" HorizontalAlignment="Left"/>
+                                        <Button x:Name="BtnMenuGps" Click="BtnMenuCategory_Click" Tag="GPS" BorderThickness="0" Padding="10,8" Margin="0,0,0,4" HorizontalAlignment="Stretch" Cursor="Hand">
+                                            <TextBlock Text="📍  GPS / Location" FontSize="13" HorizontalAlignment="Left"/>
                                         </Button>
-                                        <Button x:Name="BtnMenuComposite" Click="BtnMenuCategory_Click" Tag="Composite" Background="#0F172A" BorderThickness="0" Padding="10,8" Margin="0,0,0,4" HorizontalAlignment="Stretch" Cursor="Hand">
-                                            <TextBlock Text="🧩  Composite" Foreground="#F8FAFC" FontSize="13" HorizontalAlignment="Left"/>
+                                        <Button x:Name="BtnMenuComposite" Click="BtnMenuCategory_Click" Tag="Composite" BorderThickness="0" Padding="10,8" Margin="0,0,0,4" HorizontalAlignment="Stretch" Cursor="Hand">
+                                            <TextBlock Text="🧩  Composite" FontSize="13" HorizontalAlignment="Left"/>
                                         </Button>
-                                        <Button x:Name="BtnMenuMakerNotes" Click="BtnMenuCategory_Click" Tag="MakerNotes" Background="#0F172A" BorderThickness="0" Padding="10,8" Margin="0,0,0,4" HorizontalAlignment="Stretch" Cursor="Hand">
-                                            <TextBlock Text="⚙️  MakerNotes" Foreground="#F8FAFC" FontSize="13" HorizontalAlignment="Left"/>
+                                        <Button x:Name="BtnMenuMakerNotes" Click="BtnMenuCategory_Click" Tag="MakerNotes" BorderThickness="0" Padding="10,8" Margin="0,0,0,4" HorizontalAlignment="Stretch" Cursor="Hand">
+                                            <TextBlock Text="⚙️  MakerNotes" FontSize="13" HorizontalAlignment="Left"/>
                                         </Button>
-                                        <Button x:Name="BtnMenuXmp" Click="BtnMenuCategory_Click" Tag="XMP" Background="#0F172A" BorderThickness="0" Padding="10,8" HorizontalAlignment="Stretch" Cursor="Hand">
-                                            <TextBlock Text="🏷️  XMP / IPTC" Foreground="#F8FAFC" FontSize="13" HorizontalAlignment="Left"/>
+                                        <Button x:Name="BtnMenuXmp" Click="BtnMenuCategory_Click" Tag="XMP" BorderThickness="0" Padding="10,8" HorizontalAlignment="Stretch" Cursor="Hand">
+                                            <TextBlock Text="🏷️  XMP / IPTC" FontSize="13" HorizontalAlignment="Left"/>
                                         </Button>
                                     </StackPanel>
                                 </Border>
@@ -539,7 +539,7 @@
                         </Border>
 
                         <!-- Tags Table Header (Visible on Wide Screens >= 850px) -->
-                        <Border x:Name="TableHeaderBorder" Background="#0F172A" BorderBrush="#273549" BorderThickness="1" CornerRadius="6,6,0,0" Padding="16,10">
+                        <Border x:Name="TableHeaderBorder" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="6,6,0,0" Padding="16,10">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="130"/>
@@ -553,25 +553,25 @@
                         </Border>
 
                         <!-- Tags Items List -->
-                        <Border Background="#111827" BorderBrush="#273549" BorderThickness="1,0,1,1" CornerRadius="0,0,6,6" MinHeight="180">
+                        <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1,0,1,1" CornerRadius="0,0,6,6" MinHeight="180">
                             <ItemsControl x:Name="TagsItemsControl" ItemTemplate="{StaticResource WideTagTemplate}"/>
                         </Border>
                     </StackPanel>
                 </Border>
 
             </StackPanel>
-        </ScrollViewer>
- 
+        </controls:ResponsiveScrollViewer>
+
         <!-- FLOATING IN-APP ABOUT WINDOW OVERLAY -->
         <Grid x:Name="AboutOverlayGrid" Grid.Row="0" Grid.RowSpan="3" Visibility="Collapsed"
-              Background="#B3090D16" Canvas.ZIndex="900">
+              Background="#80000000" Canvas.ZIndex="900">
             <controls:AboutWindowControl x:Name="AboutWindow" MaxWidth="680" MaxHeight="540" Margin="16"
                                          HorizontalAlignment="Center" VerticalAlignment="Center" />
         </Grid>
 
         <!-- FLOATING IN-APP UPDATE WINDOW OVERLAY -->
         <Grid x:Name="UpdateWindowOverlayGrid" Grid.Row="0" Grid.RowSpan="3" Visibility="Collapsed"
-              Background="#B3090D16" Canvas.ZIndex="950">
+              Background="#80000000" Canvas.ZIndex="950">
             <controls:AppUpdateWindowControl x:Name="UpdateWindowControlElement" MaxWidth="600" MaxHeight="480" Margin="16"
                                              HorizontalAlignment="Center" VerticalAlignment="Center" />
         </Grid>

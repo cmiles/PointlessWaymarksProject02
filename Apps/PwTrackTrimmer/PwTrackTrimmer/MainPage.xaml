@@ -6,15 +6,17 @@
       xmlns:controls="clr-namespace:PwTrackTrimmer.Controls"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       mc:Ignorable="d"
-      Foreground="#F8FAFC">
+      Foreground="{StaticResource TextPrimaryBrush}">
 
-    <Grid x:Name="OuterRootGrid" Background="#0F172A">
+    <Grid x:Name="OuterRootGrid" Background="{StaticResource AppBackgroundBrush}">
         <!-- Main Scrollable App Content -->
-        <ScrollViewer x:Name="RootScrollViewer"
-                      HorizontalScrollBarVisibility="Disabled"
-                      VerticalScrollBarVisibility="Disabled"
-                      BorderThickness="0">
-            <Grid x:Name="RootLayoutGrid" Background="#0F172A">
+        <controls:ResponsiveScrollViewer x:Name="RootScrollViewer"
+                                         HorizontalScrollBarVisibility="Disabled"
+                                         VerticalScrollBarVisibility="Disabled"
+                                         CompactWidthThreshold="850"
+                                         BorderThickness="0"
+                                         Background="{StaticResource AppBackgroundBrush}">
+            <Grid x:Name="RootLayoutGrid" Background="{StaticResource AppBackgroundBrush}">
                 <!-- Main Application Layout Rows -->
                 <Grid.RowDefinitions>
                     <!-- 0: App Header & Menu Bar -->
@@ -30,14 +32,14 @@
                 </Grid.RowDefinitions>
 
                 <!-- Row 0: App Header & Menu Toolbar -->
-                <Border Grid.Row="0" x:Name="TopBarBorder" Background="#090D16" BorderBrush="#1E293B" BorderThickness="0,0,0,1" Padding="14,6">
+                <Border Grid.Row="0" x:Name="TopBarBorder" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="0,0,0,1" Padding="14,6">
                     <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <!-- App Branding -->
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,20,4">
-                            <TextBlock Text="Track Trimmer - " FontSize="15" FontWeight="Bold" Foreground="#F8FAFC" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="TxtAppTitle" Text="Track Trimmer - " FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                             <HyperlinkButton Content="Charles Miles" NavigateUri="https://cmiles.info" TargetName="_blank"
                                              Click="Hyperlink_Click"
-                                             FontSize="15" FontWeight="Bold" Foreground="#38BDF8"
+                                             FontSize="15" FontWeight="Bold" Foreground="{StaticResource HyperlinkBrush}"
                                              Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
                         </StackPanel>
 
@@ -51,70 +53,59 @@
                                     Background="#EF4444" Foreground="#FFFFFF" BorderBrush="#DC2626" BorderThickness="1"
                                     CornerRadius="4" Padding="10,5" FontWeight="Bold" FontSize="11" Cursor="Hand"
                                     ToolTipService.ToolTip="Discard changes and return to calling application without saving"/>
-                            <Border Width="1" Background="#334155" Height="20" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                            <Border Width="1" Background="{StaticResource DividerBrush}" Height="20" Margin="6,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
 
                         <!-- Open -->
                         <Button Content="📂 Open Track (.fit, .tcx, .gpx)" Command="{Binding LoadFileCommand}"
-                                Background="#1E293B" Foreground="#38BDF8" BorderBrush="#334155" BorderThickness="1"
-                                CornerRadius="4" Padding="10,5" Margin="0,4,16,4" FontWeight="SemiBold" Cursor="Hand"
+                                Padding="10,5" Margin="0,4,16,4" FontWeight="SemiBold" Cursor="Hand"
                                 VerticalAlignment="Center"/>
+
+                        <!-- Compact Top-Bar Activity Spinner -->
+                        <StackPanel Orientation="Horizontal" Visibility="{Binding LoadingVisibility}" Margin="0,4,16,4" VerticalAlignment="Center">
+                            <controls:LoadingSpinner SpinnerSize="16" StrokeThickness="2.2" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding BusyStatus, FallbackValue='Loading...'}" FontSize="11" FontWeight="SemiBold" 
+                                       Foreground="{StaticResource SkyAccentBrush}" VerticalAlignment="Center" MaxWidth="160" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
 
                         <!-- Export Options -->
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,16,4">
-                            <TextBlock Text="EXPORT:" FontSize="10" FontWeight="Bold" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock x:Name="TxtExportLabel" Text="EXPORT:" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
                             <Button Content="💾 GPX" Command="{Binding ExportGpxCommand}"
-                                    Background="#1E293B" Foreground="#34D399" BorderBrush="#334155" BorderThickness="1"
-                                    CornerRadius="4" Padding="8,4" Margin="0,0,4,0" FontWeight="SemiBold" Cursor="Hand"/>
+                                    Padding="8,4" Margin="0,0,4,0" FontWeight="SemiBold" Cursor="Hand"/>
                             <Button Content="💾 TCX" Command="{Binding ExportTcxCommand}"
-                                    Background="#1E293B" Foreground="#34D399" BorderBrush="#334155" BorderThickness="1"
-                                    CornerRadius="4" Padding="8,4" Margin="0,0,4,0" FontWeight="SemiBold" Cursor="Hand"/>
+                                    Padding="8,4" Margin="0,0,4,0" FontWeight="SemiBold" Cursor="Hand"/>
                             <Button Content="💾 FIT" Command="{Binding ExportFitCommand}"
-                                    Background="#1E293B" Foreground="#34D399" BorderBrush="#334155" BorderThickness="1"
-                                    CornerRadius="4" Padding="8,4" Margin="0,0,0,0" FontWeight="SemiBold" Cursor="Hand"/>
+                                    Padding="8,4" Margin="0,0,0,0" FontWeight="SemiBold" Cursor="Hand"/>
                         </StackPanel>
 
                         <!-- Edit Operations -->
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,16,4">
-                            <TextBlock Text="EDIT:" FontSize="10" FontWeight="Bold" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock x:Name="TxtEditLabel" Text="EDIT:" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
                             <Button Content="↶ Undo" Command="{Binding UndoCommand}"
-                                    Background="#1E293B" Foreground="#E2E8F0" BorderBrush="#334155" BorderThickness="1"
-                                    CornerRadius="4" Padding="8,4" Margin="0,0,4,0" FontWeight="SemiBold" Cursor="Hand"
+                                    Padding="8,4" Margin="0,0,4,0" FontWeight="SemiBold" Cursor="Hand"
                                     ToolTipService.ToolTip="Undo last edit operation"/>
                             <Button Content="↷ Redo" Command="{Binding RedoCommand}"
-                                    Background="#1E293B" Foreground="#E2E8F0" BorderBrush="#334155" BorderThickness="1"
-                                    CornerRadius="4" Padding="8,4" Margin="0,0,0,0" FontWeight="SemiBold" Cursor="Hand"
+                                    Padding="8,4" Margin="0,0,0,0" FontWeight="SemiBold" Cursor="Hand"
                                     ToolTipService.ToolTip="Redo last undone edit operation"/>
                         </StackPanel>
 
                         <!-- Right Toolbar Actions: Tools Menu & About -->
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,0,4">
                             <!-- Hamburger / Tools Menu Button -->
-                            <Button x:Name="BtnTools" Command="{Binding ToggleToolsMenuCommand}" Click="ToolsButton_Click"
-                                    Background="#1E293B" BorderBrush="#38BDF8" BorderThickness="1"
-                                    CornerRadius="4" Padding="10,5" Margin="0,0,8,0" Cursor="Hand"
-                                    ToolTipService.ToolTip="Tools &amp; Actions Menu">
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="☰" FontSize="13" FontWeight="Bold" Foreground="#38BDF8" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                    <TextBlock Text="Tools" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
+                            <Button x:Name="BtnTools" Content="☰ Tools" Command="{Binding ToggleToolsMenuCommand}" Click="ToolsButton_Click"
+                                    Padding="10,5" Margin="0,0,8,0" FontSize="11" FontWeight="SemiBold" Cursor="Hand"
+                                    ToolTipService.ToolTip="Tools &amp; Actions Menu"/>
 
                             <!-- About Button -->
-                            <Button Command="{Binding ToggleAboutWindowCommand}"
-                                    Background="#1E293B" BorderBrush="#334155" BorderThickness="1"
-                                    CornerRadius="4" Padding="10,5" Cursor="Hand"
-                                    ToolTipService.ToolTip="About Pointless Waymarks Track Trimmer">
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="ℹ️ About" FontSize="11" FontWeight="SemiBold"/>
-                                </StackPanel>
-                            </Button>
+                            <Button Content="ℹ️ About" Command="{Binding ToggleAboutWindowCommand}"
+                                    Padding="10,5" FontSize="11" FontWeight="SemiBold" Cursor="Hand"
+                                    ToolTipService.ToolTip="About Pointless Waymarks Track Trimmer"/>
 
                             <!-- Theme Toggle Button -->
                             <Button x:Name="BtnThemeToggle" Click="BtnThemeToggle_Click"
                                     Width="135" HorizontalContentAlignment="Center"
-                                    Background="#1E293B" BorderBrush="#334155" BorderThickness="1"
-                                    CornerRadius="4" Padding="6,5" Margin="8,0,0,0" Cursor="Hand"
+                                    Padding="6,5" Margin="8,0,0,0" Cursor="Hand"
                                     ToolTipService.ToolTip="Toggle theme (System / Dark / Light)">
                                 <TextBlock x:Name="TxtThemeToggle" Text="🌓 Theme" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center"/>
                             </Button>
@@ -140,19 +131,19 @@
                     <controls:MapControl Grid.Column="0" x:Name="MapControlElement" />
 
                     <!-- Vertical/Horizontal GridSplitter -->
-                    <GridSplitter Grid.Column="1" x:Name="MainAreaSplitter" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="#1E293B" />
+                    <GridSplitter Grid.Column="1" x:Name="MainAreaSplitter" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="{StaticResource CardBorderBrush}" />
 
                     <!-- Points List (Beside map, or wrapped under map) -->
                     <controls:PointsGridControl Grid.Column="2" x:Name="PointsGridControlElement" />
                 </Grid>
 
                 <!-- Row 3: Horizontal GridSplitter -->
-                <GridSplitter Grid.Row="3" x:Name="BottomAreaSplitter" Height="4" HorizontalAlignment="Stretch" Background="#1E293B" VerticalAlignment="Stretch" />
+                <GridSplitter Grid.Row="3" x:Name="BottomAreaSplitter" Height="4" HorizontalAlignment="Stretch" Background="{StaticResource CardBorderBrush}" VerticalAlignment="Stretch" />
 
                 <!-- Bottom Area: Elevation Graph & Track Trimmer -->
                 <controls:ElevationChartControl Grid.Row="4" x:Name="ElevationChartControlElement" />
             </Grid>
-        </ScrollViewer>
+        </controls:ResponsiveScrollViewer>
 
         <!-- FLOATING IN-APP TOOLS & ACTIONS DROPDOWN MENU BACKDROP -->
         <Grid Visibility="{Binding ToolsMenuVisibility}" Canvas.ZIndex="600">
@@ -173,8 +164,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="☰" FontSize="12" FontWeight="Bold" Foreground="#38BDF8" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="TOOLS &amp; ACTIONS" FontSize="11" FontWeight="Bold" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                            <TextBlock Text="☰ TOOLS &amp; ACTIONS" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
                         </StackPanel>
                         <Button Grid.Column="1" Content="✕" Command="{Binding CloseToolsMenuCommand}"
                                 Background="#1E293B" Foreground="#94A3B8" BorderThickness="0" CornerRadius="4"

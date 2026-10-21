@@ -3,8 +3,6 @@ using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
-using WaterDaze.Services;
 using WaterDaze.ViewModels;
 
 namespace WaterDaze.Controls
@@ -24,25 +22,17 @@ namespace WaterDaze.Controls
 
         private void AppUpdateWindowControl_Loaded(object sender, RoutedEventArgs e)
         {
-            ThemeManager.ThemeChanged += OnThemeChanged;
-            ApplyTheme(ThemeManager.IsDark);
             HookDataContext();
         }
 
         private void AppUpdateWindowControl_Unloaded(object sender, RoutedEventArgs e)
         {
-            ThemeManager.ThemeChanged -= OnThemeChanged;
             UnhookDataContext();
         }
 
         private void AppUpdateWindowControl_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             HookDataContext();
-        }
-
-        private void OnThemeChanged(object? sender, bool isDark)
-        {
-            Dispatcher.BeginInvoke(() => ApplyTheme(isDark));
         }
 
         private void HookDataContext()
@@ -79,17 +69,6 @@ namespace WaterDaze.Controls
                     Dispatcher.BeginInvoke(() => UpdateProgressBar(vm.UpdateDownloadPercent));
                 }
             }
-            else if (e.PropertyName == nameof(MainViewModel.IsUpdateWindowOpen))
-            {
-                if (DataContext is MainViewModel vm && vm.IsUpdateWindowOpen)
-                {
-                    Dispatcher.BeginInvoke(() =>
-                    {
-                        ApplyTheme(ThemeManager.IsDark);
-                        UpdateProgressBar(vm.UpdateDownloadPercent);
-                    });
-                }
-            }
         }
 
         public void UpdateProgressBar(double percent)
@@ -101,180 +80,6 @@ namespace WaterDaze.Controls
 
             ColProgressFill.Width = new GridLength(clamped, GridUnitType.Star);
             ColProgressRemaining.Width = new GridLength(remaining, GridUnitType.Star);
-        }
-
-        public void ApplyTheme(bool isDark)
-        {
-            if (WindowRootBorder == null) return;
-
-            if (isDark)
-            {
-                // DARK MODE
-                WindowRootBorder.Background = ThemeManager.BrushDarkCardBg;      // #1E293B
-                WindowRootBorder.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 56, 189, 248)); // #38BDF8
-
-                if (HeaderBorder != null)
-                {
-                    HeaderBorder.Background = ThemeManager.BrushDarkSubCardBg;    // #162032
-                    HeaderBorder.BorderBrush = ThemeManager.BrushDarkCardBorder;   // #334155
-                }
-                if (HeaderTitleText != null) HeaderTitleText.Foreground = ThemeManager.BrushDarkTextPrimary; // #F8FAFC
-                if (BtnCloseHeader != null)
-                {
-                    BtnCloseHeader.Background = ThemeManager.BrushDarkControlBorder;
-                    BtnCloseHeader.Foreground = ThemeManager.BrushDarkTextSecondary;
-                }
-
-                if (BodyScrollViewer != null) BodyScrollViewer.Background = ThemeManager.BrushDarkPageBg; // #0F172A
-
-                if (MainCardBorder != null)
-                {
-                    MainCardBorder.Background = ThemeManager.BrushDarkCardBg;
-                    MainCardBorder.BorderBrush = ThemeManager.BrushDarkCardBorder;
-                }
-                if (UpdateStatusTextBlock != null) UpdateStatusTextBlock.Foreground = ThemeManager.BrushDarkTextSecondary;
-
-                if (CurrentVersionBox != null)
-                {
-                    CurrentVersionBox.Background = ThemeManager.BrushDarkSubCardBg;
-                    CurrentVersionBox.BorderBrush = ThemeManager.BrushDarkCardBorder;
-                }
-                if (CurrentVersionLabelText != null) CurrentVersionLabelText.Foreground = ThemeManager.BrushDarkTextMuted;
-                if (CurrentVersionValueText != null) CurrentVersionValueText.Foreground = ThemeManager.BrushDarkTextPrimary;
-                if (VersionArrowText != null) VersionArrowText.Foreground = new SolidColorBrush(Color.FromArgb(255, 56, 189, 248));
-
-                if (NewVersionBox != null)
-                {
-                    NewVersionBox.Background = new SolidColorBrush(Color.FromArgb(255, 6, 78, 59));
-                    NewVersionBox.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 5, 150, 105));
-                }
-                if (NewVersionLabelText != null) NewVersionLabelText.Foreground = new SolidColorBrush(Color.FromArgb(255, 167, 243, 208));
-                if (NewVersionValueText != null) NewVersionValueText.Foreground = new SolidColorBrush(Color.FromArgb(255, 52, 211, 153));
-
-                if (InfoCardBorder != null)
-                {
-                    InfoCardBorder.Background = ThemeManager.BrushDarkCardBg;
-                    InfoCardBorder.BorderBrush = ThemeManager.BrushDarkCardBorder;
-                }
-                if (InfoPackageLabelText != null) InfoPackageLabelText.Foreground = ThemeManager.BrushDarkTextMuted;
-                if (InfoPackageValueText != null) InfoPackageValueText.Foreground = new SolidColorBrush(Color.FromArgb(255, 56, 189, 248));
-                if (InfoExplanationText != null) InfoExplanationText.Foreground = ThemeManager.BrushDarkTextMuted;
-
-                if (ProgressCardBorder != null)
-                {
-                    ProgressCardBorder.Background = ThemeManager.BrushDarkCardBg;
-                    ProgressCardBorder.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 56, 189, 248));
-                }
-                if (ProgressStatusText != null) ProgressStatusText.Foreground = new SolidColorBrush(Color.FromArgb(255, 56, 189, 248));
-                if (ProgressPercentText != null) ProgressPercentText.Foreground = new SolidColorBrush(Color.FromArgb(255, 56, 189, 248));
-                if (ProgressBarTrack != null)
-                {
-                    ProgressBarTrack.Background = ThemeManager.BrushDarkSubCardBg;
-                    ProgressBarTrack.BorderBrush = ThemeManager.BrushDarkDivider;
-                }
-                if (ProgressBarFill != null) ProgressBarFill.Background = new SolidColorBrush(Color.FromArgb(255, 2, 132, 199));
-
-                if (FooterBorder != null)
-                {
-                    FooterBorder.Background = ThemeManager.BrushDarkSubCardBg;
-                    FooterBorder.BorderBrush = ThemeManager.BrushDarkDivider;
-                }
-                if (BtnDismiss != null)
-                {
-                    BtnDismiss.Background = ThemeManager.BrushDarkControlBorder;
-                    BtnDismiss.BorderBrush = ThemeManager.BrushDarkControlBorder;
-                    BtnDismiss.Foreground = ThemeManager.BrushDarkTextPrimary;
-                }
-                if (BtnUpdate != null)
-                {
-                    BtnUpdate.Background = new SolidColorBrush(Color.FromArgb(255, 2, 132, 199));
-                    BtnUpdate.Foreground = ThemeManager.BrushWhite;
-                }
-            }
-            else
-            {
-                // LIGHT MODE
-                WindowRootBorder.Background = ThemeManager.BrushLightCardBg;       // #FFFFFF
-                WindowRootBorder.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 2, 132, 199)); // #0284C7
-
-                if (HeaderBorder != null)
-                {
-                    HeaderBorder.Background = ThemeManager.BrushLightSubCardBg;    // #F3F4F6
-                    HeaderBorder.BorderBrush = ThemeManager.BrushLightCardBorder;   // #E5E7EB
-                }
-                if (HeaderTitleText != null) HeaderTitleText.Foreground = ThemeManager.BrushLightTextPrimary; // #111827
-                if (BtnCloseHeader != null)
-                {
-                    BtnCloseHeader.Background = ThemeManager.BrushLightCardBorder;
-                    BtnCloseHeader.Foreground = ThemeManager.BrushLightTextSecondary;
-                }
-
-                if (BodyScrollViewer != null) BodyScrollViewer.Background = ThemeManager.BrushLightPageBg; // #F9FAFB
-
-                if (MainCardBorder != null)
-                {
-                    MainCardBorder.Background = ThemeManager.BrushLightCardBg;
-                    MainCardBorder.BorderBrush = ThemeManager.BrushLightCardBorder;
-                }
-                if (UpdateStatusTextBlock != null) UpdateStatusTextBlock.Foreground = ThemeManager.BrushLightTextSecondary;
-
-                if (CurrentVersionBox != null)
-                {
-                    CurrentVersionBox.Background = ThemeManager.BrushLightSubCardBg;
-                    CurrentVersionBox.BorderBrush = ThemeManager.BrushLightSubCardBorder;
-                }
-                if (CurrentVersionLabelText != null) CurrentVersionLabelText.Foreground = ThemeManager.BrushLightTextMuted;
-                if (CurrentVersionValueText != null) CurrentVersionValueText.Foreground = ThemeManager.BrushLightTextPrimary;
-                if (VersionArrowText != null) VersionArrowText.Foreground = new SolidColorBrush(Color.FromArgb(255, 2, 132, 199));
-
-                if (NewVersionBox != null)
-                {
-                    NewVersionBox.Background = new SolidColorBrush(Color.FromArgb(255, 236, 253, 245)); // Mint 50
-                    NewVersionBox.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 5, 150, 105));
-                }
-                if (NewVersionLabelText != null) NewVersionLabelText.Foreground = new SolidColorBrush(Color.FromArgb(255, 4, 120, 87));
-                if (NewVersionValueText != null) NewVersionValueText.Foreground = new SolidColorBrush(Color.FromArgb(255, 5, 150, 105));
-
-                if (InfoCardBorder != null)
-                {
-                    InfoCardBorder.Background = ThemeManager.BrushLightCardBg;
-                    InfoCardBorder.BorderBrush = ThemeManager.BrushLightCardBorder;
-                }
-                if (InfoPackageLabelText != null) InfoPackageLabelText.Foreground = ThemeManager.BrushLightTextMuted;
-                if (InfoPackageValueText != null) InfoPackageValueText.Foreground = new SolidColorBrush(Color.FromArgb(255, 2, 132, 199));
-                if (InfoExplanationText != null) InfoExplanationText.Foreground = ThemeManager.BrushLightTextMuted;
-
-                if (ProgressCardBorder != null)
-                {
-                    ProgressCardBorder.Background = ThemeManager.BrushLightCardBg;
-                    ProgressCardBorder.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 2, 132, 199));
-                }
-                if (ProgressStatusText != null) ProgressStatusText.Foreground = new SolidColorBrush(Color.FromArgb(255, 2, 132, 199));
-                if (ProgressPercentText != null) ProgressPercentText.Foreground = new SolidColorBrush(Color.FromArgb(255, 2, 132, 199));
-                if (ProgressBarTrack != null)
-                {
-                    ProgressBarTrack.Background = ThemeManager.BrushLightSubCardBg;
-                    ProgressBarTrack.BorderBrush = ThemeManager.BrushLightSubCardBorder;
-                }
-                if (ProgressBarFill != null) ProgressBarFill.Background = new SolidColorBrush(Color.FromArgb(255, 2, 132, 199));
-
-                if (FooterBorder != null)
-                {
-                    FooterBorder.Background = ThemeManager.BrushLightSubCardBg;
-                    FooterBorder.BorderBrush = ThemeManager.BrushLightDivider;
-                }
-                if (BtnDismiss != null)
-                {
-                    BtnDismiss.Background = ThemeManager.BrushLightCardBorder;
-                    BtnDismiss.BorderBrush = ThemeManager.BrushLightSubCardBorder;
-                    BtnDismiss.Foreground = ThemeManager.BrushLightTextPrimary;
-                }
-                if (BtnUpdate != null)
-                {
-                    BtnUpdate.Background = new SolidColorBrush(Color.FromArgb(255, 2, 132, 199));
-                    BtnUpdate.Foreground = ThemeManager.BrushWhite;
-                }
-            }
         }
 
         private void UpdateNow_Click(object sender, RoutedEventArgs e)

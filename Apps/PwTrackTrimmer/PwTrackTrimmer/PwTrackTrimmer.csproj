@@ -10,6 +10,7 @@
     <PackageReference Include="Garmin.FIT.Sdk" Version="21.217.0" />
     <PackageReference Include="NetTopologySuite.IO.GPX" Version="1.1.1" />
     <PackageReference Include="OpenSilver" Version="3.3.3" />
+    <PackageReference Include="OpenSilver.Themes.Modern" Version="3.3.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -41,6 +42,15 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\AppUpdateWindowControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ResponsiveScrollBarDictionary.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\LightTheme.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\DarkTheme.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:HistoricTempests.Controls"
              Height="280">
-    <Border x:Name="ChartCardBorder" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="10" Padding="16">
+    <Border x:Name="ChartCardBorder" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -18,8 +18,8 @@
             <!-- Chart Header & Legend (Wraps dynamically) -->
             <controls:WrapPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,12" Orientation="Horizontal">
                 <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,6">
-                    <TextBlock Text="Recent 14 Days Temperature Range &amp; Rain" FontSize="14" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center" Margin="0,0,8,0" TextWrapping="Wrap" />
-                    <TextBlock x:Name="UnitSubtitle" Text="(°F)" FontSize="12" Foreground="#64748B" VerticalAlignment="Center" />
+                    <TextBlock Text="Recent 14 Days Temperature Range &amp; Rain" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" VerticalAlignment="Center" Margin="0,0,8,0" TextWrapping="Wrap" />
+                    <TextBlock x:Name="UnitSubtitle" Text="(°F)" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
                 </controls:WrapPanel>
 
                 <!-- Legends -->

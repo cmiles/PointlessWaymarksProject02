@@ -6,6 +6,7 @@
       xmlns:controls="clr-namespace:WaterDaze.Controls"
       xmlns:viewmodels="clr-namespace:WaterDaze.ViewModels"
       mc:Ignorable="d"
+      Background="{StaticResource AppBackgroundBrush}"
       Foreground="{StaticResource TextPrimaryBrush}">
 
     <Page.Resources>
@@ -37,45 +38,15 @@
         </Style>
 
         <!-- Ranking Card Style -->
-        <Style x:Key="RankingCardBorderStyle" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
+        <Style x:Key="RankingCardBorderStyle" TargetType="Border" BasedOn="{StaticResource CardBorderStyle}">
             <Setter Property="Padding" Value="16" />
-            <Setter Property="Margin" Value="0,0,0,12" />
         </Style>
 
         <Style x:Key="RankingTitleStyle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="14" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
             <Setter Property="TextWrapping" Value="Wrap" />
             <Setter Property="Margin" Value="0,0,0,10" />
-        </Style>
-
-        <!-- Modern Action Button Style (no gradient overlay) -->
-        <Style x:Key="ActionButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource ActionButtonBackgroundBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource ActionButtonBorderBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource ActionButtonForegroundBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
         </Style>
 
         <!-- HyperlinkButton Style -->
@@ -87,7 +58,7 @@
     </Page.Resources>
 
     <Grid x:Name="LayoutRoot">
-        <ScrollViewer x:Name="MainScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="{StaticResource AppBackgroundBrush}">
+        <controls:ResponsiveScrollViewer x:Name="MainScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="{StaticResource AppBackgroundBrush}">
             <StackPanel MaxWidth="1180" HorizontalAlignment="Center" Margin="8,16,8,40">
 
             <!-- 1. HEADER & GAUGE SELECTOR -->
@@ -110,30 +81,18 @@
                     <WrapPanel VerticalAlignment="Center" Margin="0,0,0,8">
                         <TextBlock Text="Select USGS Gauge:" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextLabelBrush}" VerticalAlignment="Center" Margin="0,0,10,8" />
                         <ComboBox x:Name="CmbSites" MinWidth="180" MaxWidth="420" Height="34"
-                                  Background="{StaticResource ControlBackgroundBrush}"
-                                  BorderBrush="{StaticResource ControlBorderBrush}"
-                                  Foreground="{StaticResource ControlForegroundBrush}"
                                   ItemsSource="{Binding AvailableSites}"
                                   SelectedItem="{Binding SelectedSite, Mode=TwoWay}"
                                   DisplayMemberPath="DisplayTitle"
-                                  VerticalAlignment="Center" Margin="0,0,12,8">
-                            <ComboBox.ItemContainerStyle>
-                                <Style TargetType="ComboBoxItem">
-                                    <Setter Property="Background" Value="{StaticResource ControlBackgroundBrush}" />
-                                    <Setter Property="Foreground" Value="{StaticResource ControlForegroundBrush}" />
-                                </Style>
-                            </ComboBox.ItemContainerStyle>
-                        </ComboBox>
+                                  VerticalAlignment="Center" Margin="0,0,12,8" />
                         <!-- Desktop Action Buttons -->
                         <WrapPanel x:Name="PanelDesktopActions" VerticalAlignment="Center">
                             <Button x:Name="BtnRefresh" Content="Refresh Data" Command="{Binding RefreshCommand}" 
-                                    Style="{StaticResource ActionButtonStyle}"
                                     Height="34" Padding="14,0,14,0" 
                                     VerticalAlignment="Center" Margin="0,0,12,8" />
 
                             <!-- Updates Button -->
                             <Button x:Name="BtnUpdates" Command="{Binding CheckForUpdatesManualCommand}" Click="BtnUpdates_Click"
-                                    Style="{StaticResource ActionButtonStyle}"
                                     Height="34" Padding="12,0"
                                     VerticalAlignment="Center" Margin="0,0,12,8"
                                     ToolTipService.ToolTip="Check online catalog for software updates">
@@ -145,7 +104,6 @@
 
                             <!-- Theme Toggle Button -->
                             <Button x:Name="BtnThemeToggle" Click="BtnThemeToggle_Click"
-                                    Style="{StaticResource ActionButtonStyle}"
                                     Width="145" Height="34" Padding="8,0"
                                     HorizontalContentAlignment="Center"
                                     VerticalAlignment="Center" Margin="0,0,0,8"
@@ -156,7 +114,6 @@
 
                         <!-- Mobile Hamburger Button -->
                         <Button x:Name="BtnHamburger" Click="BtnHamburger_Click"
-                                Style="{StaticResource ActionButtonStyle}"
                                 Width="44" Height="34" Padding="0"
                                 HorizontalContentAlignment="Center"
                                 VerticalAlignment="Center" Margin="0,0,0,8"
@@ -174,10 +131,8 @@
                             Visibility="Collapsed">
                         <StackPanel>
                             <Button x:Name="BtnRefreshMobile" Content="↻ Refresh Data" Command="{Binding RefreshCommand}" Click="MobileMenuAction_Click"
-                                    Style="{StaticResource ActionButtonStyle}"
                                     Height="36" Margin="0,0,0,8" HorizontalContentAlignment="Center" />
                             <Button x:Name="BtnUpdatesMobile" Command="{Binding CheckForUpdatesManualCommand}" Click="BtnUpdatesMobile_Click"
-                                    Style="{StaticResource ActionButtonStyle}"
                                     Height="36" Margin="0,0,0,8" HorizontalContentAlignment="Center"
                                     ToolTipService.ToolTip="Check online catalog for software updates">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
@@ -186,7 +141,6 @@
                                 </StackPanel>
                             </Button>
                             <Button x:Name="BtnThemeToggleMobile" Click="BtnThemeToggle_Click"
-                                    Style="{StaticResource ActionButtonStyle}"
                                     Height="36" Margin="0,0,0,0" HorizontalContentAlignment="Center"
                                     ToolTipService.ToolTip="Cycle theme: System (Auto) -> Dark -> Light">
                                 <TextBlock x:Name="TxtThemeToggleMobile" Text="🌓 Theme" VerticalAlignment="Center" HorizontalAlignment="Center" />
@@ -493,7 +447,7 @@
             </Border>
 
         </StackPanel>
-    </ScrollViewer>
+    </controls:ResponsiveScrollViewer>
 
     <!-- Loading Banner -->
     <Border x:Name="LoadingBanner" Background="{StaticResource LoadingOverlayBackgroundBrush}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Visibility="Collapsed">

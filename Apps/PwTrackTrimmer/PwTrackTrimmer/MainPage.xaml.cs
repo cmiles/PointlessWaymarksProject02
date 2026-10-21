@@ -15,11 +15,15 @@ namespace PwTrackTrimmer
     {
         public TrackTrimmerViewModel ViewModel { get; }
 
-        public MainPage()
+        public MainPage() : this(null)
+        {
+        }
+
+        public MainPage(TrackTrimmerViewModel? existingVm)
         {
             this.InitializeComponent();
 
-            ViewModel = new TrackTrimmerViewModel();
+            ViewModel = existingVm ?? new TrackTrimmerViewModel();
             this.DataContext = ViewModel;
             ViewModel.PropertyChanged += (s, e) =>
             {
@@ -37,13 +41,15 @@ namespace PwTrackTrimmer
                 SetupFileDragAndDrop();
                 InjectGlobalCaretStyles();
                 ThemeManager.Current.ThemeChanged += (_, _) => ApplyTheme();
-                ThemeManager.Current.Initialize();
                 ApplyTheme();
                 Dispatcher.BeginInvoke(() =>
                 {
                     ApplyTheme();
                     UpdateResponsiveLayout(this.ActualWidth);
-                    _ = ViewModel.CheckForUpdatesAsync(silent: true);
+                    if (existingVm == null)
+                    {
+                        _ = ViewModel.CheckForUpdatesAsync(silent: true);
+                    }
                 });
             };
         }
@@ -188,6 +194,8 @@ namespace PwTrackTrimmer
         {
             if (width <= 0) return;
 
+            RootScrollViewer?.UpdateLayoutState(width);
+
             bool shouldBeNarrow = width < NarrowLayoutBreakpoint;
             if (shouldBeNarrow == _isNarrowLayout && _layoutInitialized)
             {
@@ -227,6 +235,8 @@ namespace PwTrackTrimmer
                 if (RootScrollViewer != null)
                 {
                     RootScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+                    RootScrollViewer.UpdateLayoutState(width);
+                    Dispatcher.BeginInvoke(() => RootScrollViewer.UpdateLayoutState(width));
                 }
 
                 if (RowMainArea != null)
@@ -263,6 +273,7 @@ namespace PwTrackTrimmer
                 {
                     RootScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
                     RootScrollViewer.ScrollToVerticalOffset(0);
+                    RootScrollViewer.UpdateLayoutState(width);
                 }
 
                 if (RowMainArea != null)
@@ -350,322 +361,8 @@ namespace PwTrackTrimmer
                 TxtThemeToggle.Text = ThemeManager.Current.ThemeButtonLabel;
             }
 
-            bool isDark = ThemeManager.Current.IsDark;
-
-            this.Background = ThemeManager.Current.PageBackground;
-
-            if (OuterRootGrid != null)
-            {
-                OuterRootGrid.Background = ThemeManager.Current.PageBackground;
-            }
-
-            if (RootScrollViewer != null)
-            {
-                RootScrollViewer.Background = ThemeManager.Current.PageBackground;
-            }
-
-            if (TopBarBorder != null)
-            {
-                TopBarBorder.Background = isDark ? ThemeManager.BrushDarkTopBarBg : ThemeManager.BrushLightTopBarBg;
-                TopBarBorder.BorderBrush = isDark ? ThemeManager.BrushDarkDivider : ThemeManager.BrushLightDivider;
-            }
-
-            if (OuterRootGrid != null)
-            {
-                OuterRootGrid.Background = ThemeManager.Current.PageBackground;
-                ApplyThemeToTree(OuterRootGrid, isDark);
-            }
-            else if (RootLayoutGrid != null)
-            {
-                RootLayoutGrid.Background = ThemeManager.Current.PageBackground;
-                ApplyThemeToTree(RootLayoutGrid, isDark);
-            }
-
-            if (ToolsMenuCard != null)
-            {
-                ApplyThemeToTree(ToolsMenuCard, isDark);
-            }
-
-            if (UpdateWindowOverlayGrid != null)
-            {
-                UpdateWindowOverlayGrid.Background = isDark 
-                    ? new SolidColorBrush(Color.FromArgb(153, 9, 13, 22)) 
-                    : new SolidColorBrush(Color.FromArgb(120, 15, 23, 42));
-            }
-
-            if (UpdateWindowControlElement != null)
-            {
-                UpdateWindowControlElement.ApplyTheme(isDark);
-            }
-
             ElevationChartControlElement?.Redraw();
         }
 
-        private void ApplyThemeToButton(Button btn, bool isDark)
-        {
-            if (!_originalDarkBrushes.ContainsKey(btn))
-            {
-                _originalDarkBrushes[btn] = (btn.Background, btn.BorderBrush, btn.Foreground);
-            }
-
-            var (darkBg, darkBorder, darkFg) = _originalDarkBrushes[btn];
-
-            // Primary accent buttons (Confirm & Save green, Cancel red, Apply blue, etc.) retain their distinct colors
-            if (darkBg is SolidColorBrush scbBg)
-            {
-                if (IsColor(scbBg, 16, 185, 129) || IsColor(scbBg, 239, 68, 68) ||
-                    IsColor(scbBg, 153, 27, 27) || IsColor(scbBg, 220, 38, 38) ||
-                    IsColor(scbBg, 2, 132, 199) || IsColor(scbBg, 3, 105, 161))
-                {
-                    btn.Background = darkBg;
-                    btn.BorderBrush = darkBorder;
-                    btn.Foreground = darkFg ?? new SolidColorBrush(Colors.White);
-                    return;
-                }
-            }
-
-            if (!isDark)
-            {
-                btn.Background = ThemeManager.BrushLightSubCardBg;
-
-                if (darkBorder is SolidColorBrush scbBorder && IsColor(scbBorder, 56, 189, 248)) // #38BDF8 (Tools button)
-                {
-                    btn.BorderBrush = ThemeManager.BrushSkyAccentDark;
-                }
-                else
-                {
-                    btn.BorderBrush = ThemeManager.BrushLightControlBorder;
-                }
-
-                if (darkFg is SolidColorBrush scbFg)
-                {
-                    if (IsColor(scbFg, 56, 189, 248)) // #38BDF8
-                    {
-                        btn.Foreground = ThemeManager.BrushSkyAccentDark;
-                    }
-                    else if (IsColor(scbFg, 52, 211, 153) || IsColor(scbFg, 16, 185, 129)) // #34D399 / #10B981
-                    {
-                        btn.Foreground = new SolidColorBrush(Color.FromArgb(255, 5, 150, 105));
-                    }
-                    else
-                    {
-                        btn.Foreground = ThemeManager.BrushLightControlFg;
-                    }
-                }
-                else
-                {
-                    btn.Foreground = ThemeManager.BrushLightControlFg;
-                }
-
-                UpdateChildTextBlocks(btn.Content as DependencyObject, isDark: false);
-            }
-            else
-            {
-                btn.Background = darkBg ?? ThemeManager.BrushDarkCardBg;
-                btn.BorderBrush = darkBorder ?? ThemeManager.BrushDarkCardBorder;
-                btn.Foreground = darkFg ?? ThemeManager.BrushDarkControlFg;
-                UpdateChildTextBlocks(btn.Content as DependencyObject, isDark: true);
-            }
-        }
-
-        private void UpdateChildTextBlocks(DependencyObject? obj, bool isDark)
-        {
-            if (obj == null) return;
-
-            if (obj is TextBlock tb)
-            {
-                if (!_originalDarkBrushes.ContainsKey(tb))
-                {
-                    _originalDarkBrushes[tb] = (null, null, tb.Foreground);
-                }
-
-                var (_, _, darkFg) = _originalDarkBrushes[tb];
-
-                if (!isDark)
-                {
-                    if (darkFg is SolidColorBrush scb)
-                    {
-                        if (IsColor(scb, 56, 189, 248)) // #38BDF8 (Tools icon ☰ or blue accent)
-                        {
-                            tb.Foreground = ThemeManager.BrushSkyAccentDark;
-                        }
-                        else if (IsColor(scb, 52, 211, 153) || IsColor(scb, 16, 185, 129)) // #34D399 / #10B981
-                        {
-                            tb.Foreground = new SolidColorBrush(Color.FromArgb(255, 5, 150, 105));
-                        }
-                        else if (IsColor(scb, 148, 163, 184) || IsColor(scb, 100, 116, 139)) // #94A3B8 / #64748B
-                        {
-                            tb.Foreground = ThemeManager.BrushLightTextMuted;
-                        }
-                        else
-                        {
-                            tb.Foreground = ThemeManager.BrushLightControlFg;
-                        }
-                    }
-                    else
-                    {
-                        tb.Foreground = ThemeManager.BrushLightControlFg;
-                    }
-                }
-                else
-                {
-                    tb.Foreground = darkFg ?? ThemeManager.BrushDarkControlFg;
-                }
-            }
-
-            int count = VisualTreeHelper.GetChildrenCount(obj);
-            if (count > 0)
-            {
-                for (int i = 0; i < count; i++)
-                {
-                    UpdateChildTextBlocks(VisualTreeHelper.GetChild(obj, i), isDark);
-                }
-            }
-            else if (obj is Panel panel)
-            {
-                foreach (UIElement child in panel.Children)
-                {
-                    UpdateChildTextBlocks(child, isDark);
-                }
-            }
-            else if (obj is ContentControl cc && cc.Content is DependencyObject contentDep)
-            {
-                UpdateChildTextBlocks(contentDep, isDark);
-            }
-        }
-
-        private void ApplyThemeToTree(DependencyObject obj, bool isDark)
-        {
-            if (obj is Controls.MapControl || obj is Controls.AppUpdateWindowControl)
-            {
-                return;
-            }
-
-            // Buttons: style directly and style their content descendants, but DO NOT recurse into control template
-            if (obj is Button btn)
-            {
-                ApplyThemeToButton(btn, isDark);
-                return;
-            }
-
-            if (obj == OuterRootGrid || obj == RootLayoutGrid || obj == RootScrollViewer || obj == TopBarBorder)
-            {
-                int count = VisualTreeHelper.GetChildrenCount(obj);
-                for (int i = 0; i < count; i++)
-                {
-                    var child = VisualTreeHelper.GetChild(obj, i);
-                    if (child != null)
-                    {
-                        ApplyThemeToTree(child, isDark);
-                    }
-                }
-                return;
-            }
-
-            if (!_originalDarkBrushes.ContainsKey(obj))
-            {
-                Brush? origBg = (obj as Control)?.Background ?? (obj as Border)?.Background ?? (obj as Panel)?.Background;
-                Brush? origBorder = (obj as Control)?.BorderBrush ?? (obj as Border)?.BorderBrush;
-                Brush? origFg = (obj as Control)?.Foreground ?? (obj as TextBlock)?.Foreground;
-                _originalDarkBrushes[obj] = (origBg, origBorder, origFg);
-            }
-
-            var (darkBg, darkBorder, darkFg) = _originalDarkBrushes[obj];
-
-            if (!isDark)
-            {
-                // Applying LIGHT mode
-                if (obj is Border b)
-                {
-                    if (darkBg is SolidColorBrush scbBg)
-                    {
-                        if (IsColor(scbBg, 15, 23, 42))        // #0F172A
-                            b.Background = ThemeManager.BrushLightSubCardBg;
-                        else if (IsColor(scbBg, 9, 13, 22))    // #090D16
-                            b.Background = ThemeManager.BrushLightTopBarBg;
-                        else if (IsColor(scbBg, 30, 41, 59))   // #1E293B
-                            b.Background = ThemeManager.BrushLightCardBg;
-                        else if (IsColor(scbBg, 11, 15, 25))   // #0B0F19
-                            b.Background = ThemeManager.BrushLightChartBg;
-                        else if (IsColor(scbBg, 11, 17, 32))   // #0B1120
-                            b.Background = ThemeManager.BrushLightPageBg;
-                        else if (IsColor(scbBg, 51, 65, 85))   // #334155
-                            b.Background = ThemeManager.BrushLightSubCardBg;
-                        else if (IsColor(scbBg, 6, 9, 17))     // #060911
-                            b.Background = ThemeManager.BrushLightSubCardBg;
-                        else if (IsColor(scbBg, 9, 14, 23))    // #090E17
-                            b.Background = ThemeManager.BrushLightSubCardBg;
-                    }
-
-                    if (darkBorder is SolidColorBrush scbBd)
-                    {
-                        if (IsColor(scbBd, 51, 65, 85) || IsColor(scbBd, 30, 41, 59)) // #334155 or #1E293B
-                            b.BorderBrush = ThemeManager.BrushLightCardBorder;
-                        else if (IsColor(scbBd, 71, 85, 105)) // #475569
-                            b.BorderBrush = ThemeManager.BrushLightControlBorder;
-                    }
-                }
-                else if (obj is GridSplitter gs)
-                {
-                    gs.Background = ThemeManager.BrushLightDivider;
-                }
-                else if (obj is TextBlock tb)
-                {
-                    if (darkFg is SolidColorBrush scbFg)
-                    {
-                        if (IsColor(scbFg, 248, 250, 252) || IsColor(scbFg, 226, 232, 240) || IsColor(scbFg, 241, 245, 249)) // #F8FAFC / #E2E8F0
-                            tb.Foreground = ThemeManager.BrushLightTextPrimary;
-                        else if (IsColor(scbFg, 203, 213, 225)) // #CBD5E1
-                            tb.Foreground = ThemeManager.BrushLightTextSecondary;
-                        else if (IsColor(scbFg, 148, 163, 184) || IsColor(scbFg, 100, 116, 139)) // #94A3B8 / #64748B
-                            tb.Foreground = ThemeManager.BrushLightTextMuted;
-                        else if (IsColor(scbFg, 56, 189, 248)) // #38BDF8
-                            tb.Foreground = ThemeManager.BrushSkyAccentDark;
-                        else if (IsColor(scbFg, 52, 211, 153)) // #34D399
-                            tb.Foreground = ThemeManager.BrushEmeraldAccent;
-                    }
-                }
-                else if (obj is TextBox txtBox)
-                {
-                    txtBox.Foreground = ThemeManager.BrushLightTextPrimary;
-                }
-            }
-            else
-            {
-                // Restoring DARK mode
-                if (obj is Border b)
-                {
-                    b.Background = darkBg;
-                    b.BorderBrush = darkBorder;
-                }
-                else if (obj is GridSplitter gs)
-                {
-                    gs.Background = darkBg;
-                }
-                else if (obj is TextBlock tb)
-                {
-                    tb.Foreground = darkFg;
-                }
-                else if (obj is TextBox txtBox)
-                {
-                    txtBox.Foreground = darkFg;
-                }
-            }
-
-            int childCount = VisualTreeHelper.GetChildrenCount(obj);
-            for (int i = 0; i < childCount; i++)
-            {
-                var child = VisualTreeHelper.GetChild(obj, i);
-                if (child != null)
-                {
-                    ApplyThemeToTree(child, isDark);
-                }
-            }
-        }
-
-        private static bool IsColor(SolidColorBrush brush, byte r, byte g, byte b)
-        {
-            return brush.Color.R == r && brush.Color.G == g && brush.Color.B == b;
-        }
     }
 }

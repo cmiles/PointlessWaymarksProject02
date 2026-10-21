@@ -513,10 +513,59 @@
         hideMap();
     }
 
+    let activePreviewContainer = null;
+    let activeMapContainer = null;
+
+    function setContainers(previewEl, mapEl) {
+        if (previewEl) {
+            activePreviewContainer = previewEl;
+            const allWrappers = document.querySelectorAll('#pw-preview-wrapper');
+            allWrappers.forEach(w => {
+                if (w.parentElement !== activePreviewContainer) {
+                    try { w.remove(); } catch (e) { }
+                }
+            });
+        }
+        if (mapEl) {
+            activeMapContainer = mapEl;
+            const allMaps = document.querySelectorAll('.pw-leaflet-div, #pw-leaflet-map');
+            allMaps.forEach(m => {
+                if (m.parentElement !== activeMapContainer) {
+                    try {
+                        if (leafletMapInstance) {
+                            safeRemoveMap(leafletMapInstance);
+                            leafletMapInstance = null;
+                            window.leafletMapInstance = null;
+                        }
+                        m.remove();
+                    } catch (e) { }
+                }
+            });
+        }
+    }
+
     // Helper to safely mount or retrieve map container DOM element
     function ensureMapContainer(containerElement) {
-        if (!containerElement) return document.getElementById('pw-leaflet-map');
-        var mapDiv = containerElement.querySelector('.pw-leaflet-div') || document.getElementById('pw-leaflet-map');
+        const container = containerElement || activeMapContainer;
+        if (!container) {
+            const existing = document.getElementById('pw-leaflet-map');
+            if (existing && existing.isConnected) return existing;
+            return null;
+        }
+
+        const oldMap = document.getElementById('pw-leaflet-map');
+        if (oldMap && oldMap.parentElement !== container) {
+            try {
+                if (leafletMapInstance) {
+                    safeRemoveMap(leafletMapInstance);
+                    leafletMapInstance = null;
+                    window.leafletMapInstance = null;
+                }
+                oldMap.remove();
+            } catch (e) { }
+        }
+
+        var mapDiv = container.querySelector('.pw-leaflet-div') || container.querySelector('#pw-leaflet-map');
         if (!mapDiv) {
             mapDiv = document.createElement('div');
             mapDiv.className = 'pw-leaflet-div';
@@ -529,11 +578,11 @@
             mapDiv.style.zIndex = '1';
             mapDiv.style.borderRadius = '8px';
         }
-        if (getComputedStyle(containerElement).position === 'static') {
-            containerElement.style.position = 'relative';
+        if (getComputedStyle(container).position === 'static') {
+            container.style.position = 'relative';
         }
-        if (mapDiv.parentElement !== containerElement) {
-            containerElement.appendChild(mapDiv);
+        if (mapDiv.parentElement !== container) {
+            container.appendChild(mapDiv);
         }
         return mapDiv;
     }
@@ -611,9 +660,13 @@
             lng = arg3;
             popupText = arg4;
         } else {
+            containerElement = activeMapContainer;
             lat = arg1;
             lng = arg2;
             popupText = arg3;
+        }
+        if (!containerElement) {
+            containerElement = activeMapContainer;
         }
 
         if (lat === undefined || lng === undefined || lat === null || lng === null || isNaN(lat) || isNaN(lng)) {
@@ -647,6 +700,9 @@
 
         var attempts = 0;
         function tryInit() {
+            if (!containerElement) {
+                containerElement = activeMapContainer;
+            }
             if (typeof L === 'undefined' || !L.map) {
                 if (++attempts < 160) setTimeout(tryInit, 50);
                 return;
@@ -944,6 +1000,8 @@
     // Display image preview safely in DOM container
     function displayPreview(containerElement, previewUrl) {
         try {
+            const container = containerElement || activePreviewContainer;
+
             const isInvalidPreview = !previewUrl ||
                 previewUrl.startsWith('data:image/arw') ||
                 previewUrl.startsWith('data:image/ARW') ||
@@ -954,20 +1012,29 @@
                 previewUrl.startsWith('data:image/x-');
 
             if (isInvalidPreview) {
-                const existing = document.getElementById('pw-preview-img');
-                if (existing) {
-                    existing.style.display = 'none';
-                    existing.src = '';
+                if (container) {
+                    const existing = container.querySelector('#pw-preview-img');
+                    if (existing) {
+                        existing.style.display = 'none';
+                        existing.src = '';
+                    }
+                    const wrapper = container.querySelector('#pw-preview-wrapper');
+                    if (wrapper) wrapper.style.display = 'none';
                 }
-                const wrapper = document.getElementById('pw-preview-wrapper');
-                if (wrapper) wrapper.style.display = 'none';
                 return;
             }
 
-            let wrapper = containerElement ? containerElement.querySelector('#pw-preview-wrapper') : document.getElementById('pw-preview-wrapper');
-            let img = document.getElementById('pw-preview-img');
+            if (!container) return;
 
-            if (!wrapper && containerElement) {
+            const oldWrapper = document.getElementById('pw-preview-wrapper');
+            if (oldWrapper && oldWrapper.parentElement !== container) {
+                try { oldWrapper.remove(); } catch (e) { }
+            }
+
+            let wrapper = container.querySelector('#pw-preview-wrapper');
+            let img = container.querySelector('#pw-preview-img');
+
+            if (!wrapper) {
                 wrapper = document.createElement('div');
                 wrapper.id = 'pw-preview-wrapper';
                 wrapper.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;pointer-events:none;z-index:10;';
@@ -978,16 +1045,16 @@
                 img.alt = 'Image Preview';
                 wrapper.appendChild(img);
 
-                if (getComputedStyle(containerElement).position === 'static') {
-                    containerElement.style.position = 'relative';
+                if (getComputedStyle(container).position === 'static') {
+                    container.style.position = 'relative';
                 }
-                containerElement.appendChild(wrapper);
-            } else if (wrapper && containerElement && wrapper.parentElement !== containerElement) {
-                containerElement.appendChild(wrapper);
+                container.appendChild(wrapper);
+            } else if (wrapper.parentElement !== container) {
+                container.appendChild(wrapper);
             }
 
             if (!img) {
-                img = document.getElementById('pw-preview-img');
+                img = wrapper.querySelector('#pw-preview-img');
             }
 
             if (img) {
@@ -1034,6 +1101,7 @@
         hideMap: hideMap,
         invalidateMapSize: invalidateMapSize,
         ensureMapContainer: ensureMapContainer,
+        setContainers: setContainers,
         displayPreview: displayPreview,
         getCurrentMetadataJson: function () {
             return JSON.stringify(currentMetadata || {});

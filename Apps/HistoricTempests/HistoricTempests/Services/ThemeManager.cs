@@ -19,6 +19,7 @@ public sealed class ThemeManager : INotifyPropertyChanged
 
     private AppThemeMode _mode = AppThemeMode.System;
     private bool _isSystemDark;
+    private bool _isInitialized;
 
     public event PropertyChangedEventHandler? PropertyChanged;
     public event EventHandler? ThemeChanged;
@@ -27,6 +28,8 @@ public sealed class ThemeManager : INotifyPropertyChanged
 
     public void Initialize()
     {
+        if (_isInitialized) return;
+
         try
         {
             object? savedObj = OpenSilver.Interop.ExecuteJavaScript(
@@ -37,14 +40,43 @@ public sealed class ThemeManager : INotifyPropertyChanged
                 _mode = savedMode;
             }
 
+            _isSystemDark = QuerySystemDarkTheme();
+            RegisterSystemThemeListener();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine("ThemeManager Init error: " + ex.Message);
+            _isSystemDark = QuerySystemDarkTheme();
+        }
+
+        _isInitialized = true;
+        NotifyThemeChanged();
+    }
+
+    public static bool QuerySystemDarkTheme()
+    {
+        try
+        {
             object? darkObj = OpenSilver.Interop.ExecuteJavaScript(
                 "Boolean(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)");
-            if (darkObj is bool b) _isSystemDark = b;
-            else if (darkObj is int i) _isSystemDark = (i != 0);
-            else if (darkObj is double d) _isSystemDark = (d != 0);
-            else if (bool.TryParse(darkObj?.ToString(), out var parsedDark)) _isSystemDark = parsedDark;
-            else if (int.TryParse(darkObj?.ToString(), out var parsedInt)) _isSystemDark = (parsedInt != 0);
+            if (darkObj is bool b) return b;
+            if (darkObj is int i) return i != 0;
+            if (darkObj is double d) return d != 0;
+            if (bool.TryParse(darkObj?.ToString(), out var parsedDark)) return parsedDark;
+            if (int.TryParse(darkObj?.ToString(), out var parsedInt)) return parsedInt != 0;
+        }
+        catch
+        {
+            // Non-browser / test environment fallback
+        }
 
+        return false;
+    }
+
+    private void RegisterSystemThemeListener()
+    {
+        try
+        {
             Action<object> callback = (res) =>
             {
                 bool isDark = res is bool rb ? rb : (bool.TryParse(res?.ToString(), out var p) && p);
@@ -69,10 +101,8 @@ public sealed class ThemeManager : INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine("ThemeManager Init error: " + ex.Message);
+            System.Diagnostics.Debug.WriteLine("ThemeManager listener registration error: " + ex.Message);
         }
-
-        NotifyThemeChanged();
     }
 
     public void SetSystemDark(bool isDark)
@@ -221,6 +251,7 @@ public sealed class ThemeManager : INotifyPropertyChanged
 
     private void NotifyThemeChanged()
     {
+        UpdateApplicationResources();
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
         ThemeChanged?.Invoke(this, EventArgs.Empty);
 
@@ -229,11 +260,58 @@ public sealed class ThemeManager : INotifyPropertyChanged
             string hostBg = IsDark ? "#0B0F19" : "#F8FAFC";
             string themeClass = IsDark ? "dark-theme" : "light-theme";
             OpenSilver.Interop.ExecuteJavaScriptVoid($@"
-                document.body.style.backgroundColor = '{hostBg}';
-                document.body.classList.remove('dark-theme', 'light-theme');
-                document.body.classList.add('{themeClass}');
+                if (document && document.body) {{
+                    document.body.style.backgroundColor = '{hostBg}';
+                    document.body.classList.remove('dark-theme', 'light-theme');
+                    document.body.classList.add('{themeClass}');
+                }}
             ");
         }
         catch { }
+    }
+
+    private void UpdateApplicationResources()
+    {
+        try
+        {
+            var app = Application.Current;
+            if (app?.Resources?.MergedDictionaries != null)
+            {
+                app.Resources.MergedDictionaries.Clear();
+                if (IsDark)
+                {
+                    app.Resources.MergedDictionaries.Add(new Themes.DarkTheme());
+                }
+                else
+                {
+                    app.Resources.MergedDictionaries.Add(new Themes.LightTheme());
+                }
+            }
+
+            if (app?.Theme is OpenSilver.Themes.Modern.ModernTheme modernTheme)
+            {
+                var targetPalette = IsDark 
+                    ? OpenSilver.Themes.Modern.ModernTheme.Palettes.Dark 
+                    : OpenSilver.Themes.Modern.ModernTheme.Palettes.Light;
+
+                if (modernTheme.CurrentPalette != targetPalette)
+                {
+                    modernTheme.CurrentPalette = targetPalette;
+                    app.Theme = modernTheme;
+
+                    if (app.RootVisual is System.Windows.Controls.Grid mainGrid && mainGrid.Children.Count > 0)
+                    {
+                        var existingPage = System.Linq.Enumerable.FirstOrDefault(mainGrid.Children) as MainPage;
+                        var existingVm = existingPage?.ViewModel;
+                        mainGrid.Children.Clear();
+                        mainGrid.Children.Add(new MainPage(existingVm));
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine("UpdateApplicationResources error: " + ex.Message);
+        }
     }
 }

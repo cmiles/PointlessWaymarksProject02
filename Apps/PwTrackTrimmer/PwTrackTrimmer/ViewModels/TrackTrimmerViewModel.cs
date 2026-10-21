@@ -355,7 +355,13 @@ namespace PwTrackTrimmer.ViewModels
         public bool IsLoading
         {
             get => _isLoading;
-            set => SetProperty(ref _isLoading, value);
+            set
+            {
+                if (SetProperty(ref _isLoading, value))
+                {
+                    OnPropertyChanged(nameof(LoadingVisibility));
+                }
+            }
         }
 
         public bool IsBusyOverlayVisible
@@ -366,11 +372,14 @@ namespace PwTrackTrimmer.ViewModels
                 if (SetProperty(ref _isBusyOverlayVisible, value))
                 {
                     OnPropertyChanged(nameof(BusyOverlayVisibility));
+                    OnPropertyChanged(nameof(LoadingVisibility));
                 }
             }
         }
 
         public System.Windows.Visibility BusyOverlayVisibility => IsBusyOverlayVisible ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+
+        public System.Windows.Visibility LoadingVisibility => (IsLoading || IsBusyOverlayVisible) ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
 
         public bool IsDragOver
         {
@@ -842,9 +851,11 @@ namespace PwTrackTrimmer.ViewModels
 
         public async Task LoadInitialTrackAsync()
         {
+            IsLoading = true;
             ShowBusy("Loading Initial Track", "Loading 2015 October Plateau Point...");
             try
             {
+                await Task.Delay(400); // Give initial frame render time to show loading spinner
                 Document = await SampleTrackService.LoadInitialTrackAsync();
                 UndoRedo.Clear();
                 ResetTrim();
@@ -861,7 +872,8 @@ namespace PwTrackTrimmer.ViewModels
             }
             finally
             {
-                HideBusy(500);
+                IsLoading = false;
+                HideBusy(600);
             }
         }
 

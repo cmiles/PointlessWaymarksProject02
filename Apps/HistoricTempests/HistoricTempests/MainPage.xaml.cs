@@ -14,11 +14,15 @@ namespace HistoricTempests;
 
 public partial class MainPage : Page
 {
-    public MainPage()
+    public MainPage() : this(null)
+    {
+    }
+
+    public MainPage(MainViewModel? existingViewModel)
     {
         InitializeComponent();
 
-        ViewModel = new MainViewModel();
+        ViewModel = existingViewModel ?? new MainViewModel();
         DataContext = ViewModel;
 
         ViewModel.PropertyChanged += ViewModel_PropertyChanged;
@@ -43,16 +47,16 @@ public partial class MainPage : Page
     {
         UpdateResponsiveLayout(ActualWidth);
         ApplyTheme();
-        await ViewModel.LoadDataAsync();
+        if (!ViewModel.DailyRecords.Any())
+        {
+            await ViewModel.LoadDataAsync();
+        }
         UpdateAllViews();
         PopulateYearDropdown();
+        SwitchTab(ViewModel.SelectedTab ?? "Timeline14Days");
         ApplyTheme();
         Dispatcher.BeginInvoke(() =>
         {
-            if (LayoutRoot != null)
-            {
-                ApplyThemeToTree(LayoutRoot, ThemeManager.Current.IsDark);
-            }
             RenderActiveTabCharts(ViewModel.SelectedTab ?? "Timeline14Days");
             _ = ViewModel.CheckForUpdatesAsync(silent: true);
         });
@@ -268,10 +272,6 @@ public partial class MainPage : Page
 
         Dispatcher.BeginInvoke(() =>
         {
-            if (LayoutRoot != null)
-            {
-                ApplyThemeToTree(LayoutRoot, ThemeManager.Current.IsDark);
-            }
             RenderActiveTabCharts(tabName);
         });
     }
@@ -324,182 +324,26 @@ public partial class MainPage : Page
         }
     }
 
-    private readonly Dictionary<DependencyObject, (Brush? Bg, Brush? Border, Brush? Fg)> _originalLightBrushes = new();
-
     public void ApplyTheme()
     {
-        bool isDark = ThemeManager.Current.IsDark;
-
-        if (MainRootGrid != null) MainRootGrid.Background = ThemeManager.Current.PageBackground;
-        if (MainPageScrollViewer != null) MainPageScrollViewer.Background = ThemeManager.Current.PageBackground;
-
-        if (HeaderBarBorder != null)
-        {
-            HeaderBarBorder.Background = ThemeManager.Current.HeaderBackground;
-            HeaderBarBorder.BorderBrush = ThemeManager.Current.HeaderBorder;
-        }
-
-        if (TxtAppTitle != null)
-        {
-            TxtAppTitle.Foreground = ThemeManager.Current.HeaderTitle;
-        }
-        if (TxtAuthorDash != null)
-        {
-            TxtAuthorDash.Foreground = ThemeManager.Current.HeaderSubtitle;
-        }
-        if (LnkAuthor != null)
-        {
-            LnkAuthor.Foreground = ThemeManager.Current.HeaderAccent;
-        }
-        if (TxtAppSubtitle != null)
-        {
-            TxtAppSubtitle.Foreground = ThemeManager.Current.HeaderSubtitle;
-        }
-        if (TxtHeaderBullet1 != null)
-        {
-            TxtHeaderBullet1.Foreground = ThemeManager.Current.HeaderBullet;
-        }
-        if (TxtHeaderBullet2 != null)
-        {
-            TxtHeaderBullet2.Foreground = ThemeManager.Current.HeaderBullet;
-        }
-        if (TxtLastDataLabel != null)
-        {
-            TxtLastDataLabel.Foreground = ThemeManager.Current.TextSecondary;
-        }
-        if (TxtLastDataDate != null)
-        {
-            TxtLastDataDate.Foreground = ThemeManager.Current.HeaderAccent;
-        }
-        if (TxtArchiveDaysLabel != null)
-        {
-            TxtArchiveDaysLabel.Foreground = ThemeManager.Current.TextSecondary;
-        }
-        if (TxtArchiveDays != null)
-        {
-            TxtArchiveDays.Foreground = ThemeManager.Current.HeaderAccent;
-        }
-
-        if (NavBarBorder != null)
-        {
-            NavBarBorder.Background = ThemeManager.Current.CardBackground;
-            NavBarBorder.BorderBrush = ThemeManager.Current.CardBorder;
-        }
-
         if (TxtThemeToggle != null)
         {
             TxtThemeToggle.Text = ThemeManager.Current.ThemeButtonLabel;
-            TxtThemeToggle.Foreground = isDark ? ThemeManager.BrushWhite : ThemeManager.BrushLightTextPrimary;
-        }
-        if (BtnThemeToggle != null)
-        {
-            BtnThemeToggle.Background = isDark ? ThemeManager.BrushDarkNavInactiveBg : ThemeManager.BrushLightNavInactiveBg;
-            BtnThemeToggle.BorderBrush = isDark ? ThemeManager.BrushDarkCardBorder : ThemeManager.BrushLightSubCardBorder;
-            BtnThemeToggle.Foreground = isDark ? ThemeManager.BrushWhite : ThemeManager.BrushLightTextPrimary;
         }
 
         if (TxtThemeToggleMobile != null)
         {
             TxtThemeToggleMobile.Text = ThemeManager.Current.ThemeButtonLabel;
-            TxtThemeToggleMobile.Foreground = isDark ? ThemeManager.BrushWhite : ThemeManager.BrushLightTextPrimary;
         }
-        if (BtnThemeToggleMobile != null)
-        {
-            BtnThemeToggleMobile.Background = isDark ? ThemeManager.BrushDarkNavInactiveBg : ThemeManager.BrushLightNavInactiveBg;
-            BtnThemeToggleMobile.BorderBrush = isDark ? ThemeManager.BrushDarkCardBorder : ThemeManager.BrushLightSubCardBorder;
-            BtnThemeToggleMobile.Foreground = isDark ? ThemeManager.BrushWhite : ThemeManager.BrushLightTextPrimary;
-        }
-        if (BtnHamburger != null)
-        {
-            BtnHamburger.Background = isDark ? ThemeManager.BrushDarkNavInactiveBg : ThemeManager.BrushLightNavInactiveBg;
-            BtnHamburger.BorderBrush = isDark ? ThemeManager.BrushDarkCardBorder : ThemeManager.BrushLightSubCardBorder;
-            BtnHamburger.Foreground = isDark ? ThemeManager.BrushWhite : ThemeManager.BrushLightTextPrimary;
-        }
-        if (TxtAppTitleMobile != null)
-        {
-            TxtAppTitleMobile.Foreground = ThemeManager.Current.HeaderTitle;
-        }
-        if (TxtAppSubtitleMobile != null)
-        {
-            TxtAppSubtitleMobile.Foreground = ThemeManager.Current.HeaderSubtitle;
-        }
-        if (LnkAuthorMobile != null)
-        {
-            LnkAuthorMobile.Foreground = ThemeManager.Current.HeaderAccent;
-        }
+
         if (MobileMenuDropdown != null)
         {
             MobileMenuDropdown.Background = ThemeManager.Current.CardBackground;
             MobileMenuDropdown.BorderBrush = ThemeManager.Current.CardBorder;
         }
 
-        if (Resources.Contains("DailyRowDividerBrush") && Resources["DailyRowDividerBrush"] is SolidColorBrush divBrush)
-        {
-            divBrush.Color = isDark ? Color.FromArgb(255, 51, 65, 85) : Color.FromArgb(255, 241, 245, 249);
-        }
-        if (Resources.Contains("DailyDateFgBrush") && Resources["DailyDateFgBrush"] is SolidColorBrush dateBrush)
-        {
-            dateBrush.Color = isDark ? Color.FromArgb(255, 248, 250, 252) : Color.FromArgb(255, 30, 41, 59);
-        }
-        if (Resources.Contains("DailyMutedFgBrush") && Resources["DailyMutedFgBrush"] is SolidColorBrush mutedBrush)
-        {
-            mutedBrush.Color = isDark ? Color.FromArgb(255, 203, 213, 225) : Color.FromArgb(255, 71, 85, 105);
-        }
-
-        // Precipitation Streaks palette
-        if (Resources.Contains("StreakItemBgBrush") && Resources["StreakItemBgBrush"] is SolidColorBrush streakBg)
-            streakBg.Color = isDark ? Color.FromArgb(255, 30, 41, 59) : Color.FromArgb(255, 255, 255, 255);
-        if (Resources.Contains("StreakItemBorderBrush") && Resources["StreakItemBorderBrush"] is SolidColorBrush streakBorder)
-            streakBorder.Color = isDark ? Color.FromArgb(255, 51, 65, 85) : Color.FromArgb(255, 226, 232, 240);
-        if (Resources.Contains("StreakDateFgBrush") && Resources["StreakDateFgBrush"] is SolidColorBrush streakDate)
-            streakDate.Color = isDark ? Color.FromArgb(255, 248, 250, 252) : Color.FromArgb(255, 15, 23, 42);
-        if (Resources.Contains("StreakDetailsFgBrush") && Resources["StreakDetailsFgBrush"] is SolidColorBrush streakDet)
-            streakDet.Color = isDark ? Color.FromArgb(255, 148, 163, 184) : Color.FromArgb(255, 100, 116, 139);
-
-        if (Resources.Contains("DryStreakTitleBrush") && Resources["DryStreakTitleBrush"] is SolidColorBrush dryTitle)
-            dryTitle.Color = isDark ? Color.FromArgb(255, 251, 191, 36) : Color.FromArgb(255, 180, 83, 9);
-        if (Resources.Contains("DryStreakBadgeBgBrush") && Resources["DryStreakBadgeBgBrush"] is SolidColorBrush dryBadgeBg)
-            dryBadgeBg.Color = isDark ? Color.FromArgb(255, 69, 26, 3) : Color.FromArgb(255, 254, 243, 199);
-        if (Resources.Contains("DryStreakBadgeBorderBrush") && Resources["DryStreakBadgeBorderBrush"] is SolidColorBrush dryBadgeBorder)
-            dryBadgeBorder.Color = isDark ? Color.FromArgb(255, 180, 83, 9) : Color.FromArgb(255, 253, 230, 138);
-        if (Resources.Contains("DryStreakBadgeFgBrush") && Resources["DryStreakBadgeFgBrush"] is SolidColorBrush dryBadgeFg)
-            dryBadgeFg.Color = isDark ? Color.FromArgb(255, 253, 230, 138) : Color.FromArgb(255, 180, 83, 9);
-
-        if (Resources.Contains("WetStreakTitleBrush") && Resources["WetStreakTitleBrush"] is SolidColorBrush wetTitle)
-            wetTitle.Color = isDark ? Color.FromArgb(255, 56, 189, 248) : Color.FromArgb(255, 3, 105, 161);
-        if (Resources.Contains("WetStreakBadgeBgBrush") && Resources["WetStreakBadgeBgBrush"] is SolidColorBrush wetBadgeBg)
-            wetBadgeBg.Color = isDark ? Color.FromArgb(255, 8, 47, 73) : Color.FromArgb(255, 224, 242, 254);
-        if (Resources.Contains("WetStreakBadgeBorderBrush") && Resources["WetStreakBadgeBorderBrush"] is SolidColorBrush wetBadgeBorder)
-            wetBadgeBorder.Color = isDark ? Color.FromArgb(255, 2, 132, 199) : Color.FromArgb(255, 186, 230, 253);
-        if (Resources.Contains("WetStreakBadgeFgBrush") && Resources["WetStreakBadgeFgBrush"] is SolidColorBrush wetBadgeFg)
-            wetBadgeFg.Color = isDark ? Color.FromArgb(255, 125, 211, 252) : Color.FromArgb(255, 2, 132, 199);
-
-        if (BorderYearFilter != null)
-        {
-            BorderYearFilter.Background = ThemeManager.Current.InputBg;
-            BorderYearFilter.BorderBrush = ThemeManager.Current.InputBorder;
-        }
-        if (TxtSelectedYear != null)
-        {
-            TxtSelectedYear.Foreground = ThemeManager.Current.InputFg;
-        }
-        if (TxtSearchDaily != null)
-        {
-            TxtSearchDaily.Background = ThemeManager.Current.InputBg;
-            TxtSearchDaily.Foreground = ThemeManager.Current.InputFg;
-            TxtSearchDaily.BorderBrush = ThemeManager.Current.InputBorder;
-        }
-
-        UpdateTabStyles(ViewModel.SelectedTab ?? "Timeline14Days");
+        UpdateTabStyles(ViewModel?.SelectedTab ?? "Timeline14Days");
         PopulateYearDropdown();
-
-        if (LayoutRoot != null)
-        {
-            ApplyThemeToTree(LayoutRoot, isDark);
-        }
-
-        RenderActiveTabCharts(ViewModel.SelectedTab ?? "Timeline14Days");
-        UpdateWindowControlElement?.ApplyTheme(isDark);
     }
 
     private void BorderYearFilter_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -566,105 +410,6 @@ public partial class MainPage : Page
 
             YearOptionsStack.Children.Add(optBorder);
         }
-    }
-
-    private void ApplyThemeToTree(DependencyObject obj, bool isDark)
-    {
-        if (obj == HeaderBarBorder || obj == NavBarBorder || obj == BorderYearFilter || obj == PopupYearFilter) return;
-
-        if (obj is Controls.MultiYearTimelineLineChart ||
-            obj is Controls.MultiYearTimelineBarChart ||
-            obj is Controls.MultiYearDayHeatmapGrid ||
-            obj is Controls.ComparisonBarBandChart ||
-            obj is Controls.RecentDaysChart ||
-            obj is Controls.AboutControl)
-        {
-            return;
-        }
-
-        if (!_originalLightBrushes.ContainsKey(obj))
-        {
-            Brush? origBg = (obj as Control)?.Background ?? (obj as Border)?.Background ?? (obj as Panel)?.Background;
-            Brush? origBorder = (obj as Control)?.BorderBrush ?? (obj as Border)?.BorderBrush;
-            Brush? origFg = (obj as Control)?.Foreground ?? (obj as TextBlock)?.Foreground;
-            _originalLightBrushes[obj] = (origBg, origBorder, origFg);
-        }
-
-        var (lightBg, lightBorder, lightFg) = _originalLightBrushes[obj];
-
-        if (isDark)
-        {
-            if (obj is Border b)
-            {
-                if (lightBg is SolidColorBrush scbBg)
-                {
-                    if (IsColor(scbBg, 255, 255, 255))
-                        b.Background = ThemeManager.BrushDarkCardBg;
-                    else if (IsColor(scbBg, 248, 250, 252))
-                        b.Background = ThemeManager.BrushDarkSubCardBg;
-                    else if (IsColor(scbBg, 241, 245, 249))
-                        b.Background = ThemeManager.BrushDarkCardBg;
-                    else if (IsColor(scbBg, 226, 232, 240))
-                        b.Background = ThemeManager.BrushDarkCardBorder;
-                }
-                if (lightBorder is SolidColorBrush scbBd)
-                {
-                    if (IsColor(scbBd, 226, 232, 240) || IsColor(scbBd, 203, 213, 225))
-                        b.BorderBrush = ThemeManager.BrushDarkCardBorder;
-                }
-            }
-            else if (obj is TextBlock tb)
-            {
-                if (lightFg is SolidColorBrush scbFg)
-                {
-                    if (IsColor(scbFg, 15, 23, 42) || IsColor(scbFg, 30, 41, 59))
-                        tb.Foreground = ThemeManager.BrushDarkTextPrimary;
-                    else if (IsColor(scbFg, 51, 65, 85) || IsColor(scbFg, 71, 85, 105))
-                        tb.Foreground = ThemeManager.BrushDarkNavInactiveFg;
-                    else if (IsColor(scbFg, 100, 116, 139))
-                        tb.Foreground = ThemeManager.BrushDarkTextSecondary;
-                }
-            }
-            else if (obj is TextBox txtBox)
-            {
-                txtBox.Background = ThemeManager.BrushDarkSubCardBg;
-                txtBox.Foreground = ThemeManager.BrushDarkTextPrimary;
-                txtBox.BorderBrush = ThemeManager.BrushDarkCardBorder;
-            }
-        }
-        else
-        {
-            if (obj is Border b)
-            {
-                b.Background = lightBg;
-                b.BorderBrush = lightBorder;
-            }
-            else if (obj is TextBlock tb)
-            {
-                tb.Foreground = lightFg;
-            }
-            else if (obj is TextBox txtBox)
-            {
-                txtBox.Background = lightBg;
-                txtBox.BorderBrush = lightBorder;
-                txtBox.Foreground = lightFg;
-            }
-        }
-
-        int childCount = VisualTreeHelper.GetChildrenCount(obj);
-        for (int i = 0; i < childCount; i++)
-        {
-            var child = VisualTreeHelper.GetChild(obj, i);
-            if (child != null)
-            {
-                ApplyThemeToTree(child, isDark);
-            }
-        }
-    }
-
-    private static bool IsColor(SolidColorBrush brush, byte r, byte g, byte b)
-    {
-        return brush.Color.R == r && brush.Color.G == g && brush.Color.B == b;
     }
 
     private void BtnExportExcel_Click(object sender, RoutedEventArgs e)

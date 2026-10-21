@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:HistoricTempests.Controls">
 
-    <Border Background="#1E293B" BorderBrush="#0284C7" BorderThickness="1.5" CornerRadius="10"
+    <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1.5" CornerRadius="10"
             Margin="0,4,0,20">
         <Grid>
             <Grid.RowDefinitions>
@@ -13,8 +13,8 @@
             </Grid.RowDefinitions>
 
             <!-- Header -->
-            <Border Grid.Row="0" Background="#0F172A" CornerRadius="9,9,0,0" Padding="20,16" 
-                    BorderBrush="#334155" BorderThickness="0,0,0,1">
+            <Border Grid.Row="0" Background="{StaticResource SubtleCardBackgroundBrush}" CornerRadius="9,9,0,0" Padding="20,16" 
+                    BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,0,0,1">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -22,49 +22,49 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="ℹ️" FontSize="20" Margin="0,0,12,0" VerticalAlignment="Center"/>
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock Text="About Rincon Valley Weather" FontWeight="Bold" FontSize="18" Foreground="#F8FAFC" />
+                        <TextBlock Text="About Rincon Valley Weather" FontWeight="Bold" FontSize="18" Foreground="{StaticResource TextHeadingBrush}" />
                     </StackPanel>
                 </Grid>
             </Border>
 
             <!-- Content -->
-            <StackPanel Grid.Row="1" Background="#0B1120" Padding="22,18">
+            <StackPanel Grid.Row="1" Background="{StaticResource AppBackgroundBrush}" Padding="22,18">
                 <!-- Top Info Card -->
-                <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="8" Padding="18,16" Margin="0,0,0,16">
+                <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="18,16" Margin="0,0,0,16">
                     <StackPanel Orientation="Vertical">
                         <TextBlock Text="Historic weather data analysis from a personal weather station located in the Rincon Valley southeast of Tucson, AZ. Features multi-year comparisons of temperature, rainfall, wind gusts, and lightning strikes across 14-day, 6-month and 12-month timeframes. Built with C#/.NET using OpenSilver with code generation and assistance from Google's Gemini 3.8 Flash in Antigravity."
-                                   FontSize="14" Foreground="#E2E8F0" TextWrapping="Wrap" Margin="0,0,0,16"/>
+                                   FontSize="14" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" Margin="0,0,0,16"/>
                         <TextBlock Text="App written and maintained by Charles Miles. A resident of the Rincon Valley since the early 2020s, I love getting outside to hike, run, and take photos. I bring over two decades of experience in software development, data management, and inventory control, and I'm currently pursuing an AAS in Health Information Technology at Pima Community College to expand my skills into healthcare."
-                                   FontSize="14" Foreground="#E2E8F0" TextWrapping="Wrap" Margin="0,0,0,16"/>
+                                   FontSize="14" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" Margin="0,0,0,16"/>
                         <controls:WrapPanel Orientation="Horizontal">
                             <StackPanel Orientation="Horizontal" Margin="0,0,20,6">
                                 <HyperlinkButton Content="Resume - Charles Miles" NavigateUri="https://cmiles.info/Posts/Career/resume/resume.html" TargetName="_blank"
                                                  Click="Hyperlink_Click"
-                                                 FontSize="14" FontWeight="SemiBold" Foreground="#38BDF8" 
+                                                 FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource HyperlinkBrush}" 
                                                  Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
                             </StackPanel>
 
                             <StackPanel Orientation="Horizontal" Margin="0,0,20,6">
-                                <TextBlock Text="Personal Website: " FontSize="14" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                <TextBlock Text="Personal Website: " FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                                 <HyperlinkButton Content="cmiles.info" NavigateUri="https://cmiles.info/" TargetName="_blank"
                                                  Click="Hyperlink_Click"
-                                                 FontSize="14" FontWeight="SemiBold" Foreground="#38BDF8" 
+                                                 FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource HyperlinkBrush}" 
                                                  Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
                             </StackPanel>
 
                             <StackPanel Orientation="Horizontal" Margin="0,0,20,6">
-                                <TextBlock Text="Photography: " FontSize="14" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                <TextBlock Text="Photography: " FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                                 <HyperlinkButton Content="Pointless Waymarks" NavigateUri="https://pointlesswaymarks.com/" TargetName="_blank"
                                                  Click="Hyperlink_Click"
-                                                 FontSize="14" FontWeight="SemiBold" Foreground="#38BDF8" 
+                                                 FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource HyperlinkBrush}" 
                                                  Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
                             </StackPanel>
 
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                <TextBlock Text="LinkedIn: " FontSize="14" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                <TextBlock Text="LinkedIn: " FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                                 <HyperlinkButton Content="Charles Miles" NavigateUri="https://www.linkedin.com/in/charlesamiles/" TargetName="_blank"
                                                  Click="Hyperlink_Click"
-                                                 FontSize="14" FontWeight="SemiBold" Foreground="#38BDF8" 
+                                                 FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource HyperlinkBrush}" 
                                                  Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
                             </StackPanel>
                         </controls:WrapPanel>
@@ -72,46 +72,46 @@
                 </Border>
 
                 <!-- Packages Section Header -->
-                <TextBlock Text="PACKAGES &amp; TECHNOLOGIES USED" FontSize="13" FontWeight="Bold" Foreground="#94A3B8" Margin="2,0,0,10"/>
+                <TextBlock Text="PACKAGES &amp; TECHNOLOGIES USED" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" Margin="2,0,0,10"/>
 
                 <!-- Package 1: OpenSilver -->
-                <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="16,12" Margin="0,0,0,10">
+                <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="16,12" Margin="0,0,0,10">
                     <StackPanel>
-                        <TextBlock Text="OpenSilver" FontSize="15" FontWeight="Bold" Foreground="#F8FAFC" Margin="0,0,0,4"/>
+                        <TextBlock Text="OpenSilver" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" Margin="0,0,0,4"/>
                         <TextBlock Text="Open-source framework enabling modern XAML and C# execution via WebAssembly and HTML5 in any modern browser."
-                                   FontSize="13" Foreground="#CBD5E1" TextWrapping="Wrap"/>
+                                   FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
                         <HyperlinkButton Content="opensilver.net ↗" NavigateUri="https://opensilver.net" TargetName="_blank"
-                                         Click="Hyperlink_Click" FontSize="13" Foreground="#38BDF8" HorizontalAlignment="Left" Margin="0,8,0,0" Cursor="Hand" Padding="0"/>
+                                         Click="Hyperlink_Click" FontSize="13" Foreground="{StaticResource HyperlinkBrush}" HorizontalAlignment="Left" Margin="0,8,0,0" Cursor="Hand" Padding="0"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Package 2: WeatherFlow Tempest -->
-                <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="16,12" Margin="0,0,0,10">
+                <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="16,12" Margin="0,0,0,10">
                     <StackPanel>
-                        <TextBlock Text="WeatherFlow Tempest Weather System &amp; Data API" FontSize="15" FontWeight="Bold" Foreground="#F8FAFC" Margin="0,0,0,4"/>
+                        <TextBlock Text="WeatherFlow Tempest Weather System &amp; Data API" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" Margin="0,0,0,4"/>
                         <TextBlock Text="All-in-one smart weather station with sonic anemometer, haptic rain sensor, optical lightning detector, and multi-year cloud archive data."
-                                   FontSize="13" Foreground="#CBD5E1" TextWrapping="Wrap"/>
+                                   FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
                         <HyperlinkButton Content="weatherflow.com ↗" NavigateUri="https://weatherflow.com/tempest-weather-system/" TargetName="_blank"
-                                         Click="Hyperlink_Click" FontSize="13" Foreground="#38BDF8" HorizontalAlignment="Left" Margin="0,8,0,0" Cursor="Hand" Padding="0"/>
+                                         Click="Hyperlink_Click" FontSize="13" Foreground="{StaticResource HyperlinkBrush}" HorizontalAlignment="Left" Margin="0,8,0,0" Cursor="Hand" Padding="0"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Package 3: Photino.NET -->
-                <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="16,12">
+                <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="16,12">
                     <StackPanel>
-                        <TextBlock Text="Photino.NET" FontSize="15" FontWeight="Bold" Foreground="#F8FAFC" Margin="0,0,0,4"/>
+                        <TextBlock Text="Photino.NET" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" Margin="0,0,0,4"/>
                         <TextBlock Text="Lightweight, cross-platform native desktop webview container for Windows, macOS, and Linux."
-                                   FontSize="13" Foreground="#CBD5E1" TextWrapping="Wrap"/>
+                                   FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
                         <HyperlinkButton Content="tryphotino.io ↗" NavigateUri="https://www.tryphotino.io" TargetName="_blank"
-                                         Click="Hyperlink_Click" FontSize="13" Foreground="#38BDF8" HorizontalAlignment="Left" Margin="0,8,0,0" Cursor="Hand" Padding="0"/>
+                                         Click="Hyperlink_Click" FontSize="13" Foreground="{StaticResource HyperlinkBrush}" HorizontalAlignment="Left" Margin="0,8,0,0" Cursor="Hand" Padding="0"/>
                     </StackPanel>
                 </Border>
             </StackPanel>
 
             <!-- Window Footer -->
-            <Border Grid.Row="2" Background="#0F172A" CornerRadius="0,0,9,9" Padding="18,12" 
-                    BorderBrush="#334155" BorderThickness="0,1,0,0">
-                <TextBlock Text="Pointless Waymarks Project" FontSize="13" Foreground="#94A3B8" VerticalAlignment="Center"/>
+            <Border Grid.Row="2" Background="{StaticResource SubtleCardBackgroundBrush}" CornerRadius="0,0,9,9" Padding="18,12" 
+                    BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,1,0,0">
+                <TextBlock Text="Pointless Waymarks Project" FontSize="13" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
             </Border>
         </Grid>
     </Border>

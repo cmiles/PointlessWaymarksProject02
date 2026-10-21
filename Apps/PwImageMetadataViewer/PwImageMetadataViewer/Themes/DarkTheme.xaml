@@ -1,0 +1,41 @@
+<ResourceDictionary x:Class="PwImageMetadataViewer.Themes.DarkTheme"
+                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Core App Surfaces & Text -->
+    <SolidColorBrush x:Key="AppBackgroundBrush" Color="#0B0F19" />
+    <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#111827" />
+    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#161F30" />
+    <SolidColorBrush x:Key="CardBorderBrush" Color="#273549" />
+    <SolidColorBrush x:Key="SubtleCardBackgroundBrush" Color="#0F172A" />
+    <SolidColorBrush x:Key="SubtleCardBorderBrush" Color="#1E293B" />
+    <SolidColorBrush x:Key="DividerBrush" Color="#1F2937" />
+
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F8FAFC" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#CBD5E1" />
+    <SolidColorBrush x:Key="TextMutedBrush" Color="#94A3B8" />
+    <SolidColorBrush x:Key="TextHeadingBrush" Color="#F1F5F9" />
+
+    <!-- Links & Accents -->
+    <SolidColorBrush x:Key="HyperlinkBrush" Color="#38BDF8" />
+    <SolidColorBrush x:Key="SkyAccentBrush" Color="#38BDF8" />
+    <SolidColorBrush x:Key="EmeraldAccentBrush" Color="#34D399" />
+    <SolidColorBrush x:Key="RedAccentBrush" Color="#EF4444" />
+
+    <!-- ScrollBar -->
+    <SolidColorBrush x:Key="ScrollBarTrackBrush" Color="#FF1E293B" />
+    <SolidColorBrush x:Key="ScrollBarButtonBackgroundBrush" Color="#FF1E293B" />
+    <SolidColorBrush x:Key="ScrollBarButtonForegroundBrush" Color="#FF64748B" />
+    <SolidColorBrush x:Key="ScrollBarThumbBrush" Color="#FF475569" />
+
+    <!-- Status Banners & Controls -->
+    <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#1E293B" />
+    <SolidColorBrush x:Key="ControlBorderBrush" Color="#475569" />
+    <SolidColorBrush x:Key="ControlForegroundBrush" Color="#F8FAFC" />
+
+    <!-- Status Banner Specific -->
+    <SolidColorBrush x:Key="StatusBannerBackgroundBrush" Color="#0C4A6E" />
+    <SolidColorBrush x:Key="StatusBannerBorderBrush" Color="#0284C7" />
+    <SolidColorBrush x:Key="StatusBannerTextBrush" Color="#E0F2FE" />
+
+</ResourceDictionary>

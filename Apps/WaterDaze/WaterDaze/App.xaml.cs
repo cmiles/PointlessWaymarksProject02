@@ -13,10 +13,15 @@ namespace WaterDaze
         {
             this.InitializeComponent();
 
+            var mainGrid = new Grid();
+            this.RootVisual = mainGrid;
+
             WaterDaze.Services.ThemeManager.Initialize();
 
-            var mainPage = new MainPage();
-            this.RootVisual = mainPage;
+            if (mainGrid.Children.Count == 0)
+            {
+                mainGrid.Children.Add(new MainPage());
+            }
         }
     }
 }

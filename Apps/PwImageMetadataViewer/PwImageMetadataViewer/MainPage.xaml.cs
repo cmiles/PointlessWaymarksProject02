@@ -26,10 +26,18 @@ namespace PwImageMetadataViewer
 
         public ViewModels.UpdateViewModel UpdateVm { get; } = new();
 
-        public MainPage()
+        public ImageMetadataReport? CurrentReport => _currentReport;
+
+        public MainPage() : this(null)
         {
+        }
+
+        public MainPage(ImageMetadataReport? existingReport)
+        {
+            _currentReport = existingReport;
             this.InitializeComponent();
             this.Loaded += MainPage_Loaded;
+            this.Unloaded += MainPage_Unloaded;
             this.SizeChanged += MainPage_SizeChanged;
             this.MouseWheel += MainPage_MouseWheel;
             this.MapContainerBorder.SizeChanged += (s, e) => InvalidateMapSize();
@@ -69,6 +77,21 @@ namespace PwImageMetadataViewer
                     UpdateVm.IsUpdateWindowOpen = false;
                 }
             };
+        }
+
+        private void MainPage_Unloaded(object sender, RoutedEventArgs e)
+        {
+            ThemeManager.Current.ThemeChanged -= OnThemeChanged;
+            if (_jsCallbackHandle != null)
+            {
+                try { _jsCallbackHandle.Dispose(); } catch { }
+                _jsCallbackHandle = null;
+            }
+        }
+
+        private void OnThemeChanged(object? sender, EventArgs e)
+        {
+            ApplyTheme();
         }
 
         private void MainPage_MouseWheel(object sender, MouseWheelEventArgs e)
@@ -232,35 +255,57 @@ namespace PwImageMetadataViewer
                 LeafletScrollIsolationHelper.ProtectControl(MapContainerBorder);
 
                 // 3. Mount Leaflet container and Image Preview in DOM
-                var mapDiv = OpenSilver.Interop.GetDiv(MapContainerBorder);
-                if (mapDiv != null)
-                {
-                    OpenSilver.Interop.ExecuteJavaScriptVoid(
-                        "if (window.pwExifBridge && window.pwExifBridge.ensureMapContainer) { window.pwExifBridge.ensureMapContainer($0); }",
-                        mapDiv
-                    );
-                }
-
-                var previewDiv = OpenSilver.Interop.GetDiv(ImagePreviewContainer);
-                if (previewDiv != null)
-                {
-                    OpenSilver.Interop.ExecuteJavaScriptVoid(
-                        "if (window.pwExifBridge && window.pwExifBridge.displayPreview) { window.pwExifBridge.displayPreview($0, null); }",
-                        previewDiv
-                    );
-                }
+                RegisterContainersWithBridge();
 
                 // 4. Register C# callback for metadata reports
                 Action<string> onMetadataAction = OnMetadataReceived;
                 _jsCallbackHandle = OpenSilver.Interop.CreateJavascriptCallback(onMetadataAction);
                 OpenSilver.Interop.ExecuteJavaScriptVoid("window.pwExifBridge.registerCallback($0);", _jsCallbackHandle);
 
-                // 5. Initial image loading: check command line argument or load default sample
-                LoadInitialImage();
+                // Check JS bridge for cached metadata if _currentReport is null
+                if (_currentReport == null)
+                {
+                    try
+                    {
+                        string? json = OpenSilver.Interop.ExecuteJavaScript("window.pwExifBridge ? window.pwExifBridge.getCurrentMetadataJson() : ''")?.ToString();
+                        if (!string.IsNullOrWhiteSpace(json) && json != "{}" && json != "null")
+                        {
+                            var options = new JsonSerializerOptions 
+                            { 
+                                PropertyNameCaseInsensitive = true,
+                                Converters = { new FlexibleStringConverter() }
+                            };
+                            var cachedReport = JsonSerializer.Deserialize<ImageMetadataReport>(json, options);
+                            if (cachedReport != null && cachedReport.Success)
+                            {
+                                _currentReport = cachedReport;
+                            }
+                        }
+                    }
+                    catch { }
+                }
 
-                // 6. Initialize ThemeManager
-                ThemeManager.Current.ThemeChanged += (_, _) => ApplyTheme();
-                ThemeManager.Current.Initialize();
+                // 5. Initial image loading: check existing report, command line argument, or load default sample
+                if (_currentReport != null)
+                {
+                    PopulateUi(_currentReport);
+                    Dispatcher.BeginInvoke(() =>
+                    {
+                        RegisterContainersWithBridge();
+                        DisplayPreviewDeferred(_currentReport.PreviewUrl);
+                        if (_currentReport.HasGps)
+                        {
+                            RenderMapDeferred(_currentReport);
+                        }
+                    });
+                }
+                else
+                {
+                    LoadInitialImage();
+                }
+
+                // 6. Theme and update checking
+                ThemeManager.Current.ThemeChanged += OnThemeChanged;
                 ApplyTheme();
                 Dispatcher.BeginInvoke(() =>
                 {
@@ -383,24 +428,7 @@ namespace PwImageMetadataViewer
             ImgPreview.Visibility = Visibility.Collapsed;
             ImgPreview.Source = null;
 
-            var previewDiv = OpenSilver.Interop.GetDiv(ImagePreviewContainer);
-            if (!string.IsNullOrEmpty(report.PreviewUrl))
-            {
-                OpenSilver.Interop.ExecuteJavaScriptVoid(
-                    "if (window.pwExifBridge && window.pwExifBridge.displayPreview) { window.pwExifBridge.displayPreview($0, $1); }",
-                    previewDiv,
-                    report.PreviewUrl
-                );
-            }
-            else
-            {
-                OpenSilver.Interop.ExecuteJavaScriptVoid(
-                    "if (window.pwExifBridge && window.pwExifBridge.displayPreview) { window.pwExifBridge.displayPreview($0, null); }",
-                    previewDiv
-                );
-                TxtPreviewPlaceholder.Text = "No Preview Available";
-                TxtPreviewPlaceholder.Visibility = Visibility.Visible;
-            }
+            DisplayPreviewDeferred(report.PreviewUrl);
 
             // Location & Map
             if (report.HasGps && report.Latitude.HasValue && report.Longitude.HasValue)
@@ -412,22 +440,7 @@ namespace PwImageMetadataViewer
                 PnlNoGpsPlaceholder.Visibility = Visibility.Collapsed;
                 PnlMapActions.Visibility = Visibility.Visible;
 
-                var mapDiv = OpenSilver.Interop.GetDiv(MapContainerBorder);
-                string popupLabel = $"{report.Make} {report.Model}".Trim();
-                if (string.IsNullOrEmpty(popupLabel)) popupLabel = report.FileName;
-                string popupHtml = $"<b>{popupLabel}</b><br/>{report.LatitudeFormatted}<br/>{report.LongitudeFormatted}";
-                if (!string.IsNullOrEmpty(report.AltitudeFormatted))
-                {
-                    popupHtml += $"<br/>Alt: {report.AltitudeFormatted}";
-                }
-
-                OpenSilver.Interop.ExecuteJavaScriptVoid(
-                    "if (window.pwExifBridge && window.pwExifBridge.renderMap) { window.pwExifBridge.renderMap($0, $1, $2, $3); }",
-                    mapDiv,
-                    report.Latitude.Value,
-                    report.Longitude.Value,
-                    popupHtml
-                );
+                RenderMapDeferred(report);
             }
             else
             {
@@ -448,6 +461,84 @@ namespace PwImageMetadataViewer
             // Tags List
             _allTags = report.Tags ?? new List<MetadataItem>();
             ApplyFilter();
+        }
+
+        private void RegisterContainersWithBridge()
+        {
+            var previewDiv = OpenSilver.Interop.GetDiv(ImagePreviewContainer);
+            var mapDiv = OpenSilver.Interop.GetDiv(MapContainerBorder);
+            if (previewDiv != null || mapDiv != null)
+            {
+                OpenSilver.Interop.ExecuteJavaScriptVoid(
+                    "if (window.pwExifBridge && window.pwExifBridge.setContainers) { window.pwExifBridge.setContainers($0, $1); }",
+                    previewDiv,
+                    mapDiv
+                );
+            }
+        }
+
+        private void DisplayPreviewDeferred(string? previewUrl)
+        {
+            if (string.IsNullOrEmpty(previewUrl))
+            {
+                var pDiv = OpenSilver.Interop.GetDiv(ImagePreviewContainer);
+                OpenSilver.Interop.ExecuteJavaScriptVoid(
+                    "if (window.pwExifBridge && window.pwExifBridge.displayPreview) { window.pwExifBridge.displayPreview($0, null); }",
+                    pDiv
+                );
+                TxtPreviewPlaceholder.Text = "No Preview Available";
+                TxtPreviewPlaceholder.Visibility = Visibility.Visible;
+                return;
+            }
+
+            var previewDiv = OpenSilver.Interop.GetDiv(ImagePreviewContainer);
+            if (previewDiv == null)
+            {
+                Dispatcher.BeginInvoke(() => DisplayPreviewDeferred(previewUrl));
+                return;
+            }
+
+            OpenSilver.Interop.ExecuteJavaScriptVoid(
+                "if (window.pwExifBridge && window.pwExifBridge.displayPreview) { window.pwExifBridge.displayPreview($0, $1); }",
+                previewDiv,
+                previewUrl
+            );
+        }
+
+        private void RenderMapDeferred(ImageMetadataReport report)
+        {
+            if (!report.HasGps || !report.Latitude.HasValue || !report.Longitude.HasValue)
+            {
+                var mDiv = OpenSilver.Interop.GetDiv(MapContainerBorder);
+                OpenSilver.Interop.ExecuteJavaScriptVoid(
+                    "if (window.pwExifBridge && window.pwExifBridge.hideMap) { window.pwExifBridge.hideMap($0); }",
+                    mDiv
+                );
+                return;
+            }
+
+            var mapDiv = OpenSilver.Interop.GetDiv(MapContainerBorder);
+            if (mapDiv == null)
+            {
+                Dispatcher.BeginInvoke(() => RenderMapDeferred(report));
+                return;
+            }
+
+            string popupLabel = $"{report.Make} {report.Model}".Trim();
+            if (string.IsNullOrEmpty(popupLabel)) popupLabel = report.FileName;
+            string popupHtml = $"<b>{popupLabel}</b><br/>{report.LatitudeFormatted}<br/>{report.LongitudeFormatted}";
+            if (!string.IsNullOrEmpty(report.AltitudeFormatted))
+            {
+                popupHtml += $"<br/>Alt: {report.AltitudeFormatted}";
+            }
+
+            OpenSilver.Interop.ExecuteJavaScriptVoid(
+                "if (window.pwExifBridge && window.pwExifBridge.renderMap) { window.pwExifBridge.renderMap($0, $1, $2, $3); }",
+                mapDiv,
+                report.Latitude.Value,
+                report.Longitude.Value,
+                popupHtml
+            );
         }
 
         private void ResetUiToError(string fileName)
@@ -480,12 +571,7 @@ namespace PwImageMetadataViewer
             TxtPreviewPlaceholder.Text = "⚠️ Format Not Supported";
             TxtPreviewPlaceholder.Visibility = Visibility.Visible;
             ImgPreview.Visibility = Visibility.Collapsed;
-            ImgPreview.Source = null;
-            var errPreviewDiv = OpenSilver.Interop.GetDiv(ImagePreviewContainer);
-            OpenSilver.Interop.ExecuteJavaScriptVoid(
-                "if (window.pwExifBridge && window.pwExifBridge.displayPreview) { window.pwExifBridge.displayPreview($0, null); }",
-                errPreviewDiv
-            );
+            DisplayPreviewDeferred(null);
 
             GpsCardBorder.Visibility = Visibility.Collapsed;
             TxtCoordinatesSummary.Text = "No GPS Data";
@@ -584,14 +670,6 @@ namespace PwImageMetadataViewer
 
             TagsItemsControl.ItemsSource = filtered;
             TxtTagCount.Text = $"{filtered.Count} of {_allTags.Count} tags";
-
-            Dispatcher.BeginInvoke(() =>
-            {
-                if (TagsItemsControl != null)
-                {
-                    ApplyThemeToTree(TagsItemsControl, ThemeManager.Current.IsDark);
-                }
-            });
         }
 
         private void ShowInfo(string message)
@@ -872,8 +950,6 @@ namespace PwImageMetadataViewer
             }
         }
 
-        private readonly Dictionary<DependencyObject, (Brush? Background, Brush? BorderBrush, Brush? Foreground)> _originalDarkBrushes = new();
-
         private void BtnThemeToggle_Click(object sender, RoutedEventArgs e)
         {
             ThemeManager.Current.CycleTheme();
@@ -907,37 +983,6 @@ namespace PwImageMetadataViewer
                 TxtMobileThemeToggle.Text = ThemeManager.Current.ThemeButtonLabel;
             }
 
-            bool isDark = ThemeManager.Current.IsDark;
-
-            this.Background = ThemeManager.Current.PageBackground;
-
-            if (RootLayoutGrid != null)
-            {
-                RootLayoutGrid.Background = ThemeManager.Current.PageBackground;
-            }
-
-            if (MainScrollViewer != null)
-            {
-                MainScrollViewer.Background = ThemeManager.Current.PageBackground;
-            }
-
-            if (TopHeaderBorder != null)
-            {
-                TopHeaderBorder.Background = ThemeManager.Current.HeaderBackground;
-                TopHeaderBorder.BorderBrush = isDark ? ThemeManager.BrushDarkDivider : ThemeManager.BrushLightDivider;
-            }
-
-            if (LnkAuthor != null)
-            {
-                LnkAuthor.Foreground = isDark ? ThemeManager.BrushSkyAccentDark : ThemeManager.BrushSkyAccentLight;
-            }
-            if (TxtSmallAuthor != null)
-            {
-                TxtSmallAuthor.Foreground = isDark ? ThemeManager.BrushSkyAccentDark : ThemeManager.BrushSkyAccentLight;
-            }
-
-            var root = (DependencyObject?)RootLayoutGrid ?? this.Content as DependencyObject ?? this;
-            ApplyThemeToTree(root, isDark);
             if (_allTags != null)
             {
                 foreach (var tag in _allTags)
@@ -946,57 +991,6 @@ namespace PwImageMetadataViewer
                 }
             }
             UpdateFilterButtonsVisuals();
-            UpdateWindowControlElement?.ApplyTheme(isDark);
-        }
-
-        private void ApplyThemeToButton(Button btn, bool isDark)
-        {
-            if (btn == BtnUpdates || btn == BtnMobileUpdates)
-            {
-                return;
-            }
-            // Filter buttons and dropdown menu buttons are fully managed by UpdateFilterButtonsVisuals()
-            if (btn == BtnFilterAll || btn == BtnFilterExif || btn == BtnFilterFile ||
-                btn == BtnFilterGps || btn == BtnFilterComposite || btn == BtnFilterMakerNotes ||
-                btn == BtnFilterXmp || btn == BtnMenuAll || btn == BtnMenuExif ||
-                btn == BtnMenuFile || btn == BtnMenuGps || btn == BtnMenuComposite ||
-                btn == BtnMenuMakerNotes || btn == BtnMenuXmp)
-            {
-                return;
-            }
-
-            if (btn == BtnOpenFile || btn == BtnMobileOpenFile)
-            {
-                btn.Background = isDark ? ThemeManager.BrushSkyAccentDark : ThemeManager.BrushSkyAccentLight;
-                btn.Foreground = isDark ? new SolidColorBrush(Color.FromArgb(255, 15, 23, 42)) : new SolidColorBrush(Colors.White);
-                UpdateChildTextBlocks(btn.Content as DependencyObject, btn.Foreground);
-                return;
-            }
-
-            if (btn == BtnOpenOsm)
-            {
-                btn.Background = isDark ? ThemeManager.BrushDarkControlBg : ThemeManager.BrushLightSubCardBg;
-                btn.BorderBrush = isDark ? ThemeManager.BrushSkyAccentDark : ThemeManager.BrushSkyAccentLight;
-                btn.Foreground = isDark ? ThemeManager.BrushSkyAccentDark : ThemeManager.BrushSkyAccentLight;
-                UpdateChildTextBlocks(btn.Content as DependencyObject, btn.Foreground);
-                return;
-            }
-
-            if (btn == BtnOpenPeakFinder)
-            {
-                var emerald = isDark ? new SolidColorBrush(Color.FromArgb(255, 16, 185, 129)) : new SolidColorBrush(Color.FromArgb(255, 5, 150, 105));
-                btn.Background = isDark ? ThemeManager.BrushDarkControlBg : ThemeManager.BrushLightSubCardBg;
-                btn.BorderBrush = emerald;
-                btn.Foreground = emerald;
-                UpdateChildTextBlocks(btn.Content as DependencyObject, btn.Foreground);
-                return;
-            }
-
-            // Standard buttons (BtnExportJson, BtnAbout, BtnThemeToggle, BtnHamburgerMenu, BtnMobileExportJson, etc.)
-            btn.Background = isDark ? ThemeManager.BrushDarkControlBg : ThemeManager.BrushLightSubCardBg;
-            btn.BorderBrush = isDark ? ThemeManager.BrushDarkControlBorder : ThemeManager.BrushLightControlBorder;
-            btn.Foreground = isDark ? ThemeManager.BrushDarkControlFg : ThemeManager.BrushLightControlFg;
-            UpdateChildTextBlocks(btn.Content as DependencyObject, btn.Foreground);
         }
 
         private static void UpdateChildTextBlocks(DependencyObject? obj, Brush foreground)
@@ -1025,138 +1019,6 @@ namespace PwImageMetadataViewer
             {
                 UpdateChildTextBlocks(contentDep, foreground);
             }
-        }
-
-        private void ApplyThemeToTree(DependencyObject obj, bool isDark)
-        {
-            // Do not traverse into Leaflet DOM container, data-bound tags control, or dialog overlays
-            if (obj == MapContainerBorder || obj == TagsItemsControl || obj == AboutOverlayGrid || obj == UpdateWindowOverlayGrid)
-            {
-                return;
-            }
-
-            // Buttons: style directly and style their content descendants, but DO NOT recurse into control template
-            if (obj is Button btn)
-            {
-                ApplyThemeToButton(btn, isDark);
-                return;
-            }
-
-            // Explicitly styled root and header containers: do not cache or alter their backgrounds/borders, but recurse to children
-            if (obj == TopHeaderBorder || obj == RootLayoutGrid || obj == MainScrollViewer)
-            {
-                int count = VisualTreeHelper.GetChildrenCount(obj);
-                for (int i = 0; i < count; i++)
-                {
-                    var child = VisualTreeHelper.GetChild(obj, i);
-                    if (child != null)
-                    {
-                        ApplyThemeToTree(child, isDark);
-                    }
-                }
-                return;
-            }
-
-            if (!_originalDarkBrushes.ContainsKey(obj))
-            {
-                Brush? origBg = (obj as Control)?.Background ?? (obj as Border)?.Background ?? (obj as Panel)?.Background;
-                Brush? origBorder = (obj as Control)?.BorderBrush ?? (obj as Border)?.BorderBrush;
-                Brush? origFg = (obj as Control)?.Foreground ?? (obj as TextBlock)?.Foreground;
-                _originalDarkBrushes[obj] = (origBg, origBorder, origFg);
-            }
-
-            var (darkBg, darkBorder, darkFg) = _originalDarkBrushes[obj];
-
-            if (!isDark)
-            {
-                // Applying LIGHT mode
-                if (obj is Border b)
-                {
-                    if (darkBg is SolidColorBrush scbBg)
-                    {
-                        if (IsColor(scbBg, 11, 15, 25))        // #0B0F19
-                            b.Background = ThemeManager.BrushLightPageBg;
-                        else if (IsColor(scbBg, 17, 24, 39))   // #111827
-                            b.Background = ThemeManager.BrushLightHeaderBg;
-                        else if (IsColor(scbBg, 22, 31, 48))   // #161F30
-                            b.Background = ThemeManager.BrushLightCardBg;
-                        else if (IsColor(scbBg, 15, 23, 42))   // #0F172A
-                            b.Background = ThemeManager.BrushLightSubCardBg;
-                        else if (IsColor(scbBg, 30, 41, 59))   // #1E293B
-                            b.Background = ThemeManager.BrushLightSubCardBg;
-                        else if (IsColor(scbBg, 11, 17, 32))   // #0B1120
-                            b.Background = ThemeManager.BrushLightPageBg;
-                        else if (IsColor(scbBg, 12, 74, 110))  // #0C4A6E
-                            b.Background = ThemeManager.BrushLightStatusBg;
-                    }
-
-                    if (darkBorder is SolidColorBrush scbBd)
-                    {
-                        if (IsColor(scbBd, 31, 41, 55))        // #1F2937
-                            b.BorderBrush = ThemeManager.BrushLightDivider;
-                        else if (IsColor(scbBd, 39, 53, 73) || IsColor(scbBd, 51, 65, 85) || IsColor(scbBd, 30, 41, 59)) // #273549, #334155, #1E293B
-                            b.BorderBrush = ThemeManager.BrushLightCardBorder;
-                        else if (IsColor(scbBd, 71, 85, 105))  // #475569
-                            b.BorderBrush = ThemeManager.BrushLightControlBorder;
-                        else if (IsColor(scbBd, 2, 132, 199))   // #0284C7
-                            b.BorderBrush = ThemeManager.BrushLightStatusBorder;
-                    }
-                }
-                else if (obj is TextBlock tb)
-                {
-                    if (darkFg is SolidColorBrush scbFg)
-                    {
-                        if (IsColor(scbFg, 248, 250, 252) || IsColor(scbFg, 226, 232, 240)) // #F8FAFC / #E2E8F0
-                            tb.Foreground = ThemeManager.BrushLightTextPrimary;
-                        else if (IsColor(scbFg, 241, 245, 249)) // #F1F5F9
-                            tb.Foreground = ThemeManager.BrushLightTextHeading;
-                        else if (IsColor(scbFg, 203, 213, 225)) // #CBD5E1
-                            tb.Foreground = ThemeManager.BrushLightTextSecondary;
-                        else if (IsColor(scbFg, 148, 163, 184) || IsColor(scbFg, 100, 116, 139)) // #94A3B8 / #64748B
-                            tb.Foreground = ThemeManager.BrushLightTextMuted;
-                        else if (IsColor(scbFg, 56, 189, 248)) // #38BDF8
-                            tb.Foreground = ThemeManager.BrushSkyAccentLight;
-                        else if (IsColor(scbFg, 240, 249, 255)) // #F0F9FF
-                            tb.Foreground = new SolidColorBrush(Color.FromArgb(255, 3, 105, 161)); // #0369A1
-                    }
-                }
-                else if (obj is TextBox txtBox)
-                {
-                    txtBox.Foreground = ThemeManager.BrushLightTextPrimary;
-                }
-            }
-            else
-            {
-                // Restoring DARK mode
-                if (obj is Border b)
-                {
-                    b.Background = darkBg;
-                    b.BorderBrush = darkBorder;
-                }
-                else if (obj is TextBlock tb)
-                {
-                    tb.Foreground = darkFg;
-                }
-                else if (obj is TextBox txtBox)
-                {
-                    txtBox.Foreground = darkFg;
-                }
-            }
-
-            int childCount = VisualTreeHelper.GetChildrenCount(obj);
-            for (int i = 0; i < childCount; i++)
-            {
-                var child = VisualTreeHelper.GetChild(obj, i);
-                if (child != null)
-                {
-                    ApplyThemeToTree(child, isDark);
-                }
-            }
-        }
-
-        private static bool IsColor(SolidColorBrush brush, byte r, byte g, byte b)
-        {
-            return brush.Color.R == r && brush.Color.G == g && brush.Color.B == b;
         }
     }
 }

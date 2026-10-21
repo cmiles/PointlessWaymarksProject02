@@ -7,107 +7,107 @@
              mc:Ignorable="d"
              d:DesignHeight="80" d:DesignWidth="1100">
 
-    <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="0,0,0,1" Padding="12,6">
+    <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="0,0,0,1" Padding="12,6">
         <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
             <!-- Track Info Title & Pill -->
-            <Border Background="#0F172A" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="0,3,8,3" MinWidth="130" VerticalAlignment="Center">
+            <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="0,3,8,3" MinWidth="130" VerticalAlignment="Center">
                 <StackPanel Orientation="Vertical">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="TRACK" FontSize="10" FontWeight="Bold" Foreground="#94A3B8" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                        <Border Background="#334155" CornerRadius="4" Padding="6,1,6,1">
-                            <TextBlock Text="{Binding Document.FileFormat, FallbackValue='GPX'}" FontSize="10" FontWeight="Bold" Foreground="#E2E8F0"/>
+                        <TextBlock Text="TRACK" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <Border Background="{StaticResource ControlBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,1,6,1">
+                            <TextBlock Text="{Binding Document.FileFormat, FallbackValue='GPX'}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
                         </Border>
                     </StackPanel>
                     <TextBlock Text="{Binding Document.Name, FallbackValue='No Track Loaded'}" 
-                               FontSize="14" FontWeight="SemiBold" Foreground="#F8FAFC" 
+                               FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextHeadingBrush}" 
                                MaxWidth="200" TextTrimming="WordEllipsis" Margin="0,2,0,0"/>
                 </StackPanel>
             </Border>
 
             <!-- Distance -->
-            <Border Background="#0F172A" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="0,3,8,3" MinWidth="95" VerticalAlignment="Center">
+            <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="0,3,8,3" MinWidth="95" VerticalAlignment="Center">
                 <StackPanel>
-                    <TextBlock Text="DISTANCE" FontSize="10" FontWeight="SemiBold" Foreground="#94A3B8"/>
+                    <TextBlock Text="DISTANCE" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
                     <TextBlock Text="{Binding Document.Statistics.DistanceFormatted, FallbackValue='0.00 mi'}" 
-                               FontSize="14" FontWeight="Bold" Foreground="#E2E8F0" Margin="0,2,0,0"/>
+                               FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" Margin="0,2,0,0"/>
                 </StackPanel>
             </Border>
 
             <!-- Elevation Gain -->
-            <Border Background="#0F172A" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="0,3,8,3" MinWidth="95" VerticalAlignment="Center">
+            <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="0,3,8,3" MinWidth="95" VerticalAlignment="Center">
                 <StackPanel>
-                    <TextBlock Text="ELEV GAIN" FontSize="10" FontWeight="SemiBold" Foreground="#94A3B8"/>
+                    <TextBlock Text="ELEV GAIN" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
                     <TextBlock Text="{Binding Document.Statistics.ElevationGainFormatted, FallbackValue='+0 ft'}" 
-                               FontSize="14" FontWeight="Bold" Foreground="#E2E8F0" Margin="0,2,0,0"/>
+                               FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" Margin="0,2,0,0"/>
                 </StackPanel>
             </Border>
 
             <!-- Elevation Loss -->
-            <Border Background="#0F172A" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="0,3,8,3" MinWidth="95" VerticalAlignment="Center">
+            <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="0,3,8,3" MinWidth="95" VerticalAlignment="Center">
                 <StackPanel>
-                    <TextBlock Text="ELEV LOSS" FontSize="10" FontWeight="SemiBold" Foreground="#94A3B8"/>
+                    <TextBlock Text="ELEV LOSS" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
                     <TextBlock Text="{Binding Document.Statistics.ElevationLossFormatted, FallbackValue='-0 ft'}" 
-                               FontSize="14" FontWeight="Bold" Foreground="#E2E8F0" Margin="0,2,0,0"/>
+                               FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" Margin="0,2,0,0"/>
                 </StackPanel>
             </Border>
 
             <!-- Elev Range (Min - Max) -->
-            <Border Background="#0F172A" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="0,3,8,3" MinWidth="110" VerticalAlignment="Center">
+            <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="0,3,8,3" MinWidth="110" VerticalAlignment="Center">
                 <StackPanel>
-                    <TextBlock Text="MIN / MAX ELEV" FontSize="10" FontWeight="SemiBold" Foreground="#94A3B8"/>
+                    <TextBlock Text="MIN / MAX ELEV" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
                     <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
                         <TextBlock Text="{Binding Document.Statistics.MinElevationFormatted, FallbackValue='0 ft'}" 
-                                   FontSize="13" FontWeight="Bold" Foreground="#E2E8F0"/>
-                        <TextBlock Text=" / " FontSize="13" Foreground="#64748B"/>
+                                   FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}"/>
+                        <TextBlock Text=" / " FontSize="13" Foreground="{StaticResource TextMutedBrush}"/>
                         <TextBlock Text="{Binding Document.Statistics.MaxElevationFormatted, FallbackValue='0 ft'}" 
-                                   FontSize="13" FontWeight="Bold" Foreground="#E2E8F0"/>
+                                   FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
 
             <!-- Moving Time / Duration -->
-            <Border Background="#0F172A" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="0,3,8,3" MinWidth="105" VerticalAlignment="Center">
+            <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="0,3,8,3" MinWidth="105" VerticalAlignment="Center">
                 <StackPanel>
-                    <TextBlock Text="{Binding Document.Statistics.DurationCardTitle, FallbackValue='DURATION'}" FontSize="10" FontWeight="SemiBold" Foreground="#94A3B8"/>
+                    <TextBlock Text="{Binding Document.Statistics.DurationCardTitle, FallbackValue='DURATION'}" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
                     <TextBlock Text="{Binding Document.Statistics.DurationCardValue, FallbackValue='0m 00s'}" 
-                               FontSize="14" FontWeight="Bold" Foreground="#E2E8F0" Margin="0,2,0,0"/>
+                               FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" Margin="0,2,0,0"/>
                 </StackPanel>
             </Border>
 
             <!-- Avg Speed / Pace -->
-            <Border Background="#0F172A" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="0,3,8,3" MinWidth="105" VerticalAlignment="Center"
+            <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="0,3,8,3" MinWidth="105" VerticalAlignment="Center"
                     ToolTipService.ToolTip="{Binding Document.Statistics.SpeedToolTipText}">
                 <StackPanel>
-                    <TextBlock Text="AVG SPEED (PACE)" FontSize="10" FontWeight="SemiBold" Foreground="#94A3B8"/>
+                    <TextBlock Text="AVG SPEED (PACE)" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
                     <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
                         <TextBlock Text="{Binding Document.Statistics.AverageSpeedFormatted, FallbackValue='0.0 mph'}" 
-                                   FontSize="13" FontWeight="Bold" Foreground="#E2E8F0"/>
-                        <TextBlock Text=" · " FontSize="13" Foreground="#64748B"/>
+                                   FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}"/>
+                        <TextBlock Text=" · " FontSize="13" Foreground="{StaticResource TextMutedBrush}"/>
                         <TextBlock Text="{Binding Document.Statistics.AveragePaceFormatted, FallbackValue='--:--'}" 
-                                   FontSize="12" Foreground="#CBD5E1" VerticalAlignment="Center"/>
+                                   FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
 
             <!-- Point Count -->
-            <Border Background="#0F172A" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="0,3,8,3" MinWidth="85" VerticalAlignment="Center">
+            <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="0,3,8,3" MinWidth="85" VerticalAlignment="Center">
                 <StackPanel>
-                    <TextBlock Text="POINTS" FontSize="10" FontWeight="SemiBold" Foreground="#94A3B8"/>
+                    <TextBlock Text="POINTS" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
                     <TextBlock Text="{Binding Document.Statistics.PointCount, FallbackValue='0'}" 
-                               FontSize="14" FontWeight="Bold" Foreground="#E2E8F0" Margin="0,2,0,0"/>
+                               FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" Margin="0,2,0,0"/>
                 </StackPanel>
             </Border>
 
             <!-- Selection Indicator Card -->
-            <Border Background="#0F172A" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="0,3,0,3" MinWidth="135" VerticalAlignment="Center">
+            <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="0,3,0,3" MinWidth="135" VerticalAlignment="Center">
                 <StackPanel>
-                    <TextBlock Text="{Binding SelectionCardTitle, FallbackValue='SELECTED POINT'}" FontSize="10" FontWeight="SemiBold" Foreground="#94A3B8"/>
+                    <TextBlock Text="{Binding SelectionCardTitle, FallbackValue='SELECTED POINT'}" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
                     <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
                         <TextBlock Text="{Binding SelectionCardMainText, FallbackValue='None'}" 
-                                   FontSize="13" FontWeight="Bold" Foreground="#E2E8F0"/>
-                        <TextBlock Text=" · " FontSize="13" Foreground="#64748B"/>
+                                   FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}"/>
+                        <TextBlock Text=" · " FontSize="13" Foreground="{StaticResource TextMutedBrush}"/>
                         <TextBlock Text="{Binding SelectionCardSubText, FallbackValue='--'}" 
-                                   FontSize="12" FontWeight="SemiBold" Foreground="#38BDF8"/>
+                                   FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource SkyAccentBrush}"/>
                     </StackPanel>
                 </StackPanel>
             </Border>

@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="OpenSilver" Version="3.3.3" />
+    <PackageReference Include="OpenSilver.Themes.Modern" Version="3.3.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,6 +31,9 @@
     <Page Include="Controls\AppUpdateWindowControl.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\ResponsiveScrollBarDictionary.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Themes\LightTheme.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -45,6 +49,8 @@
     <Compile Include="Controls\MonthlyFlowBandChart.xaml.cs" />
     <Compile Include="Controls\MonthlyHeatmapControl.xaml.cs" />
     <Compile Include="Controls\AppUpdateWindowControl.xaml.cs" />
+    <Compile Include="Controls\ResponsiveScrollBarDictionary.xaml.cs" />
+    <Compile Include="Controls\ResponsiveScrollViewer.cs" />
     <Compile Include="Models\DailyFlowRecord.cs" />
     <Compile Include="Models\DailyPeakFlowRecord.cs" />
     <Compile Include="Models\GaugeDashboardData.cs" />

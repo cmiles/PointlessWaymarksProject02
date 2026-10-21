@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:HistoricTempests.Controls"
              MinHeight="230">
-    <Border x:Name="GridCardBorder" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="10" Padding="16,14,16,12">
+    <Border x:Name="GridCardBorder" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16,14,16,12">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -13,8 +13,8 @@
             <!-- Grid Header & Legend (Wraps dynamically on smaller screens) -->
             <controls:WrapPanel Grid.Row="0" Margin="0,0,0,10" Orientation="Horizontal">
                 <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,6">
-                    <TextBlock x:Name="ChartTitleBlock" Text="Daily Precipitation Grid" FontSize="14" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,6,0" VerticalAlignment="Center" TextWrapping="Wrap" />
-                    <TextBlock x:Name="ChartUnitBlock" Text="(in)" FontSize="12" Foreground="#64748B" VerticalAlignment="Center" />
+                    <TextBlock x:Name="ChartTitleBlock" Text="Daily Precipitation Grid" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" Margin="0,0,6,0" VerticalAlignment="Center" TextWrapping="Wrap" />
+                    <TextBlock x:Name="ChartUnitBlock" Text="(in)" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
                 </controls:WrapPanel>
 
                 <!-- Heatmap Color Scale Legend -->
@@ -44,7 +44,7 @@
 
             <!-- Inverted Vertical Container (Rain Days: Hardware-Accelerated HTML5 Canvas) -->
             <Grid x:Name="InvertedLayoutGrid" Grid.Row="1" Visibility="Collapsed">
-                <Border x:Name="InvertedCanvasContainer" HorizontalAlignment="Stretch" Background="White" />
+                <Border x:Name="InvertedCanvasContainer" HorizontalAlignment="Stretch" Background="{StaticResource CardBackgroundBrush}" />
             </Grid>
         </Grid>
     </Border>
