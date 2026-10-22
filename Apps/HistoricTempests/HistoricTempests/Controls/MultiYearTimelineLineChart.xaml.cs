@@ -881,13 +881,13 @@ public partial class MultiYearTimelineLineChart : UserControl
 
         _tooltipPanel = new StackPanel
         {
-            Background = new SolidColorBrush(Color.FromArgb(245, 15, 23, 42)),
             Margin = new Thickness(0)
         };
 
         _tooltipBorder = new Border
         {
             CornerRadius = new CornerRadius(6),
+            Background = new SolidColorBrush(Color.FromArgb(245, 15, 23, 42)),
             Padding = new Thickness(10, 8, 10, 8),
             Child = _tooltipPanel,
             BorderBrush = new SolidColorBrush(Color.FromArgb(200, 51, 65, 85)),

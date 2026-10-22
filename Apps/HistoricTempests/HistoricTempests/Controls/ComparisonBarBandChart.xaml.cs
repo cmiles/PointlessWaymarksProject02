@@ -294,12 +294,12 @@ public partial class ComparisonBarBandChart : UserControl
 
         var panel = new StackPanel
         {
-            Background = new SolidColorBrush(Color.FromArgb(240, 15, 23, 42)), // Slate 900
             Margin = new Thickness(0)
         };
         var border = new Border
         {
             CornerRadius = new CornerRadius(6),
+            Background = new SolidColorBrush(Color.FromArgb(240, 15, 23, 42)), // Slate 900
             Padding = new Thickness(10, 8, 10, 8),
             Child = panel,
             BorderBrush = new SolidColorBrush(Color.FromArgb(200, 51, 65, 85)),

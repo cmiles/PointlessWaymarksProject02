@@ -33,6 +33,32 @@ public class MonthlySummaryRecord
     public double? AvgSolarRadiation { get; set; }
     public double? MaxSolarRadiation { get; set; }
     public double? AvgUvIndex { get; set; }
+
+    [JsonIgnore]
+    public string DisplayMonth => string.IsNullOrWhiteSpace(MonthName)
+        ? $"{Year}-{Month:D2}"
+        : $"{MonthName} {Year}";
+
+    [JsonIgnore]
+    public double? MeanHighF => Temperature?.MeanHighF ?? Temperature?.MaxF;
+
+    [JsonIgnore]
+    public double? MeanLowF => Temperature?.MeanLowF ?? Temperature?.MinF;
+
+    [JsonIgnore]
+    public double? AvgTempF => Temperature?.AvgF;
+
+    [JsonIgnore]
+    public double TotalPrecipInches => Precipitation?.TotalInches ?? 0;
+
+    [JsonIgnore]
+    public int RainyDays => Precipitation?.RainyDays ?? 0;
+
+    [JsonIgnore]
+    public double? MaxGustMph => Wind?.MaxGustMph;
+
+    [JsonIgnore]
+    public double? AvgWindMph => Wind?.AvgMph;
 }
 
 public class MonthlyTempInfo

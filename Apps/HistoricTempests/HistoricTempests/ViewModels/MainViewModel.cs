@@ -24,6 +24,8 @@ public class MainViewModel : ViewModelBase
     private RecentDayItem? _selectedRecentDay;
     private string _dailySearchText = string.Empty;
     private int _selectedDailyYear = 0;
+    private string _monthlySearchText = string.Empty;
+    private int _selectedMonthlyYear = 0;
 
     private StationMetadata? _station;
     private OverviewReport? _overview;
@@ -157,6 +159,7 @@ public class MainViewModel : ViewModelBase
     private string _glance12MonthWindAvgText = "--";
     private SolidColorBrush _glance12MonthWindAvgBrush = SlateGlanceBrush;
     private string _glance12MonthWindPeakText = "--";
+    private SolidColorBrush _glance12MonthWindPeakBrush = SlateGlanceBrush;
 
     private string _glance12MonthLightningStrikesText = "--";
     private SolidColorBrush _glance12MonthLightningStrikesBrush = SlateGlanceBrush;
@@ -201,6 +204,7 @@ public class MainViewModel : ViewModelBase
     private string _glance14DayWindAvgText = "--";
     private SolidColorBrush _glance14DayWindAvgBrush = SlateGlanceBrush;
     private string _glance14DayWindPeakText = "--";
+    private SolidColorBrush _glance14DayWindPeakBrush = SlateGlanceBrush;
 
     private string _glance14DayLightningStrikesText = "--";
     private SolidColorBrush _glance14DayLightningStrikesBrush = SlateGlanceBrush;
@@ -223,6 +227,7 @@ public class MainViewModel : ViewModelBase
     private string _glance6MonthWindAvgText = "--";
     private SolidColorBrush _glance6MonthWindAvgBrush = SlateGlanceBrush;
     private string _glance6MonthWindPeakText = "--";
+    private SolidColorBrush _glance6MonthWindPeakBrush = SlateGlanceBrush;
 
     private string _glance6MonthLightningStrikesText = "--";
     private SolidColorBrush _glance6MonthLightningStrikesBrush = SlateGlanceBrush;
@@ -264,6 +269,8 @@ public class MainViewModel : ViewModelBase
         UpcomingWeek = [];
         DailyRecords = [];
         FilteredDailyRecords = [];
+        MonthlyRecords = [];
+        FilteredMonthlyRecords = [];
         AvailableYears = [0];
 
         Top10HottestDays = [];
@@ -464,6 +471,8 @@ public class MainViewModel : ViewModelBase
     public ObservableCollection<UpcomingDayItem> UpcomingWeek { get; }
     public ObservableCollection<DailyWeatherRecord> DailyRecords { get; }
     public ObservableCollection<DailyWeatherRecord> FilteredDailyRecords { get; }
+    public ObservableCollection<MonthlySummaryRecord> MonthlyRecords { get; }
+    public ObservableCollection<MonthlySummaryRecord> FilteredMonthlyRecords { get; }
     public ObservableCollection<int> AvailableYears { get; }
 
     public ObservableCollection<WeatherRecordRankItem> Top10HottestDays { get; }
@@ -569,6 +578,33 @@ public class MainViewModel : ViewModelBase
     }
 
     public string SelectedDailyYearDisplay => _selectedDailyYear == 0 ? "All Years" : _selectedDailyYear.ToString();
+
+    public string MonthlySearchText
+    {
+        get => _monthlySearchText;
+        set
+        {
+            if (SetProperty(ref _monthlySearchText, value))
+            {
+                ApplyMonthlyFilter();
+            }
+        }
+    }
+
+    public int SelectedMonthlyYear
+    {
+        get => _selectedMonthlyYear;
+        set
+        {
+            if (SetProperty(ref _selectedMonthlyYear, value))
+            {
+                OnPropertyChanged(nameof(SelectedMonthlyYearDisplay));
+                ApplyMonthlyFilter();
+            }
+        }
+    }
+
+    public string SelectedMonthlyYearDisplay => _selectedMonthlyYear == 0 ? "All Years" : _selectedMonthlyYear.ToString();
 
     // Formatted Overview Strings
     public string HottestDayDisplay
@@ -713,6 +749,7 @@ public class MainViewModel : ViewModelBase
     public string Glance14DayWindAvgText { get => _glance14DayWindAvgText; private set => SetProperty(ref _glance14DayWindAvgText, value); }
     public SolidColorBrush Glance14DayWindAvgBrush { get => _glance14DayWindAvgBrush; private set => SetProperty(ref _glance14DayWindAvgBrush, value); }
     public string Glance14DayWindPeakText { get => _glance14DayWindPeakText; private set => SetProperty(ref _glance14DayWindPeakText, value); }
+    public SolidColorBrush Glance14DayWindPeakBrush { get => _glance14DayWindPeakBrush; private set => SetProperty(ref _glance14DayWindPeakBrush, value); }
 
     public string Glance14DayLightningStrikesText { get => _glance14DayLightningStrikesText; private set => SetProperty(ref _glance14DayLightningStrikesText, value); }
     public SolidColorBrush Glance14DayLightningStrikesBrush { get => _glance14DayLightningStrikesBrush; private set => SetProperty(ref _glance14DayLightningStrikesBrush, value); }
@@ -735,6 +772,7 @@ public class MainViewModel : ViewModelBase
     public string Glance6MonthWindAvgText { get => _glance6MonthWindAvgText; private set => SetProperty(ref _glance6MonthWindAvgText, value); }
     public SolidColorBrush Glance6MonthWindAvgBrush { get => _glance6MonthWindAvgBrush; private set => SetProperty(ref _glance6MonthWindAvgBrush, value); }
     public string Glance6MonthWindPeakText { get => _glance6MonthWindPeakText; private set => SetProperty(ref _glance6MonthWindPeakText, value); }
+    public SolidColorBrush Glance6MonthWindPeakBrush { get => _glance6MonthWindPeakBrush; private set => SetProperty(ref _glance6MonthWindPeakBrush, value); }
 
     public string Glance6MonthLightningStrikesText { get => _glance6MonthLightningStrikesText; private set => SetProperty(ref _glance6MonthLightningStrikesText, value); }
     public SolidColorBrush Glance6MonthLightningStrikesBrush { get => _glance6MonthLightningStrikesBrush; private set => SetProperty(ref _glance6MonthLightningStrikesBrush, value); }
@@ -761,6 +799,7 @@ public class MainViewModel : ViewModelBase
     public string Glance12MonthWindAvgText { get => _glance12MonthWindAvgText; private set => SetProperty(ref _glance12MonthWindAvgText, value); }
     public SolidColorBrush Glance12MonthWindAvgBrush { get => _glance12MonthWindAvgBrush; private set => SetProperty(ref _glance12MonthWindAvgBrush, value); }
     public string Glance12MonthWindPeakText { get => _glance12MonthWindPeakText; private set => SetProperty(ref _glance12MonthWindPeakText, value); }
+    public SolidColorBrush Glance12MonthWindPeakBrush { get => _glance12MonthWindPeakBrush; private set => SetProperty(ref _glance12MonthWindPeakBrush, value); }
 
     public string Glance12MonthLightningStrikesText { get => _glance12MonthLightningStrikesText; private set => SetProperty(ref _glance12MonthLightningStrikesText, value); }
     public SolidColorBrush Glance12MonthLightningStrikesBrush { get => _glance12MonthLightningStrikesBrush; private set => SetProperty(ref _glance12MonthLightningStrikesBrush, value); }
@@ -875,6 +914,11 @@ public class MainViewModel : ViewModelBase
                 MonthlyMatrix.Clear();
                 foreach (var kvp in comparisons.MonthByMonthMultiYearComparison.OrderBy(k => k.Value.MonthNumber))
                     MonthlyMatrix.Add(kvp.Value);
+
+                MonthlyRecords.Clear();
+                foreach (var m in comparisons.MonthlySummaries.OrderByDescending(x => x.Year).ThenByDescending(x => x.Month))
+                    MonthlyRecords.Add(m);
+                ApplyMonthlyFilter();
 
                 if (Station == null && comparisons.Station != null)
                     Station = comparisons.Station;
@@ -1234,6 +1278,31 @@ public class MainViewModel : ViewModelBase
         }
     }
 
+    private void ApplyMonthlyFilter()
+    {
+        FilteredMonthlyRecords.Clear();
+        var query = MonthlyRecords.AsEnumerable();
+
+        if (SelectedMonthlyYear > 0)
+        {
+            query = query.Where(m => m.Year == SelectedMonthlyYear);
+        }
+
+        if (!string.IsNullOrWhiteSpace(MonthlySearchText))
+        {
+            string s = MonthlySearchText.Trim();
+            query = query.Where(m =>
+                m.Year.ToString().Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                m.MonthName.Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                m.DisplayMonth.Contains(s, StringComparison.OrdinalIgnoreCase));
+        }
+
+        foreach (var item in query)
+        {
+            FilteredMonthlyRecords.Add(item);
+        }
+    }
+
     private void BuildSixMonthSummaries(List<DailyWeatherRecord>? dailySummaries)
     {
         if (dailySummaries == null || dailySummaries.Count == 0) return;
@@ -1426,7 +1495,8 @@ public class MainViewModel : ViewModelBase
 
         Glance14DayWindAvgText = $"{(deltaGust >= 0 ? "+" : "")}{deltaGust:F1} mph";
         Glance14DayWindAvgBrush = GetWindBrush(deltaGust);
-        Glance14DayWindPeakText = $"Peak {thisYear14DayPeakGust:F1} mph";
+        Glance14DayWindPeakText = $"Peak {(deltaPeakGust >= 0 ? "+" : "")}{deltaPeakGust:F1} mph";
+        Glance14DayWindPeakBrush = GetWindBrush(deltaPeakGust);
 
         Glance14DayLightningStrikesText = $"{(deltaStrikes >= 0 ? "+" : "")}{deltaStrikes:N0} strikes";
         Glance14DayLightningStrikesBrush = GetLightningBrush(deltaStrikes);
@@ -1725,7 +1795,8 @@ public class MainViewModel : ViewModelBase
 
             Glance6MonthWindAvgText = $"{(delta6Gust >= 0 ? "+" : "")}{delta6Gust:F1} mph";
             Glance6MonthWindAvgBrush = GetWindBrush(delta6Gust);
-            Glance6MonthWindPeakText = $"Peak {thisYear6MoPeakGust:F1} mph";
+            Glance6MonthWindPeakText = $"Peak {(delta6PeakGust >= 0 ? "+" : "")}{delta6PeakGust:F1} mph";
+            Glance6MonthWindPeakBrush = GetWindBrush(delta6PeakGust);
 
             Glance6MonthLightningStrikesText = $"{(delta6Strikes >= 0 ? "+" : "")}{delta6Strikes:N0} strikes";
             Glance6MonthLightningStrikesBrush = GetLightningBrush(delta6Strikes);
@@ -1919,7 +1990,8 @@ public class MainViewModel : ViewModelBase
 
         Glance12MonthWindAvgText = $"{(delta12Gust >= 0 ? "+" : "")}{delta12Gust:F1} mph";
         Glance12MonthWindAvgBrush = GetWindBrush(delta12Gust);
-        Glance12MonthWindPeakText = $"Peak {thisYear12MoPeakGust:F1} mph";
+        Glance12MonthWindPeakText = $"Peak {(delta12PeakGust >= 0 ? "+" : "")}{delta12PeakGust:F1} mph";
+        Glance12MonthWindPeakBrush = GetWindBrush(delta12PeakGust);
 
         Glance12MonthLightningStrikesText = $"{(delta12Strikes >= 0 ? "+" : "")}{delta12Strikes:N0} strikes";
         Glance12MonthLightningStrikesBrush = GetLightningBrush(delta12Strikes);

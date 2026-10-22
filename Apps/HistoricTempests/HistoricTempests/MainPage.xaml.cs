@@ -53,6 +53,7 @@ public partial class MainPage : Page
         }
         UpdateAllViews();
         PopulateYearDropdown();
+        PopulateMonthlyYearDropdown();
         SwitchTab(ViewModel.SelectedTab ?? "Timeline14Days");
         ApplyTheme();
         Dispatcher.BeginInvoke(() =>
@@ -266,6 +267,7 @@ public partial class MainPage : Page
         if (ViewOverview != null) ViewOverview.Visibility = tabName == "Overview" ? Visibility.Visible : Visibility.Collapsed;
         if (ViewRainDays != null) ViewRainDays.Visibility = tabName == "RainDays" ? Visibility.Visible : Visibility.Collapsed;
         if (ViewDaily != null) ViewDaily.Visibility = tabName == "Daily" ? Visibility.Visible : Visibility.Collapsed;
+        if (ViewMonthly != null) ViewMonthly.Visibility = tabName == "Monthly" ? Visibility.Visible : Visibility.Collapsed;
         if (ViewAbout != null) ViewAbout.Visibility = tabName == "About" ? Visibility.Visible : Visibility.Collapsed;
 
         RenderActiveTabCharts(tabName);
@@ -311,7 +313,7 @@ public partial class MainPage : Page
     private void UpdateTabStyles(string activeTab)
     {
         var tm = ThemeManager.Current;
-        Button[] tabBtns = [TabBtn14Days, TabBtn6Month, TabBtn12Month, TabBtnOverview, TabBtnRainDays, TabBtnDaily, TabBtnAbout];
+        Button[] tabBtns = [TabBtn14Days, TabBtn6Month, TabBtn12Month, TabBtnOverview, TabBtnRainDays, TabBtnDaily, TabBtnMonthly, TabBtnAbout];
         foreach (var b in tabBtns)
         {
             if (b == null) continue;
@@ -344,6 +346,7 @@ public partial class MainPage : Page
 
         UpdateTabStyles(ViewModel?.SelectedTab ?? "Timeline14Days");
         PopulateYearDropdown();
+        PopulateMonthlyYearDropdown();
     }
 
     private void BorderYearFilter_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -450,6 +453,117 @@ public partial class MainPage : Page
     }
 
     private void TxtSearchDaily_TextChanged(object sender, TextChangedEventArgs e)
+    {
+    }
+
+    private void BorderMonthlyYearFilter_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (PopupMonthlyYearFilter != null)
+        {
+            PopulateMonthlyYearDropdown();
+            PopupMonthlyYearFilter.IsOpen = !PopupMonthlyYearFilter.IsOpen;
+            e.Handled = true;
+        }
+    }
+
+    private void PopulateMonthlyYearDropdown()
+    {
+        if (MonthlyYearOptionsStack == null) return;
+        MonthlyYearOptionsStack.Children.Clear();
+        bool isDark = ThemeManager.Current.IsDark;
+
+        foreach (int yr in ViewModel.AvailableYears)
+        {
+            string label = yr == 0 ? "All Years" : yr.ToString();
+            bool isSelected = yr == ViewModel.SelectedMonthlyYear;
+
+            var optBorder = new Border
+            {
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(10, 6, 10, 6),
+                Cursor = System.Windows.Input.Cursors.Hand,
+                Background = isSelected
+                    ? (isDark ? new SolidColorBrush(Color.FromArgb(255, 30, 41, 59)) : new SolidColorBrush(Color.FromArgb(255, 226, 232, 240)))
+                    : (Brush)Brushes.Transparent
+            };
+            var optText = new TextBlock
+            {
+                Text = label,
+                FontSize = 13,
+                FontWeight = isSelected ? FontWeights.Bold : FontWeights.Normal,
+                Foreground = isDark ? ThemeManager.BrushDarkTextPrimary : ThemeManager.BrushLightTextPrimary
+            };
+            optBorder.Child = optText;
+
+            int targetYear = yr;
+            optBorder.MouseEnter += (s, e) =>
+            {
+                optBorder.Background = ThemeManager.Current.IsDark
+                    ? new SolidColorBrush(Color.FromArgb(255, 30, 41, 59))
+                    : new SolidColorBrush(Color.FromArgb(255, 241, 245, 249));
+            };
+            optBorder.MouseLeave += (s, e) =>
+            {
+                optBorder.Background = targetYear == ViewModel.SelectedMonthlyYear
+                    ? (ThemeManager.Current.IsDark ? new SolidColorBrush(Color.FromArgb(255, 30, 41, 59)) : new SolidColorBrush(Color.FromArgb(255, 226, 232, 240)))
+                    : (Brush)Brushes.Transparent;
+            };
+            optBorder.MouseLeftButtonDown += (s, e) =>
+            {
+                ViewModel.SelectedMonthlyYear = targetYear;
+                if (TxtSelectedMonthlyYear != null)
+                    TxtSelectedMonthlyYear.Text = label;
+                if (PopupMonthlyYearFilter != null)
+                    PopupMonthlyYearFilter.IsOpen = false;
+                e.Handled = true;
+            };
+
+            MonthlyYearOptionsStack.Children.Add(optBorder);
+        }
+    }
+
+    private void BtnExportMonthlyExcel_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var records = ViewModel.MonthlyRecords;
+            if (records == null || records.Count == 0) return;
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("Year,Month,MonthName,DaysCount,MeanHigh_F,MeanLow_F,AvgTemp_F,TotalPrecip_Inches,RainyDays,MaxGust_Mph,AvgWind_Mph,SolarRadiation_AvgWm2,UV_Index_Avg,LightningStrikes,LightningDays");
+            foreach (var r in records.OrderBy(m => m.Year).ThenBy(m => m.Month))
+            {
+                sb.AppendLine(string.Format(CultureInfo.InvariantCulture,
+                    "{0},{1},{2},{3},{4:F1},{5:F1},{6:F1},{7:F2},{8},{9:F1},{10:F1},{11:F0},{12:F1},{13},{14}",
+                    r.Year, r.Month, r.MonthName, r.DaysCount,
+                    r.MeanHighF, r.MeanLowF, r.AvgTempF,
+                    r.TotalPrecipInches, r.RainyDays,
+                    r.MaxGustMph, r.AvgWindMph,
+                    r.AvgSolarRadiation, r.AvgUvIndex,
+                    r.LightningStrikes, r.LightningDays));
+            }
+
+            var csvText = sb.ToString();
+            var bytes = System.Text.Encoding.UTF8.GetBytes(csvText);
+            var base64 = Convert.ToBase64String(bytes);
+
+            var js = $@"
+                var link = document.createElement('a');
+                link.download = 'historic_tempest_monthly_data.csv';
+                link.href = 'data:text/csv;base64,{base64}';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            ";
+            OpenSilver.Interop.ExecuteJavaScriptVoid(js);
+        }
+        catch (Exception ex)
+        {
+            ViewModel.ErrorMessage = "Export failed: " + ex.Message;
+        }
+    }
+
+    private void TxtSearchMonthly_TextChanged(object sender, TextChangedEventArgs e)
     {
     }
 }

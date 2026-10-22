@@ -141,10 +141,10 @@ public sealed class ThemeManager : INotifyPropertyChanged
 
     public string ThemeButtonLabel => _mode switch
     {
-        AppThemeMode.System => IsDark ? "🌓 System (Dark)" : "🌓 System (Light)",
-        AppThemeMode.Dark => "🌙 Dark",
-        AppThemeMode.Light => "☀️ Light",
-        _ => "🌓 Theme"
+        AppThemeMode.System => IsDark ? "System (Dark)" : "System (Light)",
+        AppThemeMode.Dark => "Dark",
+        AppThemeMode.Light => "Light",
+        _ => "Theme"
     };
 
     public void CycleTheme()
