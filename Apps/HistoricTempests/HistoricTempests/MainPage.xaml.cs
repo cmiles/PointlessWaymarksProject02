@@ -36,6 +36,16 @@ public partial class MainPage : Page
             }
         };
 
+        _fontScaleDebounceTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(250)
+        };
+        _fontScaleDebounceTimer.Tick += (_, _) =>
+        {
+            _fontScaleDebounceTimer.Stop();
+            ThemeManager.Current.FontScalePercent = _pendingFontScalePercent;
+        };
+
         ThemeManager.Current.Initialize();
         ThemeManager.Current.ThemeChanged += (_, _) => ApplyTheme();
         ApplyTheme();
@@ -103,6 +113,33 @@ public partial class MainPage : Page
     private void BtnThemeToggle_Click(object sender, RoutedEventArgs e)
     {
         ThemeManager.Current.CycleTheme();
+    }
+
+    private readonly System.Windows.Threading.DispatcherTimer _fontScaleDebounceTimer;
+    private bool _isUpdatingFontSlider;
+    private double _pendingFontScalePercent = 100.0;
+
+    private void SliderFontScale_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isUpdatingFontSlider) return;
+        _isUpdatingFontSlider = true;
+        try
+        {
+            double newPercent = Math.Clamp(Math.Round(e.NewValue), 50.0, 300.0);
+            _pendingFontScalePercent = newPercent;
+
+            if (SliderFontScale != null && Math.Abs(SliderFontScale.Value - newPercent) > 0.5)
+                SliderFontScale.Value = newPercent;
+            if (SliderFontScaleMobile != null && Math.Abs(SliderFontScaleMobile.Value - newPercent) > 0.5)
+                SliderFontScaleMobile.Value = newPercent;
+
+            _fontScaleDebounceTimer.Stop();
+            _fontScaleDebounceTimer.Start();
+        }
+        finally
+        {
+            _isUpdatingFontSlider = false;
+        }
     }
 
     private void AuthorLink_Click(object sender, RoutedEventArgs e)
@@ -338,6 +375,20 @@ public partial class MainPage : Page
             TxtThemeToggleMobile.Text = ThemeManager.Current.ThemeButtonLabel;
         }
 
+        if (SliderFontScale != null && !_isUpdatingFontSlider && Math.Abs(SliderFontScale.Value - ThemeManager.Current.FontScalePercent) > 0.5)
+        {
+            _isUpdatingFontSlider = true;
+            try { SliderFontScale.Value = ThemeManager.Current.FontScalePercent; }
+            finally { _isUpdatingFontSlider = false; }
+        }
+
+        if (SliderFontScaleMobile != null && !_isUpdatingFontSlider && Math.Abs(SliderFontScaleMobile.Value - ThemeManager.Current.FontScalePercent) > 0.5)
+        {
+            _isUpdatingFontSlider = true;
+            try { SliderFontScaleMobile.Value = ThemeManager.Current.FontScalePercent; }
+            finally { _isUpdatingFontSlider = false; }
+        }
+
         if (MobileMenuDropdown != null)
         {
             MobileMenuDropdown.Background = ThemeManager.Current.CardBackground;
@@ -382,7 +433,7 @@ public partial class MainPage : Page
             var optText = new TextBlock
             {
                 Text = label,
-                FontSize = 13,
+                FontSize = ThemeManager.Current.FontSizeBody,
                 FontWeight = isSelected ? FontWeights.Bold : FontWeights.Normal,
                 Foreground = isDark ? ThemeManager.BrushDarkTextPrimary : ThemeManager.BrushLightTextPrimary
             };
@@ -489,7 +540,7 @@ public partial class MainPage : Page
             var optText = new TextBlock
             {
                 Text = label,
-                FontSize = 13,
+                FontSize = ThemeManager.Current.FontSizeBody,
                 FontWeight = isSelected ? FontWeights.Bold : FontWeights.Normal,
                 Foreground = isDark ? ThemeManager.BrushDarkTextPrimary : ThemeManager.BrushLightTextPrimary
             };

@@ -12,12 +12,21 @@ public enum AppThemeMode
     Light
 }
 
+public enum AppFontScale
+{
+    Small,      // 85%
+    Normal,     // 100%
+    Large,      // 115%
+    ExtraLarge  // 130%
+}
+
 public sealed class ThemeManager : INotifyPropertyChanged
 {
     private static readonly ThemeManager _instance = new();
     public static ThemeManager Current => _instance;
 
     private AppThemeMode _mode = AppThemeMode.System;
+    private double _fontScalePercent = 100.0;
     private bool _isSystemDark;
     private bool _isInitialized;
 
@@ -38,6 +47,25 @@ public sealed class ThemeManager : INotifyPropertyChanged
             if (Enum.TryParse<AppThemeMode>(saved, out var savedMode))
             {
                 _mode = savedMode;
+            }
+
+            object? savedFontObj = OpenSilver.Interop.ExecuteJavaScript(
+                "localStorage.getItem('ht_font_scale_percent') || localStorage.getItem('ht_font_scale') || '100'");
+            string savedFont = savedFontObj?.ToString() ?? "100";
+            if (double.TryParse(savedFont, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var parsedPercent))
+            {
+                _fontScalePercent = Math.Clamp(parsedPercent, 50.0, 300.0);
+            }
+            else if (Enum.TryParse<AppFontScale>(savedFont, out var savedScale))
+            {
+                _fontScalePercent = savedScale switch
+                {
+                    AppFontScale.Small => 85.0,
+                    AppFontScale.Normal => 100.0,
+                    AppFontScale.Large => 115.0,
+                    AppFontScale.ExtraLarge => 130.0,
+                    _ => 100.0
+                };
             }
 
             _isSystemDark = QuerySystemDarkTheme();
@@ -157,6 +185,70 @@ public sealed class ThemeManager : INotifyPropertyChanged
             _ => AppThemeMode.System
         };
     }
+
+    public double FontScalePercent
+    {
+        get => _fontScalePercent;
+        set
+        {
+            double clamped = Math.Clamp(Math.Round(value), 50.0, 300.0);
+            if (Math.Abs(_fontScalePercent - clamped) > 0.01)
+            {
+                _fontScalePercent = clamped;
+                try
+                {
+                    OpenSilver.Interop.ExecuteJavaScriptVoid(
+                        $"localStorage.setItem('ht_font_scale_percent', '{_fontScalePercent.ToString(System.Globalization.CultureInfo.InvariantCulture)}');");
+                }
+                catch { }
+
+                NotifyThemeChanged();
+            }
+        }
+    }
+
+    public double FontScaleFactor => _fontScalePercent / 100.0;
+
+    public AppFontScale FontScale
+    {
+        get => _fontScalePercent switch
+        {
+            <= 90.0 => AppFontScale.Small,
+            <= 107.0 => AppFontScale.Normal,
+            <= 122.0 => AppFontScale.Large,
+            _ => AppFontScale.ExtraLarge
+        };
+        set => FontScalePercent = value switch
+        {
+            AppFontScale.Small => 85.0,
+            AppFontScale.Normal => 100.0,
+            AppFontScale.Large => 115.0,
+            AppFontScale.ExtraLarge => 130.0,
+            _ => 100.0
+        };
+    }
+
+    public string FontScaleLabel => $"Font: {_fontScalePercent:F0}%";
+
+    public void CycleFontScale()
+    {
+        FontScalePercent = _fontScalePercent switch
+        {
+            < 95.0 => 100.0,
+            < 110.0 => 115.0,
+            < 125.0 => 130.0,
+            _ => 85.0
+        };
+    }
+
+    // Dynamic Typography Scale Tokens (50% to 300%)
+    public double FontSizeSmall => Math.Max(6.0, Math.Round(11.0 * FontScaleFactor, 1));
+    public double FontSizeRegular => Math.Max(7.0, Math.Round(12.0 * FontScaleFactor, 1));
+    public double FontSizeBody => Math.Max(7.5, Math.Round(13.0 * FontScaleFactor, 1));
+    public double FontSizeMedium => Math.Max(8.0, Math.Round(14.0 * FontScaleFactor, 1));
+    public double FontSizeSubheading => Math.Max(9.0, Math.Round(16.0 * FontScaleFactor, 1));
+    public double FontSizeHeading => Math.Max(11.0, Math.Round(20.0 * FontScaleFactor, 1));
+    public double FontSizeTitle => Math.Max(14.0, Math.Round(26.0 * FontScaleFactor, 1));
 
     // Dynamic semantic brushes
     public SolidColorBrush PageBackground => IsDark ? BrushDarkPageBg : BrushLightPageBg;

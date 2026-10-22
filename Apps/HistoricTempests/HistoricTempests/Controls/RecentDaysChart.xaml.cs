@@ -72,9 +72,15 @@ public partial class RecentDaysChart : UserControl
             ChartCardBorder.Background = Services.ThemeManager.Current.CardBackground;
             ChartCardBorder.BorderBrush = Services.ThemeManager.Current.CardBorder;
         }
+        if (ChartTitleBlock != null)
+        {
+            ChartTitleBlock.Foreground = Services.ThemeManager.Current.TextPrimary;
+            ChartTitleBlock.FontSize = Services.ThemeManager.Current.FontSizeMedium;
+        }
         if (UnitSubtitle != null)
         {
             UnitSubtitle.Foreground = Services.ThemeManager.Current.TextSecondary;
+            UnitSubtitle.FontSize = Services.ThemeManager.Current.FontSizeRegular;
         }
     }
 

@@ -114,10 +114,12 @@ public partial class MultiYearDayHeatmapGrid : UserControl
         if (ChartTitleBlock != null)
         {
             ChartTitleBlock.Foreground = Services.ThemeManager.Current.TextPrimary;
+            ChartTitleBlock.FontSize = Services.ThemeManager.Current.FontSizeMedium;
         }
         if (ChartUnitBlock != null)
         {
             ChartUnitBlock.Foreground = Services.ThemeManager.Current.TextSecondary;
+            ChartUnitBlock.FontSize = Services.ThemeManager.Current.FontSizeRegular;
         }
         if (InvertedCanvasContainer != null)
         {

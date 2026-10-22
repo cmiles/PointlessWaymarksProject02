@@ -35,20 +35,20 @@
                         <controls:WrapPanel x:Name="WideHeaderPanel" Orientation="Horizontal">
                             <StackPanel VerticalAlignment="Center" Margin="0,0,20,8">
                                 <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,4">
-                                    <TextBlock x:Name="TxtAppTitle" Text="Rincon Valley Weather" FontSize="26" FontWeight="Bold" Foreground="{Binding Theme.HeaderTitle}" VerticalAlignment="Bottom" Margin="0,0,6,0" TextWrapping="Wrap" />
-                                    <TextBlock x:Name="TxtAuthorDash" Text="- " FontSize="16" FontWeight="SemiBold" Foreground="{Binding Theme.HeaderSubtitle}" VerticalAlignment="Bottom" Margin="0,0,2,3" />
+                                    <TextBlock x:Name="TxtAppTitle" Text="Rincon Valley Weather" FontSize="{Binding Theme.FontSizeTitle}" FontWeight="Bold" Foreground="{Binding Theme.HeaderTitle}" VerticalAlignment="Bottom" Margin="0,0,6,0" TextWrapping="Wrap" />
+                                    <TextBlock x:Name="TxtAuthorDash" Text="- " FontSize="{Binding Theme.FontSizeSubheading}" FontWeight="SemiBold" Foreground="{Binding Theme.HeaderSubtitle}" VerticalAlignment="Bottom" Margin="0,0,2,3" />
                                     <HyperlinkButton x:Name="LnkAuthor" Content="Charles Miles" NavigateUri="https://cmiles.info" TargetName="_blank" Click="AuthorLink_Click"
-                                                     FontSize="16" FontWeight="SemiBold" Foreground="{Binding Theme.HeaderAccent}"
+                                                     FontSize="{Binding Theme.FontSizeSubheading}" FontWeight="SemiBold" Foreground="{Binding Theme.HeaderAccent}"
                                                      Padding="0" Margin="0,0,0,3" Cursor="Hand" VerticalAlignment="Bottom" />
                                 </controls:WrapPanel>
                                 <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock x:Name="TxtAppSubtitle" Text="WeatherFlow Tempest Data" FontSize="14" FontWeight="SemiBold" Foreground="{Binding Theme.HeaderSubtitle}" VerticalAlignment="Center" Margin="0,0,10,2" />
-                                    <TextBlock x:Name="TxtHeaderBullet1" Text="•" FontSize="13" Foreground="{Binding Theme.HeaderBullet}" VerticalAlignment="Center" Margin="0,0,10,2" />
-                                    <TextBlock x:Name="TxtLastDataLabel" Text="Last Data: " FontSize="13" Foreground="{Binding Theme.TextSecondary}" VerticalAlignment="Center" Margin="0,0,0,2" />
-                                    <TextBlock x:Name="TxtLastDataDate" Text="{Binding LastDataDateText}" FontSize="13" FontWeight="SemiBold" Foreground="{Binding Theme.HeaderAccent}" VerticalAlignment="Center" Margin="0,0,10,2" />
-                                    <TextBlock x:Name="TxtHeaderBullet2" Text="•" FontSize="13" Foreground="{Binding Theme.HeaderBullet}" VerticalAlignment="Center" Margin="0,0,10,2" />
-                                    <TextBlock x:Name="TxtArchiveDaysLabel" Text="Archive Days: " FontSize="13" Foreground="{Binding Theme.TextSecondary}" VerticalAlignment="Center" Margin="0,0,0,2" />
-                                    <TextBlock x:Name="TxtArchiveDays" Text="{Binding ArchiveDaysText}" FontSize="13" FontWeight="SemiBold" Foreground="{Binding Theme.HeaderAccent}" VerticalAlignment="Center" Margin="0,0,0,2" />
+                                    <TextBlock x:Name="TxtAppSubtitle" Text="WeatherFlow Tempest Data" FontSize="{Binding Theme.FontSizeMedium}" FontWeight="SemiBold" Foreground="{Binding Theme.HeaderSubtitle}" VerticalAlignment="Center" Margin="0,0,10,2" />
+                                    <TextBlock x:Name="TxtHeaderBullet1" Text="•" FontSize="{Binding Theme.FontSizeBody}" Foreground="{Binding Theme.HeaderBullet}" VerticalAlignment="Center" Margin="0,0,10,2" />
+                                    <TextBlock x:Name="TxtLastDataLabel" Text="Last Data: " FontSize="{Binding Theme.FontSizeBody}" Foreground="{Binding Theme.TextSecondary}" VerticalAlignment="Center" Margin="0,0,0,2" />
+                                    <TextBlock x:Name="TxtLastDataDate" Text="{Binding LastDataDateText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{Binding Theme.HeaderAccent}" VerticalAlignment="Center" Margin="0,0,10,2" />
+                                    <TextBlock x:Name="TxtHeaderBullet2" Text="•" FontSize="{Binding Theme.FontSizeBody}" Foreground="{Binding Theme.HeaderBullet}" VerticalAlignment="Center" Margin="0,0,10,2" />
+                                    <TextBlock x:Name="TxtArchiveDaysLabel" Text="Archive Days: " FontSize="{Binding Theme.FontSizeBody}" Foreground="{Binding Theme.TextSecondary}" VerticalAlignment="Center" Margin="0,0,0,2" />
+                                    <TextBlock x:Name="TxtArchiveDays" Text="{Binding ArchiveDaysText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{Binding Theme.HeaderAccent}" VerticalAlignment="Center" Margin="0,0,0,2" />
                                 </controls:WrapPanel>
                             </StackPanel>
 
@@ -56,8 +56,8 @@
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,8">
                                 <!-- Theme Toggle Button -->
                                 <Button x:Name="BtnThemeToggle" Click="BtnThemeToggle_Click"
-                                        Width="145" HorizontalContentAlignment="Center"
-                                        FontWeight="SemiBold" FontSize="12"
+                                        MinWidth="110" HorizontalContentAlignment="Center"
+                                        FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}"
                                         Padding="8,8" Margin="0,0,10,0" Cursor="Hand"
                                         ToolTipService.ToolTip="Cycle theme: System (Auto) -> Dark -> Light">
                                     <TextBlock x:Name="TxtThemeToggle" Text="Theme" VerticalAlignment="Center" HorizontalAlignment="Center" />
@@ -65,7 +65,7 @@
 
                                 <!-- Updates Button -->
                                 <Button x:Name="BtnUpdates" Command="{Binding CheckForUpdatesManualCommand}" Click="BtnUpdates_Click"
-                                        FontWeight="SemiBold" FontSize="12"
+                                        FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}"
                                         Padding="14,8" Margin="0,0,10,0" Cursor="Hand"
                                         ToolTipService.ToolTip="Check online catalog for software updates">
                                     <TextBlock Text="Updates" VerticalAlignment="Center" />
@@ -73,14 +73,25 @@
 
                                 <!-- Refresh Button -->
                                 <Button x:Name="BtnRefresh" Click="BtnRefresh_Click"
-                                        FontWeight="SemiBold" FontSize="12"
-                                        Padding="16,8,16,8" Cursor="Hand"
+                                        FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}"
+                                        Padding="14,8" Margin="0,0,10,0" Cursor="Hand"
                                         ToolTipService.ToolTip="Reload latest weather summaries from Pointless Waymarks server">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="↻ " FontSize="13" VerticalAlignment="Center" />
+                                        <TextBlock Text="↻ " FontSize="{Binding Theme.FontSizeBody}" VerticalAlignment="Center" />
                                         <TextBlock Text="Refresh" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
+
+                                <!-- Font Size Slider -->
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0"
+                                            ToolTipService.ToolTip="Adjust application font size (50% to 300%)">
+                                    <TextBlock Text="Font Size" VerticalAlignment="Center" Margin="0,0,10,0"
+                                               FontSize="{Binding Theme.FontSizeRegular}" FontWeight="SemiBold"
+                                               Foreground="{Binding Theme.TextSecondary}" />
+                                    <Slider x:Name="SliderFontScale" Width="100" VerticalAlignment="Center"
+                                            Minimum="50" Maximum="300" Value="100" SmallChange="5" LargeChange="25"
+                                            ValueChanged="SliderFontScale_ValueChanged" Cursor="Hand" />
+                                </StackPanel>
                             </StackPanel>
                         </controls:WrapPanel>
 
@@ -91,11 +102,11 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="TxtAppTitleMobile" Grid.Column="0" Text="Rincon Valley Weather" FontSize="20" FontWeight="Bold" Foreground="{Binding Theme.HeaderTitle}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                <TextBlock x:Name="TxtAppTitleMobile" Grid.Column="0" Text="Rincon Valley Weather" FontSize="{Binding Theme.FontSizeHeading}" FontWeight="Bold" Foreground="{Binding Theme.HeaderTitle}" VerticalAlignment="Center" TextWrapping="Wrap" />
                                 <Button x:Name="BtnHamburger" Grid.Column="1" Click="BtnHamburger_Click"
                                         CornerRadius="6" Padding="10,6" Margin="8,0,0,0" Cursor="Hand"
                                         ToolTipService.ToolTip="Menu">
-                                    <TextBlock Text="☰" FontSize="16" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                    <TextBlock Text="☰" FontSize="{Binding Theme.FontSizeSubheading}" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center" />
                                 </Button>
                             </Grid>
 
@@ -104,38 +115,48 @@
                                 <StackPanel>
                                     <!-- Author Link -->
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                        <TextBlock Text="By " FontSize="13" Foreground="{Binding Theme.TextSecondary}" VerticalAlignment="Center" />
+                                        <TextBlock Text="By " FontSize="{Binding Theme.FontSizeBody}" Foreground="{Binding Theme.TextSecondary}" VerticalAlignment="Center" />
                                         <HyperlinkButton x:Name="LnkAuthorMobile" Content="Charles Miles" NavigateUri="https://cmiles.info" TargetName="_blank" Click="AuthorLink_Click"
-                                                         FontSize="13" FontWeight="SemiBold" Foreground="{Binding Theme.HeaderAccent}"
+                                                         FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{Binding Theme.HeaderAccent}"
                                                          Padding="0" Cursor="Hand" VerticalAlignment="Center" />
                                     </StackPanel>
 
                                     <!-- Subtitle -->
-                                    <TextBlock x:Name="TxtAppSubtitleMobile" Text="WeatherFlow Tempest Data" FontSize="12.5" FontWeight="SemiBold" Foreground="{Binding Theme.HeaderSubtitle}" Margin="0,0,0,4" />
+                                    <TextBlock x:Name="TxtAppSubtitleMobile" Text="WeatherFlow Tempest Data" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="SemiBold" Foreground="{Binding Theme.HeaderSubtitle}" Margin="0,0,0,4" />
 
                                     <!-- Last Data & Archive Days -->
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
-                                        <TextBlock Text="Last Data: " FontSize="12" Foreground="{Binding Theme.TextSecondary}" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding LastDataDateText}" FontSize="12" FontWeight="SemiBold" Foreground="{Binding Theme.HeaderAccent}" VerticalAlignment="Center" />
+                                        <TextBlock Text="Last Data: " FontSize="{Binding Theme.FontSizeRegular}" Foreground="{Binding Theme.TextSecondary}" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding LastDataDateText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="SemiBold" Foreground="{Binding Theme.HeaderAccent}" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                        <TextBlock Text="Archive Days: " FontSize="12" Foreground="{Binding Theme.TextSecondary}" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding ArchiveDaysText}" FontSize="12" FontWeight="SemiBold" Foreground="{Binding Theme.HeaderAccent}" VerticalAlignment="Center" />
+                                        <TextBlock Text="Archive Days: " FontSize="{Binding Theme.FontSizeRegular}" Foreground="{Binding Theme.TextSecondary}" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding ArchiveDaysText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="SemiBold" Foreground="{Binding Theme.HeaderAccent}" VerticalAlignment="Center" />
                                     </StackPanel>
 
                                     <!-- Action Buttons -->
                                     <controls:WrapPanel Orientation="Horizontal">
                                         <Button x:Name="BtnThemeToggleMobile" Click="BtnThemeToggle_Click"
-                                                Width="145" HorizontalContentAlignment="Center"
-                                                FontWeight="SemiBold" FontSize="12"
+                                                MinWidth="110" HorizontalContentAlignment="Center"
+                                                FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}"
                                                 Padding="8,8" Margin="0,0,10,6" Cursor="Hand">
                                             <TextBlock x:Name="TxtThemeToggleMobile" Text="Theme" VerticalAlignment="Center" HorizontalAlignment="Center" />
                                         </Button>
+                                        <!-- Font Size Slider Mobile -->
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,6"
+                                                    ToolTipService.ToolTip="Adjust application font size (50% to 300%)">
+                                            <TextBlock Text="Font Size" VerticalAlignment="Center" Margin="0,0,8,0"
+                                                       FontSize="{Binding Theme.FontSizeRegular}" FontWeight="SemiBold"
+                                                       Foreground="{Binding Theme.TextSecondary}" />
+                                            <Slider x:Name="SliderFontScaleMobile" Width="110" VerticalAlignment="Center"
+                                                    Minimum="50" Maximum="300" Value="100" SmallChange="5" LargeChange="25"
+                                                    ValueChanged="SliderFontScale_ValueChanged" Cursor="Hand" />
+                                        </StackPanel>
                                         <Button x:Name="BtnRefreshMobile" Click="BtnRefresh_Click"
-                                                FontWeight="SemiBold" FontSize="12"
+                                                FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}"
                                                 Padding="16,8,16,8" Margin="0,0,0,6" Cursor="Hand">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="↻ " FontSize="13" VerticalAlignment="Center" />
+                                                <TextBlock Text="↻ " FontSize="{Binding Theme.FontSizeBody}" VerticalAlignment="Center" />
                                                 <TextBlock Text="Refresh" VerticalAlignment="Center" />
                                             </StackPanel>
                                         </Button>
@@ -148,28 +169,28 @@
 
                 <!-- Loading / Error Alert Banner -->
                 <Border x:Name="ErrorBanner" Background="#FEF2F2" BorderBrush="#FECACA" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,0,16" Visibility="Collapsed">
-                    <TextBlock Text="{Binding ErrorMessage}" Foreground="#DC2626" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding ErrorMessage}" Foreground="#DC2626" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" TextWrapping="Wrap" />
                 </Border>
 
                 <!-- 2. NAVIGATION TAB BAR -->
                 <Border x:Name="NavBarBorder" Background="{Binding Theme.CardBackground}" BorderBrush="{Binding Theme.CardBorder}" BorderThickness="1" CornerRadius="10" Padding="6" Margin="0,0,0,16">
                     <controls:WrapPanel Orientation="Horizontal">
                         <Button x:Name="TabBtn14Days" Content="14 Days" Click="TabBtn_Click" Tag="Timeline14Days" Style="{StaticResource TabNavButtonStyle}"
-                                Margin="3" Padding="14,8,14,8" FontWeight="Bold" FontSize="13" Cursor="Hand" />
+                                Margin="3" Padding="14,8,14,8" FontWeight="Bold" FontSize="{Binding Theme.FontSizeBody}" Cursor="Hand" />
                         <Button x:Name="TabBtn6Month" Content="6 Months" Click="TabBtn_Click" Tag="Timeline6Month" Style="{StaticResource TabNavButtonStyle}"
-                                Margin="3" Padding="14,8,14,8" FontWeight="SemiBold" FontSize="13" Cursor="Hand" />
+                                Margin="3" Padding="14,8,14,8" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeBody}" Cursor="Hand" />
                         <Button x:Name="TabBtn12Month" Content="12 Months" Click="TabBtn_Click" Tag="Timeline12Month" Style="{StaticResource TabNavButtonStyle}"
-                                Margin="3" Padding="14,8,14,8" FontWeight="SemiBold" FontSize="13" Cursor="Hand" />
+                                Margin="3" Padding="14,8,14,8" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeBody}" Cursor="Hand" />
                         <Button x:Name="TabBtnRainDays" Content="🌧 Rain Days" Click="TabBtn_Click" Tag="RainDays" Style="{StaticResource TabNavButtonStyle}"
-                                Margin="3" Padding="14,8,14,8" FontWeight="SemiBold" FontSize="13" Cursor="Hand" />
+                                Margin="3" Padding="14,8,14,8" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeBody}" Cursor="Hand" />
                         <Button x:Name="TabBtnOverview" Content="📊 Records" Click="TabBtn_Click" Tag="Overview" Style="{StaticResource TabNavButtonStyle}"
-                                Margin="3" Padding="14,8,14,8" FontWeight="SemiBold" FontSize="13" Cursor="Hand" />
+                                Margin="3" Padding="14,8,14,8" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeBody}" Cursor="Hand" />
                         <Button x:Name="TabBtnDaily" Content="🗄 Daily History" Click="TabBtn_Click" Tag="Daily" Style="{StaticResource TabNavButtonStyle}"
-                                Margin="3" Padding="14,8,14,8" FontWeight="SemiBold" FontSize="13" Cursor="Hand" />
+                                Margin="3" Padding="14,8,14,8" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeBody}" Cursor="Hand" />
                         <Button x:Name="TabBtnMonthly" Content="📅 Monthly History" Click="TabBtn_Click" Tag="Monthly" Style="{StaticResource TabNavButtonStyle}"
-                                Margin="3" Padding="14,8,14,8" FontWeight="SemiBold" FontSize="13" Cursor="Hand" />
+                                Margin="3" Padding="14,8,14,8" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeBody}" Cursor="Hand" />
                         <Button x:Name="TabBtnAbout" Content="ℹ️ About" Click="TabBtn_Click" Tag="About" Style="{StaticResource TabNavButtonStyle}"
-                                Margin="3" Padding="14,8,14,8" FontWeight="SemiBold" FontSize="13" Cursor="Hand" />
+                                Margin="3" Padding="14,8,14,8" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeBody}" Cursor="Hand" />
                     </controls:WrapPanel>
                 </Border>
 
@@ -183,32 +204,32 @@
                             <!-- Rain -->
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,5,8,5" Margin="0,0,6,4" VerticalAlignment="Center">
                                 <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="🌧 Rain: " FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                    <TextBlock Text="🌧 Rain: " FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Glance14DayRainDaysText}" Foreground="{Binding Glance14DayRainDaysBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
-                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Glance14DayRainDaysText}" Foreground="{Binding Glance14DayRainDaysBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
+                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                     </StackPanel>
-                                    <TextBlock Text="{Binding Glance14DayRainAmountText}" Foreground="{Binding Glance14DayRainAmountBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Glance14DayRainAmountText}" Foreground="{Binding Glance14DayRainAmountBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                 </controls:WrapPanel>
                             </Border>
 
                             <!-- Temperature -->
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,5,8,5" Margin="0,0,6,4" VerticalAlignment="Center">
                                 <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="🌡 Temp: " FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                    <TextBlock Text="🌡 Temp: " FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="Max " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding Glance14DayTempMaxText}" Foreground="{Binding Glance14DayTempMaxBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
-                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Text="Max " FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Glance14DayTempMaxText}" Foreground="{Binding Glance14DayTempMaxBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
+                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="Min " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding Glance14DayTempMinText}" Foreground="{Binding Glance14DayTempMinBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
-                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Text="Min " FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Glance14DayTempMinText}" Foreground="{Binding Glance14DayTempMinBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
+                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="Avg " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding Glance14DayTempAvgText}" Foreground="{Binding Glance14DayTempAvgBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Text="Avg " FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Glance14DayTempAvgText}" Foreground="{Binding Glance14DayTempAvgBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </controls:WrapPanel>
                             </Border>
@@ -216,34 +237,34 @@
                             <!-- Wind -->
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,5,8,5" Margin="0,0,6,4" VerticalAlignment="Center">
                                 <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="💨 Wind: " FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                    <TextBlock Text="💨 Wind: " FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="Avg " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding Glance14DayWindAvgText}" Foreground="{Binding Glance14DayWindAvgBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
-                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Text="Avg " FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Glance14DayWindAvgText}" Foreground="{Binding Glance14DayWindAvgBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
+                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                     </StackPanel>
-                                    <TextBlock Text="{Binding Glance14DayWindPeakText}" Foreground="{Binding Glance14DayWindPeakBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Glance14DayWindPeakText}" Foreground="{Binding Glance14DayWindPeakBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                 </controls:WrapPanel>
                             </Border>
 
                             <!-- Lightning -->
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,5,8,5" Margin="0,0,6,4" VerticalAlignment="Center">
                                 <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="⚡ Lightning: " FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                    <TextBlock Text="⚡ Lightning: " FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Glance14DayLightningStrikesText}" Foreground="{Binding Glance14DayLightningStrikesBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
-                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Glance14DayLightningStrikesText}" Foreground="{Binding Glance14DayLightningStrikesBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
+                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                     </StackPanel>
-                                    <TextBlock Text="{Binding Glance14DayLightningDaysText}" Foreground="{Binding Glance14DayLightningDaysBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Glance14DayLightningDaysText}" Foreground="{Binding Glance14DayLightningDaysBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                 </controls:WrapPanel>
                             </Border>
 
                             <!-- Sun / Amount of Sun -->
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,5,8,5" Margin="0,0,0,4" VerticalAlignment="Center">
                                 <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="☀️ Sun: " FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
-                                    <TextBlock Text="Avg " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding Glance14DaySolarAvgText}" Foreground="{Binding Glance14DaySolarAvgBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock Text="☀️ Sun: " FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                    <TextBlock Text="Avg " FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Glance14DaySolarAvgText}" Foreground="{Binding Glance14DaySolarAvgBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                 </controls:WrapPanel>
                             </Border>
                         </controls:WrapPanel>
@@ -253,9 +274,9 @@
                     <controls:MultiYearTimelineLineChart x:Name="Chart14DayTempAvg" Title="Average Daily Temperature" Mode="AverageTemperature" ShowFutureShading="True" Margin="0,0,0,8" />
                     <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10,14,10" Margin="0,0,0,20">
                         <controls:WrapPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding SixMonthAvgTempThisYearText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding SixMonthAvgTempThisYearText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,8,4" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding SixMonthAvgTempDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding SixMonthAvgTempDeltaBrush}" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding SixMonthAvgTempDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding SixMonthAvgTempDeltaBrush}" TextWrapping="Wrap" />
                             </Border>
                         </controls:WrapPanel>
                     </Border>
@@ -264,13 +285,13 @@
                     <controls:MultiYearTimelineLineChart x:Name="Chart14DayTempDual" Title="Daily Temperature Range (Max High &amp; Min Low)" Mode="TemperatureDual" ShowFutureShading="True" Margin="0,0,0,8" />
                     <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10,14,10" Margin="0,0,0,20">
                         <controls:WrapPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding SixMonthAvgHighThisYearText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding SixMonthAvgHighThisYearText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,10,4" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding SixMonthAvgHighDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding SixMonthAvgHighDeltaBrush}" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding SixMonthAvgHighDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding SixMonthAvgHighDeltaBrush}" TextWrapping="Wrap" />
                             </Border>
-                            <TextBlock Text="{Binding SixMonthAvgLowThisYearText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding SixMonthAvgLowThisYearText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,8,4" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding SixMonthAvgLowDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding SixMonthAvgLowDeltaBrush}" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding SixMonthAvgLowDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding SixMonthAvgLowDeltaBrush}" TextWrapping="Wrap" />
                             </Border>
                         </controls:WrapPanel>
                     </Border>
@@ -279,13 +300,13 @@
                     <controls:MultiYearTimelineLineChart x:Name="Chart14DayWind" Title="Peak Daily Wind Gust" Mode="WindGust" ShowFutureShading="True" Margin="0,0,0,8" />
                     <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10,14,10" Margin="0,0,0,20">
                         <controls:WrapPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding SixMonthWindThisYearText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding SixMonthWindThisYearText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,10,4" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding SixMonthWindDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding SixMonthWindDeltaBrush}" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding SixMonthWindDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding SixMonthWindDeltaBrush}" TextWrapping="Wrap" />
                             </Border>
-                            <TextBlock Text="{Binding SixMonthWindPeakText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding SixMonthWindPeakText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,8,4" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding SixMonthWindPeakDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding SixMonthWindPeakDeltaBrush}" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding SixMonthWindPeakDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding SixMonthWindPeakDeltaBrush}" TextWrapping="Wrap" />
                             </Border>
                         </controls:WrapPanel>
                     </Border>
@@ -296,13 +317,13 @@
                         <StackPanel>
                             <!-- Precipitation Summary -->
                             <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                <TextBlock Text="{Binding SixMonthRainThisYearText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding SixMonthRainThisYearText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                                 <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,10,4" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding SixMonthRainDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding SixMonthRainDeltaBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding SixMonthRainDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding SixMonthRainDeltaBrush}" TextWrapping="Wrap" />
                                 </Border>
-                                <TextBlock Text="{Binding SixMonthRainDaysText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding SixMonthRainDaysText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                                 <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,10,4" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding SixMonthRainDaysDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding SixMonthRainDaysDeltaBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding SixMonthRainDaysDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding SixMonthRainDaysDeltaBrush}" TextWrapping="Wrap" />
                                 </Border>
                             </controls:WrapPanel>
 
@@ -311,13 +332,13 @@
 
                             <!-- Lightning Summary -->
                             <controls:WrapPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding SixMonthLightningThisYearText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding SixMonthLightningThisYearText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                                 <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,10,4" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding SixMonthLightningDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding SixMonthLightningDeltaBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding SixMonthLightningDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding SixMonthLightningDeltaBrush}" TextWrapping="Wrap" />
                                 </Border>
-                                <TextBlock Text="{Binding SixMonthLightningDaysText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding SixMonthLightningDaysText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                                 <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,10,4" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding SixMonthLightningDaysDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding SixMonthLightningDaysDeltaBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding SixMonthLightningDaysDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding SixMonthLightningDaysDeltaBrush}" TextWrapping="Wrap" />
                                 </Border>
                             </controls:WrapPanel>
                         </StackPanel>
@@ -327,9 +348,9 @@
                     <controls:MultiYearTimelineLineChart x:Name="Chart14DaySolar" Title="Daily Solar Radiation (Sunniness)" Mode="SolarRadiation" ShowFutureShading="True" Margin="0,0,0,8" />
                     <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10,14,10" Margin="0,0,0,20">
                         <controls:WrapPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding FourteenDayTabSolarThisYearText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding FourteenDayTabSolarThisYearText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,8,4" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding FourteenDayTabSolarDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding FourteenDayTabSolarDeltaBrush}" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding FourteenDayTabSolarDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding FourteenDayTabSolarDeltaBrush}" TextWrapping="Wrap" />
                             </Border>
                         </controls:WrapPanel>
                     </Border>
@@ -343,32 +364,32 @@
                             <!-- Rain -->
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,5,8,5" Margin="0,0,6,4" VerticalAlignment="Center">
                                 <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="🌧 Rain: " FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                    <TextBlock Text="🌧 Rain: " FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Glance6MonthRainDaysText}" Foreground="{Binding Glance6MonthRainDaysBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
-                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Glance6MonthRainDaysText}" Foreground="{Binding Glance6MonthRainDaysBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
+                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                     </StackPanel>
-                                    <TextBlock Text="{Binding Glance6MonthRainAmountText}" Foreground="{Binding Glance6MonthRainAmountBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Glance6MonthRainAmountText}" Foreground="{Binding Glance6MonthRainAmountBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                 </controls:WrapPanel>
                             </Border>
 
                             <!-- Temperature -->
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,5,8,5" Margin="0,0,6,4" VerticalAlignment="Center">
                                 <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="🌡 Temp: " FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                    <TextBlock Text="🌡 Temp: " FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="Max " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding Glance6MonthTempMaxText}" Foreground="{Binding Glance6MonthTempMaxBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
-                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Text="Max " FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Glance6MonthTempMaxText}" Foreground="{Binding Glance6MonthTempMaxBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
+                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="Min " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding Glance6MonthTempMinText}" Foreground="{Binding Glance6MonthTempMinBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
-                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Text="Min " FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Glance6MonthTempMinText}" Foreground="{Binding Glance6MonthTempMinBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
+                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="Avg " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding Glance6MonthTempAvgText}" Foreground="{Binding Glance6MonthTempAvgBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Text="Avg " FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Glance6MonthTempAvgText}" Foreground="{Binding Glance6MonthTempAvgBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </controls:WrapPanel>
                             </Border>
@@ -376,34 +397,34 @@
                             <!-- Wind -->
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,5,8,5" Margin="0,0,6,4" VerticalAlignment="Center">
                                 <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="💨 Wind: " FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                    <TextBlock Text="💨 Wind: " FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="Avg " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding Glance6MonthWindAvgText}" Foreground="{Binding Glance6MonthWindAvgBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
-                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Text="Avg " FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Glance6MonthWindAvgText}" Foreground="{Binding Glance6MonthWindAvgBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
+                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                     </StackPanel>
-                                    <TextBlock Text="{Binding Glance6MonthWindPeakText}" Foreground="{Binding Glance6MonthWindPeakBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Glance6MonthWindPeakText}" Foreground="{Binding Glance6MonthWindPeakBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                 </controls:WrapPanel>
                             </Border>
 
                             <!-- Lightning -->
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,5,8,5" Margin="0,0,6,4" VerticalAlignment="Center">
                                 <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="⚡ Lightning: " FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                    <TextBlock Text="⚡ Lightning: " FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Glance6MonthLightningStrikesText}" Foreground="{Binding Glance6MonthLightningStrikesBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
-                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Glance6MonthLightningStrikesText}" Foreground="{Binding Glance6MonthLightningStrikesBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
+                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                     </StackPanel>
-                                    <TextBlock Text="{Binding Glance6MonthLightningDaysText}" Foreground="{Binding Glance6MonthLightningDaysBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Glance6MonthLightningDaysText}" Foreground="{Binding Glance6MonthLightningDaysBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                 </controls:WrapPanel>
                             </Border>
 
                             <!-- Sun / Amount of Sun -->
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,5,8,5" Margin="0,0,0,4" VerticalAlignment="Center">
                                 <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="☀️ Sun: " FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
-                                    <TextBlock Text="Avg " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding Glance6MonthSolarAvgText}" Foreground="{Binding Glance6MonthSolarAvgBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock Text="☀️ Sun: " FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                    <TextBlock Text="Avg " FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Glance6MonthSolarAvgText}" Foreground="{Binding Glance6MonthSolarAvgBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                 </controls:WrapPanel>
                             </Border>
                         </controls:WrapPanel>
@@ -413,9 +434,9 @@
                     <controls:MultiYearTimelineLineChart x:Name="Chart6MonthTempAvg" Title="Monthly Average Temperature" Mode="AverageTemperature" ShowFutureShading="True" Margin="0,0,0,8" />
                     <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10,14,10" Margin="0,0,0,20">
                         <controls:WrapPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding SixMonthTabAvgTempThisYearText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding SixMonthTabAvgTempThisYearText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,8,4" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding SixMonthTabAvgTempDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding SixMonthTabAvgTempDeltaBrush}" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding SixMonthTabAvgTempDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding SixMonthTabAvgTempDeltaBrush}" TextWrapping="Wrap" />
                             </Border>
                         </controls:WrapPanel>
                     </Border>
@@ -424,13 +445,13 @@
                     <controls:MultiYearTimelineLineChart x:Name="Chart6MonthTempDual" Title="Monthly Temperature Range (Max High &amp; Min Low)" Mode="TemperatureDual" ShowFutureShading="True" Margin="0,0,0,8" />
                     <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10,14,10" Margin="0,0,0,20">
                         <controls:WrapPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding SixMonthTabAvgHighThisYearText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding SixMonthTabAvgHighThisYearText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,10,4" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding SixMonthTabAvgHighDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding SixMonthTabAvgHighDeltaBrush}" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding SixMonthTabAvgHighDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding SixMonthTabAvgHighDeltaBrush}" TextWrapping="Wrap" />
                             </Border>
-                            <TextBlock Text="{Binding SixMonthTabAvgLowThisYearText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,8,4" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding SixMonthTabAvgLowThisYearText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,8,4" TextWrapping="Wrap" />
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,8,4" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding SixMonthTabAvgLowDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding SixMonthTabAvgLowDeltaBrush}" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding SixMonthTabAvgLowDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding SixMonthTabAvgLowDeltaBrush}" TextWrapping="Wrap" />
                             </Border>
                         </controls:WrapPanel>
                     </Border>
@@ -439,13 +460,13 @@
                     <controls:MultiYearTimelineLineChart x:Name="Chart6MonthWind" Title="Monthly Peak Wind Gust" Mode="WindGust" ShowFutureShading="True" Margin="0,0,0,8" />
                     <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10,14,10" Margin="0,0,0,20">
                         <controls:WrapPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding SixMonthTabWindThisYearText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding SixMonthTabWindThisYearText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,10,4" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding SixMonthTabWindDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding SixMonthTabWindDeltaBrush}" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding SixMonthTabWindDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding SixMonthTabWindDeltaBrush}" TextWrapping="Wrap" />
                             </Border>
-                            <TextBlock Text="{Binding SixMonthTabWindPeakText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding SixMonthTabWindPeakText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,8,4" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding SixMonthTabWindPeakDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding SixMonthTabWindPeakDeltaBrush}" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding SixMonthTabWindPeakDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding SixMonthTabWindPeakDeltaBrush}" TextWrapping="Wrap" />
                             </Border>
                         </controls:WrapPanel>
                     </Border>
@@ -456,13 +477,13 @@
                         <StackPanel>
                             <!-- Precipitation Summary & Months -->
                             <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                <TextBlock Text="{Binding SixMonthTabRainThisYearText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding SixMonthTabRainThisYearText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                                 <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,10,4" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding SixMonthTabRainDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding SixMonthTabRainDeltaBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding SixMonthTabRainDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding SixMonthTabRainDeltaBrush}" TextWrapping="Wrap" />
                                 </Border>
-                                <TextBlock Text="{Binding SixMonthTabRainDaysText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding SixMonthTabRainDaysText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                                 <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,10,4" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding SixMonthTabRainDaysDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding SixMonthTabRainDaysDeltaBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding SixMonthTabRainDaysDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding SixMonthTabRainDaysDeltaBrush}" TextWrapping="Wrap" />
                                 </Border>
                             </controls:WrapPanel>
 
@@ -471,13 +492,13 @@
 
                             <!-- Lightning Summary & Months -->
                             <controls:WrapPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding SixMonthTabLightningThisYearText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding SixMonthTabLightningThisYearText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                                 <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,10,4" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding SixMonthTabLightningDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding SixMonthTabLightningDeltaBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding SixMonthTabLightningDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding SixMonthTabLightningDeltaBrush}" TextWrapping="Wrap" />
                                 </Border>
-                                <TextBlock Text="{Binding SixMonthTabLightningDaysText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding SixMonthTabLightningDaysText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                                 <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,10,4" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding SixMonthTabLightningDaysDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding SixMonthTabLightningDaysDeltaBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding SixMonthTabLightningDaysDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding SixMonthTabLightningDaysDeltaBrush}" TextWrapping="Wrap" />
                                 </Border>
                             </controls:WrapPanel>
                         </StackPanel>
@@ -487,9 +508,9 @@
                     <controls:MultiYearTimelineLineChart x:Name="Chart6MonthSolar" Title="Monthly Solar Radiation (Sunniness)" Mode="SolarRadiation" ShowFutureShading="True" Margin="0,0,0,8" />
                     <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10,14,10" Margin="0,0,0,20">
                         <controls:WrapPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding SixMonthTabSolarThisYearText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding SixMonthTabSolarThisYearText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,8,4" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding SixMonthTabSolarDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding SixMonthTabSolarDeltaBrush}" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding SixMonthTabSolarDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding SixMonthTabSolarDeltaBrush}" TextWrapping="Wrap" />
                             </Border>
                         </controls:WrapPanel>
                     </Border>
@@ -503,32 +524,32 @@
                             <!-- Rain -->
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,5,8,5" Margin="0,0,6,4" VerticalAlignment="Center">
                                 <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="🌧 Rain: " FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                    <TextBlock Text="🌧 Rain: " FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Glance12MonthRainDaysText}" Foreground="{Binding Glance12MonthRainDaysBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
-                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Glance12MonthRainDaysText}" Foreground="{Binding Glance12MonthRainDaysBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
+                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                     </StackPanel>
-                                    <TextBlock Text="{Binding Glance12MonthRainAmountText}" Foreground="{Binding Glance12MonthRainAmountBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Glance12MonthRainAmountText}" Foreground="{Binding Glance12MonthRainAmountBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                 </controls:WrapPanel>
                             </Border>
 
                             <!-- Temperature -->
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,5,8,5" Margin="0,0,6,4" VerticalAlignment="Center">
                                 <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="🌡 Temp: " FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                    <TextBlock Text="🌡 Temp: " FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="Max " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding Glance12MonthTempMaxText}" Foreground="{Binding Glance12MonthTempMaxBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
-                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Text="Max " FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Glance12MonthTempMaxText}" Foreground="{Binding Glance12MonthTempMaxBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
+                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="Min " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding Glance12MonthTempMinText}" Foreground="{Binding Glance12MonthTempMinBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
-                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Text="Min " FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Glance12MonthTempMinText}" Foreground="{Binding Glance12MonthTempMinBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
+                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="Avg " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding Glance12MonthTempAvgText}" Foreground="{Binding Glance12MonthTempAvgBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Text="Avg " FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Glance12MonthTempAvgText}" Foreground="{Binding Glance12MonthTempAvgBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </controls:WrapPanel>
                             </Border>
@@ -536,34 +557,34 @@
                             <!-- Wind -->
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,5,8,5" Margin="0,0,6,4" VerticalAlignment="Center">
                                 <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="💨 Wind: " FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                    <TextBlock Text="💨 Wind: " FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="Avg " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding Glance12MonthWindAvgText}" Foreground="{Binding Glance12MonthWindAvgBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
-                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Text="Avg " FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Glance12MonthWindAvgText}" Foreground="{Binding Glance12MonthWindAvgBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
+                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                     </StackPanel>
-                                    <TextBlock Text="{Binding Glance12MonthWindPeakText}" Foreground="{Binding Glance12MonthWindPeakBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Glance12MonthWindPeakText}" Foreground="{Binding Glance12MonthWindPeakBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                 </controls:WrapPanel>
                             </Border>
 
                             <!-- Lightning -->
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,5,8,5" Margin="0,0,6,4" VerticalAlignment="Center">
                                 <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="⚡ Lightning: " FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                    <TextBlock Text="⚡ Lightning: " FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Glance12MonthLightningStrikesText}" Foreground="{Binding Glance12MonthLightningStrikesBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
-                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Glance12MonthLightningStrikesText}" Foreground="{Binding Glance12MonthLightningStrikesBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
+                                        <TextBlock Text=", " Foreground="{StaticResource TextSecondaryBrush}" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                     </StackPanel>
-                                    <TextBlock Text="{Binding Glance12MonthLightningDaysText}" Foreground="{Binding Glance12MonthLightningDaysBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Glance12MonthLightningDaysText}" Foreground="{Binding Glance12MonthLightningDaysBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                 </controls:WrapPanel>
                             </Border>
 
                             <!-- Sun / Amount of Sun -->
                             <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,5,8,5" Margin="0,0,0,4" VerticalAlignment="Center">
                                 <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="☀️ Sun: " FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
-                                    <TextBlock Text="Avg " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding Glance12MonthSolarAvgText}" Foreground="{Binding Glance12MonthSolarAvgBrush}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock Text="☀️ Sun: " FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                    <TextBlock Text="Avg " FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Glance12MonthSolarAvgText}" Foreground="{Binding Glance12MonthSolarAvgBrush}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" VerticalAlignment="Center" />
                                 </controls:WrapPanel>
                             </Border>
                         </controls:WrapPanel>
@@ -574,12 +595,12 @@
                     <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10,14,10" Margin="0,0,0,20">
                         <StackPanel>
                             <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                <TextBlock Text="{Binding TwelveMonthTabAvgTempThisYearText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding TwelveMonthTabAvgTempThisYearText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                                 <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,8,4" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding TwelveMonthTabAvgTempDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding TwelveMonthTabAvgTempDeltaBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding TwelveMonthTabAvgTempDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding TwelveMonthTabAvgTempDeltaBrush}" TextWrapping="Wrap" />
                                 </Border>
                             </controls:WrapPanel>
-                            <TextBlock Text="{Binding TwelveMonthTempAvgMonthly}" FontSize="12.5" FontFamily="Consolas, monospace" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding TwelveMonthTempAvgMonthly}" FontSize="{Binding Theme.FontSizeRegular}" FontFamily="Consolas, monospace" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
 
@@ -588,16 +609,16 @@
                     <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10,14,10" Margin="0,0,0,20">
                         <StackPanel>
                             <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                <TextBlock Text="{Binding TwelveMonthTabAvgHighThisYearText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding TwelveMonthTabAvgHighThisYearText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                                 <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,10,4" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding TwelveMonthTabAvgHighDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding TwelveMonthTabAvgHighDeltaBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding TwelveMonthTabAvgHighDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding TwelveMonthTabAvgHighDeltaBrush}" TextWrapping="Wrap" />
                                 </Border>
-                                <TextBlock Text="{Binding TwelveMonthTabAvgLowThisYearText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,8,4" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding TwelveMonthTabAvgLowThisYearText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,8,4" TextWrapping="Wrap" />
                                 <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,8,4" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding TwelveMonthTabAvgLowDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding TwelveMonthTabAvgLowDeltaBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding TwelveMonthTabAvgLowDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding TwelveMonthTabAvgLowDeltaBrush}" TextWrapping="Wrap" />
                                 </Border>
                             </controls:WrapPanel>
-                            <TextBlock Text="{Binding TwelveMonthTempRangeMonthly}" FontSize="12.5" FontFamily="Consolas, monospace" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding TwelveMonthTempRangeMonthly}" FontSize="{Binding Theme.FontSizeRegular}" FontFamily="Consolas, monospace" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
 
@@ -606,16 +627,16 @@
                     <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10,14,10" Margin="0,0,0,20">
                         <StackPanel>
                             <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                <TextBlock Text="{Binding TwelveMonthTabWindThisYearText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding TwelveMonthTabWindThisYearText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                                 <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,10,4" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding TwelveMonthTabWindDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding TwelveMonthTabWindDeltaBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding TwelveMonthTabWindDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding TwelveMonthTabWindDeltaBrush}" TextWrapping="Wrap" />
                                 </Border>
-                                <TextBlock Text="{Binding TwelveMonthTabWindPeakText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding TwelveMonthTabWindPeakText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                                 <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,8,4" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding TwelveMonthTabWindPeakDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding TwelveMonthTabWindPeakDeltaBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding TwelveMonthTabWindPeakDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding TwelveMonthTabWindPeakDeltaBrush}" TextWrapping="Wrap" />
                                 </Border>
                             </controls:WrapPanel>
-                            <TextBlock Text="{Binding TwelveMonthWindMonthly}" FontSize="12.5" FontFamily="Consolas, monospace" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding TwelveMonthWindMonthly}" FontSize="{Binding Theme.FontSizeRegular}" FontFamily="Consolas, monospace" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
 
@@ -624,38 +645,38 @@
                     <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,12,14,12" Margin="0,0,0,20">
                         <StackPanel>
                             <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                <TextBlock Text="{Binding TwelveMonthTabRainThisYearText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding TwelveMonthTabRainThisYearText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                                 <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,10,4" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding TwelveMonthTabRainDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding TwelveMonthTabRainDeltaBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding TwelveMonthTabRainDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding TwelveMonthTabRainDeltaBrush}" TextWrapping="Wrap" />
                                 </Border>
-                                <TextBlock Text="{Binding TwelveMonthTabRainDaysText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding TwelveMonthTabRainDaysText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                                 <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,10,4" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding TwelveMonthTabRainDaysDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding TwelveMonthTabRainDaysDeltaBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding TwelveMonthTabRainDaysDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding TwelveMonthTabRainDaysDeltaBrush}" TextWrapping="Wrap" />
                                 </Border>
                             </controls:WrapPanel>
-                            <TextBlock Text="{Binding TwelveMonthRainMonthly}" FontSize="12.5" FontFamily="Consolas, monospace" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,10" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding TwelveMonthRainMonthly}" FontSize="{Binding Theme.FontSizeRegular}" FontFamily="Consolas, monospace" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,10" TextWrapping="Wrap" />
 
                             <!-- Divider -->
                             <Border Height="1" Background="{StaticResource DividerBrush}" Margin="0,0,0,10" />
 
                             <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                <TextBlock Text="{Binding TwelveMonthTabLightningThisYearText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding TwelveMonthTabLightningThisYearText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                                 <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,10,4" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding TwelveMonthTabLightningDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding TwelveMonthTabLightningDeltaBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding TwelveMonthTabLightningDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding TwelveMonthTabLightningDeltaBrush}" TextWrapping="Wrap" />
                                 </Border>
-                                <TextBlock Text="{Binding TwelveMonthTabLightningDaysText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding TwelveMonthTabLightningDaysText}" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,6,4" TextWrapping="Wrap" />
                                 <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2" Margin="0,0,10,4" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding TwelveMonthTabLightningDaysDeltaText}" FontSize="12" FontWeight="Bold" Foreground="{Binding TwelveMonthTabLightningDaysDeltaBrush}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding TwelveMonthTabLightningDaysDeltaText}" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="Bold" Foreground="{Binding TwelveMonthTabLightningDaysDeltaBrush}" TextWrapping="Wrap" />
                                 </Border>
                             </controls:WrapPanel>
-                            <TextBlock Text="{Binding TwelveMonthLightningMonthly}" FontSize="12.5" FontFamily="Consolas, monospace" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding TwelveMonthLightningMonthly}" FontSize="{Binding Theme.FontSizeRegular}" FontFamily="Consolas, monospace" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
 
                     <!-- 5. Solar Radiation Graph: 12 Months in Calendar Order (Line Chart) -->
                     <controls:MultiYearTimelineLineChart x:Name="Chart12MonthSolar" Title="Monthly Solar Radiation" Mode="SolarRadiation" Margin="0,0,0,8" />
                     <Border Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10,14,10" Margin="0,0,0,20">
-                        <TextBlock Text="{Binding TwelveMonthSolarMonthly}" FontSize="12.5" FontFamily="Consolas, monospace" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding TwelveMonthSolarMonthly}" FontSize="{Binding Theme.FontSizeRegular}" FontFamily="Consolas, monospace" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
                     </Border>
                 </StackPanel>
 
@@ -664,46 +685,46 @@
                     <!-- High-Level All-Time Records Card -->
                     <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="20,18,20,18" Margin="0,0,0,20">
                         <StackPanel>
-                            <TextBlock Text="All-Time Weather Records" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" Margin="0,0,0,4" TextWrapping="Wrap" />
-                            <TextBlock Text="Key historical weather extremes and all-time station benchmarks recorded since installation." FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,16" TextWrapping="Wrap" />
+                            <TextBlock Text="All-Time Weather Records" FontSize="{Binding Theme.FontSizeSubheading}" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" Margin="0,0,0,4" TextWrapping="Wrap" />
+                            <TextBlock Text="Key historical weather extremes and all-time station benchmarks recorded since installation." FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,16" TextWrapping="Wrap" />
                             <controls:WrapPanel Orientation="Horizontal">
                                 <Border MaxWidth="218" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,12,12">
                                     <StackPanel>
-                                        <TextBlock Text="🌡 Hottest Day" FontSize="12" FontWeight="SemiBold" Foreground="#EA580C" Margin="0,0,0,6" TextWrapping="Wrap" />
-                                        <TextBlock Text="{Binding HottestDayDisplay}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" />
-                                        <TextBlock Text="Station record high" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" TextWrapping="Wrap" />
+                                        <TextBlock Text="🌡 Hottest Day" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="SemiBold" Foreground="#EA580C" Margin="0,0,0,6" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding HottestDayDisplay}" FontSize="{Binding Theme.FontSizeMedium}" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" />
+                                        <TextBlock Text="Station record high" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" TextWrapping="Wrap" />
                                     </StackPanel>
                                 </Border>
 
                                 <Border MaxWidth="218" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,12,12">
                                     <StackPanel>
-                                        <TextBlock Text="❄ Coldest Day" FontSize="12" FontWeight="SemiBold" Foreground="#0284C7" Margin="0,0,0,6" TextWrapping="Wrap" />
-                                        <TextBlock Text="{Binding ColdestDayDisplay}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" />
-                                        <TextBlock Text="Station record low" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" TextWrapping="Wrap" />
+                                        <TextBlock Text="❄ Coldest Day" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="SemiBold" Foreground="#0284C7" Margin="0,0,0,6" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding ColdestDayDisplay}" FontSize="{Binding Theme.FontSizeMedium}" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" />
+                                        <TextBlock Text="Station record low" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" TextWrapping="Wrap" />
                                     </StackPanel>
                                 </Border>
 
                                 <Border MaxWidth="218" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,12,12">
                                     <StackPanel>
-                                        <TextBlock Text="🌧 Rainiest Day" FontSize="12" FontWeight="SemiBold" Foreground="#0D9488" Margin="0,0,0,6" TextWrapping="Wrap" />
-                                        <TextBlock Text="{Binding RainiestDayDisplay}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" />
-                                        <TextBlock Text="Single-day max precip" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" TextWrapping="Wrap" />
+                                        <TextBlock Text="🌧 Rainiest Day" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="SemiBold" Foreground="#0D9488" Margin="0,0,0,6" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding RainiestDayDisplay}" FontSize="{Binding Theme.FontSizeMedium}" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" />
+                                        <TextBlock Text="Single-day max precip" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" TextWrapping="Wrap" />
                                     </StackPanel>
                                 </Border>
 
                                 <Border MaxWidth="218" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,12,12">
                                     <StackPanel>
-                                        <TextBlock Text="💨 Peak Wind Gust" FontSize="12" FontWeight="SemiBold" Foreground="#4F46E5" Margin="0,0,0,6" TextWrapping="Wrap" />
-                                        <TextBlock Text="{Binding WindiestDayDisplay}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" />
-                                        <TextBlock Text="Maximum instantaneous gust" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" TextWrapping="Wrap" />
+                                        <TextBlock Text="💨 Peak Wind Gust" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="SemiBold" Foreground="#4F46E5" Margin="0,0,0,6" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding WindiestDayDisplay}" FontSize="{Binding Theme.FontSizeMedium}" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" />
+                                        <TextBlock Text="Maximum instantaneous gust" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" TextWrapping="Wrap" />
                                     </StackPanel>
                                 </Border>
 
                                 <Border MaxWidth="218" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,12,12">
                                     <StackPanel>
-                                        <TextBlock Text="🌊 Total Precipitation" FontSize="12" FontWeight="SemiBold" Foreground="#0284C7" Margin="0,0,0,6" TextWrapping="Wrap" />
-                                        <TextBlock Text="{Binding TotalPrecipDisplay}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" />
-                                        <TextBlock Text="Across all recorded days" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" TextWrapping="Wrap" />
+                                        <TextBlock Text="🌊 Total Precipitation" FontSize="{Binding Theme.FontSizeRegular}" FontWeight="SemiBold" Foreground="#0284C7" Margin="0,0,0,6" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding TotalPrecipDisplay}" FontSize="{Binding Theme.FontSizeMedium}" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" />
+                                        <TextBlock Text="Across all recorded days" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" TextWrapping="Wrap" />
                                     </StackPanel>
                                 </Border>
                             </controls:WrapPanel>
@@ -713,17 +734,17 @@
                     <!-- Precipitation Streaks Section (Top 3 Dry & Top 3 Wet) -->
                     <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="20,18,20,18" Margin="0,0,0,20">
                         <StackPanel>
-                            <TextBlock Text="Precipitation Streaks" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" Margin="0,0,0,4" TextWrapping="Wrap" />
-                            <TextBlock Text="Longest consecutive stretches of dry days and wet days in recorded station history." FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,16" TextWrapping="Wrap" />
+                            <TextBlock Text="Precipitation Streaks" FontSize="{Binding Theme.FontSizeSubheading}" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" Margin="0,0,0,4" TextWrapping="Wrap" />
+                            <TextBlock Text="Longest consecutive stretches of dry days and wet days in recorded station history." FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,16" TextWrapping="Wrap" />
 
                             <controls:WrapPanel Orientation="Horizontal">
                                 <!-- Top 3 Dry Streaks Card -->
                                 <Border MaxWidth="570" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,16,14">
                                     <StackPanel>
                                         <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                            <TextBlock Text="☀️" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                            <TextBlock Text="Top 3 Longest Dry Streaks" FontSize="14" FontWeight="Bold" Foreground="{StaticResource DryStreakTitleBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                            <TextBlock Text=" (Consecutive days without rain)" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                            <TextBlock Text="☀️" FontSize="{Binding Theme.FontSizeSubheading}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="Top 3 Longest Dry Streaks" FontSize="{Binding Theme.FontSizeMedium}" FontWeight="Bold" Foreground="{StaticResource DryStreakTitleBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                            <TextBlock Text=" (Consecutive days without rain)" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
                                         </controls:WrapPanel>
 
                                         <ItemsControl ItemsSource="{Binding Top3DryStreaks}">
@@ -739,18 +760,18 @@
 
                                                              <!-- Rank Badge -->
                                                             <Border Grid.Column="0" Background="{StaticResource DryStreakBadgeBgBrush}" BorderBrush="{StaticResource DryStreakBadgeBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="0,0,12,0" VerticalAlignment="Center">
-                                                                <TextBlock Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="12" Foreground="{StaticResource DryStreakBadgeFgBrush}" TextWrapping="Wrap" />
+                                                                <TextBlock Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DryStreakBadgeFgBrush}" TextWrapping="Wrap" />
                                                             </Border>
 
                                                             <!-- Date Range & Details -->
                                                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                                <TextBlock Text="{Binding DateRangeDisplay}" FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource StreakDateFgBrush}" TextWrapping="Wrap" />
-                                                                <TextBlock Text="{Binding Details}" FontSize="11" Foreground="{StaticResource StreakDetailsFgBrush}" Margin="0,2,0,0" TextWrapping="Wrap" />
+                                                                <TextBlock Text="{Binding DateRangeDisplay}" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeBody}" Foreground="{StaticResource StreakDateFgBrush}" TextWrapping="Wrap" />
+                                                                <TextBlock Text="{Binding Details}" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource StreakDetailsFgBrush}" Margin="0,2,0,0" TextWrapping="Wrap" />
                                                             </StackPanel>
 
                                                             <!-- Days Count -->
                                                             <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
-                                                                <TextBlock Text="{Binding DaysCountDisplay}" FontWeight="Bold" FontSize="15" Foreground="{StaticResource DryStreakTitleBrush}" HorizontalAlignment="Right" TextWrapping="Wrap" />
+                                                                <TextBlock Text="{Binding DaysCountDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeMedium}" Foreground="{StaticResource DryStreakTitleBrush}" HorizontalAlignment="Right" TextWrapping="Wrap" />
                                                             </StackPanel>
                                                         </Grid>
                                                     </Border>
@@ -764,9 +785,9 @@
                                 <Border MaxWidth="570" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,0,14">
                                     <StackPanel>
                                         <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                            <TextBlock Text="🌧" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                            <TextBlock Text="Top 3 Longest Wet Streaks" FontSize="14" FontWeight="Bold" Foreground="{StaticResource WetStreakTitleBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                            <TextBlock Text=" (Consecutive days with rain)" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                            <TextBlock Text="🌧" FontSize="{Binding Theme.FontSizeSubheading}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="Top 3 Longest Wet Streaks" FontSize="{Binding Theme.FontSizeMedium}" FontWeight="Bold" Foreground="{StaticResource WetStreakTitleBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                            <TextBlock Text=" (Consecutive days with rain)" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
                                         </controls:WrapPanel>
 
                                         <ItemsControl ItemsSource="{Binding Top3WetStreaks}">
@@ -782,18 +803,18 @@
 
                                                             <!-- Rank Badge -->
                                                             <Border Grid.Column="0" Background="{StaticResource WetStreakBadgeBgBrush}" BorderBrush="{StaticResource WetStreakBadgeBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="0,0,12,0" VerticalAlignment="Center">
-                                                                <TextBlock Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="12" Foreground="{StaticResource WetStreakBadgeFgBrush}" TextWrapping="Wrap" />
+                                                                <TextBlock Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource WetStreakBadgeFgBrush}" TextWrapping="Wrap" />
                                                             </Border>
 
                                                             <!-- Date Range & Details -->
                                                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                                <TextBlock Text="{Binding DateRangeDisplay}" FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource StreakDateFgBrush}" TextWrapping="Wrap" />
-                                                                <TextBlock Text="{Binding Details}" FontSize="11" Foreground="{StaticResource StreakDetailsFgBrush}" Margin="0,2,0,0" TextWrapping="Wrap" />
+                                                                <TextBlock Text="{Binding DateRangeDisplay}" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeBody}" Foreground="{StaticResource StreakDateFgBrush}" TextWrapping="Wrap" />
+                                                                <TextBlock Text="{Binding Details}" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource StreakDetailsFgBrush}" Margin="0,2,0,0" TextWrapping="Wrap" />
                                                             </StackPanel>
 
                                                             <!-- Days Count -->
                                                             <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
-                                                                <TextBlock Text="{Binding DaysCountDisplay}" FontWeight="Bold" FontSize="15" Foreground="{StaticResource WetStreakTitleBrush}" HorizontalAlignment="Right" TextWrapping="Wrap" />
+                                                                <TextBlock Text="{Binding DaysCountDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeMedium}" Foreground="{StaticResource WetStreakTitleBrush}" HorizontalAlignment="Right" TextWrapping="Wrap" />
                                                             </StackPanel>
                                                         </Grid>
                                                     </Border>
@@ -809,8 +830,8 @@
                     <!-- Top 10 All-Time Weather Rankings Section -->
                     <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="20,18,20,18" Margin="0,0,0,20">
                         <StackPanel>
-                            <TextBlock Text="Top 10 Historical Rankings" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" Margin="0,0,0,4" TextWrapping="Wrap" />
-                            <TextBlock Text="All-time top 10 daily records for temperature extremes, peak wind gusts, and daily rainfall totals." FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,16" TextWrapping="Wrap" />
+                            <TextBlock Text="Top 10 Historical Rankings" FontSize="{Binding Theme.FontSizeSubheading}" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" Margin="0,0,0,4" TextWrapping="Wrap" />
+                            <TextBlock Text="All-time top 10 daily records for temperature extremes, peak wind gusts, and daily rainfall totals." FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,16" TextWrapping="Wrap" />
 
                             <controls:WrapPanel Orientation="Horizontal">
 
@@ -818,9 +839,9 @@
                                 <Border MaxWidth="570" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,16,16">
                                     <StackPanel>
                                         <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                            <TextBlock Text="🌡" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                            <TextBlock Text="Top 10 Hottest Days" FontSize="14" FontWeight="Bold" Foreground="#EA580C" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                            <TextBlock Text=" (Daily High Temperature)" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                            <TextBlock Text="🌡" FontSize="{Binding Theme.FontSizeSubheading}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="Top 10 Hottest Days" FontSize="{Binding Theme.FontSizeMedium}" FontWeight="Bold" Foreground="#EA580C" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                            <TextBlock Text=" (Daily High Temperature)" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
                                         </controls:WrapPanel>
 
                                         <!-- Column Headers -->
@@ -832,10 +853,10 @@
                                                     <ColumnDefinition Width="90" />
                                                     <ColumnDefinition Width="90" />
                                                 </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="Rank" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="11" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="1" Text="Date" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="11" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="2" Text="High Temp" FontWeight="Bold" Foreground="#FB7185" FontSize="11" HorizontalAlignment="Right" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="3" Text="Low Temp" FontWeight="Bold" Foreground="#94A3B8" FontSize="11" HorizontalAlignment="Right" TextWrapping="Wrap" />
+                                                <TextBlock Grid.Column="0" Text="Rank" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="Wrap" />
+                                                <TextBlock Grid.Column="1" Text="Date" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="Wrap" />
+                                                <TextBlock Grid.Column="2" Text="High Temp" FontWeight="Bold" Foreground="#FB7185" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="Wrap" />
+                                                <TextBlock Grid.Column="3" Text="Low Temp" FontWeight="Bold" Foreground="#94A3B8" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="Wrap" />
                                             </Grid>
                                         </Border>
 
@@ -850,10 +871,10 @@
                                                                 <ColumnDefinition Width="90" />
                                                                 <ColumnDefinition Width="90" />
                                                             </Grid.ColumnDefinitions>
-                                                            <TextBlock Grid.Column="0" Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="12" Foreground="#EA580C" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="1" Text="{Binding FormattedDate}" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="2" Text="{Binding ValueDisplay}" FontWeight="Bold" FontSize="12" Foreground="#DC2626" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="3" Text="{Binding SecondaryInfo}" FontSize="11" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                                            <TextBlock Grid.Column="0" Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#EA580C" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                                            <TextBlock Grid.Column="1" Text="{Binding FormattedDate}" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                                            <TextBlock Grid.Column="2" Text="{Binding ValueDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#DC2626" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                                            <TextBlock Grid.Column="3" Text="{Binding SecondaryInfo}" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
                                                         </Grid>
                                                     </Border>
                                                 </DataTemplate>
@@ -866,9 +887,9 @@
                                 <Border MaxWidth="570" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,16,16">
                                     <StackPanel>
                                         <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                            <TextBlock Text="❄" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                            <TextBlock Text="Top 10 Coldest Days" FontSize="14" FontWeight="Bold" Foreground="#0284C7" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                            <TextBlock Text=" (Daily Low Temperature)" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                            <TextBlock Text="❄" FontSize="{Binding Theme.FontSizeSubheading}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="Top 10 Coldest Days" FontSize="{Binding Theme.FontSizeMedium}" FontWeight="Bold" Foreground="#0284C7" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                            <TextBlock Text=" (Daily Low Temperature)" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
                                         </controls:WrapPanel>
 
                                         <!-- Column Headers -->
@@ -880,10 +901,10 @@
                                                     <ColumnDefinition Width="90" />
                                                     <ColumnDefinition Width="90" />
                                                 </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="Rank" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="11" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="1" Text="Date" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="11" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="2" Text="Low Temp" FontWeight="Bold" Foreground="#38BDF8" FontSize="11" HorizontalAlignment="Right" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="3" Text="High Temp" FontWeight="Bold" Foreground="#94A3B8" FontSize="11" HorizontalAlignment="Right" TextWrapping="Wrap" />
+                                                <TextBlock Grid.Column="0" Text="Rank" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="Wrap" />
+                                                <TextBlock Grid.Column="1" Text="Date" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="Wrap" />
+                                                <TextBlock Grid.Column="2" Text="Low Temp" FontWeight="Bold" Foreground="#38BDF8" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="Wrap" />
+                                                <TextBlock Grid.Column="3" Text="High Temp" FontWeight="Bold" Foreground="#94A3B8" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="Wrap" />
                                             </Grid>
                                         </Border>
 
@@ -898,10 +919,10 @@
                                                                 <ColumnDefinition Width="90" />
                                                                 <ColumnDefinition Width="90" />
                                                             </Grid.ColumnDefinitions>
-                                                            <TextBlock Grid.Column="0" Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="12" Foreground="#0284C7" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="1" Text="{Binding FormattedDate}" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="2" Text="{Binding ValueDisplay}" FontWeight="Bold" FontSize="12" Foreground="#0284C7" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="3" Text="{Binding SecondaryInfo}" FontSize="11" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                                            <TextBlock Grid.Column="0" Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#0284C7" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                                            <TextBlock Grid.Column="1" Text="{Binding FormattedDate}" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                                            <TextBlock Grid.Column="2" Text="{Binding ValueDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#0284C7" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                                            <TextBlock Grid.Column="3" Text="{Binding SecondaryInfo}" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
                                                         </Grid>
                                                     </Border>
                                                 </DataTemplate>
@@ -914,9 +935,9 @@
                                 <Border MaxWidth="570" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,16,16">
                                     <StackPanel>
                                         <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                            <TextBlock Text="💨" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                            <TextBlock Text="Top 10 Highest Wind Gusts" FontSize="14" FontWeight="Bold" Foreground="#4F46E5" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                            <TextBlock Text=" (Peak Daily Gust)" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                            <TextBlock Text="💨" FontSize="{Binding Theme.FontSizeSubheading}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="Top 10 Highest Wind Gusts" FontSize="{Binding Theme.FontSizeMedium}" FontWeight="Bold" Foreground="#4F46E5" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                            <TextBlock Text=" (Peak Daily Gust)" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
                                         </controls:WrapPanel>
 
                                         <!-- Column Headers -->
@@ -928,10 +949,10 @@
                                                     <ColumnDefinition Width="90" />
                                                     <ColumnDefinition Width="90" />
                                                 </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="Rank" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="11" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="1" Text="Date" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="11" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="2" Text="Peak Gust" FontWeight="Bold" Foreground="#A5B4FC" FontSize="11" HorizontalAlignment="Right" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="3" Text="Avg Wind" FontWeight="Bold" Foreground="#94A3B8" FontSize="11" HorizontalAlignment="Right" TextWrapping="Wrap" />
+                                                <TextBlock Grid.Column="0" Text="Rank" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="Wrap" />
+                                                <TextBlock Grid.Column="1" Text="Date" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="Wrap" />
+                                                <TextBlock Grid.Column="2" Text="Peak Gust" FontWeight="Bold" Foreground="#A5B4FC" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="Wrap" />
+                                                <TextBlock Grid.Column="3" Text="Avg Wind" FontWeight="Bold" Foreground="#94A3B8" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="Wrap" />
                                             </Grid>
                                         </Border>
 
@@ -946,10 +967,10 @@
                                                                 <ColumnDefinition Width="90" />
                                                                 <ColumnDefinition Width="90" />
                                                             </Grid.ColumnDefinitions>
-                                                            <TextBlock Grid.Column="0" Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="12" Foreground="#4F46E5" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="1" Text="{Binding FormattedDate}" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="2" Text="{Binding ValueDisplay}" FontWeight="Bold" FontSize="12" Foreground="#4F46E5" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="3" Text="{Binding SecondaryInfo}" FontSize="11" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                                            <TextBlock Grid.Column="0" Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#4F46E5" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                                            <TextBlock Grid.Column="1" Text="{Binding FormattedDate}" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                                            <TextBlock Grid.Column="2" Text="{Binding ValueDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#4F46E5" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                                            <TextBlock Grid.Column="3" Text="{Binding SecondaryInfo}" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
                                                         </Grid>
                                                     </Border>
                                                 </DataTemplate>
@@ -962,9 +983,9 @@
                                 <Border MaxWidth="570" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,16,16">
                                     <StackPanel>
                                         <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                            <TextBlock Text="🌧" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                            <TextBlock Text="Top 10 Rainiest Days" FontSize="14" FontWeight="Bold" Foreground="#0D9488" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                            <TextBlock Text=" (Single-Day Precipitation)" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                            <TextBlock Text="🌧" FontSize="{Binding Theme.FontSizeSubheading}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="Top 10 Rainiest Days" FontSize="{Binding Theme.FontSizeMedium}" FontWeight="Bold" Foreground="#0D9488" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                            <TextBlock Text=" (Single-Day Precipitation)" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
                                         </controls:WrapPanel>
 
                                         <!-- Column Headers -->
@@ -976,10 +997,10 @@
                                                     <ColumnDefinition Width="90" />
                                                     <ColumnDefinition Width="130" />
                                                 </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="Rank" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="11" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="1" Text="Date" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="11" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="2" Text="Precip" FontWeight="Bold" Foreground="#5EEAD4" FontSize="11" HorizontalAlignment="Right" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="3" Text="Activity" FontWeight="Bold" Foreground="#94A3B8" FontSize="11" HorizontalAlignment="Right" TextWrapping="Wrap" />
+                                                <TextBlock Grid.Column="0" Text="Rank" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="Wrap" />
+                                                <TextBlock Grid.Column="1" Text="Date" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="Wrap" />
+                                                <TextBlock Grid.Column="2" Text="Precip" FontWeight="Bold" Foreground="#5EEAD4" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="Wrap" />
+                                                <TextBlock Grid.Column="3" Text="Activity" FontWeight="Bold" Foreground="#94A3B8" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="Wrap" />
                                             </Grid>
                                         </Border>
 
@@ -994,10 +1015,10 @@
                                                                 <ColumnDefinition Width="90" />
                                                                 <ColumnDefinition Width="130" />
                                                             </Grid.ColumnDefinitions>
-                                                            <TextBlock Grid.Column="0" Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="12" Foreground="#0D9488" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="1" Text="{Binding FormattedDate}" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="2" Text="{Binding ValueDisplay}" FontWeight="Bold" FontSize="12" Foreground="#0D9488" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="3" Text="{Binding SecondaryInfo}" FontSize="11" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                                            <TextBlock Grid.Column="0" Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#0D9488" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                                            <TextBlock Grid.Column="1" Text="{Binding FormattedDate}" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                                            <TextBlock Grid.Column="2" Text="{Binding ValueDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#0D9488" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                                            <TextBlock Grid.Column="3" Text="{Binding SecondaryInfo}" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
                                                         </Grid>
                                                     </Border>
                                                 </DataTemplate>
@@ -1026,19 +1047,19 @@
                                     <DataTemplate>
                                         <Border Background="{StaticResource StreakItemBgBrush}" BorderBrush="{StaticResource StreakItemBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,10,12,10" Margin="0,0,10,8">
                                             <StackPanel>
-                                                <TextBlock Text="{Binding Year}" FontWeight="Bold" FontSize="14" Foreground="{StaticResource DailyDateFgBrush}" Margin="0,0,0,4" />
+                                                <TextBlock Text="{Binding Year}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeMedium}" Foreground="{StaticResource DailyDateFgBrush}" Margin="0,0,0,4" />
                                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
-                                                    <TextBlock Text="🌧 Rain: " FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource WetStreakTitleBrush}" />
-                                                    <TextBlock Text="{Binding RainDays, StringFormat='{}{0} days'}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource DailyDateFgBrush}" />
-                                                    <TextBlock Text="{Binding TotalRainInches, StringFormat=' ({0:F2}&quot;)'}" FontSize="11" Foreground="{StaticResource StreakDetailsFgBrush}" />
+                                                    <TextBlock Text="🌧 Rain: " FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource WetStreakTitleBrush}" />
+                                                    <TextBlock Text="{Binding RainDays, StringFormat='{}{0} days'}" FontSize="{Binding Theme.FontSizeSmall}" FontWeight="Bold" Foreground="{StaticResource DailyDateFgBrush}" />
+                                                    <TextBlock Text="{Binding TotalRainInches, StringFormat=' ({0:F2}&quot;)'}" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource StreakDetailsFgBrush}" />
                                                 </StackPanel>
                                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                                    <TextBlock Text="⚡ Lightning: " FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource DryStreakTitleBrush}" />
-                                                    <TextBlock Text="{Binding LightningDays, StringFormat='{}{0} storm days'}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource DailyDateFgBrush}" />
-                                                    <TextBlock Text="{Binding TotalLightningStrikes, StringFormat=' ({0:N0} strikes)'}" FontSize="11" Foreground="{StaticResource StreakDetailsFgBrush}" />
+                                                    <TextBlock Text="⚡ Lightning: " FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource DryStreakTitleBrush}" />
+                                                    <TextBlock Text="{Binding LightningDays, StringFormat='{}{0} storm days'}" FontSize="{Binding Theme.FontSizeSmall}" FontWeight="Bold" Foreground="{StaticResource DailyDateFgBrush}" />
+                                                    <TextBlock Text="{Binding TotalLightningStrikes, StringFormat=' ({0:N0} strikes)'}" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource StreakDetailsFgBrush}" />
                                                 </StackPanel>
                                                 <Border Height="1" Background="{StaticResource DailyRowDividerBrush}" Margin="0,2,0,4" />
-                                                <TextBlock Text="{Binding DaysRecordedDisplay}" FontSize="11" Foreground="{StaticResource StreakDetailsFgBrush}" />
+                                                <TextBlock Text="{Binding DaysRecordedDisplay}" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource StreakDetailsFgBrush}" />
                                             </StackPanel>
                                         </Border>
                                     </DataTemplate>
@@ -1060,19 +1081,19 @@
                             </Grid.ColumnDefinitions>
                             <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,4">
-                                    <TextBlock Text="Filter by Date:" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource DailyMutedFgBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
-                                    <TextBox x:Name="TxtSearchDaily" Width="160" Height="32" Text="{Binding DailySearchText, Mode=TwoWay}"
+                                    <TextBlock Text="Filter by Date:" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource DailyMutedFgBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <TextBox x:Name="TxtSearchDaily" Width="160" MinHeight="32" Text="{Binding DailySearchText, Mode=TwoWay}"
                                              Background="{Binding Theme.InputBg}" Foreground="{Binding Theme.InputFg}" BorderBrush="{Binding Theme.InputBorder}"
                                              TextChanged="TxtSearchDaily_TextChanged" VerticalAlignment="Center" />
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,4">
-                                    <TextBlock Text="Year:" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource DailyMutedFgBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <TextBlock Text="Year:" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource DailyMutedFgBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
                                     <Grid VerticalAlignment="Center">
                                         <Border x:Name="BorderYearFilter" CornerRadius="6"
                                                 Background="{Binding Theme.InputBg}"
                                                 BorderBrush="{Binding Theme.InputBorder}"
                                                 BorderThickness="1"
-                                                Width="110" Height="32" Padding="10,0,8,0"
+                                                Width="110" MinHeight="32" Padding="10,0,8,0"
                                                 Cursor="Hand"
                                                 MouseLeftButtonDown="BorderYearFilter_Click">
                                             <Grid>
@@ -1083,11 +1104,11 @@
                                                 <TextBlock x:Name="TxtSelectedYear"
                                                            Text="{Binding SelectedDailyYearDisplay}"
                                                            Foreground="{Binding Theme.InputFg}"
-                                                           FontSize="13" FontWeight="SemiBold"
+                                                           FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold"
                                                            VerticalAlignment="Center" />
                                                 <TextBlock Grid.Column="1" Text="▾"
                                                            Foreground="{Binding Theme.TextSecondary}"
-                                                           FontSize="11" VerticalAlignment="Center" Margin="4,0,0,0" />
+                                                           FontSize="{Binding Theme.FontSizeSmall}" VerticalAlignment="Center" Margin="4,0,0,0" />
                                             </Grid>
                                         </Border>
 
@@ -1105,12 +1126,12 @@
                                     </Grid>
                                 </StackPanel>
                                 <Button x:Name="BtnExportExcel" Content="Export All to CSV" Click="BtnExportExcel_Click"
-                                        FontWeight="SemiBold" FontSize="12"
-                                        Padding="14,6,14,6" Height="32"
+                                        FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}"
+                                        Padding="14,6,14,6" MinHeight="32"
                                         Margin="0,0,0,4" VerticalAlignment="Center" Cursor="Hand" />
                             </controls:WrapPanel>
                             <TextBlock Grid.Column="1" Text="{Binding FilteredDailyRecords.Count, StringFormat='Showing {0} daily records'}"
-                                       FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
+                                       FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
                         </Grid>
                     </Border>
 
@@ -1123,14 +1144,14 @@
                                         <ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Date" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="12" />
-                                    <TextBlock Grid.Column="1" Text="High Temp" FontWeight="Bold" Foreground="#FB7185" FontSize="12" HorizontalAlignment="Right" />
-                                    <TextBlock Grid.Column="2" Text="Low Temp" FontWeight="Bold" Foreground="#60A5FA" FontSize="12" HorizontalAlignment="Right" />
-                                    <TextBlock Grid.Column="3" Text="Precip" FontWeight="Bold" Foreground="#38BDF8" FontSize="12" HorizontalAlignment="Right" />
-                                    <TextBlock Grid.Column="4" Text="Wind Gust" FontWeight="Bold" Foreground="#94A3B8" FontSize="12" HorizontalAlignment="Right" />
-                                    <TextBlock Grid.Column="5" Text="Solar W/m²" FontWeight="Bold" Foreground="#FDE047" FontSize="12" HorizontalAlignment="Right" />
-                                    <TextBlock Grid.Column="6" Text="UV Index" FontWeight="Bold" Foreground="#FDE047" FontSize="12" HorizontalAlignment="Right" />
-                                    <TextBlock Grid.Column="7" Text="Lightning" FontWeight="Bold" Foreground="#C084FC" FontSize="12" HorizontalAlignment="Right" />
+                                    <TextBlock Grid.Column="0" Text="Date" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeRegular}" />
+                                    <TextBlock Grid.Column="1" Text="High Temp" FontWeight="Bold" Foreground="#FB7185" FontSize="{Binding Theme.FontSizeRegular}" HorizontalAlignment="Right" />
+                                    <TextBlock Grid.Column="2" Text="Low Temp" FontWeight="Bold" Foreground="#60A5FA" FontSize="{Binding Theme.FontSizeRegular}" HorizontalAlignment="Right" />
+                                    <TextBlock Grid.Column="3" Text="Precip" FontWeight="Bold" Foreground="#38BDF8" FontSize="{Binding Theme.FontSizeRegular}" HorizontalAlignment="Right" />
+                                    <TextBlock Grid.Column="4" Text="Wind Gust" FontWeight="Bold" Foreground="#94A3B8" FontSize="{Binding Theme.FontSizeRegular}" HorizontalAlignment="Right" />
+                                    <TextBlock Grid.Column="5" Text="Solar W/m²" FontWeight="Bold" Foreground="#FDE047" FontSize="{Binding Theme.FontSizeRegular}" HorizontalAlignment="Right" />
+                                    <TextBlock Grid.Column="6" Text="UV Index" FontWeight="Bold" Foreground="#FDE047" FontSize="{Binding Theme.FontSizeRegular}" HorizontalAlignment="Right" />
+                                    <TextBlock Grid.Column="7" Text="Lightning" FontWeight="Bold" Foreground="#C084FC" FontSize="{Binding Theme.FontSizeRegular}" HorizontalAlignment="Right" />
                                 </Grid>
                             </Border>
 
@@ -1144,14 +1165,14 @@
                                                     <ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
                                                     <ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
                                                 </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="{Binding Date}" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="1" Text="{Binding TempHighF, StringFormat='{}{0:F1}°F'}" FontSize="12" Foreground="#DC2626" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="2" Text="{Binding TempLowF, StringFormat='{}{0:F1}°F'}" FontSize="12" Foreground="#2563EB" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="3" Text="{Binding PrecipInches, StringFormat='{}{0:F2} in'}" FontSize="12" Foreground="#0284C7" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="4" Text="{Binding WindGustMph, StringFormat='{}{0:F1} mph'}" FontSize="12" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="5" Text="{Binding SolarRadiationAvg, StringFormat='{}{0:F0}'}" FontSize="12" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="6" Text="{Binding UvAvg, StringFormat='{}{0:F1}'}" FontSize="12" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="7" Text="{Binding LightningStrikes, StringFormat='{}{0}'}" FontWeight="SemiBold" FontSize="12" Foreground="#7C3AED" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="0" Text="{Binding Date}" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="1" Text="{Binding TempHighF, StringFormat='{}{0:F1}°F'}" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#DC2626" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="2" Text="{Binding TempLowF, StringFormat='{}{0:F1}°F'}" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#2563EB" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="3" Text="{Binding PrecipInches, StringFormat='{}{0:F2} in'}" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#0284C7" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="4" Text="{Binding WindGustMph, StringFormat='{}{0:F1} mph'}" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="5" Text="{Binding SolarRadiationAvg, StringFormat='{}{0:F0}'}" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="6" Text="{Binding UvAvg, StringFormat='{}{0:F1}'}" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="7" Text="{Binding LightningStrikes, StringFormat='{}{0}'}" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#7C3AED" HorizontalAlignment="Right" VerticalAlignment="Center" />
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
@@ -1171,19 +1192,19 @@
                             </Grid.ColumnDefinitions>
                             <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,4">
-                                    <TextBlock Text="Filter by Month/Year:" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource DailyMutedFgBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
-                                    <TextBox x:Name="TxtSearchMonthly" Width="160" Height="32" Text="{Binding MonthlySearchText, Mode=TwoWay}"
+                                    <TextBlock Text="Filter by Month/Year:" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource DailyMutedFgBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <TextBox x:Name="TxtSearchMonthly" Width="160" MinHeight="32" Text="{Binding MonthlySearchText, Mode=TwoWay}"
                                              Background="{Binding Theme.InputBg}" Foreground="{Binding Theme.InputFg}" BorderBrush="{Binding Theme.InputBorder}"
                                              TextChanged="TxtSearchMonthly_TextChanged" VerticalAlignment="Center" />
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,4">
-                                    <TextBlock Text="Year:" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource DailyMutedFgBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <TextBlock Text="Year:" FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold" Foreground="{StaticResource DailyMutedFgBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
                                     <Grid VerticalAlignment="Center">
                                         <Border x:Name="BorderMonthlyYearFilter" CornerRadius="6"
                                                 Background="{Binding Theme.InputBg}"
                                                 BorderBrush="{Binding Theme.InputBorder}"
                                                 BorderThickness="1"
-                                                Width="110" Height="32" Padding="10,0,8,0"
+                                                Width="110" MinHeight="32" Padding="10,0,8,0"
                                                 Cursor="Hand"
                                                 MouseLeftButtonDown="BorderMonthlyYearFilter_Click">
                                             <Grid>
@@ -1194,11 +1215,11 @@
                                                 <TextBlock x:Name="TxtSelectedMonthlyYear"
                                                            Text="{Binding SelectedMonthlyYearDisplay}"
                                                            Foreground="{Binding Theme.InputFg}"
-                                                           FontSize="13" FontWeight="SemiBold"
+                                                           FontSize="{Binding Theme.FontSizeBody}" FontWeight="SemiBold"
                                                            VerticalAlignment="Center" />
                                                 <TextBlock Grid.Column="1" Text="▾"
                                                            Foreground="{Binding Theme.TextSecondary}"
-                                                           FontSize="11" VerticalAlignment="Center" Margin="4,0,0,0" />
+                                                           FontSize="{Binding Theme.FontSizeSmall}" VerticalAlignment="Center" Margin="4,0,0,0" />
                                             </Grid>
                                         </Border>
 
@@ -1216,12 +1237,12 @@
                                     </Grid>
                                 </StackPanel>
                                 <Button x:Name="BtnExportMonthlyExcel" Content="Export All to CSV" Click="BtnExportMonthlyExcel_Click"
-                                        FontWeight="SemiBold" FontSize="12"
-                                        Padding="14,6,14,6" Height="32"
+                                        FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}"
+                                        Padding="14,6,14,6" MinHeight="32"
                                         Margin="0,0,0,4" VerticalAlignment="Center" Cursor="Hand" />
                             </controls:WrapPanel>
                             <TextBlock Grid.Column="1" Text="{Binding FilteredMonthlyRecords.Count, StringFormat='Showing {0} monthly records'}"
-                                       FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
+                                       FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
                         </Grid>
                     </Border>
 
@@ -1234,15 +1255,15 @@
                                         <ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Month" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="12" />
-                                    <TextBlock Grid.Column="1" Text="Mean High" FontWeight="Bold" Foreground="#FB7185" FontSize="12" HorizontalAlignment="Right" />
-                                    <TextBlock Grid.Column="2" Text="Mean Low" FontWeight="Bold" Foreground="#60A5FA" FontSize="12" HorizontalAlignment="Right" />
-                                    <TextBlock Grid.Column="3" Text="Total Precip" FontWeight="Bold" Foreground="#38BDF8" FontSize="12" HorizontalAlignment="Right" />
-                                    <TextBlock Grid.Column="4" Text="Rain Days" FontWeight="Bold" Foreground="#0284C7" FontSize="12" HorizontalAlignment="Right" />
-                                    <TextBlock Grid.Column="5" Text="Peak Gust" FontWeight="Bold" Foreground="#94A3B8" FontSize="12" HorizontalAlignment="Right" />
-                                    <TextBlock Grid.Column="6" Text="Solar W/m²" FontWeight="Bold" Foreground="#FDE047" FontSize="12" HorizontalAlignment="Right" />
-                                    <TextBlock Grid.Column="7" Text="UV Index" FontWeight="Bold" Foreground="#FDE047" FontSize="12" HorizontalAlignment="Right" />
-                                    <TextBlock Grid.Column="8" Text="Lightning" FontWeight="Bold" Foreground="#C084FC" FontSize="12" HorizontalAlignment="Right" />
+                                    <TextBlock Grid.Column="0" Text="Month" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeRegular}" />
+                                    <TextBlock Grid.Column="1" Text="Mean High" FontWeight="Bold" Foreground="#FB7185" FontSize="{Binding Theme.FontSizeRegular}" HorizontalAlignment="Right" />
+                                    <TextBlock Grid.Column="2" Text="Mean Low" FontWeight="Bold" Foreground="#60A5FA" FontSize="{Binding Theme.FontSizeRegular}" HorizontalAlignment="Right" />
+                                    <TextBlock Grid.Column="3" Text="Total Precip" FontWeight="Bold" Foreground="#38BDF8" FontSize="{Binding Theme.FontSizeRegular}" HorizontalAlignment="Right" />
+                                    <TextBlock Grid.Column="4" Text="Rain Days" FontWeight="Bold" Foreground="#0284C7" FontSize="{Binding Theme.FontSizeRegular}" HorizontalAlignment="Right" />
+                                    <TextBlock Grid.Column="5" Text="Peak Gust" FontWeight="Bold" Foreground="#94A3B8" FontSize="{Binding Theme.FontSizeRegular}" HorizontalAlignment="Right" />
+                                    <TextBlock Grid.Column="6" Text="Solar W/m²" FontWeight="Bold" Foreground="#FDE047" FontSize="{Binding Theme.FontSizeRegular}" HorizontalAlignment="Right" />
+                                    <TextBlock Grid.Column="7" Text="UV Index" FontWeight="Bold" Foreground="#FDE047" FontSize="{Binding Theme.FontSizeRegular}" HorizontalAlignment="Right" />
+                                    <TextBlock Grid.Column="8" Text="Lightning" FontWeight="Bold" Foreground="#C084FC" FontSize="{Binding Theme.FontSizeRegular}" HorizontalAlignment="Right" />
                                 </Grid>
                             </Border>
 
@@ -1256,15 +1277,15 @@
                                                     <ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
                                                     <ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
                                                 </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="{Binding DisplayMonth}" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="1" Text="{Binding MeanHighF, StringFormat='{}{0:F1}°F'}" FontSize="12" Foreground="#DC2626" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="2" Text="{Binding MeanLowF, StringFormat='{}{0:F1}°F'}" FontSize="12" Foreground="#2563EB" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="3" Text="{Binding TotalPrecipInches, StringFormat='{}{0:F2} in'}" FontSize="12" Foreground="#0284C7" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="4" Text="{Binding RainyDays, StringFormat='{}{0} days'}" FontSize="12" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="5" Text="{Binding MaxGustMph, StringFormat='{}{0:F1} mph'}" FontSize="12" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="6" Text="{Binding AvgSolarRadiation, StringFormat='{}{0:F0}'}" FontSize="12" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="7" Text="{Binding AvgUvIndex, StringFormat='{}{0:F1}'}" FontSize="12" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="8" Text="{Binding LightningStrikes, StringFormat='{}{0} strikes'}" FontWeight="SemiBold" FontSize="12" Foreground="#7C3AED" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="0" Text="{Binding DisplayMonth}" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="1" Text="{Binding MeanHighF, StringFormat='{}{0:F1}°F'}" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#DC2626" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="2" Text="{Binding MeanLowF, StringFormat='{}{0:F1}°F'}" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#2563EB" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="3" Text="{Binding TotalPrecipInches, StringFormat='{}{0:F2} in'}" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#0284C7" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="4" Text="{Binding RainyDays, StringFormat='{}{0} days'}" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="5" Text="{Binding MaxGustMph, StringFormat='{}{0:F1} mph'}" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="6" Text="{Binding AvgSolarRadiation, StringFormat='{}{0:F0}'}" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="7" Text="{Binding AvgUvIndex, StringFormat='{}{0:F1}'}" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="8" Text="{Binding LightningStrikes, StringFormat='{}{0} strikes'}" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#7C3AED" HorizontalAlignment="Right" VerticalAlignment="Center" />
                                             </Grid>
                                         </Border>
                                     </DataTemplate>

@@ -73,10 +73,12 @@ public partial class ComparisonBarBandChart : UserControl
         if (ChartTitleBlock != null)
         {
             ChartTitleBlock.Foreground = Services.ThemeManager.Current.TextPrimary;
+            ChartTitleBlock.FontSize = Services.ThemeManager.Current.FontSizeMedium;
         }
         if (ChartSubtitleBlock != null)
         {
             ChartSubtitleBlock.Foreground = Services.ThemeManager.Current.TextSecondary;
+            ChartSubtitleBlock.FontSize = Services.ThemeManager.Current.FontSizeRegular;
         }
     }
 
