@@ -772,6 +772,19 @@ public static class ContentListSearch
                 searchString.Trim(), "Title"), searchResultModifier);
     }
 
+    public static ContentListSearchReturn SearchIsDraft(IContentListItem toFilter, string searchString,
+        Func<bool, bool> searchResultModifier)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return new ContentListSearchReturn(
+                new ContentListSearchFunctionReturn(true, "Draft Search with no Search String - Including"),
+                searchResultModifier);
+
+        return new ContentListSearchReturn(
+            ContentListSearchFunctions.FilterBoolean(toFilter.Content().IsDraft,
+                searchString.Trim(), "Is Draft"), searchResultModifier);
+    }
+
     public static ContentListSearchReturn SearchUpdateNotes(IContentListItem toFilter, string searchString,
         Func<bool, bool> searchResultModifier)
     {

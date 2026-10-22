@@ -727,6 +727,8 @@ public partial class ContentListContext : IDragSource, IDropTarget
                 searchFilterFunction = ContentListSearch.SearchCreatedOn;
             else if (searchString.StartsWith("CREATED BY:", StringComparison.InvariantCultureIgnoreCase))
                 searchFilterFunction = ContentListSearch.SearchCreatedBy;
+            else if (searchString.StartsWith("IS DRAFT:", StringComparison.InvariantCultureIgnoreCase))
+                searchFilterFunction = ContentListSearch.SearchIsDraft;
             else if (searchString.StartsWith("LAST UPDATED ON:", StringComparison.InvariantCultureIgnoreCase))
                 searchFilterFunction = ContentListSearch.SearchLastUpdatedOn;
             else if (searchString.StartsWith("LAST UPDATED BY:", StringComparison.InvariantCultureIgnoreCase))

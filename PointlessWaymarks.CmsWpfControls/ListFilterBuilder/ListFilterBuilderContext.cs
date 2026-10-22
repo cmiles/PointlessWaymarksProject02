@@ -42,6 +42,8 @@ public partial class ListFilterBuilderContext
             new ListFilterBuilderFilterAdd
                 { Description = "Updates", AddFilterCommand = AddGeneralUpdateNotesFilterCommand, AppliesTo = [] },
             new ListFilterBuilderFilterAdd
+                { Description = "Is Draft", AddFilterCommand = AddGeneralIsDraftSearchFilterCommand, AppliesTo = [] },
+            new ListFilterBuilderFilterAdd
             {
                 Description = "Created By", AddFilterCommand = AddGeneralCreatedBySearchFilterCommand, AppliesTo = []
             },
@@ -319,6 +321,13 @@ public partial class ListFilterBuilderContext
     public async Task AddGeneralShowInMainSiteFeedSearchFilter()
     {
         await AddSearchFilter(new BooleanListFilterFieldBuilder { FieldTitle = "In Main Site Feed" });
+    }
+    
+    
+    [NonBlockingCommand]
+    public async Task AddGeneralIsDraftSearchFilter()
+    {
+        await AddSearchFilter(new BooleanListFilterFieldBuilder { FieldTitle = "Is Draft" });
     }
 
     [NonBlockingCommand]
