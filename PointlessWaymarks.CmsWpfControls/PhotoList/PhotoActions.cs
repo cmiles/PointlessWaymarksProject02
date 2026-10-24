@@ -195,7 +195,7 @@ public static class PhotoActions
     public static async Task DailyPhotoPageBracketCodesToClipboard(List<PhotoContent> contents,
         StatusControlContext statusContext)
     {
-        var codeList = contents.Select(loopSelected => $"{BracketCodeDailyPhotoPage.Create(loopSelected).Distinct()}")
+        var codeList = contents.Select(loopSelected => $"{BracketCodeDailyPhotoPage.Create(loopSelected)}").Distinct()
             .ToList();
         var finalString = string.Join(Environment.NewLine, codeList);
 
