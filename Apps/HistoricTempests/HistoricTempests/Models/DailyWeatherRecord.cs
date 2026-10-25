@@ -74,4 +74,7 @@ public class DailyWeatherRecord
 
     [JsonPropertyName("lightningAvgDistanceKm")]
     public double? LightningAvgDistanceKm { get; set; }
+
+    [JsonIgnore]
+    public Services.ThemeManager Theme => Services.ThemeManager.Current;
 }

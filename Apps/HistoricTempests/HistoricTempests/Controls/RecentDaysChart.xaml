@@ -25,16 +25,16 @@
                 <!-- Legends -->
                 <controls:WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,6">
                     <Border Width="12" Height="12" Background="#F43F5E" CornerRadius="3" Margin="0,0,5,0" VerticalAlignment="Center" />
-                    <TextBlock Text="Current High" FontSize="11" Foreground="#475569" Margin="0,0,12,0" VerticalAlignment="Center" />
+                    <TextBlock x:Name="LegendHigh" Text="Current High" FontSize="11" Foreground="#475569" Margin="0,0,12,0" VerticalAlignment="Center" />
 
                     <Border Width="12" Height="12" Background="#3B82F6" CornerRadius="3" Margin="0,0,5,0" VerticalAlignment="Center" />
-                    <TextBlock Text="Current Low" FontSize="11" Foreground="#475569" Margin="0,0,12,0" VerticalAlignment="Center" />
+                    <TextBlock x:Name="LegendLow" Text="Current Low" FontSize="11" Foreground="#475569" Margin="0,0,12,0" VerticalAlignment="Center" />
 
                     <Border Width="14" Height="3" Background="#94A3B8" CornerRadius="1" Margin="0,0,5,0" VerticalAlignment="Center" />
-                    <TextBlock Text="Normal High" FontSize="11" Foreground="#475569" Margin="0,0,12,0" VerticalAlignment="Center" />
+                    <TextBlock x:Name="LegendNormalHigh" Text="Normal High" FontSize="11" Foreground="#475569" Margin="0,0,12,0" VerticalAlignment="Center" />
 
                     <Border Width="12" Height="12" Background="#0284C7" CornerRadius="3" Margin="0,0,5,0" VerticalAlignment="Center" />
-                    <TextBlock Text="Rain" FontSize="11" Foreground="#475569" VerticalAlignment="Center" />
+                    <TextBlock x:Name="LegendRain" Text="Rain" FontSize="11" Foreground="#475569" VerticalAlignment="Center" />
                 </controls:WrapPanel>
             </controls:WrapPanel>
 

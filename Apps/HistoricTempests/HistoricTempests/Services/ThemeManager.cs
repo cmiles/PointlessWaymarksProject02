@@ -26,7 +26,7 @@ public sealed class ThemeManager : INotifyPropertyChanged
     public static ThemeManager Current => _instance;
 
     private AppThemeMode _mode = AppThemeMode.System;
-    private double _fontScalePercent = 100.0;
+    private double _fontScalePercent = 150.0;
     private bool _isSystemDark;
     private bool _isInitialized;
 
@@ -50,8 +50,8 @@ public sealed class ThemeManager : INotifyPropertyChanged
             }
 
             object? savedFontObj = OpenSilver.Interop.ExecuteJavaScript(
-                "localStorage.getItem('ht_font_scale_percent') || localStorage.getItem('ht_font_scale') || '100'");
-            string savedFont = savedFontObj?.ToString() ?? "100";
+                "localStorage.getItem('ht_font_scale_percent_v2') || '150'");
+            string savedFont = savedFontObj?.ToString() ?? "150";
             if (double.TryParse(savedFont, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var parsedPercent))
             {
                 _fontScalePercent = Math.Clamp(parsedPercent, 50.0, 300.0);
@@ -64,7 +64,7 @@ public sealed class ThemeManager : INotifyPropertyChanged
                     AppFontScale.Normal => 100.0,
                     AppFontScale.Large => 115.0,
                     AppFontScale.ExtraLarge => 130.0,
-                    _ => 100.0
+                    _ => 150.0
                 };
             }
 
@@ -198,7 +198,7 @@ public sealed class ThemeManager : INotifyPropertyChanged
                 try
                 {
                     OpenSilver.Interop.ExecuteJavaScriptVoid(
-                        $"localStorage.setItem('ht_font_scale_percent', '{_fontScalePercent.ToString(System.Globalization.CultureInfo.InvariantCulture)}');");
+                        $"localStorage.setItem('ht_font_scale_percent_v2', '{_fontScalePercent.ToString(System.Globalization.CultureInfo.InvariantCulture)}'); localStorage.setItem('ht_font_scale_percent', '{_fontScalePercent.ToString(System.Globalization.CultureInfo.InvariantCulture)}');");
                 }
                 catch { }
 
@@ -243,6 +243,7 @@ public sealed class ThemeManager : INotifyPropertyChanged
 
     // Dynamic Typography Scale Tokens (50% to 300%)
     public double FontSizeSmall => Math.Max(6.0, Math.Round(11.0 * FontScaleFactor, 1));
+    public double FontSizeLegend => Math.Max(6.0, Math.Round(11.0 * FontScaleFactor, 1));
     public double FontSizeRegular => Math.Max(7.0, Math.Round(12.0 * FontScaleFactor, 1));
     public double FontSizeBody => Math.Max(7.5, Math.Round(13.0 * FontScaleFactor, 1));
     public double FontSizeMedium => Math.Max(8.0, Math.Round(14.0 * FontScaleFactor, 1));
@@ -345,6 +346,17 @@ public sealed class ThemeManager : INotifyPropertyChanged
     {
         UpdateApplicationResources();
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FontSizeSmall)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FontSizeLegend)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FontSizeRegular)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FontSizeBody)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FontSizeMedium)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FontSizeSubheading)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FontSizeHeading)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FontSizeTitle)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FontScalePercent)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FontScaleFactor)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FontScaleLabel)));
         ThemeChanged?.Invoke(this, EventArgs.Empty);
 
         try

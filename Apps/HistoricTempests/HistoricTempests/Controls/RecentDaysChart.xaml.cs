@@ -82,6 +82,11 @@ public partial class RecentDaysChart : UserControl
             UnitSubtitle.Foreground = Services.ThemeManager.Current.TextSecondary;
             UnitSubtitle.FontSize = Services.ThemeManager.Current.FontSizeRegular;
         }
+        double legendSize = Services.ThemeManager.Current.FontSizeLegend;
+        if (LegendHigh != null) { LegendHigh.FontSize = legendSize; LegendHigh.Foreground = Services.ThemeManager.Current.TextSecondary; }
+        if (LegendLow != null) { LegendLow.FontSize = legendSize; LegendLow.Foreground = Services.ThemeManager.Current.TextSecondary; }
+        if (LegendNormalHigh != null) { LegendNormalHigh.FontSize = legendSize; LegendNormalHigh.Foreground = Services.ThemeManager.Current.TextSecondary; }
+        if (LegendRain != null) { LegendRain.FontSize = legendSize; LegendRain.Foreground = Services.ThemeManager.Current.TextSecondary; }
     }
 
     public IEnumerable<RecentDayItem>? RecentDays

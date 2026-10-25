@@ -90,6 +90,15 @@ public partial class MainPage : Page
         if (!isSmall && MobileMenuDropdown != null)
             MobileMenuDropdown.Visibility = Visibility.Collapsed;
 
+        if (DailyTableView != null)
+            DailyTableView.Visibility = isSmall ? Visibility.Collapsed : Visibility.Visible;
+        if (DailyCardsView != null)
+            DailyCardsView.Visibility = isSmall ? Visibility.Visible : Visibility.Collapsed;
+        if (MonthlyTableView != null)
+            MonthlyTableView.Visibility = isSmall ? Visibility.Collapsed : Visibility.Visible;
+        if (MonthlyCardsView != null)
+            MonthlyCardsView.Visibility = isSmall ? Visibility.Visible : Visibility.Collapsed;
+
         if (LayoutRoot != null)
         {
             LayoutRoot.Margin = isSmall ? new Thickness(4, 10, 4, 30) : new Thickness(16, 20, 16, 40);
@@ -117,7 +126,7 @@ public partial class MainPage : Page
 
     private readonly System.Windows.Threading.DispatcherTimer _fontScaleDebounceTimer;
     private bool _isUpdatingFontSlider;
-    private double _pendingFontScalePercent = 100.0;
+    private double _pendingFontScalePercent = 150.0;
 
     private void SliderFontScale_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {

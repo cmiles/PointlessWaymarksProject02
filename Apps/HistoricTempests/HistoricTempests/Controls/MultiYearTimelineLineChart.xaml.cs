@@ -102,6 +102,24 @@ public partial class MultiYearTimelineLineChart : UserControl
             ChartUnitBlock.Foreground = Services.ThemeManager.Current.TextSecondary;
             ChartUnitBlock.FontSize = Services.ThemeManager.Current.FontSizeRegular;
         }
+        if (LegendContainer != null)
+        {
+            double legendSize = Services.ThemeManager.Current.FontSizeLegend;
+            foreach (var child in LegendContainer.Children)
+            {
+                if (child is Panel p)
+                {
+                    foreach (var sub in p.Children)
+                    {
+                        if (sub is TextBlock tb)
+                        {
+                            tb.FontSize = legendSize;
+                            tb.Foreground = Services.ThemeManager.Current.TextSecondary;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public IEnumerable<DayTimelinePoint>? DayData
@@ -852,7 +870,7 @@ public partial class MultiYearTimelineLineChart : UserControl
         var tb = new TextBlock
         {
             Text = text,
-            FontSize = 10,
+            FontSize = Services.ThemeManager.Current.FontSizeLegend,
             FontWeight = isBold ? FontWeights.SemiBold : FontWeights.Normal,
             Foreground = Services.ThemeManager.Current.TextSecondary,
             VerticalAlignment = VerticalAlignment.Center

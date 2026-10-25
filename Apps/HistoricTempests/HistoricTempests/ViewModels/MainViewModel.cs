@@ -252,6 +252,9 @@ public class MainViewModel : ViewModelBase
     private SolidColorBrush _sixMonthTabSolarDeltaBrush = SlateGlanceBrush;
     private string _sixMonthSolarMonthly = "";
 
+    private string _twelveMonthTabSolarThisYearText = "Avg Solar: --";
+    private string _twelveMonthTabSolarDeltaText = "";
+    private SolidColorBrush _twelveMonthTabSolarDeltaBrush = SlateGlanceBrush;
     private string _twelveMonthSolarMonthly = "";
 
     public MainViewModel(IWeatherReportService? weatherService = null)
@@ -296,7 +299,14 @@ public class MainViewModel : ViewModelBase
         StartUpdateCommand = new RelayCommand(async () => await StartUpdateAsync());
         CheckForUpdatesManualCommand = new RelayCommand(async () => await CheckForUpdatesAsync(silent: false));
 
-        ThemeManager.Current.ThemeChanged += (_, _) => OnPropertyChanged(nameof(Theme));
+        ThemeManager.Current.ThemeChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(Theme));
+            ApplyDailyFilter();
+            ApplyMonthlyFilter();
+            OnPropertyChanged(nameof(FilteredDailyRecords));
+            OnPropertyChanged(nameof(FilteredMonthlyRecords));
+        };
     }
 
     public ThemeManager Theme => ThemeManager.Current;
@@ -862,6 +872,9 @@ public class MainViewModel : ViewModelBase
     public SolidColorBrush SixMonthTabSolarDeltaBrush { get => _sixMonthTabSolarDeltaBrush; private set => SetProperty(ref _sixMonthTabSolarDeltaBrush, value); }
     public string SixMonthSolarMonthly { get => _sixMonthSolarMonthly; private set => SetProperty(ref _sixMonthSolarMonthly, value); }
 
+    public string TwelveMonthTabSolarThisYearText { get => _twelveMonthTabSolarThisYearText; private set => SetProperty(ref _twelveMonthTabSolarThisYearText, value); }
+    public string TwelveMonthTabSolarDeltaText { get => _twelveMonthTabSolarDeltaText; private set => SetProperty(ref _twelveMonthTabSolarDeltaText, value); }
+    public SolidColorBrush TwelveMonthTabSolarDeltaBrush { get => _twelveMonthTabSolarDeltaBrush; private set => SetProperty(ref _twelveMonthTabSolarDeltaBrush, value); }
     public string TwelveMonthSolarMonthly { get => _twelveMonthSolarMonthly; private set => SetProperty(ref _twelveMonthSolarMonthly, value); }
 
     public async Task LoadDataAsync()
@@ -1821,19 +1834,13 @@ public class MainViewModel : ViewModelBase
         if (recordsWithDate.Count == 0) return;
 
         var latestDate = recordsWithDate.Last().Date;
-        int endYear = latestDate.Year;
-        int endMonth = latestDate.Month;
+        int currentYear = latestDate.Year;
 
-        var target12Months = new List<(int Year, int Month, string ShortName)>();
-        for (int offset = -11; offset <= 0; offset++)
-        {
-            var mDt = new DateTime(endYear, endMonth, 1).AddMonths(offset);
-            target12Months.Add((mDt.Year, mDt.Month, mDt.ToString("MMM", CultureInfo.InvariantCulture)));
-        }
-
-        // Current 12-month period
-        var ty12Recs = recordsWithDate.Where(r => target12Months.Any(tm => tm.Year == r.Date.Year && tm.Month == r.Date.Month)).ToList();
+        // Current Year to Date (YTD) records
+        var ty12Recs = recordsWithDate.Where(r => r.Date.Year == currentYear).ToList();
         if (ty12Recs.Count == 0) return;
+
+        var ytdMonths = ty12Recs.Select(r => r.Date.Month).Distinct().ToHashSet();
 
         var ty12Temps = ty12Recs.Where(r => r.Record.TempAvgF.HasValue).Select(r => r.Record.TempAvgF!.Value).ToList();
         double thisYear12MoAvgTemp = ty12Temps.Count > 0 ? ty12Temps.Average() : 0;
@@ -1859,7 +1866,7 @@ public class MainViewModel : ViewModelBase
         var ty12Solar = ty12Recs.Where(r => r.Record.SolarRadiationAvg.HasValue).Select(r => r.Record.SolarRadiationAvg!.Value).ToList();
         double thisYear12MoAvgSolar = ty12Solar.Count > 0 ? ty12Solar.Average() : 0;
 
-        // Previous periods (1, 2, 3 years back)
+        // Previous years YTD (only using years where all year-to-date months have data)
         var py12AvgTemps = new List<double>();
         var py12AvgHighs = new List<double>();
         var py12AvgLows = new List<double>();
@@ -1871,9 +1878,24 @@ public class MainViewModel : ViewModelBase
         var py12StrikeDays = new List<int>();
         var py12AvgSolar = new List<double>();
 
-        foreach (int yrOffset in new[] { 1, 2, 3 })
+        var distinctPrevYears = recordsWithDate
+            .Select(r => r.Date.Year)
+            .Where(y => y < currentYear)
+            .Distinct()
+            .OrderBy(y => y)
+            .ToList();
+
+        foreach (int py in distinctPrevYears)
         {
-            var pyRecs = recordsWithDate.Where(r => target12Months.Any(tm => (tm.Year - yrOffset) == r.Date.Year && tm.Month == r.Date.Month)).ToList();
+            var pyMonths = recordsWithDate.Where(r => r.Date.Year == py).Select(r => r.Date.Month).Distinct().ToHashSet();
+            // Check that all year-to-date months have data in this year
+            if (!ytdMonths.All(m => pyMonths.Contains(m))) continue;
+
+            // Get Year to Date records for this previous year up to the same month and day
+            var pyRecs = recordsWithDate
+                .Where(r => r.Date.Year == py && (r.Date.Month < latestDate.Month || (r.Date.Month == latestDate.Month && r.Date.Day <= latestDate.Day)))
+                .ToList();
+
             if (pyRecs.Count > 0)
             {
                 var t = pyRecs.Where(r => r.Record.TempAvgF.HasValue).Select(r => r.Record.TempAvgF!.Value).ToList();
@@ -1925,55 +1947,59 @@ public class MainViewModel : ViewModelBase
         double delta12StrikeDays = thisYear12MoStrikeDays - prevYears12MoAvgStrikeDays;
         double delta12Solar = thisYear12MoAvgSolar - prevYears12MoAvgSolar;
 
-        TwelveMonthTabAvgTempThisYearText = $"Avg Temp: {thisYear12MoAvgTemp:F1}°F";
-        TwelveMonthTabAvgTempDeltaText = $"{(delta12AvgTemp >= 0 ? "+" : "")}{delta12AvgTemp:F1}°F vs {prevYears12MoAvgTemp:F1}°F prev yrs avg";
+        TwelveMonthTabAvgTempThisYearText = $"{currentYear} YTD Avg Temp: {thisYear12MoAvgTemp:F1}°F";
+        TwelveMonthTabAvgTempDeltaText = $"{(delta12AvgTemp >= 0 ? "+" : "")}{delta12AvgTemp:F1}°F vs {prevYears12MoAvgTemp:F1}°F prev yrs YTD avg";
         TwelveMonthTabAvgTempDeltaBrush = delta12AvgTemp >= 0
             ? new SolidColorBrush(Color.FromArgb(255, 220, 38, 38))
             : new SolidColorBrush(Color.FromArgb(255, 22, 163, 74));
 
-        TwelveMonthTabAvgHighThisYearText = $"Avg Max: {thisYear12MoAvgHigh:F1}°F";
-        TwelveMonthTabAvgHighDeltaText = $"{(delta12AvgHigh >= 0 ? "+" : "")}{delta12AvgHigh:F1}°F vs {prevYears12MoAvgHigh:F1}°F prev yrs avg";
+        TwelveMonthTabAvgHighThisYearText = $"{currentYear} YTD Avg Max: {thisYear12MoAvgHigh:F1}°F";
+        TwelveMonthTabAvgHighDeltaText = $"{(delta12AvgHigh >= 0 ? "+" : "")}{delta12AvgHigh:F1}°F vs {prevYears12MoAvgHigh:F1}°F prev yrs YTD avg";
         TwelveMonthTabAvgHighDeltaBrush = delta12AvgHigh >= 0
             ? new SolidColorBrush(Color.FromArgb(255, 220, 38, 38))
             : new SolidColorBrush(Color.FromArgb(255, 22, 163, 74));
-        TwelveMonthTabAvgLowThisYearText = $"Avg Min: {thisYear12MoAvgLow:F1}°F";
-        TwelveMonthTabAvgLowDeltaText = $"{(delta12AvgLow >= 0 ? "+" : "")}{delta12AvgLow:F1}°F vs {prevYears12MoAvgLow:F1}°F prev yrs avg";
+        TwelveMonthTabAvgLowThisYearText = $"{currentYear} YTD Avg Min: {thisYear12MoAvgLow:F1}°F";
+        TwelveMonthTabAvgLowDeltaText = $"{(delta12AvgLow >= 0 ? "+" : "")}{delta12AvgLow:F1}°F vs {prevYears12MoAvgLow:F1}°F prev yrs YTD avg";
         TwelveMonthTabAvgLowDeltaBrush = delta12AvgLow >= 0
             ? new SolidColorBrush(Color.FromArgb(255, 220, 38, 38))
             : new SolidColorBrush(Color.FromArgb(255, 22, 163, 74));
 
-        TwelveMonthTabWindThisYearText = $"Avg Daily Gust: {thisYear12MoAvgGust:F1} mph";
-        TwelveMonthTabWindDeltaText = $"{(delta12Gust >= 0 ? "+" : "")}{delta12Gust:F1} mph vs {prevYears12MoAvgGust:F1} mph prev yrs avg";
+        TwelveMonthTabWindThisYearText = $"{currentYear} YTD Avg Daily Gust: {thisYear12MoAvgGust:F1} mph";
+        TwelveMonthTabWindDeltaText = $"{(delta12Gust >= 0 ? "+" : "")}{delta12Gust:F1} mph vs {prevYears12MoAvgGust:F1} mph prev yrs YTD avg";
         TwelveMonthTabWindDeltaBrush = delta12Gust >= 0
             ? new SolidColorBrush(Color.FromArgb(255, 220, 38, 38))
             : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
-        TwelveMonthTabWindPeakText = !string.IsNullOrEmpty(peakGustDate12Mo) ? $"Peak Gust: {thisYear12MoPeakGust:F1} mph ({peakGustDate12Mo})" : $"Peak Gust: {thisYear12MoPeakGust:F1} mph";
-        TwelveMonthTabWindPeakDeltaText = $"{(delta12PeakGust >= 0 ? "+" : "")}{delta12PeakGust:F1} mph vs {prevYears12MoAvgPeakGust:F1} mph prev yrs peak";
+        TwelveMonthTabWindPeakText = !string.IsNullOrEmpty(peakGustDate12Mo) ? $"{currentYear} YTD Peak Gust: {thisYear12MoPeakGust:F1} mph ({peakGustDate12Mo})" : $"{currentYear} YTD Peak Gust: {thisYear12MoPeakGust:F1} mph";
+        TwelveMonthTabWindPeakDeltaText = $"{(delta12PeakGust >= 0 ? "+" : "")}{delta12PeakGust:F1} mph vs {prevYears12MoAvgPeakGust:F1} mph prev yrs YTD peak";
         TwelveMonthTabWindPeakDeltaBrush = delta12PeakGust >= 0
             ? new SolidColorBrush(Color.FromArgb(255, 220, 38, 38))
             : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
 
-        TwelveMonthTabRainThisYearText = $"Total Rain: {thisYear12MoTotalRain:F2} in";
-        TwelveMonthTabRainDeltaText = $"{(delta12Rain >= 0 ? "+" : "")}{delta12Rain:F2} in vs {prevYears12MoAvgRain:F2} in prev yrs avg";
+        TwelveMonthTabRainThisYearText = $"{currentYear} YTD Total Rain: {thisYear12MoTotalRain:F2} in";
+        TwelveMonthTabRainDeltaText = $"{(delta12Rain >= 0 ? "+" : "")}{delta12Rain:F2} in vs {prevYears12MoAvgRain:F2} in prev yrs YTD avg";
         TwelveMonthTabRainDeltaBrush = delta12Rain >= 0
             ? new SolidColorBrush(Color.FromArgb(255, 5, 150, 105))
             : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
-        TwelveMonthTabRainDaysText = $"Rain Days: {thisYear12MoRainDays}";
-        TwelveMonthTabRainDaysDeltaText = $"{(delta12RainDays >= 0 ? "+" : "")}{delta12RainDays:F1} vs {prevYears12MoAvgRainDays:F1} prev yrs avg";
+        TwelveMonthTabRainDaysText = $"{currentYear} YTD Rain Days: {thisYear12MoRainDays}";
+        TwelveMonthTabRainDaysDeltaText = $"{(delta12RainDays >= 0 ? "+" : "")}{delta12RainDays:F1} vs {prevYears12MoAvgRainDays:F1} prev yrs YTD avg";
         TwelveMonthTabRainDaysDeltaBrush = delta12RainDays >= 0
             ? new SolidColorBrush(Color.FromArgb(255, 5, 150, 105))
             : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
 
-        TwelveMonthTabLightningThisYearText = $"Total Strikes: {thisYear12MoTotalStrikes:N0}";
-        TwelveMonthTabLightningDeltaText = $"{(delta12Strikes >= 0 ? "+" : "")}{delta12Strikes:N0} vs {prevYears12MoAvgStrikes:N0} prev yrs avg";
+        TwelveMonthTabLightningThisYearText = $"{currentYear} YTD Total Strikes: {thisYear12MoTotalStrikes:N0}";
+        TwelveMonthTabLightningDeltaText = $"{(delta12Strikes >= 0 ? "+" : "")}{delta12Strikes:N0} vs {prevYears12MoAvgStrikes:N0} prev yrs YTD avg";
         TwelveMonthTabLightningDeltaBrush = delta12Strikes >= 0
             ? new SolidColorBrush(Color.FromArgb(255, 217, 119, 6))
             : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
-        TwelveMonthTabLightningDaysText = $"Days with Lightning: {thisYear12MoStrikeDays}";
-        TwelveMonthTabLightningDaysDeltaText = $"{(delta12StrikeDays >= 0 ? "+" : "")}{delta12StrikeDays:F1} vs {prevYears12MoAvgStrikeDays:F1} prev yrs avg";
+        TwelveMonthTabLightningDaysText = $"{currentYear} YTD Days with Lightning: {thisYear12MoStrikeDays}";
+        TwelveMonthTabLightningDaysDeltaText = $"{(delta12StrikeDays >= 0 ? "+" : "")}{delta12StrikeDays:F1} vs {prevYears12MoAvgStrikeDays:F1} prev yrs YTD avg";
         TwelveMonthTabLightningDaysDeltaBrush = delta12StrikeDays >= 0
             ? new SolidColorBrush(Color.FromArgb(255, 217, 119, 6))
             : new SolidColorBrush(Color.FromArgb(255, 37, 99, 235));
+
+        TwelveMonthTabSolarThisYearText = $"{currentYear} YTD Avg Solar: {thisYear12MoAvgSolar:F0} W/m²";
+        TwelveMonthTabSolarDeltaText = $"{(delta12Solar >= 0 ? "+" : "")}{delta12Solar:F0} W/m² vs {prevYears12MoAvgSolar:F0} W/m² prev yrs YTD avg";
+        TwelveMonthTabSolarDeltaBrush = GetSolarBrush(delta12Solar);
 
         // Glance Overview (12-Month)
         Glance12MonthRainDaysText = $"{(delta12RainDays >= 0 ? "+" : "")}{delta12RainDays:F1} days";
@@ -2001,7 +2027,7 @@ public class MainViewModel : ViewModelBase
         Glance12MonthSolarAvgText = $"{(delta12Solar >= 0 ? "+" : "")}{delta12Solar:F0} W/m²";
         Glance12MonthSolarAvgBrush = GetSolarBrush(delta12Solar);
 
-        // Yearly Breakdown Strings across all recorded calendar years (descending)
+        // Yearly Breakdown Strings across full calendar years only (descending)
         var calTempRangeParts = new List<string>();
         var calTempAvgParts = new List<string>();
         var calRainParts = new List<string>();
@@ -2010,8 +2036,11 @@ public class MainViewModel : ViewModelBase
         var calSolarParts = new List<string>();
 
         var distinctYears = recordsWithDate.Select(x => x.Date.Year).Distinct().OrderByDescending(y => y).ToList();
+        var fullYears = distinctYears
+            .Where(yr => recordsWithDate.Where(x => x.Date.Year == yr).Select(x => x.Date.Month).Distinct().Count() == 12)
+            .ToList();
 
-        foreach (var yr in distinctYears)
+        foreach (var yr in fullYears)
         {
             var yRecs = recordsWithDate.Where(x => x.Date.Year == yr).ToList();
             if (yRecs.Count == 0) continue;
@@ -2047,12 +2076,12 @@ public class MainViewModel : ViewModelBase
             calSolarParts.Add($"{yr}: Avg {ySolar:F0} W/m²");
         }
 
-        TwelveMonthTempRangeMonthly = string.Join("  |  ", calTempRangeParts);
-        TwelveMonthTempAvgMonthly = string.Join("  |  ", calTempAvgParts);
-        TwelveMonthRainMonthly = string.Join("  |  ", calRainParts);
-        TwelveMonthWindMonthly = string.Join("  |  ", calWindParts);
-        TwelveMonthLightningMonthly = string.Join("  |  ", calLightningParts);
-        TwelveMonthSolarMonthly = string.Join("  |  ", calSolarParts);
+        TwelveMonthTempRangeMonthly = calTempRangeParts.Count > 0 ? $"Full Year Stats: {string.Join("  |  ", calTempRangeParts)}" : "";
+        TwelveMonthTempAvgMonthly = calTempAvgParts.Count > 0 ? $"Full Year Stats: {string.Join("  |  ", calTempAvgParts)}" : "";
+        TwelveMonthRainMonthly = calRainParts.Count > 0 ? $"Full Year Stats: {string.Join("  |  ", calRainParts)}" : "";
+        TwelveMonthWindMonthly = calWindParts.Count > 0 ? $"Full Year Stats: {string.Join("  |  ", calWindParts)}" : "";
+        TwelveMonthLightningMonthly = calLightningParts.Count > 0 ? $"Full Year Stats: {string.Join("  |  ", calLightningParts)}" : "";
+        TwelveMonthSolarMonthly = calSolarParts.Count > 0 ? $"Full Year Stats: {string.Join("  |  ", calSolarParts)}" : "";
     }
 
     private void BuildFullYearRainDaysTimeline(List<DailyWeatherRecord>? dailySummaries)

@@ -80,6 +80,12 @@ public partial class ComparisonBarBandChart : UserControl
             ChartSubtitleBlock.Foreground = Services.ThemeManager.Current.TextSecondary;
             ChartSubtitleBlock.FontSize = Services.ThemeManager.Current.FontSizeRegular;
         }
+        double legendSize = Services.ThemeManager.Current.FontSizeLegend;
+        if (Legend2023 != null) { Legend2023.FontSize = legendSize; Legend2023.Foreground = Services.ThemeManager.Current.TextSecondary; }
+        if (Legend2024 != null) { Legend2024.FontSize = legendSize; Legend2024.Foreground = Services.ThemeManager.Current.TextSecondary; }
+        if (Legend2025 != null) { Legend2025.FontSize = legendSize; Legend2025.Foreground = Services.ThemeManager.Current.TextSecondary; }
+        if (Legend2026 != null) { Legend2026.FontSize = legendSize; Legend2026.Foreground = Services.ThemeManager.Current.TextSecondary; }
+        if (LegendNormal != null) { LegendNormal.FontSize = legendSize; LegendNormal.Foreground = Services.ThemeManager.Current.TextSecondary; }
     }
 
     public IEnumerable<MonthMatrixItem>? MonthData

@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json.Serialization;
 
 namespace HistoricTempests.Models;
 
@@ -10,6 +11,9 @@ public class WeatherRecordRankItem
     public string FormattedDate { get; set; } = string.Empty;
     public string ValueDisplay { get; set; } = string.Empty;
     public string SecondaryInfo { get; set; } = string.Empty;
+
+    [JsonIgnore]
+    public Services.ThemeManager Theme => Services.ThemeManager.Current;
 }
 
 public class WeatherStreakRecord
@@ -23,4 +27,7 @@ public class WeatherStreakRecord
     public string EndDate { get; set; } = string.Empty;
     public string DateRangeDisplay { get; set; } = string.Empty;
     public string Details { get; set; } = string.Empty;
+
+    [JsonIgnore]
+    public Services.ThemeManager Theme => Services.ThemeManager.Current;
 }

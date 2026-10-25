@@ -59,6 +59,9 @@ public class MonthlySummaryRecord
 
     [JsonIgnore]
     public double? AvgWindMph => Wind?.AvgMph;
+
+    [JsonIgnore]
+    public Services.ThemeManager Theme => Services.ThemeManager.Current;
 }
 
 public class MonthlyTempInfo

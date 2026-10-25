@@ -57,6 +57,7 @@ public partial class MultiYearDayHeatmapGrid : UserControl
     private double _cachedLegendMaxRain = -1;
     private double _cachedLegendMaxLight = -1;
     private bool? _cachedLegendStack;
+    private double _cachedLegendFontScale = -1;
 
     public MultiYearDayHeatmapGrid()
     {
@@ -125,6 +126,7 @@ public partial class MultiYearDayHeatmapGrid : UserControl
         {
             InvertedCanvasContainer.Background = Services.ThemeManager.Current.CardBackground;
         }
+        _cachedLegendFontScale = -1;
     }
 
     public IEnumerable<DayTimelinePoint>? DayData
@@ -730,6 +732,7 @@ public partial class MultiYearDayHeatmapGrid : UserControl
             Math.Abs(_cachedLegendMaxRain - maxRainVal) < 0.001 &&
             Math.Abs(_cachedLegendMaxLight - maxLightningVal) < 0.001 &&
             _cachedLegendStack == stackVertically &&
+            Math.Abs(_cachedLegendFontScale - Services.ThemeManager.Current.FontScaleFactor) < 0.001 &&
             LegendContainer.Children.Count > 0)
         {
             return;
@@ -740,6 +743,7 @@ public partial class MultiYearDayHeatmapGrid : UserControl
         _cachedLegendMaxRain = maxRainVal;
         _cachedLegendMaxLight = maxLightningVal;
         _cachedLegendStack = stackVertically;
+        _cachedLegendFontScale = Services.ThemeManager.Current.FontScaleFactor;
 
         LegendContainer.Children.Clear();
         LegendContainer.Orientation = stackVertically ? Orientation.Vertical : Orientation.Horizontal;
@@ -757,7 +761,7 @@ public partial class MultiYearDayHeatmapGrid : UserControl
             var rainTitle = new TextBlock
             {
                 Text = isMetric ? "🌧 Rain (mm):" : "🌧 Rain (in):",
-                FontSize = 10,
+                FontSize = Services.ThemeManager.Current.FontSizeLegend,
                 FontWeight = FontWeights.SemiBold,
                 Foreground = AxisTextBrush,
                 VerticalAlignment = VerticalAlignment.Center,
@@ -785,7 +789,7 @@ public partial class MultiYearDayHeatmapGrid : UserControl
             var lightTitle = new TextBlock
             {
                 Text = "⚡ Strikes:",
-                FontSize = 10,
+                FontSize = Services.ThemeManager.Current.FontSizeLegend,
                 FontWeight = FontWeights.SemiBold,
                 Foreground = AxisTextBrush,
                 VerticalAlignment = VerticalAlignment.Center,
@@ -814,7 +818,7 @@ public partial class MultiYearDayHeatmapGrid : UserControl
             var titleBlock = new TextBlock
             {
                 Text = "Scale: ",
-                FontSize = 10,
+                FontSize = Services.ThemeManager.Current.FontSizeLegend,
                 Foreground = AxisTextBrush,
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(0, 0, 4, 0)
@@ -852,10 +856,12 @@ public partial class MultiYearDayHeatmapGrid : UserControl
         var panel = target ?? LegendContainer;
         if (panel == null) return;
 
+        double scaleFactor = Services.ThemeManager.Current.FontScaleFactor;
         var swatchBorder = new Border
         {
-            Width = 26,
-            Height = 15,
+            MinWidth = 26,
+            Width = Math.Max(26.0, Math.Round(26.0 * scaleFactor, 1)),
+            Height = Math.Max(15.0, Math.Round(15.0 * scaleFactor, 1)),
             CornerRadius = new CornerRadius(2),
             Background = fill,
             BorderBrush = border,
@@ -876,7 +882,7 @@ public partial class MultiYearDayHeatmapGrid : UserControl
         var tb = new TextBlock
         {
             Text = label,
-            FontSize = 8,
+            FontSize = Math.Max(7.0, Math.Round(8.0 * scaleFactor, 1)),
             FontWeight = FontWeights.Bold,
             Foreground = textFg,
             HorizontalAlignment = HorizontalAlignment.Center,
