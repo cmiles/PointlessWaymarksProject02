@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace HistoricTempests.Models;
 
@@ -34,6 +35,9 @@ public class RainDaysYearSummary
     public string MaxDailyRainDate { get; set; } = string.Empty;
     public int MaxDailyStrikes { get; set; }
     public string MaxDailyStrikesDate { get; set; } = string.Empty;
+
+    [JsonIgnore]
+    public Services.ThemeManager Theme => Services.ThemeManager.Current;
 }
 
 public class DayTimelinePoint

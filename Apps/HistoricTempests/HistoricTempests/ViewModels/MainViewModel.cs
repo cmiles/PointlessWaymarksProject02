@@ -361,7 +361,7 @@ public class MainViewModel : ViewModelBase
         set => SetProperty(ref _updateInstallerFileName, value);
     }
 
-    private string _updateWindowTitle = "Historic Tempests Updates";
+    private string _updateWindowTitle = "Rincon Valley Weather Updates";
     public string UpdateWindowTitle
     {
         get => _updateWindowTitle;
@@ -389,7 +389,7 @@ public class MainViewModel : ViewModelBase
         set => SetProperty(ref _updateInstallerInfoVisibility, value);
     }
 
-    private string _updateStatusMessage = "A newer version of Pointless Waymarks Historic Tempests is available.";
+    private string _updateStatusMessage = "A newer version of Rincon Valley Weather is available.";
     public string UpdateStatusMessage
     {
         get => _updateStatusMessage;
@@ -2470,8 +2470,8 @@ public class MainViewModel : ViewModelBase
 
             if (result.HasUpdate && result.AvailableRelease != null)
             {
-                UpdateWindowTitle = "Historic Tempests Update Available";
-                UpdateStatusMessage = "A newer version of Pointless Waymarks Historic Tempests is available.";
+                UpdateWindowTitle = "Rincon Valley Weather Update Available";
+                UpdateStatusMessage = "A newer version of Pointless Waymarks Rincon Valley Weather is available.";
                 UpdateInstallerInfoVisibility = System.Windows.Visibility.Visible;
                 UpdateButtonVisibility = System.Windows.Visibility.Visible;
                 UpdateActionButtonText = "Download & Install Now";
@@ -2485,7 +2485,7 @@ public class MainViewModel : ViewModelBase
             }
             else if (result.IsDevelopmentOrPortableMode)
             {
-                UpdateWindowTitle = "Historic Tempests Version Status";
+                UpdateWindowTitle = "Rincon Valley Weather Version Status";
                 UpdateStatusMessage = $"No installed version marker ({result.SearchPattern}) was found in probed directories:\n{probeSummary}\n\n" +
                     (result.AvailableRelease != null
                         ? $"The latest online release is {result.AvailableRelease.ApplicationVersion}."
@@ -2507,8 +2507,8 @@ public class MainViewModel : ViewModelBase
             }
             else
             {
-                UpdateWindowTitle = "Historic Tempests is Up to Date";
-                UpdateStatusMessage = $"You are running the latest version of Pointless Waymarks Historic Tempests ({result.InstalledVersionString}). No update is required.";
+                UpdateWindowTitle = "Rincon Valley Weather is Up to Date";
+                UpdateStatusMessage = $"You are running the latest version of Rincon Valley Weather ({result.InstalledVersionString}). No update is required.";
                 UpdateInstallerInfoVisibility = System.Windows.Visibility.Collapsed;
                 UpdateButtonVisibility = System.Windows.Visibility.Collapsed;
                 UpdateDismissButtonText = "Close";
@@ -2519,7 +2519,7 @@ public class MainViewModel : ViewModelBase
                 {
                     IsUpdateWindowOpen = true;
                 }
-                System.Diagnostics.Debug.WriteLine($"[Update] {result.Message ?? "Historic Tempests is up to date."}");
+                System.Diagnostics.Debug.WriteLine($"[Update] {result.Message ?? "Rincon Valley Weather is up to date."}");
             }
         }
         catch (Exception ex)

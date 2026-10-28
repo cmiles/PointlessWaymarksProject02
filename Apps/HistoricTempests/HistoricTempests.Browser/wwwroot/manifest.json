@@ -1,6 +1,6 @@
 {
-  "name": "Historic Tempests",
-  "short_name": "HistoricTempests",
+  "name": "Rincon Valley Weather",
+  "short_name": "Rincon Valley Weather",
   "description": "Historic Tempest weather comparison charts, monthly rainfall, temperature, lightning strikes, solar irradiance, and upcoming weather last year.",
   "start_url": "index.html",
   "scope": "./",

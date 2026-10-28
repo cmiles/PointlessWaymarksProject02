@@ -287,14 +287,18 @@ public partial class PhotoListGroupListItem : IHasChanges, ICheckForChangesAndVa
     {
         // Pick a primary photo:
         //  1. Prefer .jpg/.jpeg files
-        //  2. Prefer other viewable file types over .dng and other raw image formats
-        //  3. Prefer the "base" filename (shortest name without extension) — e.g.
+        //  2. Prefer .dng files
+        //  3. Prefer raw file types over processed image formats
+        //  4. Prefer DxO_DeepPRIME processed files
+        //  5. Prefer the "base" filename (shortest name without extension) — e.g.
         //     "2026 Jan Photo.orf" over "2026 Jan Photo 01.orf"
-        //  4. Fall back to the most recent write time
+        //  6. Fall back to the most recent write time
         var primaryCandidate = Items
             .OrderByDescending(i => i.PhotoFile.Extension.Equals(".jpg", StringComparison.OrdinalIgnoreCase) ||
                                     i.PhotoFile.Extension.Equals(".jpeg", StringComparison.OrdinalIgnoreCase))
-            .ThenByDescending(i => !RawExtensions.Contains(i.PhotoFile.Extension))
+            .ThenByDescending(i => i.PhotoFile.Extension.Equals(".dng", StringComparison.OrdinalIgnoreCase))
+            .ThenByDescending(i => RawExtensions.Contains(i.PhotoFile.Extension))
+            .ThenByDescending(i => i.PhotoFile.Name.Contains("DxO_DeepPRIME", StringComparison.OrdinalIgnoreCase))
             .ThenBy(i => Path.GetFileNameWithoutExtension(i.PhotoFile.Name).Length)
             .ThenByDescending(i => i.PhotoFile.LastWriteTimeUtc)
             .FirstOrDefault();

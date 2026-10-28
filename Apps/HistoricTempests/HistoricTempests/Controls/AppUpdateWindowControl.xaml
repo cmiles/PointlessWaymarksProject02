@@ -42,7 +42,7 @@
                     <!-- Main announcement card -->
                     <Border x:Name="MainCardBorder" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,12" Margin="0,0,0,12">
                         <StackPanel Orientation="Vertical">
-                            <TextBlock x:Name="UpdateStatusTextBlock" Text="{Binding UpdateStatusMessage, FallbackValue='A newer version of Pointless Waymarks Historic Tempests is available.'}" 
+                            <TextBlock x:Name="UpdateStatusTextBlock" Text="{Binding UpdateStatusMessage, FallbackValue='A newer version of Rincon Valley Weather is available.'}" 
                                        FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="18" Margin="0,0,0,10"/>
 
                             <!-- Versions Comparison Box -->
