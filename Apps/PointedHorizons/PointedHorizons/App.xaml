@@ -1,0 +1,11 @@
+﻿<Application
+    x:Class="PointedHorizons.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:PointedHorizons">
+    <Application.Resources>
+        <ResourceDictionary>
+            
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

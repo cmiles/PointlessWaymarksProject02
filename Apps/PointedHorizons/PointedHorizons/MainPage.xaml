@@ -1,0 +1,107 @@
+<Page x:Class="PointedHorizons.MainPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:controls="clr-namespace:PointedHorizons.Controls"
+      xmlns:vm="clr-namespace:PointedHorizons.ViewModels"
+      mc:Ignorable="d"
+      d:DesignHeight="800" d:DesignWidth="1100"
+      Foreground="White">
+
+    <Grid x:Name="MainRootGrid" Background="#070A10">
+        <Grid.RowDefinitions>
+            <!-- Top App Bar (Header, Presets) -->
+            <RowDefinition Height="Auto" />
+            <!-- Main Content: Split Top Horizon / Middle Directions Bar / Bottom Map -->
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Top Header Navigation & Presets Bar -->
+        <Border x:Name="TopHeaderBorder" Grid.Row="0" Background="#0B0F19" BorderBrush="#1E293B" BorderThickness="0,0,0,1" Padding="14,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- App Branding -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="🌄" FontSize="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="TxtAppTitle" Text="Pointed Horizons" FontSize="16" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="TxtAppSubtitle" Text=" · PeakFinder Horizon &amp; Map" FontSize="12" Foreground="#94A3B8" VerticalAlignment="Center" Margin="6,2,0,0"/>
+                </StackPanel>
+
+                <!-- Center Presets Quick Switcher -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <TextBlock x:Name="TxtPresetsLabel" Text="Presets:" Foreground="#94A3B8" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <Button x:Name="BtnPresetRincon" Click="BtnPresetRincon_Click"
+                            BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="2" Cursor="Hand">
+                        <TextBlock x:Name="TxtPresetRincon" Text="Rincon (Screenshot)" FontSize="11" FontWeight="SemiBold" />
+                    </Button>
+                    <Button x:Name="BtnPresetLemmon" Click="BtnPresetLemmon_Click"
+                            BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="2" Cursor="Hand">
+                        <TextBlock x:Name="TxtPresetLemmon" Text="Mount Lemmon" FontSize="11" FontWeight="SemiBold" />
+                    </Button>
+                    <Button x:Name="BtnPresetRainier" Click="BtnPresetRainier_Click"
+                            BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="2" Cursor="Hand">
+                        <TextBlock x:Name="TxtPresetRainier" Text="Mount Rainier" FontSize="11" FontWeight="SemiBold" />
+                    </Button>
+                    <Button x:Name="BtnPresetCanyon" Click="BtnPresetCanyon_Click"
+                            BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="2" Cursor="Hand">
+                        <TextBlock x:Name="TxtPresetCanyon" Text="Grand Canyon" FontSize="11" FontWeight="SemiBold" />
+                    </Button>
+                    <Button x:Name="BtnPresetPikes" Click="BtnPresetPikes_Click"
+                            BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="2" Cursor="Hand">
+                        <TextBlock x:Name="TxtPresetPikes" Text="Pikes Peak" FontSize="11" FontWeight="SemiBold" />
+                    </Button>
+                    <Button x:Name="BtnPresetYosemite" Click="BtnPresetYosemite_Click"
+                            BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="2" Cursor="Hand">
+                        <TextBlock x:Name="TxtPresetYosemite" Text="Yosemite" FontSize="11" FontWeight="SemiBold" />
+                    </Button>
+                    <Button x:Name="BtnPresetWashington" Click="BtnPresetWashington_Click"
+                            BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="2" Cursor="Hand">
+                        <TextBlock x:Name="TxtPresetWashington" Text="Mount Washington" FontSize="11" FontWeight="SemiBold" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Split Screen -->
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <!-- Top Half: Horizon Ray-Traced View (PeakFinder style) -->
+                <RowDefinition Height="1.1*" MinHeight="220" />
+                <!-- Middle Split Bar: Moving Directions Bar & Refresh Button -->
+                <RowDefinition Height="Auto" />
+                <!-- Bottom Half: Leaflet Interactive Map -->
+                <RowDefinition Height="1*" MinHeight="200" />
+            </Grid.RowDefinitions>
+
+            <!-- Top Horizon View Control -->
+            <controls:HorizonViewControl Grid.Row="0" x:Name="HorizonViewer" />
+
+            <!-- Middle Bar: Directions Bar (Moving compass ticks, cardinals) & Refresh Button -->
+            <Border x:Name="SplitBarBorder" Grid.Row="1" Background="#0A0E17" BorderBrush="#1E293B" BorderThickness="0,1,0,1" Height="36">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Moving Directions Bar (Cardinals N, NE, E, SE... with dynamic ticks) -->
+                    <controls:DirectionsBarControl Grid.Column="0" x:Name="DirectionsBar" />
+
+                    <!-- Refresh Button -->
+                    <Button x:Name="BtnRefresh" Grid.Column="1" Content="↻ Refresh Horizon" Click="BtnRefresh_Click"
+                            Background="#1E293B" Foreground="#38BDF8" BorderThickness="1" BorderBrush="#334155"
+                            Padding="10,4" Margin="6,3,10,3" VerticalAlignment="Center"
+                            FontSize="11" FontWeight="SemiBold" Cursor="Hand"/>
+                </Grid>
+            </Border>
+
+            <!-- Bottom Leaflet Map Control -->
+            <controls:LeafletMapControl Grid.Row="2" x:Name="LeafletMap" />
+        </Grid>
+    </Grid>
+</Page>

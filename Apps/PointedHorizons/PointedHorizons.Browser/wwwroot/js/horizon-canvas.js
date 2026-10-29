@@ -1,0 +1,701 @@
+// PeakFinder-Styled Hardware-Accelerated 360° Continuous Horizon Renderer for PointedHorizons
+(function () {
+    let currentInstance = null;
+
+    // Public API to update horizon azimuth, FOV or tilt without re-calculating or re-sending JSON
+    window.setHorizonParams = function (newAz, newFov, newTilt) {
+        if (currentInstance && currentInstance.setParams) {
+            currentInstance.setParams(newAz, newFov, newTilt);
+        }
+    };
+
+    window.initHorizonCanvas = function (container, jsonString, onPanCallback, onFovCallback, onPeakSelectedCallback) {
+        if (!container) return;
+
+        let data;
+        try {
+            data = typeof jsonString === 'string' ? JSON.parse(jsonString) : jsonString;
+        } catch (e) {
+            console.error('Invalid horizon scene JSON', e);
+            return;
+        }
+
+        if (!data) return;
+
+        container.innerHTML = '';
+        container.style.position = 'relative';
+        container.style.width = '100%';
+        container.style.height = '100%';
+        container.style.overflow = 'hidden';
+        container.style.userSelect = 'none';
+
+        const canvas = document.createElement('canvas');
+        canvas.style.display = 'block';
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.cursor = 'grab';
+        container.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d', { alpha: false });
+
+        // Tooltip element for summits and terrain hover
+        let tooltip = document.getElementById('pointedHorizonsTooltip');
+        if (!tooltip) {
+            tooltip = document.createElement('div');
+            tooltip.id = 'pointedHorizonsTooltip';
+            tooltip.style.position = 'fixed';
+            tooltip.style.display = 'none';
+            tooltip.style.pointerEvents = 'none';
+            tooltip.style.zIndex = '999999';
+            tooltip.style.padding = '8px 12px';
+            tooltip.style.borderRadius = '8px';
+            tooltip.style.fontSize = '12px';
+            tooltip.style.fontFamily = 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            tooltip.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.15)';
+            tooltip.style.lineHeight = '1.4';
+            document.body.appendChild(tooltip);
+        }
+
+        let isDark = data.isDark ?? data.IsDark ?? false;
+        let isMetric = data.isMetric ?? data.IsMetric ?? true;
+
+        // 360° Viewing State
+        let centerAz = data.azimuthCenter ?? data.AzimuthCenter ?? 0;
+        let fov = data.fieldOfView ?? data.FieldOfView ?? 45;
+        let verticalTiltDeg = 0; // Dynamic pitch offset in degrees
+
+        let mouseX = -1;
+        let mouseY = -1;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let dragStartAz = centerAz;
+        let dragStartTilt = 0;
+
+        function normalizeAngle(a) {
+            a = a % 360;
+            if (a < 0) a += 360;
+            return a;
+        }
+
+        function getCardinal(deg) {
+            const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+            const idx = Math.round(deg / 22.5) % 16;
+            return directions[idx];
+        }
+
+        function drawRoundRect(c, x, y, w, h, r) {
+            if (typeof c.roundRect === 'function') {
+                c.beginPath();
+                c.roundRect(x, y, w, h, r);
+                c.fill();
+                c.stroke();
+            } else {
+                c.beginPath();
+                c.moveTo(x + r, y);
+                c.lineTo(x + w - r, y);
+                c.quadraticCurveTo(x + w, y, x + w, y + r);
+                c.lineTo(x + w, y + h - r);
+                c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                c.lineTo(x + r, y + h);
+                c.quadraticCurveTo(x, y + h, x, y + h - r);
+                c.lineTo(x, y + r);
+                c.quadraticCurveTo(x, y, x + r, y);
+                c.closePath();
+                c.fill();
+                c.stroke();
+            }
+        }
+
+        // Interpolates altitude angle from the 360° dataset for any continuous azimuth
+        // Wraps around 0° / 360° seamlessly with zero artifacts
+        function getSampleAtAz(pts, az) {
+            if (!pts || pts.length === 0) return -15.0;
+            const normAz = normalizeAngle(az);
+            const n = pts.length;
+            const fIdx = (normAz / 360.0) * n;
+            const i0 = Math.floor(fIdx) % n;
+            const i1 = (i0 + 1) % n;
+            const frac = fIdx - Math.floor(fIdx);
+            const alt0 = pts[i0].alt ?? pts[i0].altitudeAngle ?? pts[i0].AltitudeAngle ?? -15.0;
+            const alt1 = pts[i1].alt ?? pts[i1].altitudeAngle ?? pts[i1].AltitudeAngle ?? -15.0;
+            return alt0 * (1.0 - frac) + alt1 * frac;
+        }
+
+        function getDistanceAtAz(pts, az) {
+            if (!pts || pts.length === 0) return 10.0;
+            const normAz = normalizeAngle(az);
+            const n = pts.length;
+            const fIdx = Math.floor((normAz / 360.0) * n) % n;
+            return pts[fIdx].dist ?? pts[fIdx].distanceKm ?? pts[fIdx].DistanceKm ?? 10.0;
+        }
+
+        function getElevationAtAz(pts, az) {
+            if (!pts || pts.length === 0) return 0;
+            const normAz = normalizeAngle(az);
+            const n = pts.length;
+            const fIdx = Math.floor((normAz / 360.0) * n) % n;
+            return pts[fIdx].elev ?? pts[fIdx].elevationM ?? pts[fIdx].ElevationM ?? 0;
+        }
+
+        // Floating UI Overlay
+        const uiOverlay = document.createElement('div');
+        uiOverlay.style.position = 'absolute';
+        uiOverlay.style.top = '0';
+        uiOverlay.style.left = '0';
+        uiOverlay.style.width = '100%';
+        uiOverlay.style.height = '100%';
+        uiOverlay.style.pointerEvents = 'none';
+        uiOverlay.style.zIndex = '10';
+        container.appendChild(uiOverlay);
+
+        // 1. Compass Rose Widget (Top Right)
+        const compassContainer = document.createElement('div');
+        compassContainer.style.position = 'absolute';
+        compassContainer.style.top = '16px';
+        compassContainer.style.right = '20px';
+        compassContainer.style.display = 'flex';
+        compassContainer.style.flexDirection = 'column';
+        compassContainer.style.alignItems = 'center';
+        compassContainer.style.pointerEvents = 'auto';
+        compassContainer.style.cursor = 'pointer';
+
+        const compassCircle = document.createElement('div');
+        compassCircle.style.width = '48px';
+        compassCircle.style.height = '48px';
+        compassCircle.style.borderRadius = '50%';
+        compassCircle.style.backgroundColor = isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.96)';
+        compassCircle.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.12)';
+        compassCircle.style.border = isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.08)';
+        compassCircle.style.display = 'flex';
+        compassCircle.style.alignItems = 'center';
+        compassCircle.style.justifyContent = 'center';
+
+        const compassSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        compassSvg.setAttribute('viewBox', '0 0 40 40');
+        compassSvg.setAttribute('width', '32');
+        compassSvg.setAttribute('height', '32');
+        compassSvg.innerHTML = `
+            <circle cx="20" cy="20" r="18" fill="none" stroke="${isDark ? '#475569' : '#E2E8F0'}" stroke-width="1"/>
+            <polygon points="20,5 24,20 20,17 16,20" fill="#0284C7"/>
+            <polygon points="20,35 24,20 20,23 16,20" fill="${isDark ? '#94A3B8' : '#64748B'}"/>
+            <circle cx="20" cy="20" r="2.5" fill="${isDark ? '#F8FAFC' : '#0F172A'}"/>
+        `;
+        compassCircle.appendChild(compassSvg);
+
+        const compassLabel = document.createElement('div');
+        compassLabel.style.marginTop = '4px';
+        compassLabel.style.fontFamily = 'Inter, -apple-system, sans-serif';
+        compassLabel.style.fontSize = '12px';
+        compassLabel.style.fontWeight = '700';
+        compassLabel.style.color = isDark ? '#F8FAFC' : '#1E293B';
+        compassLabel.innerText = `${Math.round(centerAz)}°`;
+
+        compassContainer.appendChild(compassCircle);
+        compassContainer.appendChild(compassLabel);
+        uiOverlay.appendChild(compassContainer);
+
+        // 2. Vertical Tilt Chevrons (Center Left)
+        const tiltContainer = document.createElement('div');
+        tiltContainer.style.position = 'absolute';
+        tiltContainer.style.left = '16px';
+        tiltContainer.style.top = '50%';
+        tiltContainer.style.transform = 'translateY(-50%)';
+        tiltContainer.style.display = 'flex';
+        tiltContainer.style.flexDirection = 'column';
+        tiltContainer.style.borderRadius = '18px';
+        tiltContainer.style.backgroundColor = isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.96)';
+        tiltContainer.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.12)';
+        tiltContainer.style.border = isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.08)';
+        tiltContainer.style.overflow = 'hidden';
+        tiltContainer.style.pointerEvents = 'auto';
+
+        const btnTiltUp = document.createElement('button');
+        btnTiltUp.style.width = '36px';
+        btnTiltUp.style.height = '34px';
+        btnTiltUp.style.border = 'none';
+        btnTiltUp.style.background = 'transparent';
+        btnTiltUp.style.cursor = 'pointer';
+        btnTiltUp.style.display = 'flex';
+        btnTiltUp.style.alignItems = 'center';
+        btnTiltUp.style.justifyContent = 'center';
+        btnTiltUp.style.color = isDark ? '#F8FAFC' : '#1E293B';
+        btnTiltUp.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>`;
+        btnTiltUp.title = 'Tilt Horizon Up';
+        btnTiltUp.addEventListener('click', () => {
+            verticalTiltDeg += 1.5;
+            render();
+        });
+
+        const btnTiltDown = document.createElement('button');
+        btnTiltDown.style.width = '36px';
+        btnTiltDown.style.height = '34px';
+        btnTiltDown.style.border = 'none';
+        btnTiltDown.style.background = 'transparent';
+        btnTiltDown.style.cursor = 'pointer';
+        btnTiltDown.style.display = 'flex';
+        btnTiltDown.style.alignItems = 'center';
+        btnTiltDown.style.justifyContent = 'center';
+        btnTiltDown.style.color = isDark ? '#F8FAFC' : '#1E293B';
+        btnTiltDown.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+        btnTiltDown.title = 'Tilt Horizon Down';
+        btnTiltDown.addEventListener('click', () => {
+            verticalTiltDeg -= 1.5;
+            render();
+        });
+
+        tiltContainer.appendChild(btnTiltUp);
+        tiltContainer.appendChild(btnTiltDown);
+        uiOverlay.appendChild(tiltContainer);
+
+        // 3. Reset Pitch Button (Bottom Right)
+        const btnTarget = document.createElement('button');
+        btnTarget.style.position = 'absolute';
+        btnTarget.style.bottom = '16px';
+        btnTarget.style.right = '20px';
+        btnTarget.style.width = '38px';
+        btnTarget.style.height = '38px';
+        btnTarget.style.borderRadius = '50%';
+        btnTarget.style.backgroundColor = isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.96)';
+        btnTarget.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.12)';
+        btnTarget.style.border = isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.08)';
+        btnTarget.style.display = 'flex';
+        btnTarget.style.alignItems = 'center';
+        btnTarget.style.justifyContent = 'center';
+        btnTarget.style.cursor = 'pointer';
+        btnTarget.style.pointerEvents = 'auto';
+        btnTarget.style.color = isDark ? '#E2E8F0' : '#334155';
+        btnTarget.innerHTML = `
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="22" y1="12" x2="18" y2="12"></line>
+                <line x1="6" y1="12" x2="2" y2="12"></line>
+                <line x1="12" y1="6" x2="12" y2="2"></line>
+                <line x1="12" y1="22" x2="12" y2="18"></line>
+            </svg>
+        `;
+        btnTarget.title = 'Reset Pitch to Level';
+        btnTarget.addEventListener('click', () => {
+            verticalTiltDeg = 0;
+            render();
+        });
+        uiOverlay.appendChild(btnTarget);
+
+        function render() {
+            try {
+                const rect = container.getBoundingClientRect();
+                const width = Math.max(300, rect.width || 300);
+                const height = Math.max(200, rect.height || 200);
+
+                const dpr = window.devicePixelRatio || 1;
+                canvas.width = Math.round(width * dpr);
+                canvas.height = Math.round(height * dpr);
+                ctx.resetTransform();
+                ctx.scale(dpr, dpr);
+
+                const profile360 = data.profilePoints || data.ProfilePoints || [];
+                const peaks360 = data.peaks || data.Peaks || [];
+                const ridgeLayers = data.ridgeLayers || data.RidgeLayers || [];
+
+                const rawMinAlt = data.minAltitude != null ? data.minAltitude : (data.MinAltitude != null ? data.MinAltitude : -4.0);
+                const rawMaxAlt = data.maxAltitude != null ? data.maxAltitude : (data.MaxAltitude != null ? data.MaxAltitude : 12.0);
+
+                const minAlt = rawMinAlt + verticalTiltDeg;
+                const maxAlt = rawMaxAlt + verticalTiltDeg;
+                const altSpan = Math.max(2.0, maxAlt - minAlt);
+
+                const startAz = centerAz - fov / 2.0;
+
+                // Update Compass Rose Widget
+                compassSvg.style.transform = `rotate(${-centerAz}deg)`;
+                compassLabel.innerText = `${Math.round(centerAz)}°`;
+
+                // Theme Palette (PeakFinder Light Paper default)
+                const paperBg = isDark ? '#0A0E17' : '#FFFFFF';
+                const skylineStroke = isDark ? '#F8FAFC' : '#18181B';
+                const ridgeStrokePrimary = isDark ? '#CBD5E1' : '#27272A';
+                const ridgeStrokeSecondary = isDark ? '#94A3B8' : '#52525B';
+                const slopeContourStroke = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.15)';
+                const zeroLineColor = isDark ? 'rgba(56, 189, 248, 0.25)' : 'rgba(0, 0, 0, 0.12)';
+                const textPrimary = isDark ? '#F8FAFC' : '#18181B';
+                const textMuted = isDark ? '#94A3B8' : '#71717A';
+
+                // 1. Draw Paper Background
+                ctx.fillStyle = paperBg;
+                ctx.fillRect(0, 0, width, height);
+
+                // Helper: Altitude angle to Y pixel coordinate (using full canvas height down to border)
+                function altToY(alt) {
+                    if (alt == null || isNaN(alt)) return height - 16;
+                    const usableTop = 24;
+                    const usableBottom = height - 16;
+                    const norm = (alt - minAlt) / altSpan;
+                    return usableBottom - norm * (usableBottom - usableTop);
+                }
+
+                // Helper: Peak Azimuth to X pixel coordinate within current FOV
+                function azToX(peakAz) {
+                    let diff = peakAz - startAz;
+                    while (diff < 0) diff += 360;
+                    while (diff >= 360) diff -= 360;
+                    if (diff > fov) return null; // Outside current visible window
+                    return (diff / fov) * width;
+                }
+
+                // 2. Draw 0° Horizontal Eye-Level Reference Line
+                if (minAlt <= 0 && maxAlt >= 0) {
+                    const zeroY = altToY(0);
+                    ctx.save();
+                    ctx.strokeStyle = zeroLineColor;
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([3, 5]);
+                    ctx.beginPath();
+                    ctx.moveTo(0, zeroY);
+                    ctx.lineTo(width, zeroY);
+                    ctx.stroke();
+
+                    ctx.fillStyle = zeroLineColor;
+                    ctx.font = '10px Inter, -apple-system, sans-serif';
+                    ctx.fillText('0° (eye-level)', 12, zeroY - 4);
+                    ctx.restore();
+                }
+
+                // Resolution of continuous slice rendering across screen
+                const numSteps = Math.min(Math.round(width), 1000);
+
+                // 3. Draw Depth-Shaded Ridge Layers (Furthest to Nearest)
+                // Solid paper fill behind closer ridges occludes background layers
+                if (ridgeLayers.length > 0) {
+                    for (let lIdx = ridgeLayers.length - 1; lIdx >= 0; lIdx--) {
+                        const lPts = ridgeLayers[lIdx].points || ridgeLayers[lIdx].Points || [];
+                        if (lPts.length < 2) continue;
+
+                        const isClose = lIdx <= 2;
+                        const isMid = lIdx > 2 && lIdx <= 5;
+                        const strokeColor = isClose ? ridgeStrokePrimary : (isMid ? ridgeStrokeSecondary : (isDark ? '#64748B' : '#71717A'));
+                        const lineW = isClose ? 1.5 : (isMid ? 1.2 : 1.0);
+
+                        ctx.save();
+
+                        // A. Solid Occlusion Fill
+                        ctx.fillStyle = paperBg;
+                        ctx.beginPath();
+                        ctx.moveTo(0, height + 10);
+                        for (let s = 0; s <= numSteps; s++) {
+                            const x = (s / numSteps) * width;
+                            const az = normalizeAngle(startAz + (s / numSteps) * fov);
+                            const alt = getSampleAtAz(lPts, az);
+                            const y = altToY(alt);
+                            ctx.lineTo(x, y);
+                        }
+                        ctx.lineTo(width, height + 10);
+                        ctx.closePath();
+                        ctx.fill();
+
+                        // B. Faint Topographical Slope Contours (PeakFinder etching style)
+                        if (isClose || isMid) {
+                            ctx.save();
+                            ctx.strokeStyle = slopeContourStroke;
+                            ctx.lineWidth = 0.75;
+                            for (let c = 1; c <= 2; c++) {
+                                ctx.beginPath();
+                                let started = false;
+                                for (let s = 0; s <= numSteps; s += 2) {
+                                    const x = (s / numSteps) * width;
+                                    const az = normalizeAngle(startAz + (s / numSteps) * fov);
+                                    const baseAlt = getSampleAtAz(lPts, az);
+                                    if (baseAlt <= minAlt - 1.0) continue;
+
+                                    const contourAlt = baseAlt - (c * 0.45 * (1.0 + 0.12 * Math.sin(s * 0.08 + c * 2.0)));
+                                    const y = altToY(contourAlt);
+
+                                    if (!started) {
+                                        ctx.moveTo(x, y);
+                                        started = true;
+                                    } else {
+                                        ctx.lineTo(x, y);
+                                    }
+                                }
+                                ctx.stroke();
+                            }
+                            ctx.restore();
+                        }
+
+                        // C. Crisp Top Ridge Outline Stroke
+                        ctx.strokeStyle = strokeColor;
+                        ctx.lineWidth = lineW;
+                        ctx.lineJoin = 'round';
+                        ctx.lineCap = 'round';
+                        ctx.beginPath();
+                        for (let s = 0; s <= numSteps; s++) {
+                            const x = (s / numSteps) * width;
+                            const az = normalizeAngle(startAz + (s / numSteps) * fov);
+                            const alt = getSampleAtAz(lPts, az);
+                            const y = altToY(alt);
+                            if (s === 0) ctx.moveTo(x, y);
+                            else ctx.lineTo(x, y);
+                        }
+                        ctx.stroke();
+
+                        ctx.restore();
+                    }
+                }
+
+                // 4. Draw Main Horizon Skyline Silhouette across visible FOV
+                if (profile360.length > 1) {
+                    ctx.save();
+                    ctx.strokeStyle = skylineStroke;
+                    ctx.lineWidth = 1.8;
+                    ctx.lineJoin = 'round';
+                    ctx.lineCap = 'round';
+
+                    ctx.beginPath();
+                    for (let s = 0; s <= numSteps; s++) {
+                        const x = (s / numSteps) * width;
+                        const az = normalizeAngle(startAz + (s / numSteps) * fov);
+                        const alt = getSampleAtAz(profile360, az);
+                        const y = altToY(alt);
+                        if (s === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // 5. Draw Prominent Peaks visible within current FOV
+                if (peaks360.length > 0) {
+                    const labelLevels = [42, 64, 86];
+                    let visiblePeakIdx = 0;
+
+                    peaks360.forEach((peak) => {
+                        const peakAz = peak.azimuth ?? peak.Azimuth ?? 0;
+                        const px = azToX(peakAz);
+
+                        // Only render if peak is within the current visible FOV
+                        if (px === null || px < -30 || px > width + 30) return;
+
+                        const peakAlt = peak.altitudeAngle ?? peak.AltitudeAngle ?? 0;
+                        const peakName = peak.name ?? peak.Name ?? 'Summit';
+                        const peakElevM = peak.elevationM ?? peak.ElevationM ?? 0;
+                        const peakElevFt = peak.elevationFt ?? peak.ElevationFt ?? (peakElevM * 3.28084);
+                        const peakDistKm = peak.distanceKm ?? peak.DistanceKm ?? 0;
+                        const peakDistMi = peak.distanceMi ?? peak.DistanceMi ?? (peakDistKm * 0.621371);
+
+                        const py = altToY(peakAlt);
+                        const labelY = labelLevels[visiblePeakIdx % labelLevels.length];
+                        visiblePeakIdx++;
+
+                        ctx.save();
+                        // Vertical dashed drop-line from label to summit marker
+                        ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(24, 24, 27, 0.4)';
+                        ctx.lineWidth = 1;
+                        ctx.setLineDash([2, 3]);
+                        ctx.beginPath();
+                        ctx.moveTo(px, labelY + 12);
+                        ctx.lineTo(px, py);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+
+                        // Summit marker dot
+                        ctx.fillStyle = isDark ? '#38BDF8' : '#0284C7';
+                        ctx.strokeStyle = isDark ? '#FFFFFF' : '#18181B';
+                        ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.arc(px, py, 3.5, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+
+                        // Peak name label text
+                        const elevStr = isMetric
+                            ? `${Math.round(peakElevM)} m`
+                            : `${Math.round(peakElevFt)} ft`;
+                        const distStr = isMetric
+                            ? `${peakDistKm.toFixed(1)} km`
+                            : `${peakDistMi.toFixed(1)} mi`;
+
+                        ctx.font = 'bold 11px Inter, -apple-system, sans-serif';
+                        ctx.textAlign = 'center';
+                        const nameMetrics = ctx.measureText(peakName);
+                        const badgeW = Math.max(nameMetrics.width + 14, 64);
+
+                        // Pill background for peak label
+                        ctx.fillStyle = isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+                        ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.12)';
+                        ctx.lineWidth = 1;
+                        drawRoundRect(ctx, px - badgeW / 2, labelY - 14, badgeW, 26, 6);
+
+                        // Text: Peak Name
+                        ctx.fillStyle = textPrimary;
+                        ctx.fillText(peakName, px, labelY - 2);
+
+                        // Text: Elevation / Distance subtitle
+                        ctx.font = '9px Inter, -apple-system, sans-serif';
+                        ctx.fillStyle = textMuted;
+                        ctx.fillText(`${elevStr} · ${distStr}`, px, labelY + 9);
+
+                        ctx.restore();
+                    });
+                }
+
+                // 6. Interactive Hover Cursor & Info Tooltip
+                if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
+                    const cursorAz = normalizeAngle(startAz + (mouseX / width) * fov);
+                    const cursorAlt = getSampleAtAz(profile360, cursorAz);
+                    const hx = mouseX;
+                    const hy = altToY(cursorAlt);
+
+                    ctx.save();
+                    ctx.strokeStyle = isDark ? '#38BDF8' : '#0284C7';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.arc(hx, hy, 4.5, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.restore();
+
+                    // Position tooltip
+                    tooltip.style.display = 'block';
+                    tooltip.style.backgroundColor = isDark ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.98)';
+                    tooltip.style.color = isDark ? '#F8FAFC' : '#18181B';
+                    tooltip.style.border = isDark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 0, 0, 0.12)';
+                    tooltip.style.left = `${Math.min(window.innerWidth - 220, rect.left + hx + 12)}px`;
+                    tooltip.style.top = `${Math.max(10, rect.top + Math.min(hy, height - 80))}px`;
+
+                    const hpElevM = getElevationAtAz(profile360, cursorAz);
+                    const hpDistKm = getDistanceAtAz(profile360, cursorAz);
+
+                    const elevText = isMetric
+                        ? `${Math.round(hpElevM).toLocaleString()} m`
+                        : `${Math.round(hpElevM * 3.28084).toLocaleString()} ft`;
+                    const distText = isMetric
+                        ? `${hpDistKm.toFixed(1)} km`
+                        : `${(hpDistKm * 0.621371).toFixed(1)} mi`;
+
+                    tooltip.innerHTML = `
+                        <div style="font-weight:700; color:${isDark ? '#38BDF8' : '#0284C7'}; margin-bottom:2px;">
+                            ${Math.round(cursorAz)}° ${getCardinal(cursorAz)}
+                        </div>
+                        <div style="font-size:11px; opacity:0.9;">
+                            Elev: <b>${elevText}</b> &nbsp;|&nbsp; Dist: <b>${distText}</b>
+                        </div>
+                        <div style="font-size:11px; opacity:0.75; margin-top:2px;">
+                            Altitude Angle: <b>${cursorAlt >= 0 ? '+' : ''}${cursorAlt.toFixed(1)}°</b>
+                        </div>
+                    `;
+                } else {
+                    tooltip.style.display = 'none';
+                }
+            } catch (err) {
+                console.error('Horizon canvas render error:', err);
+            }
+        }
+
+        // Pointer Events for 360° Infinite Continuous Drag Pan & Pitch Tilt
+        canvas.addEventListener('mousedown', function (e) {
+            isDragging = true;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            dragStartAz = centerAz;
+            dragStartTilt = verticalTiltDeg;
+            canvas.style.cursor = 'grabbing';
+        });
+
+        window.addEventListener('mousemove', function (e) {
+            if (isDragging) {
+                const deltaX = e.clientX - dragStartX;
+                const deltaY = e.clientY - dragStartY;
+                const rect = canvas.getBoundingClientRect();
+
+                // 360° Infinite horizontal drag pan
+                const deltaAz = -(deltaX / Math.max(1, rect.width)) * fov;
+                centerAz = normalizeAngle(dragStartAz + deltaAz);
+
+                // Vertical pitch tilt
+                const deltaTilt = (deltaY / Math.max(1, rect.height)) * 14.0;
+                verticalTiltDeg = Math.max(-25, Math.min(25, dragStartTilt + deltaTilt));
+
+                render();
+
+                // Synchronize Directions Bar immediately in the same frame
+                if (window.setDirectionsBarParams) {
+                    window.setDirectionsBarParams(centerAz, fov);
+                }
+
+                if (onPanCallback) {
+                    onPanCallback(centerAz);
+                }
+            } else {
+                const rect = canvas.getBoundingClientRect();
+                if (e.clientX >= rect.left && e.clientX <= rect.right &&
+                    e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                    mouseX = e.clientX - rect.left;
+                    mouseY = e.clientY - rect.top;
+                    render();
+                } else {
+                    if (mouseX !== -1) {
+                        mouseX = -1;
+                        mouseY = -1;
+                        render();
+                    }
+                }
+            }
+        });
+
+        window.addEventListener('mouseup', function () {
+            if (isDragging) {
+                isDragging = false;
+                canvas.style.cursor = 'grab';
+                if (onPanCallback) {
+                    onPanCallback(centerAz);
+                }
+            }
+        });
+
+        canvas.addEventListener('mouseleave', function () {
+            if (!isDragging) {
+                mouseX = -1;
+                mouseY = -1;
+                render();
+            }
+        });
+
+        // Mouse Wheel for Smooth Field Of View Zooming (30° - 160°)
+        canvas.addEventListener('wheel', function (e) {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? 3 : -3;
+            fov = Math.max(30, Math.min(160, fov + delta));
+            render();
+
+            if (window.setDirectionsBarParams) {
+                window.setDirectionsBarParams(centerAz, fov);
+            }
+
+            if (onFovCallback) {
+                onFovCallback(fov);
+            }
+        }, { passive: false });
+
+        // ResizeObserver for dynamic responsiveness
+        if (window.ResizeObserver && !container._horizonObserver) {
+            container._horizonObserver = new ResizeObserver(() => render());
+            container._horizonObserver.observe(container);
+        }
+
+        // Store instance API so C# can update azimuth, FOV or tilt without re-calculating
+        currentInstance = {
+            setParams: function (newAz, newFov, newTilt) {
+                if (newAz != null) {
+                    centerAz = normalizeAngle(newAz);
+                }
+                if (newFov != null) {
+                    fov = Math.max(30, Math.min(160, newFov));
+                }
+                if (newTilt != null) {
+                    verticalTiltDeg = newTilt;
+                }
+                render();
+            }
+        };
+
+        render();
+    };
+})();
