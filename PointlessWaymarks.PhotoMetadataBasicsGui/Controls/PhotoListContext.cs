@@ -745,7 +745,7 @@ public partial class PhotoListContext : IDropTarget
 
         // Pre-compute the numbered suffix root (e.g. "photo" from "photo-1" or "photo_2")
         string? numberRoot = null;
-        var suffixMatch = Regex.Match(baseName, @"^(.+)[_-]\d+$");
+        var suffixMatch = Regex.Match(baseName, @"^(.+)[_-]\d{1,2}$");
         if (suffixMatch.Success)
             numberRoot = suffixMatch.Groups[1].Value;
 
@@ -800,7 +800,7 @@ public partial class PhotoListContext : IDropTarget
             // match "root" and "root-M" / "root_M". If anchor is "root", also match "root-M" / "root_M".
             if (hasRootFile && numberRoot is not null
                             && (candidateBase.Equals(numberRoot, StringComparison.OrdinalIgnoreCase)
-                                || Regex.IsMatch(candidateBase, $@"^{Regex.Escape(numberRoot)}[_-]\d+$",
+                                || Regex.IsMatch(candidateBase, $@"^{Regex.Escape(numberRoot)}[_-]\d{{1,2}}$",
                                     RegexOptions.IgnoreCase)))
             {
                 result.Add(f);
@@ -808,7 +808,7 @@ public partial class PhotoListContext : IDropTarget
             }
 
             if (numberRoot is null
-                && Regex.IsMatch(candidateBase, $@"^{Regex.Escape(baseName)}[_-]\d+$",
+                && Regex.IsMatch(candidateBase, $@"^{Regex.Escape(baseName)}[_-]\d{{1,2}}$",
                     RegexOptions.IgnoreCase))
                 result.Add(f);
         }
