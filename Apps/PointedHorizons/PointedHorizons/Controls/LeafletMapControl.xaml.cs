@@ -1,6 +1,7 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using OpenSilver;
 using PointedHorizons.Services;
 using PointedHorizons.ViewModels;
@@ -22,11 +23,17 @@ public partial class LeafletMapControl : UserControl
         SizeChanged += LeafletMapControl_SizeChanged;
         DataContextChanged += LeafletMapControl_DataContextChanged;
 
+        ThemeManager.Current.ThemeChanged += (s, e) =>
+        {
+            Dispatcher.BeginInvoke(() => UpdateTheme(ThemeManager.Current.IsDark));
+        };
+
         LeafletScrollIsolationHelper.ProtectControl(this, MapContainer);
     }
 
     private void LeafletMapControl_Loaded(object sender, RoutedEventArgs e)
     {
+        UpdateTheme(ThemeManager.Current.IsDark);
         InitializeMap();
     }
 
@@ -55,6 +62,8 @@ public partial class LeafletMapControl : UserControl
             oldVm.MapLocationRequested -= Vm_MapLocationRequested;
             oldVm.MapDirectionRequested -= Vm_MapDirectionRequested;
             oldVm.MapFovRequested -= Vm_MapFovRequested;
+            oldVm.FarthestVisibleLineCalculated -= Vm_FarthestVisibleLineCalculated;
+            oldVm.FarthestVisibleLineCleared -= Vm_FarthestVisibleLineCleared;
         }
 
         if (e.NewValue is MainViewModel newVm)
@@ -62,12 +71,95 @@ public partial class LeafletMapControl : UserControl
             newVm.MapLocationRequested += Vm_MapLocationRequested;
             newVm.MapDirectionRequested += Vm_MapDirectionRequested;
             newVm.MapFovRequested += Vm_MapFovRequested;
+            newVm.FarthestVisibleLineCalculated += Vm_FarthestVisibleLineCalculated;
+            newVm.FarthestVisibleLineCleared += Vm_FarthestVisibleLineCleared;
 
             if (_isMapInitialized)
             {
                 SyncMapFromViewModel(panTo: true);
             }
         }
+    }
+
+    public void UpdateTheme(bool isDark)
+    {
+        var tm = ThemeManager.Current;
+
+        if (MapRootGrid != null)
+        {
+            MapRootGrid.Background = isDark
+                ? new SolidColorBrush(Color.FromArgb(255, 11, 15, 25))
+                : new SolidColorBrush(Color.FromArgb(255, 241, 245, 249));
+        }
+
+        if (MapContainer != null)
+        {
+            MapContainer.Background = isDark
+                ? new SolidColorBrush(Color.FromArgb(255, 15, 23, 42))
+                : new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+        }
+
+        var overlayBg = tm.MapOverlayBackground;
+        var overlayBorder = tm.MapOverlayBorder;
+
+        if (DirectionToolbarBorder != null)
+        {
+            DirectionToolbarBorder.Background = overlayBg;
+            DirectionToolbarBorder.BorderBrush = overlayBorder;
+        }
+
+        if (LocationBadgeBorder != null)
+        {
+            LocationBadgeBorder.Background = overlayBg;
+            LocationBadgeBorder.BorderBrush = overlayBorder;
+        }
+
+        if (HelpHintBorder != null)
+        {
+            HelpHintBorder.Background = overlayBg;
+            HelpHintBorder.BorderBrush = overlayBorder;
+        }
+
+        if (ToolbarDivider != null)
+        {
+            ToolbarDivider.Background = overlayBorder;
+        }
+
+        if (TxtDirectionLabel != null) TxtDirectionLabel.Foreground = tm.TextSecondary;
+        if (TxtAngleLabel != null) TxtAngleLabel.Foreground = tm.TextSecondary;
+        if (TxtAzimuthValue != null) TxtAzimuthValue.Foreground = tm.TextPrimary;
+
+        if (TxtCoordinatesValue != null) TxtCoordinatesValue.Foreground = tm.TextPrimary;
+        if (TxtElevationLabel != null) TxtElevationLabel.Foreground = tm.TextSecondary;
+        if (TxtElevationValue != null) TxtElevationValue.Foreground = tm.Accent;
+
+        if (TxtHelpHint != null) TxtHelpHint.Foreground = tm.TextSecondary;
+
+        void StyleMajorCard(Button btn)
+        {
+            if (btn == null) return;
+            btn.Background = tm.CardinalMajorBackground;
+            btn.BorderBrush = tm.CardinalMajorBorder;
+            btn.Foreground = tm.CardinalMajorForeground;
+        }
+
+        void StyleMinorCard(Button btn)
+        {
+            if (btn == null) return;
+            btn.Background = tm.CardinalMinorBackground;
+            btn.BorderBrush = tm.CardinalMinorBorder;
+            btn.Foreground = tm.CardinalMinorForeground;
+        }
+
+        StyleMajorCard(BtnCardN);
+        StyleMajorCard(BtnCardE);
+        StyleMajorCard(BtnCardS);
+        StyleMajorCard(BtnCardW);
+
+        StyleMinorCard(BtnCardNE);
+        StyleMinorCard(BtnCardSE);
+        StyleMinorCard(BtnCardSW);
+        StyleMinorCard(BtnCardNW);
     }
 
     private void Vm_MapLocationRequested(double lat, double lon, bool panTo)
@@ -100,6 +192,30 @@ public partial class LeafletMapControl : UserControl
         try
         {
             Interop.ExecuteJavaScriptVoid("if (window.pointedMap && window.pointedMap.setFieldOfView) { window.pointedMap.setFieldOfView($0); }", fov);
+        }
+        catch
+        {
+        }
+    }
+
+    private void Vm_FarthestVisibleLineCalculated(double lat, double lon, double distKm, double elevM)
+    {
+        if (!_isMapInitialized) return;
+        try
+        {
+            Interop.ExecuteJavaScriptVoid("if (window.pointedMap && window.pointedMap.setFarthestVisibleLine) { window.pointedMap.setFarthestVisibleLine($0, $1, $2, $3); }", lat, lon, distKm, elevM);
+        }
+        catch
+        {
+        }
+    }
+
+    private void Vm_FarthestVisibleLineCleared()
+    {
+        if (!_isMapInitialized) return;
+        try
+        {
+            Interop.ExecuteJavaScriptVoid("if (window.pointedMap && window.pointedMap.clearFarthestVisibleLine) { window.pointedMap.clearFarthestVisibleLine(); }");
         }
         catch
         {

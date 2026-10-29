@@ -6,10 +6,9 @@
       xmlns:controls="clr-namespace:PointedHorizons.Controls"
       xmlns:vm="clr-namespace:PointedHorizons.ViewModels"
       mc:Ignorable="d"
-      d:DesignHeight="800" d:DesignWidth="1100"
-      Foreground="White">
+      d:DesignHeight="800" d:DesignWidth="1100">
 
-    <Grid x:Name="MainRootGrid" Background="#070A10">
+    <Grid x:Name="MainRootGrid">
         <Grid.RowDefinitions>
             <!-- Top App Bar (Header, Presets) -->
             <RowDefinition Height="Auto" />
@@ -18,7 +17,7 @@
         </Grid.RowDefinitions>
 
         <!-- Top Header Navigation & Presets Bar -->
-        <Border x:Name="TopHeaderBorder" Grid.Row="0" Background="#0B0F19" BorderBrush="#1E293B" BorderThickness="0,0,0,1" Padding="14,10">
+        <Border x:Name="TopHeaderBorder" Grid.Row="0" BorderThickness="0,0,0,1" Padding="14,10">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -28,41 +27,27 @@
                 <!-- App Branding -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="🌄" FontSize="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <TextBlock x:Name="TxtAppTitle" Text="Pointed Horizons" FontSize="16" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="TxtAppSubtitle" Text=" · PeakFinder Horizon &amp; Map" FontSize="12" Foreground="#94A3B8" VerticalAlignment="Center" Margin="6,2,0,0"/>
+                    <TextBlock x:Name="TxtAppTitle" Text="Pointed Horizons" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="TxtAppSubtitle" Text=" · PeakFinder Horizon &amp; Map" FontSize="12" VerticalAlignment="Center" Margin="6,2,0,0"/>
                 </StackPanel>
 
                 <!-- Center Presets Quick Switcher -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <TextBlock x:Name="TxtPresetsLabel" Text="Presets:" Foreground="#94A3B8" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                    <Button x:Name="BtnPresetRincon" Click="BtnPresetRincon_Click"
-                            BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="2" Cursor="Hand">
-                        <TextBlock x:Name="TxtPresetRincon" Text="Rincon (Screenshot)" FontSize="11" FontWeight="SemiBold" />
-                    </Button>
-                    <Button x:Name="BtnPresetLemmon" Click="BtnPresetLemmon_Click"
-                            BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="2" Cursor="Hand">
-                        <TextBlock x:Name="TxtPresetLemmon" Text="Mount Lemmon" FontSize="11" FontWeight="SemiBold" />
-                    </Button>
-                    <Button x:Name="BtnPresetRainier" Click="BtnPresetRainier_Click"
-                            BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="2" Cursor="Hand">
-                        <TextBlock x:Name="TxtPresetRainier" Text="Mount Rainier" FontSize="11" FontWeight="SemiBold" />
-                    </Button>
-                    <Button x:Name="BtnPresetCanyon" Click="BtnPresetCanyon_Click"
-                            BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="2" Cursor="Hand">
-                        <TextBlock x:Name="TxtPresetCanyon" Text="Grand Canyon" FontSize="11" FontWeight="SemiBold" />
-                    </Button>
-                    <Button x:Name="BtnPresetPikes" Click="BtnPresetPikes_Click"
-                            BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="2" Cursor="Hand">
-                        <TextBlock x:Name="TxtPresetPikes" Text="Pikes Peak" FontSize="11" FontWeight="SemiBold" />
-                    </Button>
-                    <Button x:Name="BtnPresetYosemite" Click="BtnPresetYosemite_Click"
-                            BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="2" Cursor="Hand">
-                        <TextBlock x:Name="TxtPresetYosemite" Text="Yosemite" FontSize="11" FontWeight="SemiBold" />
-                    </Button>
-                    <Button x:Name="BtnPresetWashington" Click="BtnPresetWashington_Click"
-                            BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="2" Cursor="Hand">
-                        <TextBlock x:Name="TxtPresetWashington" Text="Mount Washington" FontSize="11" FontWeight="SemiBold" />
-                    </Button>
+                    <TextBlock x:Name="TxtPresetsLabel" Text="Presets:" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <Button x:Name="BtnPresetRincon" Content="Rincon (Screenshot)" Click="BtnPresetRincon_Click"
+                            Style="{StaticResource PillButtonStyle}" FontSize="11" Margin="2" />
+                    <Button x:Name="BtnPresetLemmon" Content="Mount Lemmon" Click="BtnPresetLemmon_Click"
+                            Style="{StaticResource PillButtonStyle}" FontSize="11" Margin="2" />
+                    <Button x:Name="BtnPresetRainier" Content="Mount Rainier" Click="BtnPresetRainier_Click"
+                            Style="{StaticResource PillButtonStyle}" FontSize="11" Margin="2" />
+                    <Button x:Name="BtnPresetCanyon" Content="Grand Canyon" Click="BtnPresetCanyon_Click"
+                            Style="{StaticResource PillButtonStyle}" FontSize="11" Margin="2" />
+                    <Button x:Name="BtnPresetPikes" Content="Pikes Peak" Click="BtnPresetPikes_Click"
+                            Style="{StaticResource PillButtonStyle}" FontSize="11" Margin="2" />
+                    <Button x:Name="BtnPresetYosemite" Content="Yosemite" Click="BtnPresetYosemite_Click"
+                            Style="{StaticResource PillButtonStyle}" FontSize="11" Margin="2" />
+                    <Button x:Name="BtnPresetWashington" Content="Mount Washington" Click="BtnPresetWashington_Click"
+                            Style="{StaticResource PillButtonStyle}" FontSize="11" Margin="2" />
                 </StackPanel>
             </Grid>
         </Border>
@@ -82,7 +67,7 @@
             <controls:HorizonViewControl Grid.Row="0" x:Name="HorizonViewer" />
 
             <!-- Middle Bar: Directions Bar (Moving compass ticks, cardinals) & Refresh Button -->
-            <Border x:Name="SplitBarBorder" Grid.Row="1" Background="#0A0E17" BorderBrush="#1E293B" BorderThickness="0,1,0,1" Height="36">
+            <Border x:Name="SplitBarBorder" Grid.Row="1" BorderThickness="0,1,0,1" Height="36">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -94,9 +79,9 @@
 
                     <!-- Refresh Button -->
                     <Button x:Name="BtnRefresh" Grid.Column="1" Content="↻ Refresh Horizon" Click="BtnRefresh_Click"
-                            Background="#1E293B" Foreground="#38BDF8" BorderThickness="1" BorderBrush="#334155"
+                            Style="{StaticResource PillButtonStyle}"
                             Padding="10,4" Margin="6,3,10,3" VerticalAlignment="Center"
-                            FontSize="11" FontWeight="SemiBold" Cursor="Hand"/>
+                            FontSize="11" FontWeight="SemiBold" />
                 </Grid>
             </Border>
 

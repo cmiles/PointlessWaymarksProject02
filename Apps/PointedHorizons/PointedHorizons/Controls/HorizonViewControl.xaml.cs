@@ -20,11 +20,20 @@ public partial class HorizonViewControl : UserControl
         SizeChanged += HorizonViewControl_SizeChanged;
         DataContextChanged += HorizonViewControl_DataContextChanged;
 
+        ThemeManager.Current.ThemeChanged += (s, e) =>
+        {
+            Dispatcher.BeginInvoke(() =>
+            {
+                UpdateTheme(ThemeManager.Current.IsDark);
+            });
+        };
+
         LeafletScrollIsolationHelper.ProtectControl(this, CanvasContainer);
     }
 
     private void HorizonViewControl_Loaded(object sender, RoutedEventArgs e)
     {
+        UpdateTheme(ThemeManager.Current.IsDark);
         InitializeCanvas();
     }
 
@@ -48,6 +57,38 @@ public partial class HorizonViewControl : UserControl
             UpdateFovButtons(newVm.FieldOfView);
             RenderScene();
         }
+    }
+
+    public void UpdateTheme(bool isDark)
+    {
+        var tm = ThemeManager.Current;
+
+        if (QuickToolbarBorder != null)
+        {
+            QuickToolbarBorder.Background = tm.MapOverlayBackground;
+            QuickToolbarBorder.BorderBrush = tm.MapOverlayBorder;
+        }
+
+        if (ToolbarDivider != null)
+        {
+            ToolbarDivider.Background = tm.MapOverlayBorder;
+        }
+
+        if (BtnToggleUnits != null)
+        {
+            BtnToggleUnits.Background = tm.ButtonInactiveBackground;
+            BtnToggleUnits.BorderBrush = tm.ButtonInactiveBorder;
+            BtnToggleUnits.Foreground = tm.Accent;
+        }
+
+        if (BtnToggleTheme != null)
+        {
+            BtnToggleTheme.Background = tm.ButtonInactiveBackground;
+            BtnToggleTheme.BorderBrush = tm.ButtonInactiveBorder;
+            BtnToggleTheme.Foreground = tm.TextPrimary;
+        }
+
+        UpdateFovButtons(ViewModel?.FieldOfView ?? 45.0);
     }
 
     private void Vm_ViewParametersChanged(double? azimuth, double? fov)
@@ -159,15 +200,23 @@ public partial class HorizonViewControl : UserControl
 
     private void UpdateFovButtons(double fov)
     {
-        var activeBg = new SolidColorBrush(Color.FromArgb(255, 2, 132, 199)); // #0284C7
-        var inactiveBg = new SolidColorBrush(Color.FromArgb(255, 241, 245, 249)); // #F1F5F9
-        var activeFg = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
-        var inactiveFg = new SolidColorBrush(Color.FromArgb(255, 51, 65, 85));
+        var tm = ThemeManager.Current;
+
+        var activeBg = tm.ButtonActiveBackground;
+        var activeBorder = tm.ButtonActiveBorder;
+        var activeFg = tm.ButtonActiveForeground;
+
+        var inactiveBg = tm.ButtonInactiveBackground;
+        var inactiveBorder = tm.ButtonInactiveBorder;
+        var inactiveFg = tm.ButtonInactiveForeground;
 
         void StyleBtn(Button btn, bool active)
         {
+            if (btn == null) return;
             btn.Background = active ? activeBg : inactiveBg;
+            btn.BorderBrush = active ? activeBorder : inactiveBorder;
             btn.Foreground = active ? activeFg : inactiveFg;
+            btn.FontWeight = active ? FontWeights.Bold : FontWeights.SemiBold;
         }
 
         StyleBtn(BtnFov45, Math.Abs(fov - 45) < 1);

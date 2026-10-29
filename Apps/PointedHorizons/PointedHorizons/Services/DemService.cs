@@ -199,6 +199,40 @@ public static class DemService
     }
 
     /// <summary>
+    /// Calculates all 1x1 degree tile keys along a ray defined by an origin, bearing, and distance in km.
+    /// </summary>
+    public static List<string> GetTileKeysAlongRay(double originLat, double originLon, double bearingDeg, double distanceKm)
+    {
+        var keys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        const double R = 6371.0;
+        double bRad = bearingDeg * Math.PI / 180.0;
+        double latRad = originLat * Math.PI / 180.0;
+        double lonRad = originLon * Math.PI / 180.0;
+        double sinLat = Math.Sin(latRad);
+        double cosLat = Math.Cos(latRad);
+        double sinB = Math.Sin(bRad);
+        double cosB = Math.Cos(bRad);
+
+        for (double d = 0; d <= distanceKm + 6.0; d += 12.0)
+        {
+            double dClamped = Math.Min(d, distanceKm);
+            double dByR = dClamped / R;
+            double sinD = Math.Sin(dByR);
+            double cosD = Math.Cos(dByR);
+
+            double lat2 = Math.Asin(sinLat * cosD + cosLat * sinD * cosB);
+            double lon2 = lonRad + Math.Atan2(sinB * sinD * cosLat, cosD - sinLat * Math.Sin(lat2));
+
+            double degLat = lat2 * 180.0 / Math.PI;
+            double degLon = lon2 * 180.0 / Math.PI;
+
+            keys.Add(HgtTile.GetTileKey(degLat, degLon));
+        }
+
+        return keys.OrderBy(k => k).ToList();
+    }
+
+    /// <summary>
     /// Preloads all tiles needed for a radius around observer coordinates.
     /// </summary>
     public static async Task<List<string>> PreloadTilesForRadiusAsync(

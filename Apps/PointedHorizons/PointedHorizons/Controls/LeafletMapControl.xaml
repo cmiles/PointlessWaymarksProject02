@@ -1,77 +1,77 @@
 <UserControl x:Class="PointedHorizons.Controls.LeafletMapControl"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d"
-             d:DesignHeight="350" d:DesignWidth="900">
+              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+              mc:Ignorable="d"
+              d:DesignHeight="350" d:DesignWidth="900">
 
-    <Grid Background="#0B0F19">
+    <Grid x:Name="MapRootGrid">
         <!-- Leaflet Map Container -->
-        <Border x:Name="MapContainer" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="#0F172A" />
+        <Border x:Name="MapContainer" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
 
         <!-- Floating Azimuth & Direction Toolbar Overlay (Top Center) -->
-        <Border HorizontalAlignment="Center" VerticalAlignment="Top" Margin="10,12,10,0"
-                Background="#D90F172A" BorderBrush="#334155" BorderThickness="1" CornerRadius="10" Padding="12,8">
+        <Border x:Name="DirectionToolbarBorder" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="10,12,10,0"
+                BorderThickness="1" CornerRadius="10" Padding="12,8">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <!-- Compass Cardinal Quick Buttons -->
-                <TextBlock Text="Direction:" Foreground="#94A3B8" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <TextBlock x:Name="TxtDirectionLabel" Text="Direction:" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
                 <Button x:Name="BtnCardN" Content="N" Click="BtnCardN_Click"
-                        Background="#1E293B" Foreground="#38BDF8" BorderThickness="0" Padding="7,3" Margin="2"
-                        FontSize="11" FontWeight="Bold" Cursor="Hand"/>
+                        Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
+                        FontSize="11" FontWeight="Bold" />
                 <Button x:Name="BtnCardNE" Content="NE" Click="BtnCardNE_Click"
-                        Background="#1E293B" Foreground="#E2E8F0" BorderThickness="0" Padding="6,3" Margin="2"
-                        FontSize="11" FontWeight="SemiBold" Cursor="Hand"/>
+                        Style="{StaticResource PillButtonStyle}" Padding="6,3" Margin="2"
+                        FontSize="11" FontWeight="SemiBold" />
                 <Button x:Name="BtnCardE" Content="E" Click="BtnCardE_Click"
-                        Background="#1E293B" Foreground="#38BDF8" BorderThickness="0" Padding="7,3" Margin="2"
-                        FontSize="11" FontWeight="Bold" Cursor="Hand"/>
+                        Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
+                        FontSize="11" FontWeight="Bold" />
                 <Button x:Name="BtnCardSE" Content="SE" Click="BtnCardSE_Click"
-                        Background="#1E293B" Foreground="#E2E8F0" BorderThickness="0" Padding="6,3" Margin="2"
-                        FontSize="11" FontWeight="SemiBold" Cursor="Hand"/>
+                        Style="{StaticResource PillButtonStyle}" Padding="6,3" Margin="2"
+                        FontSize="11" FontWeight="SemiBold" />
                 <Button x:Name="BtnCardS" Content="S" Click="BtnCardS_Click"
-                        Background="#1E293B" Foreground="#38BDF8" BorderThickness="0" Padding="7,3" Margin="2"
-                        FontSize="11" FontWeight="Bold" Cursor="Hand"/>
+                        Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
+                        FontSize="11" FontWeight="Bold" />
                 <Button x:Name="BtnCardSW" Content="SW" Click="BtnCardSW_Click"
-                        Background="#1E293B" Foreground="#E2E8F0" BorderThickness="0" Padding="6,3" Margin="2"
-                        FontSize="11" FontWeight="SemiBold" Cursor="Hand"/>
+                        Style="{StaticResource PillButtonStyle}" Padding="6,3" Margin="2"
+                        FontSize="11" FontWeight="SemiBold" />
                 <Button x:Name="BtnCardW" Content="W" Click="BtnCardW_Click"
-                        Background="#1E293B" Foreground="#38BDF8" BorderThickness="0" Padding="7,3" Margin="2"
-                        FontSize="11" FontWeight="Bold" Cursor="Hand"/>
+                        Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
+                        FontSize="11" FontWeight="Bold" />
                 <Button x:Name="BtnCardNW" Content="NW" Click="BtnCardNW_Click"
-                        Background="#1E293B" Foreground="#E2E8F0" BorderThickness="0" Padding="6,3" Margin="2"
-                        FontSize="11" FontWeight="SemiBold" Cursor="Hand"/>
+                        Style="{StaticResource PillButtonStyle}" Padding="6,3" Margin="2"
+                        FontSize="11" FontWeight="SemiBold" />
 
-                <Border Width="1" Background="#334155" Margin="8,2" Height="18" VerticalAlignment="Center"/>
+                <Border x:Name="ToolbarDivider" Width="1" Margin="8,2" Height="18" VerticalAlignment="Center"/>
 
                 <!-- Azimuth Slider -->
-                <TextBlock Text="Angle:" Foreground="#94A3B8" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <TextBlock x:Name="TxtAngleLabel" Text="Angle:" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
                 <Slider x:Name="SliderAzimuth" Minimum="0" Maximum="360" Value="{Binding Azimuth, Mode=TwoWay}"
                         Width="130" VerticalAlignment="Center" Margin="0,0,6,0" ValueChanged="SliderAzimuth_ValueChanged"/>
-                <TextBlock Text="{Binding AzimuthDisplay}" Foreground="#FFFFFF" FontSize="12" FontWeight="Bold"
+                <TextBlock x:Name="TxtAzimuthValue" Text="{Binding AzimuthDisplay}" FontSize="12" FontWeight="Bold"
                            VerticalAlignment="Center" Width="70"/>
             </StackPanel>
         </Border>
 
         <!-- Floating Coordinates & Location Info Badge (Top Left) -->
-        <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="12,12,0,0"
-                Background="#D90F172A" BorderBrush="#334155" BorderThickness="1" CornerRadius="8" Padding="10,6">
+        <Border x:Name="LocationBadgeBorder" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="12,12,0,0"
+                BorderThickness="1" CornerRadius="8" Padding="10,6">
             <StackPanel Orientation="Vertical">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="📍 " FontSize="12" VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding CoordinatesDisplay}" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="TxtCoordinatesValue" Text="{Binding CoordinatesDisplay}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="18,2,0,0">
-                    <TextBlock Text="Elevation: " Foreground="#94A3B8" FontSize="10"/>
-                    <TextBlock Text="{Binding ObserverElevationDisplay}" Foreground="#38BDF8" FontSize="10" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="TxtElevationLabel" Text="Elevation: " FontSize="10"/>
+                    <TextBlock x:Name="TxtElevationValue" Text="{Binding ObserverElevationDisplay}" FontSize="10" FontWeight="SemiBold"/>
                 </StackPanel>
             </StackPanel>
         </Border>
 
         <!-- Help Hint at Bottom Left -->
-        <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="12,0,0,12"
-                Background="#D90F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="8,4">
-            <TextBlock Text="💡 Click map to set location · Drag arrow tip to rotate direction · Drag red pin to move"
-                       Foreground="#94A3B8" FontSize="11"/>
+        <Border x:Name="HelpHintBorder" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="12,0,0,12"
+                BorderThickness="1" CornerRadius="6" Padding="8,4">
+            <TextBlock x:Name="TxtHelpHint" Text="💡 Click map to set location · Drag arrow tip to rotate direction · Drag red pin to move"
+                       FontSize="11"/>
         </Border>
     </Grid>
 </UserControl>

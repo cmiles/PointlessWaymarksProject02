@@ -19,6 +19,11 @@ public partial class DirectionsBarControl : UserControl
         SizeChanged += DirectionsBarControl_SizeChanged;
         DataContextChanged += DirectionsBarControl_DataContextChanged;
 
+        ThemeManager.Current.ThemeChanged += (s, e) =>
+        {
+            Dispatcher.BeginInvoke(UpdateParams);
+        };
+
         LeafletScrollIsolationHelper.ProtectControl(this, CanvasContainer);
     }
 
@@ -57,9 +62,9 @@ public partial class DirectionsBarControl : UserControl
             {
                 Interop.ExecuteJavaScriptVoid(@"
                     if (window.setDirectionsBarParams) {
-                        window.setDirectionsBarParams($0, $1);
+                        window.setDirectionsBarParams($0, $1, $2);
                     }
-                ", azimuth, fov);
+                ", azimuth, fov, ThemeManager.Current.IsDark);
             }
             catch
             {
@@ -71,21 +76,7 @@ public partial class DirectionsBarControl : UserControl
     {
         if (e.PropertyName == nameof(MainViewModel.IsDarkTheme))
         {
-            Dispatcher.BeginInvoke(() =>
-            {
-                if (!_isInitialized || ViewModel == null) return;
-                try
-                {
-                    Interop.ExecuteJavaScriptVoid(@"
-                        if (window.setDirectionsBarParams) {
-                            window.setDirectionsBarParams($0, $1, $2);
-                        }
-                    ", ViewModel.Azimuth, ViewModel.FieldOfView, ViewModel.IsDarkTheme);
-                }
-                catch
-                {
-                }
-            });
+            Dispatcher.BeginInvoke(UpdateParams);
         }
     }
 
@@ -112,7 +103,7 @@ public partial class DirectionsBarControl : UserControl
 
         double initAz = ViewModel?.Azimuth ?? 270.0;
         double initFov = ViewModel?.FieldOfView ?? 90.0;
-        bool isDark = ViewModel?.IsDarkTheme ?? false;
+        bool isDark = ThemeManager.Current.IsDark;
 
         try
         {
@@ -145,11 +136,10 @@ public partial class DirectionsBarControl : UserControl
                 if (window.setDirectionsBarParams) {
                     window.setDirectionsBarParams($0, $1, $2);
                 }
-            ", ViewModel.Azimuth, ViewModel.FieldOfView, ViewModel.IsDarkTheme);
+            ", ViewModel.Azimuth, ViewModel.FieldOfView, ThemeManager.Current.IsDark);
         }
         catch
         {
         }
     }
 }
-

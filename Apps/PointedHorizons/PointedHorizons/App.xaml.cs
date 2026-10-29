@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using PointedHorizons.Services;
 
 namespace PointedHorizons
 {
@@ -13,7 +14,7 @@ namespace PointedHorizons
         {
             this.InitializeComponent();
 
-            // Enter construction logic here...
+            ThemeManager.Current.Initialize();
 
             var mainPage = new MainPage();
             this.RootVisual = mainPage;

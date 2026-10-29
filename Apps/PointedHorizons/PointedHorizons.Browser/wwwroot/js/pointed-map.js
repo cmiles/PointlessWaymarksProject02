@@ -6,6 +6,8 @@
     let observerMarker = null;
     let arrowHandleMarker = null;
     let directionLine = null;
+    let farthestVisibleLine = null;
+    let farthestVisibleDot = null;
     let fovSectorPolygon = null;
     let arrowHeadPolygon = null;
 
@@ -19,6 +21,9 @@
 
     let isInteractingWithHandle = false;
     let isInteractingWithObserver = false;
+
+    // Generous optimistic constant for human line-of-sight limit on Earth
+    const SIGHT_LIMIT_KM = 300.0;
 
     // Contiguous United States (CONUS) approximate bounding box with small buffer
     const CONUS_SOUTH = 24.0;
@@ -71,25 +76,38 @@
         return Math.max(0.2, 6000 / Math.pow(2, zoom));
     }
 
+    function clearFarthestVisibleLine() {
+        if (farthestVisibleLine && map) {
+            map.removeLayer(farthestVisibleLine);
+            farthestVisibleLine = null;
+        }
+        if (farthestVisibleDot && map) {
+            map.removeLayer(farthestVisibleDot);
+            farthestVisibleDot = null;
+        }
+    }
+
     function updateArrowAndSector(updateHandlePos = true) {
         if (!map || !observerMarker) return;
 
         const distKm = getArrowDistanceKm();
         const tipPos = projectLatLng(currentLat, currentLon, distKm, currentBearing);
+        const sightLimitPos = projectLatLng(currentLat, currentLon, SIGHT_LIMIT_KM, currentBearing);
 
-        // 1. Update Direction Arrow Line (Starts strictly from the center of observer marker)
+        // 1. Update Direction of View Line (Dashed slightly faded blue line extending to generous limit of human sight)
         if (!directionLine) {
-            directionLine = L.polyline([[currentLat, currentLon], tipPos], {
+            directionLine = L.polyline([[currentLat, currentLon], sightLimitPos], {
                 color: '#0284C7',
-                weight: 3.5,
-                opacity: 0.9,
+                weight: 2.5,
+                opacity: 0.45,
+                dashArray: '8, 8',
                 interactive: false
             }).addTo(map);
         } else {
-            directionLine.setLatLngs([[currentLat, currentLon], tipPos]);
+            directionLine.setLatLngs([[currentLat, currentLon], sightLimitPos]);
         }
 
-        // 2. Update Arrowhead polygon
+        // 2. Update Arrowhead polygon at the handle
         const leftWing = projectLatLng(tipPos[0], tipPos[1], distKm * 0.22, normalizeAngle(currentBearing + 155));
         const rightWing = projectLatLng(tipPos[0], tipPos[1], distKm * 0.22, normalizeAngle(currentBearing - 155));
 
@@ -131,6 +149,7 @@
 
             arrowHandleMarker.on('mousedown touchstart pointerdown', function (e) {
                 isInteractingWithHandle = true;
+                clearFarthestVisibleLine();
                 L.DomEvent.stopPropagation(e);
             });
 
@@ -144,11 +163,13 @@
 
             arrowHandleMarker.on('dragstart', function (e) {
                 isInteractingWithHandle = true;
+                clearFarthestVisibleLine();
                 L.DomEvent.stopPropagation(e);
             });
 
             arrowHandleMarker.on('drag', function (e) {
                 isInteractingWithHandle = true;
+                clearFarthestVisibleLine();
                 const pos = e.target.getLatLng();
                 currentBearing = Math.round(computeBearing(currentLat, currentLon, pos.lat, pos.lng));
                 updateArrowAndSector(false); // Don't call setLatLng on handle while dragging
@@ -285,6 +306,7 @@
 
         observerMarker.on('mousedown touchstart pointerdown', function (e) {
             isInteractingWithObserver = true;
+            clearFarthestVisibleLine();
             L.DomEvent.stopPropagation(e);
         });
 
@@ -298,11 +320,13 @@
 
         observerMarker.on('dragstart', function (e) {
             isInteractingWithObserver = true;
+            clearFarthestVisibleLine();
             L.DomEvent.stopPropagation(e);
         });
 
         observerMarker.on('drag', function (e) {
             isInteractingWithObserver = true;
+            clearFarthestVisibleLine();
             const pos = e.target.getLatLng();
             const [cLat, cLon] = clampToConus(pos.lat, pos.lng);
             currentLat = cLat;
@@ -325,6 +349,7 @@
             if (isInteractingWithHandle || isInteractingWithObserver) {
                 return;
             }
+            clearFarthestVisibleLine();
             const [cLat, cLon] = clampToConus(e.latlng.lat, e.latlng.lng);
             currentLat = cLat;
             currentLon = cLon;
@@ -350,7 +375,46 @@
         }
     };
 
+    window.pointedMap.clearFarthestVisibleLine = clearFarthestVisibleLine;
+
+    window.pointedMap.setFarthestVisibleLine = function (targetLat, targetLon, distKm, elevM) {
+        if (!map) return;
+        clearFarthestVisibleLine();
+
+        if (targetLat == null || targetLon == null || distKm == null || distKm < 1.0) {
+            return;
+        }
+
+        // Draw solid bright blue line to the farthest away land feature that can be seen
+        farthestVisibleLine = L.polyline([[currentLat, currentLon], [targetLat, targetLon]], {
+            color: '#00BFFF',
+            weight: 3.5,
+            opacity: 1.0,
+            interactive: false
+        }).addTo(map);
+
+        // Draw small dot at the end
+        farthestVisibleDot = L.circleMarker([targetLat, targetLon], {
+            radius: 5,
+            fillColor: '#00BFFF',
+            fillOpacity: 1.0,
+            color: '#FFFFFF',
+            weight: 2,
+            interactive: true
+        }).addTo(map);
+
+        if (farthestVisibleDot.bindTooltip) {
+            const distMiles = (distKm * 0.621371).toFixed(1);
+            const elevFt = Math.round(elevM * 3.28084);
+            farthestVisibleDot.bindTooltip(
+                `<b>Farthest Visible Terrain Feature</b><br/>Distance: ${distKm.toFixed(1)} km (${distMiles} mi)<br/>Elevation: ${Math.round(elevM)} m (${elevFt} ft)`,
+                { direction: 'top', offset: [0, -6] }
+            );
+        }
+    };
+
     window.pointedMap.setLocation = function (lat, lon, panTo) {
+        clearFarthestVisibleLine();
         const [cLat, cLon] = clampToConus(lat, lon);
         currentLat = cLat;
         currentLon = cLon;
@@ -364,6 +428,7 @@
     };
 
     window.pointedMap.setDirection = function (bearing) {
+        clearFarthestVisibleLine();
         currentBearing = normalizeAngle(bearing);
         updateArrowAndSector(true);
     };

@@ -368,4 +368,90 @@ public static class HorizonRayTracer
         if (angle < 0) angle += 360.0;
         return angle;
     }
+
+    public record struct FarthestVisiblePoint(double Lat, double Lon, double DistanceKm, double ElevationM);
+
+    /// <summary>
+    /// Traces a single ray along a given bearing out to maxDistanceKm and identifies
+    /// the farthest visible land feature (unobstructed terrain point with line-of-sight from the observer).
+    /// Returns null if no terrain point beyond the minimum threshold (1.5 km) is visible.
+    /// </summary>
+    public static FarthestVisiblePoint? FindFarthestVisibleLandFeature(
+        double observerLat,
+        double observerLon,
+        double eyeElevationM,
+        double bearingDeg,
+        double maxDistanceKm = 300.0)
+    {
+        const double R = 6371.0;
+        double bRad = bearingDeg * Math.PI / 180.0;
+        double latRad = observerLat * Math.PI / 180.0;
+        double lonRad = observerLon * Math.PI / 180.0;
+        double sinLat = Math.Sin(latRad);
+        double cosLat = Math.Cos(latRad);
+        double sinB = Math.Sin(bRad);
+        double cosB = Math.Cos(bRad);
+
+        double maxDistM = maxDistanceKm * 1000.0;
+        double maxAngle = -90.0;
+
+        double bestDistM = 0;
+        double bestLat = 0;
+        double bestLon = 0;
+        double bestElev = 0;
+
+        // Minimum distance to count as a distinct land feature (1.5 km)
+        const double minFeatureDistM = 1500.0;
+
+        double d = 60.0; // Start at 60 meters
+        while (d <= maxDistM)
+        {
+            double step;
+            if (d < 3000) step = 40.0;
+            else if (d < 10000) step = 80.0;
+            else if (d < 30000) step = 140.0;
+            else if (d < 70000) step = 200.0;
+            else if (d < 150000) step = 300.0;
+            else step = 450.0;
+
+            double dByR = (d / 1000.0) / R;
+            double sinD = Math.Sin(dByR);
+            double cosD = Math.Cos(dByR);
+
+            double ptLatRad = Math.Asin(sinLat * cosD + cosLat * sinD * cosB);
+            double ptLonRad = lonRad + Math.Atan2(sinB * sinD * cosLat, cosD - sinLat * Math.Sin(ptLatRad));
+
+            double ptLat = ptLatRad * 180.0 / Math.PI;
+            double ptLon = ptLonRad * 180.0 / Math.PI;
+
+            double? elev = DemService.GetElevation(ptLat, ptLon);
+            if (elev.HasValue)
+            {
+                double curDrop = (d * d) / (2.0 * EffectiveEarthRadiusM);
+                double altAngle = Math.Atan2(elev.Value - eyeElevationM - curDrop, d) * (180.0 / Math.PI);
+
+                if (altAngle > maxAngle)
+                {
+                    maxAngle = altAngle;
+
+                    if (d >= minFeatureDistM)
+                    {
+                        bestDistM = d;
+                        bestLat = ptLat;
+                        bestLon = ptLon;
+                        bestElev = elev.Value;
+                    }
+                }
+            }
+
+            d += step;
+        }
+
+        if (bestDistM >= minFeatureDistM)
+        {
+            return new FarthestVisiblePoint(bestLat, bestLon, Math.Round(bestDistM / 1000.0, 2), Math.Round(bestElev, 1));
+        }
+
+        return null;
+    }
 }

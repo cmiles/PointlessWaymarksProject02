@@ -1,0 +1,59 @@
+<ResourceDictionary x:Class="PointedHorizons.Themes.LightTheme"
+                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Core App Surfaces & Text -->
+    <SolidColorBrush x:Key="AppBackgroundBrush" Color="#F1F5F9" />
+    <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="HeaderBorderBrush" Color="#E2E8F0" />
+    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="CardBorderBrush" Color="#CBD5E1" />
+    <SolidColorBrush x:Key="SubtleCardBackgroundBrush" Color="#F8FAFC" />
+    <SolidColorBrush x:Key="SubtleCardBorderBrush" Color="#CBD5E1" />
+    <SolidColorBrush x:Key="DividerBrush" Color="#CBD5E1" />
+
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#0F172A" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#64748B" />
+    <SolidColorBrush x:Key="TextMutedBrush" Color="#94A3B8" />
+    <SolidColorBrush x:Key="TextHeadingBrush" Color="#0F172A" />
+
+    <!-- Links & Accents -->
+    <SolidColorBrush x:Key="HyperlinkBrush" Color="#0284C7" />
+    <SolidColorBrush x:Key="SkyAccentBrush" Color="#0284C7" />
+
+    <!-- Map & Canvas Overlays -->
+    <SolidColorBrush x:Key="MapOverlayBackgroundBrush" Color="#F0FFFFFF" />
+    <SolidColorBrush x:Key="MapOverlayBorderBrush" Color="#CBD5E1" />
+    <SolidColorBrush x:Key="SplitBarBackgroundBrush" Color="#F8FAFC" />
+    <SolidColorBrush x:Key="SplitBarBorderBrush" Color="#E2E8F0" />
+
+    <!-- Button Brushes -->
+    <SolidColorBrush x:Key="ButtonBackgroundBrush" Color="#F1F5F9" />
+    <SolidColorBrush x:Key="ButtonForegroundBrush" Color="#0F172A" />
+    <SolidColorBrush x:Key="ButtonBorderBrush" Color="#CBD5E1" />
+    <SolidColorBrush x:Key="ButtonActiveBackgroundBrush" Color="#0284C7" />
+    <SolidColorBrush x:Key="ButtonActiveForegroundBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="ButtonActiveBorderBrush" Color="#0284C7" />
+
+    <!-- Reusable Clean Pill Button Style with TemplateBinding -->
+    <Style x:Key="PillButtonStyle" TargetType="Button">
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            TextElement.Foreground="{TemplateBinding Foreground}"
+                            CornerRadius="4"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

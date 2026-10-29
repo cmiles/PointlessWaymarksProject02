@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using PointedHorizons.Services;
 using PointedHorizons.ViewModels;
 
 namespace PointedHorizons;
@@ -20,7 +21,16 @@ public partial class MainPage : Page
         DataContext = ViewModel;
 
         ViewModel.PropertyChanged += ViewModel_PropertyChanged;
+        ThemeManager.Current.ThemeChanged += ThemeManager_ThemeChanged;
         Loaded += MainPage_Loaded;
+    }
+
+    private void ThemeManager_ThemeChanged(object? sender, EventArgs e)
+    {
+        Dispatcher.BeginInvoke(() =>
+        {
+            UpdateTheme(ThemeManager.Current.IsDark);
+        });
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -39,46 +49,49 @@ public partial class MainPage : Page
     {
         UpdateTheme(ViewModel.IsDarkTheme);
         ViewModel.ScheduleHorizonGeneration(immediate: true);
+        ViewModel.ScheduleFarthestVisibleFeatureCalculation();
     }
 
     private void UpdateTheme(bool isDark)
     {
+        var tm = ThemeManager.Current;
+
         // 1. Top Bar & App Header
         if (TopHeaderBorder != null)
         {
-            TopHeaderBorder.Background = new SolidColorBrush(isDark ? Color.FromArgb(255, 11, 15, 25) : Color.FromArgb(255, 255, 255, 255));
-            TopHeaderBorder.BorderBrush = new SolidColorBrush(isDark ? Color.FromArgb(255, 30, 41, 59) : Color.FromArgb(255, 226, 232, 240));
+            TopHeaderBorder.Background = tm.HeaderBackground;
+            TopHeaderBorder.BorderBrush = tm.HeaderBorder;
         }
         if (TxtAppTitle != null)
         {
-            TxtAppTitle.Foreground = new SolidColorBrush(isDark ? Color.FromArgb(255, 255, 255, 255) : Color.FromArgb(255, 15, 23, 42));
+            TxtAppTitle.Foreground = tm.TextPrimary;
         }
         if (TxtAppSubtitle != null)
         {
-            TxtAppSubtitle.Foreground = new SolidColorBrush(isDark ? Color.FromArgb(255, 148, 163, 184) : Color.FromArgb(255, 100, 116, 139));
+            TxtAppSubtitle.Foreground = tm.TextSecondary;
         }
         if (TxtPresetsLabel != null)
         {
-            TxtPresetsLabel.Foreground = new SolidColorBrush(isDark ? Color.FromArgb(255, 148, 163, 184) : Color.FromArgb(255, 71, 85, 105));
+            TxtPresetsLabel.Foreground = tm.TextSecondary;
         }
 
         // 2. Main Root Grid Background
         if (MainRootGrid != null)
         {
-            MainRootGrid.Background = new SolidColorBrush(isDark ? Color.FromArgb(255, 7, 10, 16) : Color.FromArgb(255, 241, 245, 249));
+            MainRootGrid.Background = tm.PageBackground;
         }
 
         // 3. Middle Split Directions Bar & Refresh Button
         if (SplitBarBorder != null)
         {
-            SplitBarBorder.Background = new SolidColorBrush(isDark ? Color.FromArgb(255, 10, 14, 23) : Color.FromArgb(255, 248, 250, 252));
-            SplitBarBorder.BorderBrush = new SolidColorBrush(isDark ? Color.FromArgb(255, 30, 41, 59) : Color.FromArgb(255, 226, 232, 240));
+            SplitBarBorder.Background = tm.SplitBarBackground;
+            SplitBarBorder.BorderBrush = tm.SplitBarBorder;
         }
         if (BtnRefresh != null)
         {
-            BtnRefresh.Background = new SolidColorBrush(isDark ? Color.FromArgb(255, 30, 41, 59) : Color.FromArgb(255, 241, 245, 249));
-            BtnRefresh.BorderBrush = new SolidColorBrush(isDark ? Color.FromArgb(255, 51, 65, 85) : Color.FromArgb(255, 203, 213, 225));
-            BtnRefresh.Foreground = new SolidColorBrush(isDark ? Color.FromArgb(255, 56, 189, 248) : Color.FromArgb(255, 2, 132, 199));
+            BtnRefresh.Background = tm.ButtonInactiveBackground;
+            BtnRefresh.BorderBrush = tm.ButtonInactiveBorder;
+            BtnRefresh.Foreground = tm.Accent;
         }
 
         // 4. Update Preset Buttons
@@ -88,51 +101,34 @@ public partial class MainPage : Page
     private void UpdatePresetButtonsTheme(bool isDark)
     {
         string selectedName = ViewModel.LocationPresetName;
+        var tm = ThemeManager.Current;
 
-        var selectedBg = new SolidColorBrush(Color.FromArgb(255, 2, 132, 199));     // #0284C7
-        var selectedBorder = new SolidColorBrush(Color.FromArgb(255, 2, 132, 199)); // #0284C7
-        var selectedFg = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));   // #FFFFFF
+        var selectedBg = tm.ButtonActiveBackground;
+        var selectedBorder = tm.ButtonActiveBorder;
+        var selectedFg = tm.ButtonActiveForeground;
 
-        // Dark Theme unselected: Slate dark background #1E293B, border #334155, crisp white text #F8FAFC
-        var darkUnselectedBg = new SolidColorBrush(Color.FromArgb(255, 30, 41, 59));
-        var darkUnselectedBorder = new SolidColorBrush(Color.FromArgb(255, 51, 65, 85));
-        var darkUnselectedFg = new SolidColorBrush(Color.FromArgb(255, 248, 250, 252));
+        var unselectedBg = tm.ButtonInactiveBackground;
+        var unselectedBorder = tm.ButtonInactiveBorder;
+        var unselectedFg = tm.ButtonInactiveForeground;
 
-        // Light Theme unselected: Clean light slate background #F1F5F9, border #CBD5E1, deep dark slate text #0F172A
-        var lightUnselectedBg = new SolidColorBrush(Color.FromArgb(255, 241, 245, 249));
-        var lightUnselectedBorder = new SolidColorBrush(Color.FromArgb(255, 203, 213, 225));
-        var lightUnselectedFg = new SolidColorBrush(Color.FromArgb(255, 15, 23, 42));
-
-        var unselectedBg = isDark ? darkUnselectedBg : lightUnselectedBg;
-        var unselectedBorder = isDark ? darkUnselectedBorder : lightUnselectedBorder;
-        var unselectedFg = isDark ? darkUnselectedFg : lightUnselectedFg;
-
-        void StylePreset(Button btn, TextBlock tb, string presetName)
+        void StylePreset(Button btn, string presetName)
         {
             if (btn == null) return;
             bool isSelected = string.Equals(selectedName, presetName, StringComparison.OrdinalIgnoreCase);
 
-            var bg = isSelected ? selectedBg : unselectedBg;
-            var border = isSelected ? selectedBorder : unselectedBorder;
-            var fg = isSelected ? selectedFg : unselectedFg;
-
-            btn.Background = bg;
-            btn.BorderBrush = border;
-            btn.Foreground = fg;
-            if (tb != null)
-            {
-                tb.Foreground = fg;
-                tb.FontWeight = isSelected ? FontWeights.Bold : FontWeights.SemiBold;
-            }
+            btn.Background = isSelected ? selectedBg : unselectedBg;
+            btn.BorderBrush = isSelected ? selectedBorder : unselectedBorder;
+            btn.Foreground = isSelected ? selectedFg : unselectedFg;
+            btn.FontWeight = isSelected ? FontWeights.Bold : FontWeights.SemiBold;
         }
 
-        StylePreset(BtnPresetRincon, TxtPresetRincon, "Tucson East (Rincon Ridges), AZ");
-        StylePreset(BtnPresetLemmon, TxtPresetLemmon, "Mount Lemmon, AZ");
-        StylePreset(BtnPresetRainier, TxtPresetRainier, "Mount Rainier (Paradise), WA");
-        StylePreset(BtnPresetCanyon, TxtPresetCanyon, "Grand Canyon (Mather Point), AZ");
-        StylePreset(BtnPresetPikes, TxtPresetPikes, "Pikes Peak, CO");
-        StylePreset(BtnPresetYosemite, TxtPresetYosemite, "Yosemite (Glacier Point), CA");
-        StylePreset(BtnPresetWashington, TxtPresetWashington, "Mount Washington, NH");
+        StylePreset(BtnPresetRincon, "Tucson East (Rincon Ridges), AZ");
+        StylePreset(BtnPresetLemmon, "Mount Lemmon, AZ");
+        StylePreset(BtnPresetRainier, "Mount Rainier (Paradise), WA");
+        StylePreset(BtnPresetCanyon, "Grand Canyon (Mather Point), AZ");
+        StylePreset(BtnPresetPikes, "Pikes Peak, CO");
+        StylePreset(BtnPresetYosemite, "Yosemite (Glacier Point), CA");
+        StylePreset(BtnPresetWashington, "Mount Washington, NH");
     }
 
     private void BtnPresetRincon_Click(object sender, RoutedEventArgs e) =>

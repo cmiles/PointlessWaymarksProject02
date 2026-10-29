@@ -34,6 +34,24 @@ public class MainViewModel : INotifyPropertyChanged
     public event Action<double, double, bool>? MapLocationRequested;
     public event Action<double>? MapDirectionRequested;
     public event Action<double>? MapFovRequested;
+    public event Action<double, double, double, double>? FarthestVisibleLineCalculated;
+    public event Action? FarthestVisibleLineCleared;
+
+    private CancellationTokenSource? _farthestFeatureCts;
+
+    public MainViewModel()
+    {
+        _isDarkTheme = ThemeManager.Current.IsDark;
+        ThemeManager.Current.ThemeChanged += (s, e) =>
+        {
+            if (_isDarkTheme != ThemeManager.Current.IsDark)
+            {
+                _isDarkTheme = ThemeManager.Current.IsDark;
+                OnPropertyChanged(nameof(IsDarkTheme));
+                UpdateSceneJson();
+            }
+        };
+    }
 
     public List<LocationPreset> Presets { get; } =
     [
@@ -57,6 +75,7 @@ public class MainViewModel : INotifyPropertyChanged
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(CoordinatesDisplay));
                 ScheduleHorizonGeneration();
+                ScheduleFarthestVisibleFeatureCalculation();
             }
         }
     }
@@ -72,6 +91,7 @@ public class MainViewModel : INotifyPropertyChanged
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(CoordinatesDisplay));
                 ScheduleHorizonGeneration();
+                ScheduleFarthestVisibleFeatureCalculation();
             }
         }
     }
@@ -110,6 +130,7 @@ public class MainViewModel : INotifyPropertyChanged
                 OnPropertyChanged(nameof(AzimuthDisplay));
                 MapDirectionRequested?.Invoke(_azimuth);
                 ViewParametersChanged?.Invoke(_azimuth, null);
+                ScheduleFarthestVisibleFeatureCalculation();
             }
         }
     }
@@ -152,12 +173,13 @@ public class MainViewModel : INotifyPropertyChanged
 
     public bool IsDarkTheme
     {
-        get => _isDarkTheme;
+        get => ThemeManager.Current.IsDark;
         set
         {
-            if (_isDarkTheme != value)
+            if (ThemeManager.Current.IsDark != value)
             {
                 _isDarkTheme = value;
+                ThemeManager.Current.Mode = value ? AppThemeMode.Dark : AppThemeMode.Light;
                 OnPropertyChanged();
                 UpdateSceneJson();
             }
@@ -250,6 +272,7 @@ public class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(Longitude));
         OnPropertyChanged(nameof(CoordinatesDisplay));
         ScheduleHorizonGeneration();
+        ScheduleFarthestVisibleFeatureCalculation();
     }
 
     public void UpdateDirectionFromMap(double bearing)
@@ -261,6 +284,7 @@ public class MainViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(Azimuth));
             OnPropertyChanged(nameof(AzimuthDisplay));
             ViewParametersChanged?.Invoke(_azimuth, null);
+            ScheduleFarthestVisibleFeatureCalculation();
         }
     }
 
@@ -273,6 +297,7 @@ public class MainViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(Azimuth));
             OnPropertyChanged(nameof(AzimuthDisplay));
             MapDirectionRequested?.Invoke(_azimuth);
+            ScheduleFarthestVisibleFeatureCalculation();
         }
     }
 
@@ -316,6 +341,79 @@ public class MainViewModel : INotifyPropertyChanged
         MapFovRequested?.Invoke(_fieldOfView);
 
         ScheduleHorizonGeneration(immediate: true);
+        ScheduleFarthestVisibleFeatureCalculation();
+    }
+
+    public void ScheduleFarthestVisibleFeatureCalculation()
+    {
+        _farthestFeatureCts?.Cancel();
+        _farthestFeatureCts = new CancellationTokenSource();
+        var token = _farthestFeatureCts.Token;
+
+        // Immediately notify UI and map to remove the solid line
+        FarthestVisibleLineCleared?.Invoke();
+
+        Task.Run(async () =>
+        {
+            try
+            {
+                // Wait for direction to settle
+                await Task.Delay(350, token);
+                if (token.IsCancellationRequested) return;
+
+                double lat = Latitude;
+                double lon = Longitude;
+                double az = Azimuth;
+                double eyeElev = ObserverElevationM > 0 ? ObserverElevationM + 2.0 : 1000.0;
+                const double maxSightKm = 300.0;
+
+                // 1. Get tile keys along the ray from 0 to 300 km
+                var neededKeys = DemService.GetTileKeysAlongRay(lat, lon, az, maxSightKm);
+
+                // 2. Preload needed DEM tiles
+                foreach (var key in neededKeys)
+                {
+                    if (token.IsCancellationRequested) return;
+                    if (!DemService.IsTileLoaded(key))
+                    {
+                        await DemService.GetOrLoadTileAsync(key);
+                    }
+                }
+
+                if (token.IsCancellationRequested) return;
+
+                // Ensure observer elevation is accurate if DEM tile is loaded
+                double? groundElev = DemService.GetElevation(lat, lon);
+                if (groundElev.HasValue && groundElev.Value > 0)
+                {
+                    eyeElev = groundElev.Value + 2.0;
+                }
+
+                // 3. Find the farthest visible land feature along the direction of view line
+                var result = HorizonRayTracer.FindFarthestVisibleLandFeature(lat, lon, eyeElev, az, maxSightKm);
+
+                if (token.IsCancellationRequested) return;
+
+                RunOnUIThread(() =>
+                {
+                    if (!token.IsCancellationRequested && result.HasValue)
+                    {
+                        FarthestVisibleLineCalculated?.Invoke(
+                            result.Value.Lat,
+                            result.Value.Lon,
+                            result.Value.DistanceKm,
+                            result.Value.ElevationM);
+                    }
+                });
+            }
+            catch (TaskCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("ScheduleFarthestVisibleFeatureCalculation error: " + ex.Message);
+            }
+        }, token);
     }
 
     public void ScheduleHorizonGeneration(bool immediate = false)
@@ -398,6 +496,7 @@ public class MainViewModel : INotifyPropertyChanged
                 {
                     ObserverElevationM = Math.Round(groundElev.Value, 1);
                 });
+                ScheduleFarthestVisibleFeatureCalculation();
             }
 
             RunOnUIThread(() => StatusMessage = "Ray tracing complete 360° horizon panorama and peaks...");
