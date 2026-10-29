@@ -99,6 +99,53 @@ public partial class MainPage : Page
         if (MonthlyCardsView != null)
             MonthlyCardsView.Visibility = isSmall ? Visibility.Visible : Visibility.Collapsed;
 
+        // Records Tab: Streaks & Top 10 responsive card widths & adaptive views
+        if (SectionTop10Border != null)
+            SectionTop10Border.Padding = isSmall ? new Thickness(12, 12, 12, 12) : new Thickness(20, 18, 20, 18);
+        if (SectionStreaksBorder != null)
+            SectionStreaksBorder.Padding = isSmall ? new Thickness(12, 12, 12, 12) : new Thickness(20, 18, 20, 18);
+
+        if (CardTop3Dry != null)
+        {
+            CardTop3Dry.Width = isSmall ? double.NaN : 530;
+            CardTop3Dry.Margin = isSmall ? new Thickness(0, 0, 0, 14) : new Thickness(0, 0, 16, 14);
+        }
+        if (CardTop3Wet != null)
+        {
+            CardTop3Wet.Width = isSmall ? double.NaN : 530;
+            CardTop3Wet.Margin = new Thickness(0, 0, 0, 14);
+        }
+
+        var top10Cards = new[] { CardTop10Hottest, CardTop10Coldest, CardTop10Gusts, CardTop10Rainiest };
+        foreach (var card in top10Cards)
+        {
+            if (card != null)
+            {
+                card.Width = isSmall ? double.NaN : 530;
+                card.Margin = isSmall ? new Thickness(0, 0, 0, 14) : new Thickness(0, 0, 16, 16);
+            }
+        }
+
+        if (Top10HottestDesktopView != null)
+            Top10HottestDesktopView.Visibility = isSmall ? Visibility.Collapsed : Visibility.Visible;
+        if (Top10HottestMobileView != null)
+            Top10HottestMobileView.Visibility = isSmall ? Visibility.Visible : Visibility.Collapsed;
+
+        if (Top10ColdestDesktopView != null)
+            Top10ColdestDesktopView.Visibility = isSmall ? Visibility.Collapsed : Visibility.Visible;
+        if (Top10ColdestMobileView != null)
+            Top10ColdestMobileView.Visibility = isSmall ? Visibility.Visible : Visibility.Collapsed;
+
+        if (Top10GustsDesktopView != null)
+            Top10GustsDesktopView.Visibility = isSmall ? Visibility.Collapsed : Visibility.Visible;
+        if (Top10GustsMobileView != null)
+            Top10GustsMobileView.Visibility = isSmall ? Visibility.Visible : Visibility.Collapsed;
+
+        if (Top10RainiestDesktopView != null)
+            Top10RainiestDesktopView.Visibility = isSmall ? Visibility.Collapsed : Visibility.Visible;
+        if (Top10RainiestMobileView != null)
+            Top10RainiestMobileView.Visibility = isSmall ? Visibility.Visible : Visibility.Collapsed;
+
         if (LayoutRoot != null)
         {
             LayoutRoot.Margin = isSmall ? new Thickness(4, 10, 4, 30) : new Thickness(16, 20, 16, 40);

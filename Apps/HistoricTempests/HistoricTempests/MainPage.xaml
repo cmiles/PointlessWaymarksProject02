@@ -772,14 +772,14 @@
                     </Border>
 
                     <!-- Precipitation Streaks Section (Top 3 Dry & Top 3 Wet) -->
-                    <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="20,18,20,18" Margin="0,0,0,20">
+                    <Border x:Name="SectionStreaksBorder" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="20,18,20,18" Margin="0,0,0,20">
                         <StackPanel>
                             <TextBlock Text="Precipitation Streaks" FontSize="{Binding Theme.FontSizeSubheading}" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" Margin="0,0,0,4" TextWrapping="Wrap" />
                             <TextBlock Text="Longest consecutive stretches of dry days and wet days in recorded station history." FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,16" TextWrapping="Wrap" />
 
                             <controls:WrapPanel Orientation="Horizontal">
                                 <!-- Top 3 Dry Streaks Card -->
-                                <Border MaxWidth="570" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,16,14">
+                                <Border x:Name="CardTop3Dry" MaxWidth="570" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,16,14">
                                     <StackPanel>
                                         <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,12">
                                             <TextBlock Text="☀️" FontSize="{Binding Theme.FontSizeSubheading}" Margin="0,0,8,0" VerticalAlignment="Center" />
@@ -822,7 +822,7 @@
                                 </Border>
 
                                 <!-- Top 3 Wet Streaks Card -->
-                                <Border MaxWidth="570" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,0,14">
+                                <Border x:Name="CardTop3Wet" MaxWidth="570" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,0,14">
                                     <StackPanel>
                                         <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,12">
                                             <TextBlock Text="🌧" FontSize="{Binding Theme.FontSizeSubheading}" Margin="0,0,8,0" VerticalAlignment="Center" />
@@ -868,7 +868,7 @@
                     </Border>
 
                     <!-- Top 10 All-Time Weather Rankings Section -->
-                    <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="20,18,20,18" Margin="0,0,0,20">
+                    <Border x:Name="SectionTop10Border" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="20,18,20,18" Margin="0,0,0,20">
                         <StackPanel>
                             <TextBlock Text="Top 10 Historical Rankings" FontSize="{Binding Theme.FontSizeSubheading}" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" Margin="0,0,0,4" TextWrapping="Wrap" />
                             <TextBlock Text="All-time top 10 daily records for temperature extremes, peak wind gusts, and daily rainfall totals." FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,16" TextWrapping="Wrap" />
@@ -876,7 +876,7 @@
                             <controls:WrapPanel Orientation="Horizontal">
 
                                 <!-- 1. Top 10 Hottest Days Card -->
-                                <Border MaxWidth="570" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,16,16">
+                                <Border x:Name="CardTop10Hottest" Width="530" MaxWidth="570" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,16,16">
                                     <StackPanel>
                                         <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,10">
                                             <TextBlock Text="🌡" FontSize="{Binding Theme.FontSizeSubheading}" Margin="0,0,8,0" VerticalAlignment="Center" />
@@ -884,47 +884,90 @@
                                             <TextBlock Text=" (Daily High Temperature)" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
                                         </controls:WrapPanel>
 
-                                        <!-- Column Headers -->
-                                        <Border Background="{StaticResource HeaderBackgroundBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,4">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="45" />
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="90" />
-                                                    <ColumnDefinition Width="90" />
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="Rank" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="1" Text="Date" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="2" Text="High Temp" FontWeight="Bold" Foreground="#FB7185" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="3" Text="Low Temp" FontWeight="Bold" Foreground="#94A3B8" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="Wrap" />
-                                            </Grid>
-                                        </Border>
-
-                                        <ItemsControl ItemsSource="{Binding Top10HottestDays}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border BorderBrush="{StaticResource DailyRowDividerBrush}" BorderThickness="0,0,0,1" Padding="12,7">
+                                        <!-- Desktop Table View (Wide Screens) -->
+                                        <StackPanel x:Name="Top10HottestDesktopView">
+                                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" BorderThickness="0" Padding="0">
+                                                <StackPanel MinWidth="440">
+                                                    <Border Background="{StaticResource HeaderBackgroundBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,4">
                                                         <Grid>
                                                             <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="45" />
+                                                                <ColumnDefinition Width="48" />
                                                                 <ColumnDefinition Width="*" />
-                                                                <ColumnDefinition Width="90" />
-                                                                <ColumnDefinition Width="90" />
+                                                                <ColumnDefinition Width="105" />
+                                                                <ColumnDefinition Width="125" />
                                                             </Grid.ColumnDefinitions>
-                                                            <TextBlock Grid.Column="0" Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#EA580C" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="1" Text="{Binding FormattedDate}" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="2" Text="{Binding ValueDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#DC2626" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="3" Text="{Binding SecondaryInfo}" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                                            <TextBlock Grid.Column="0" Text="Rank" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="NoWrap" />
+                                                            <TextBlock Grid.Column="1" Text="Date" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="NoWrap" />
+                                                            <TextBlock Grid.Column="2" Text="High Temp" FontWeight="Bold" Foreground="#FB7185" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="NoWrap" />
+                                                            <TextBlock Grid.Column="3" Text="Low Temp" FontWeight="Bold" Foreground="#94A3B8" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="NoWrap" />
                                                         </Grid>
                                                     </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
+
+                                                    <ItemsControl ItemsSource="{Binding Top10HottestDays}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border BorderBrush="{StaticResource DailyRowDividerBrush}" BorderThickness="0,0,0,1" Padding="12,7">
+                                                                    <Grid>
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition Width="48" />
+                                                                            <ColumnDefinition Width="*" />
+                                                                            <ColumnDefinition Width="105" />
+                                                                            <ColumnDefinition Width="125" />
+                                                                        </Grid.ColumnDefinitions>
+                                                                        <TextBlock Grid.Column="0" Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#EA580C" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                        <TextBlock Grid.Column="1" Text="{Binding FormattedDate}" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                        <TextBlock Grid.Column="2" Text="{Binding ValueDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#DC2626" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                        <TextBlock Grid.Column="3" Text="{Binding SecondaryInfo}" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                    </Grid>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </ScrollViewer>
+                                        </StackPanel>
+
+                                        <!-- Mobile Adaptive View (Small Screens) -->
+                                        <StackPanel x:Name="Top10HottestMobileView" Visibility="Collapsed">
+                                            <Border Background="{StaticResource HeaderBackgroundBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,0,4">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="38" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="Rank" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" />
+                                                    <TextBlock Grid.Column="1" Text="Date" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" />
+                                                    <TextBlock Grid.Column="2" Text="High / Low" FontWeight="Bold" Foreground="#FB7185" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" />
+                                                </Grid>
+                                            </Border>
+                                            <ItemsControl ItemsSource="{Binding Top10HottestDays}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border BorderBrush="{StaticResource DailyRowDividerBrush}" BorderThickness="0,0,0,1" Padding="10,7">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="38" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Grid.Column="0" Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#EA580C" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                <TextBlock Grid.Column="1" Text="{Binding FormattedDate}" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{Binding ValueDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#DC2626" HorizontalAlignment="Right" TextWrapping="NoWrap" />
+                                                                    <TextBlock Text="{Binding SecondaryInfo}" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" TextWrapping="NoWrap" Margin="0,1,0,0" />
+                                                                </StackPanel>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
                                     </StackPanel>
                                 </Border>
 
                                 <!-- 2. Top 10 Coldest Days Card -->
-                                <Border MaxWidth="570" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,16,16">
+                                <Border x:Name="CardTop10Coldest" Width="530" MaxWidth="570" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,16,16">
                                     <StackPanel>
                                         <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,10">
                                             <TextBlock Text="❄" FontSize="{Binding Theme.FontSizeSubheading}" Margin="0,0,8,0" VerticalAlignment="Center" />
@@ -932,47 +975,90 @@
                                             <TextBlock Text=" (Daily Low Temperature)" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
                                         </controls:WrapPanel>
 
-                                        <!-- Column Headers -->
-                                        <Border Background="{StaticResource HeaderBackgroundBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,4">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="45" />
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="90" />
-                                                    <ColumnDefinition Width="90" />
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="Rank" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="1" Text="Date" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="2" Text="Low Temp" FontWeight="Bold" Foreground="#38BDF8" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="3" Text="High Temp" FontWeight="Bold" Foreground="#94A3B8" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="Wrap" />
-                                            </Grid>
-                                        </Border>
-
-                                        <ItemsControl ItemsSource="{Binding Top10ColdestDays}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border BorderBrush="{StaticResource DailyRowDividerBrush}" BorderThickness="0,0,0,1" Padding="12,7">
+                                        <!-- Desktop Table View (Wide Screens) -->
+                                        <StackPanel x:Name="Top10ColdestDesktopView">
+                                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" BorderThickness="0" Padding="0">
+                                                <StackPanel MinWidth="440">
+                                                    <Border Background="{StaticResource HeaderBackgroundBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,4">
                                                         <Grid>
                                                             <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="45" />
+                                                                <ColumnDefinition Width="48" />
                                                                 <ColumnDefinition Width="*" />
-                                                                <ColumnDefinition Width="90" />
-                                                                <ColumnDefinition Width="90" />
+                                                                <ColumnDefinition Width="105" />
+                                                                <ColumnDefinition Width="125" />
                                                             </Grid.ColumnDefinitions>
-                                                            <TextBlock Grid.Column="0" Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#0284C7" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="1" Text="{Binding FormattedDate}" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="2" Text="{Binding ValueDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#0284C7" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="3" Text="{Binding SecondaryInfo}" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                                            <TextBlock Grid.Column="0" Text="Rank" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="NoWrap" />
+                                                            <TextBlock Grid.Column="1" Text="Date" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="NoWrap" />
+                                                            <TextBlock Grid.Column="2" Text="Low Temp" FontWeight="Bold" Foreground="#38BDF8" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="NoWrap" />
+                                                            <TextBlock Grid.Column="3" Text="High Temp" FontWeight="Bold" Foreground="#94A3B8" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="NoWrap" />
                                                         </Grid>
                                                     </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
+
+                                                    <ItemsControl ItemsSource="{Binding Top10ColdestDays}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border BorderBrush="{StaticResource DailyRowDividerBrush}" BorderThickness="0,0,0,1" Padding="12,7">
+                                                                    <Grid>
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition Width="48" />
+                                                                            <ColumnDefinition Width="*" />
+                                                                            <ColumnDefinition Width="105" />
+                                                                            <ColumnDefinition Width="125" />
+                                                                        </Grid.ColumnDefinitions>
+                                                                        <TextBlock Grid.Column="0" Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#0284C7" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                        <TextBlock Grid.Column="1" Text="{Binding FormattedDate}" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                        <TextBlock Grid.Column="2" Text="{Binding ValueDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#0284C7" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                        <TextBlock Grid.Column="3" Text="{Binding SecondaryInfo}" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                    </Grid>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </ScrollViewer>
+                                        </StackPanel>
+
+                                        <!-- Mobile Adaptive View (Small Screens) -->
+                                        <StackPanel x:Name="Top10ColdestMobileView" Visibility="Collapsed">
+                                            <Border Background="{StaticResource HeaderBackgroundBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,0,4">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="38" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="Rank" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" />
+                                                    <TextBlock Grid.Column="1" Text="Date" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" />
+                                                    <TextBlock Grid.Column="2" Text="Low / High" FontWeight="Bold" Foreground="#38BDF8" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" />
+                                                </Grid>
+                                            </Border>
+                                            <ItemsControl ItemsSource="{Binding Top10ColdestDays}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border BorderBrush="{StaticResource DailyRowDividerBrush}" BorderThickness="0,0,0,1" Padding="10,7">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="38" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Grid.Column="0" Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#0284C7" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                <TextBlock Grid.Column="1" Text="{Binding FormattedDate}" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{Binding ValueDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#0284C7" HorizontalAlignment="Right" TextWrapping="NoWrap" />
+                                                                    <TextBlock Text="{Binding SecondaryInfo}" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" TextWrapping="NoWrap" Margin="0,1,0,0" />
+                                                                </StackPanel>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
                                     </StackPanel>
                                 </Border>
 
                                 <!-- 3. Top 10 Highest Wind Gusts Card -->
-                                <Border MaxWidth="570" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,16,16">
+                                <Border x:Name="CardTop10Gusts" Width="530" MaxWidth="570" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,16,16">
                                     <StackPanel>
                                         <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,10">
                                             <TextBlock Text="💨" FontSize="{Binding Theme.FontSizeSubheading}" Margin="0,0,8,0" VerticalAlignment="Center" />
@@ -980,47 +1066,90 @@
                                             <TextBlock Text=" (Peak Daily Gust)" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
                                         </controls:WrapPanel>
 
-                                        <!-- Column Headers -->
-                                        <Border Background="{StaticResource HeaderBackgroundBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,4">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="45" />
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="90" />
-                                                    <ColumnDefinition Width="90" />
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="Rank" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="1" Text="Date" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="2" Text="Peak Gust" FontWeight="Bold" Foreground="#A5B4FC" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="3" Text="Avg Wind" FontWeight="Bold" Foreground="#94A3B8" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="Wrap" />
-                                            </Grid>
-                                        </Border>
-
-                                        <ItemsControl ItemsSource="{Binding Top10HighestGusts}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border BorderBrush="{StaticResource DailyRowDividerBrush}" BorderThickness="0,0,0,1" Padding="12,7">
+                                        <!-- Desktop Table View (Wide Screens) -->
+                                        <StackPanel x:Name="Top10GustsDesktopView">
+                                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" BorderThickness="0" Padding="0">
+                                                <StackPanel MinWidth="440">
+                                                    <Border Background="{StaticResource HeaderBackgroundBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,4">
                                                         <Grid>
                                                             <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="45" />
+                                                                <ColumnDefinition Width="48" />
                                                                 <ColumnDefinition Width="*" />
-                                                                <ColumnDefinition Width="90" />
-                                                                <ColumnDefinition Width="90" />
+                                                                <ColumnDefinition Width="105" />
+                                                                <ColumnDefinition Width="125" />
                                                             </Grid.ColumnDefinitions>
-                                                            <TextBlock Grid.Column="0" Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#4F46E5" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="1" Text="{Binding FormattedDate}" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="2" Text="{Binding ValueDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#4F46E5" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="3" Text="{Binding SecondaryInfo}" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                                            <TextBlock Grid.Column="0" Text="Rank" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="NoWrap" />
+                                                            <TextBlock Grid.Column="1" Text="Date" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="NoWrap" />
+                                                            <TextBlock Grid.Column="2" Text="Peak Gust" FontWeight="Bold" Foreground="#A5B4FC" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="NoWrap" />
+                                                            <TextBlock Grid.Column="3" Text="Avg Wind" FontWeight="Bold" Foreground="#94A3B8" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="NoWrap" />
                                                         </Grid>
                                                     </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
+
+                                                    <ItemsControl ItemsSource="{Binding Top10HighestGusts}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border BorderBrush="{StaticResource DailyRowDividerBrush}" BorderThickness="0,0,0,1" Padding="12,7">
+                                                                    <Grid>
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition Width="48" />
+                                                                            <ColumnDefinition Width="*" />
+                                                                            <ColumnDefinition Width="105" />
+                                                                            <ColumnDefinition Width="125" />
+                                                                        </Grid.ColumnDefinitions>
+                                                                        <TextBlock Grid.Column="0" Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#4F46E5" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                        <TextBlock Grid.Column="1" Text="{Binding FormattedDate}" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                        <TextBlock Grid.Column="2" Text="{Binding ValueDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#4F46E5" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                        <TextBlock Grid.Column="3" Text="{Binding SecondaryInfo}" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                    </Grid>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </ScrollViewer>
+                                        </StackPanel>
+
+                                        <!-- Mobile Adaptive View (Small Screens) -->
+                                        <StackPanel x:Name="Top10GustsMobileView" Visibility="Collapsed">
+                                            <Border Background="{StaticResource HeaderBackgroundBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,0,4">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="38" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="Rank" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" />
+                                                    <TextBlock Grid.Column="1" Text="Date" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" />
+                                                    <TextBlock Grid.Column="2" Text="Gust / Avg Wind" FontWeight="Bold" Foreground="#A5B4FC" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" />
+                                                </Grid>
+                                            </Border>
+                                            <ItemsControl ItemsSource="{Binding Top10HighestGusts}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border BorderBrush="{StaticResource DailyRowDividerBrush}" BorderThickness="0,0,0,1" Padding="10,7">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="38" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Grid.Column="0" Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#4F46E5" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                <TextBlock Grid.Column="1" Text="{Binding FormattedDate}" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{Binding ValueDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#4F46E5" HorizontalAlignment="Right" TextWrapping="NoWrap" />
+                                                                    <TextBlock Text="{Binding SecondaryInfo}" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" TextWrapping="NoWrap" Margin="0,1,0,0" />
+                                                                </StackPanel>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
                                     </StackPanel>
                                 </Border>
 
                                 <!-- 4. Top 10 Rainiest Days Card -->
-                                <Border MaxWidth="570" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,16,16">
+                                <Border x:Name="CardTop10Rainiest" Width="530" MaxWidth="570" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,16,16">
                                     <StackPanel>
                                         <controls:WrapPanel Orientation="Horizontal" Margin="0,0,0,10">
                                             <TextBlock Text="🌧" FontSize="{Binding Theme.FontSizeSubheading}" Margin="0,0,8,0" VerticalAlignment="Center" />
@@ -1028,42 +1157,85 @@
                                             <TextBlock Text=" (Single-Day Precipitation)" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
                                         </controls:WrapPanel>
 
-                                        <!-- Column Headers -->
-                                        <Border Background="{StaticResource HeaderBackgroundBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,4">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="45" />
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="90" />
-                                                    <ColumnDefinition Width="130" />
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="Rank" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="1" Text="Date" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="2" Text="Precip" FontWeight="Bold" Foreground="#5EEAD4" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="Wrap" />
-                                                <TextBlock Grid.Column="3" Text="Activity" FontWeight="Bold" Foreground="#94A3B8" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="Wrap" />
-                                            </Grid>
-                                        </Border>
-
-                                        <ItemsControl ItemsSource="{Binding Top10RainiestDays}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border BorderBrush="{StaticResource DailyRowDividerBrush}" BorderThickness="0,0,0,1" Padding="12,7">
+                                        <!-- Desktop Table View (Wide Screens) -->
+                                        <StackPanel x:Name="Top10RainiestDesktopView">
+                                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" BorderThickness="0" Padding="0">
+                                                <StackPanel MinWidth="440">
+                                                    <Border Background="{StaticResource HeaderBackgroundBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,4">
                                                         <Grid>
                                                             <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="45" />
+                                                                <ColumnDefinition Width="48" />
                                                                 <ColumnDefinition Width="*" />
-                                                                <ColumnDefinition Width="90" />
-                                                                <ColumnDefinition Width="130" />
+                                                                <ColumnDefinition Width="85" />
+                                                                <ColumnDefinition Width="190" />
                                                             </Grid.ColumnDefinitions>
-                                                            <TextBlock Grid.Column="0" Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#0D9488" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="1" Text="{Binding FormattedDate}" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="2" Text="{Binding ValueDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#0D9488" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                            <TextBlock Grid.Column="3" Text="{Binding SecondaryInfo}" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                                            <TextBlock Grid.Column="0" Text="Rank" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="NoWrap" />
+                                                            <TextBlock Grid.Column="1" Text="Date" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" TextWrapping="NoWrap" />
+                                                            <TextBlock Grid.Column="2" Text="Precip" FontWeight="Bold" Foreground="#5EEAD4" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="NoWrap" />
+                                                            <TextBlock Grid.Column="3" Text="Activity" FontWeight="Bold" Foreground="#94A3B8" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" TextWrapping="NoWrap" />
                                                         </Grid>
                                                     </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
+
+                                                    <ItemsControl ItemsSource="{Binding Top10RainiestDays}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border BorderBrush="{StaticResource DailyRowDividerBrush}" BorderThickness="0,0,0,1" Padding="12,7">
+                                                                    <Grid>
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition Width="48" />
+                                                                            <ColumnDefinition Width="*" />
+                                                                            <ColumnDefinition Width="85" />
+                                                                            <ColumnDefinition Width="190" />
+                                                                        </Grid.ColumnDefinitions>
+                                                                        <TextBlock Grid.Column="0" Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#0D9488" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                        <TextBlock Grid.Column="1" Text="{Binding FormattedDate}" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                        <TextBlock Grid.Column="2" Text="{Binding ValueDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#0D9488" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                        <TextBlock Grid.Column="3" Text="{Binding SecondaryInfo}" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                    </Grid>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </ScrollViewer>
+                                        </StackPanel>
+
+                                        <!-- Mobile Adaptive View (Small Screens) -->
+                                        <StackPanel x:Name="Top10RainiestMobileView" Visibility="Collapsed">
+                                            <Border Background="{StaticResource HeaderBackgroundBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,0,4">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="38" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="Rank" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" />
+                                                    <TextBlock Grid.Column="1" Text="Date" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" FontSize="{Binding Theme.FontSizeSmall}" />
+                                                    <TextBlock Grid.Column="2" Text="Precip / Activity" FontWeight="Bold" Foreground="#5EEAD4" FontSize="{Binding Theme.FontSizeSmall}" HorizontalAlignment="Right" />
+                                                </Grid>
+                                            </Border>
+                                            <ItemsControl ItemsSource="{Binding Top10RainiestDays}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border BorderBrush="{StaticResource DailyRowDividerBrush}" BorderThickness="0,0,0,1" Padding="10,7">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="38" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Grid.Column="0" Text="{Binding RankDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#0D9488" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                <TextBlock Grid.Column="1" Text="{Binding FormattedDate}" FontWeight="SemiBold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="{StaticResource DailyDateFgBrush}" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                                <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{Binding ValueDisplay}" FontWeight="Bold" FontSize="{Binding Theme.FontSizeRegular}" Foreground="#0D9488" HorizontalAlignment="Right" TextWrapping="NoWrap" />
+                                                                    <TextBlock Text="{Binding SecondaryInfo}" FontSize="{Binding Theme.FontSizeSmall}" Foreground="{StaticResource DailyMutedFgBrush}" HorizontalAlignment="Right" TextWrapping="NoWrap" Margin="0,1,0,0" />
+                                                                </StackPanel>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
                                     </StackPanel>
                                 </Border>
 
