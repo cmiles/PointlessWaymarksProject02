@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\PointlessWaymarks.PhotoMetadataBasicsGui\PointlessWaymarks.PhotoMetadataBasicsGui.csproj" />
     <ProjectReference Include="..\PointlessWaymarks.UtilitarianImage\PointlessWaymarks.UtilitarianImage.csproj" />
   </ItemGroup>
 
