@@ -60,6 +60,17 @@
         return [toDeg(lat2), toDeg(lon2)];
     }
 
+    // Generates dense points along a great circle ray to eliminate Mercator projection curvature divergence
+    function generateRayPath(lat, lon, distanceKm, bearingDeg, stepKm = 2.0) {
+        const pts = [[lat, lon]];
+        const steps = Math.ceil(distanceKm / stepKm);
+        for (let i = 1; i <= steps; i++) {
+            const d = Math.min(i * stepKm, distanceKm);
+            pts.push(projectLatLng(lat, lon, d, bearingDeg));
+        }
+        return pts;
+    }
+
     // Computes bearing in degrees from point A to point B
     function computeBearing(lat1, lon1, lat2, lon2) {
         const y = Math.sin(toRad(lon2 - lon1)) * Math.cos(toRad(lat2));
@@ -92,11 +103,12 @@
 
         const distKm = getArrowDistanceKm();
         const tipPos = projectLatLng(currentLat, currentLon, distKm, currentBearing);
-        const sightLimitPos = projectLatLng(currentLat, currentLon, SIGHT_LIMIT_KM, currentBearing);
 
         // 1. Update Direction of View Line (Dashed slightly faded blue line extending to generous limit of human sight)
+        // Using dense geodesic ray path (2 km steps) to eliminate Mercator chord divergence
+        const sightPoints = generateRayPath(currentLat, currentLon, SIGHT_LIMIT_KM, currentBearing, 2.0);
         if (!directionLine) {
-            directionLine = L.polyline([[currentLat, currentLon], sightLimitPos], {
+            directionLine = L.polyline(sightPoints, {
                 color: '#0284C7',
                 weight: 2.5,
                 opacity: 0.45,
@@ -104,7 +116,7 @@
                 interactive: false
             }).addTo(map);
         } else {
-            directionLine.setLatLngs([[currentLat, currentLon], sightLimitPos]);
+            directionLine.setLatLngs(sightPoints);
         }
 
         // 2. Update Arrowhead polygon at the handle
@@ -171,7 +183,7 @@
                 isInteractingWithHandle = true;
                 clearFarthestVisibleLine();
                 const pos = e.target.getLatLng();
-                currentBearing = Math.round(computeBearing(currentLat, currentLon, pos.lat, pos.lng));
+                currentBearing = Math.round(computeBearing(currentLat, currentLon, pos.lat, pos.lng) * 10) / 10;
                 updateArrowAndSector(false); // Don't call setLatLng on handle while dragging
 
                 if (onDirectionChangedCb) {
@@ -181,7 +193,7 @@
 
             arrowHandleMarker.on('dragend', function (e) {
                 const pos = e.target.getLatLng();
-                currentBearing = Math.round(computeBearing(currentLat, currentLon, pos.lat, pos.lng));
+                currentBearing = Math.round(computeBearing(currentLat, currentLon, pos.lat, pos.lng) * 10) / 10;
                 updateArrowAndSector(true);
 
                 if (onDirectionChangedCb) {
@@ -377,24 +389,32 @@
 
     window.pointedMap.clearFarthestVisibleLine = clearFarthestVisibleLine;
 
-    window.pointedMap.setFarthestVisibleLine = function (targetLat, targetLon, distKm, elevM) {
+    window.pointedMap.setFarthestVisibleLine = function (targetLat, targetLon, distKm, elevM, bearing) {
         if (!map) return;
         clearFarthestVisibleLine();
 
-        if (targetLat == null || targetLon == null || distKm == null || distKm < 1.0) {
+        if (distKm == null || distKm < 1.0) {
             return;
         }
 
+        const sightBearing = (bearing != null && !isNaN(bearing)) ? bearing : currentBearing;
+
+        // Generate dense points along the exact same ray and bearing as the dashed direction line
+        // so that the solid line and dashed line are 100% coincident with zero divergence.
+        // generateRayPath(lat, lon, distanceKm, bearingDeg, stepKm)
+        const solidPoints = generateRayPath(currentLat, currentLon, distKm, sightBearing, 2.0);
+        const endPt = solidPoints[solidPoints.length - 1];
+
         // Draw solid bright blue line to the farthest away land feature that can be seen
-        farthestVisibleLine = L.polyline([[currentLat, currentLon], [targetLat, targetLon]], {
+        farthestVisibleLine = L.polyline(solidPoints, {
             color: '#00BFFF',
             weight: 3.5,
             opacity: 1.0,
             interactive: false
         }).addTo(map);
 
-        // Draw small dot at the end
-        farthestVisibleDot = L.circleMarker([targetLat, targetLon], {
+        // Draw small dot at the end, exactly on the line
+        farthestVisibleDot = L.circleMarker(endPt, {
             radius: 5,
             fillColor: '#00BFFF',
             fillOpacity: 1.0,

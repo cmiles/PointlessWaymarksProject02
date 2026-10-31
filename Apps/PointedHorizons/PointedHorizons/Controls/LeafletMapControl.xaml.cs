@@ -198,12 +198,12 @@ public partial class LeafletMapControl : UserControl
         }
     }
 
-    private void Vm_FarthestVisibleLineCalculated(double lat, double lon, double distKm, double elevM)
+    private void Vm_FarthestVisibleLineCalculated(double lat, double lon, double distKm, double elevM, double bearing)
     {
         if (!_isMapInitialized) return;
         try
         {
-            Interop.ExecuteJavaScriptVoid("if (window.pointedMap && window.pointedMap.setFarthestVisibleLine) { window.pointedMap.setFarthestVisibleLine($0, $1, $2, $3); }", lat, lon, distKm, elevM);
+            Interop.ExecuteJavaScriptVoid("if (window.pointedMap && window.pointedMap.setFarthestVisibleLine) { window.pointedMap.setFarthestVisibleLine($0, $1, $2, $3, $4); }", lat, lon, distKm, elevM, bearing);
         }
         catch
         {

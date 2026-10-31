@@ -34,7 +34,7 @@ public class MainViewModel : INotifyPropertyChanged
     public event Action<double, double, bool>? MapLocationRequested;
     public event Action<double>? MapDirectionRequested;
     public event Action<double>? MapFovRequested;
-    public event Action<double, double, double, double>? FarthestVisibleLineCalculated;
+    public event Action<double, double, double, double, double>? FarthestVisibleLineCalculated;
     public event Action? FarthestVisibleLineCleared;
 
     private CancellationTokenSource? _farthestFeatureCts;
@@ -402,7 +402,8 @@ public class MainViewModel : INotifyPropertyChanged
                             result.Value.Lat,
                             result.Value.Lon,
                             result.Value.DistanceKm,
-                            result.Value.ElevationM);
+                            result.Value.ElevationM,
+                            az);
                     }
                 });
             }
