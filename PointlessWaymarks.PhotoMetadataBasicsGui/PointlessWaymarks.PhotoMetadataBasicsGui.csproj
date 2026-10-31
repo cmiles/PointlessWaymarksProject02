@@ -12,6 +12,9 @@
         <AssemblyAttribute Include="PointlessWaymarks.CommonTools.BuildDateAttribute">
             <_Parameter1>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</_Parameter1>
         </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>PointlessWaymarks.UtilitarianImageTests</_Parameter1>
+        </AssemblyAttribute>
     </ItemGroup>
 
     <PropertyGroup>

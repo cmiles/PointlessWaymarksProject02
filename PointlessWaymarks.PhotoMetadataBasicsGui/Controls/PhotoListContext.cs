@@ -717,21 +717,11 @@ public partial class PhotoListContext : IDropTarget
     }
 
     /// <summary>
-    ///     Extracts a camera sequence identifier token from a filename.
-    ///     Matches patterns like _DSC1234, _1234567, _IMG5678, _DSCF0001, etc.
-    /// </summary>
-    private static string? ExtractCameraIdentifier(string fileName)
-    {
-        var match = Regex.Match(fileName, @"_[A-Za-z]*\d{3,}", RegexOptions.None);
-        return match.Success ? match.Value : null;
-    }
-
-    /// <summary>
     ///     Given an anchor file, finds all related files in the same directory by matching
-    ///     base name prefixes (bidirectional with separator boundary), camera identifier
-    ///     tokens, and numbered suffix variants (when a base root file exists).
+    ///     base name prefixes (bidirectional with separator boundary) and numbered suffix
+    ///     variants (when a base root file exists).
     /// </summary>
-    private static List<FileInfo> FindRelatedFiles(FileInfo anchor)
+    internal static List<FileInfo> FindRelatedFiles(FileInfo anchor)
     {
         var dir = anchor.Directory;
         if (dir is not { Exists: true }) return [anchor];
@@ -739,9 +729,6 @@ public partial class PhotoListContext : IDropTarget
         var baseName = Path.GetFileNameWithoutExtension(anchor.Name);
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { anchor.FullName };
         var result = new List<FileInfo> { anchor };
-
-        // Pre-compute the camera identifier token (e.g. _DSC1234, _1234, _IMG5678)
-        var cameraToken = ExtractCameraIdentifier(anchor.Name);
 
         // Pre-compute the numbered suffix root (e.g. "photo" from "photo-1" or "photo_2")
         string? numberRoot = null;
@@ -774,8 +761,12 @@ public partial class PhotoListContext : IDropTarget
                 && candidateBase.StartsWith(baseName, StringComparison.OrdinalIgnoreCase)
                 && IsGroupingSeparator(candidateBase[baseName.Length]))
             {
-                result.Add(f);
-                continue;
+                var remainder = candidateBase[(baseName.Length + 1)..];
+                if (!StartsWithLongNumericSequence(remainder))
+                {
+                    result.Add(f);
+                    continue;
+                }
             }
 
             // Reverse prefix: anchor starts with candidate's base name + separator
@@ -784,16 +775,12 @@ public partial class PhotoListContext : IDropTarget
                 && baseName.StartsWith(candidateBase, StringComparison.OrdinalIgnoreCase)
                 && IsGroupingSeparator(baseName[candidateBase.Length]))
             {
-                result.Add(f);
-                continue;
-            }
-
-            // Camera identifier token shared between anchor and candidate
-            if (!string.IsNullOrEmpty(cameraToken)
-                && f.Name.Contains(cameraToken, StringComparison.OrdinalIgnoreCase))
-            {
-                result.Add(f);
-                continue;
+                var remainder = baseName[(candidateBase.Length + 1)..];
+                if (!StartsWithLongNumericSequence(remainder))
+                {
+                    result.Add(f);
+                    continue;
+                }
             }
 
             // Numbered suffix grouping: if anchor is "root-N" or "root_N" and "root.xxx" exists in directory,
@@ -880,6 +867,11 @@ public partial class PhotoListContext : IDropTarget
     private static bool IsGroupingSeparator(char c)
     {
         return c is '-' or ' ';
+    }
+
+    private static bool StartsWithLongNumericSequence(string value)
+    {
+        return Regex.IsMatch(value, @"^\d{3,}");
     }
 
     [NonBlockingCommand]
