@@ -23,22 +23,18 @@ public static class DemService
     private static readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(30) };
 
     /// <summary>
-    /// Resolves the local DEM cache directory path (e.g. "DEM" folder beside the running application).
+    /// Resolves the local DEM directory path (configured or default).
     /// </summary>
     public static string GetLocalCacheDirectory()
     {
         try
         {
-            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            if (!string.IsNullOrEmpty(baseDir))
-            {
-                return Path.Combine(baseDir, "DEM");
-            }
+            return OfflineDataService.DemDirectory;
         }
         catch
         {
+            return "DEM";
         }
-        return "DEM";
     }
 
     /// <summary>
@@ -82,28 +78,22 @@ public static class DemService
             return cached;
         }
 
-        // 2. Check local DEM/ directory beside application (Photino desktop cache)
-        string localDir = GetLocalCacheDirectory();
-        string[] localExtensions = [".hgt", ".zip", ".hgt.zip"];
-
-        foreach (var ext in localExtensions)
+        // 2. Check local DEM directory (.hgt, .zip, etc.)
+        string? localFilePath = OfflineDataService.FindLocalDemFile(tileKey);
+        if (!string.IsNullOrEmpty(localFilePath) && File.Exists(localFilePath))
         {
             try
             {
-                string localFilePath = Path.Combine(localDir, $"{tileKey}{ext}");
-                if (File.Exists(localFilePath))
-                {
-                    progress?.Report($"Loading local tile {tileKey}...");
-                    byte[] fileBytes = await File.ReadAllBytesAsync(localFilePath);
-                    byte[] hgtBytes = HgtTile.ExtractHgtBytes(fileBytes, tileKey);
-                    var tile = new HgtTile(hgtBytes, tileKey);
-                    _tileCache[tileKey] = tile;
-                    return tile;
-                }
+                progress?.Report($"Loading local DEM tile {tileKey}...");
+                byte[] fileBytes = await File.ReadAllBytesAsync(localFilePath);
+                byte[] hgtBytes = HgtTile.ExtractHgtBytes(fileBytes, tileKey);
+                var tile = new HgtTile(hgtBytes, tileKey);
+                _tileCache[tileKey] = tile;
+                return tile;
             }
-            catch
+            catch (Exception ex)
             {
-                // Continue to remote download
+                System.Diagnostics.Debug.WriteLine($"[DemService] Error loading local tile {localFilePath}: {ex.Message}");
             }
         }
 
@@ -129,23 +119,8 @@ public static class DemService
                     var tile = new HgtTile(hgtBytes, tileKey);
                     _tileCache[tileKey] = tile;
 
-                    // Save to local cache folder if supported (desktop/Photino)
-                    try
-                    {
-                        if (!Directory.Exists(localDir))
-                        {
-                            Directory.CreateDirectory(localDir);
-                        }
-                        string savePath = Path.Combine(localDir, $"{tileKey}.hgt");
-                        if (!File.Exists(savePath))
-                        {
-                            await File.WriteAllBytesAsync(savePath, hgtBytes);
-                        }
-                    }
-                    catch
-                    {
-                        // Ignore local cache write failures in sandbox/browser
-                    }
+                    // Automatically cache downloaded DEMs to local folder
+                    _ = OfflineDataService.SaveDownloadedDemAsync(tileKey, hgtBytes);
 
                     return tile;
                 }

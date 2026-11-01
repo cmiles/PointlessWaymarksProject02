@@ -37,6 +37,11 @@ public partial class DirectionsBarControl : UserControl
         UpdateParams();
     }
 
+    public void Redraw()
+    {
+        UpdateParams();
+    }
+
     private void DirectionsBarControl_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
         if (e.OldValue is MainViewModel oldVm)

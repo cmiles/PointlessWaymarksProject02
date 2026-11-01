@@ -52,26 +52,23 @@
             </StackPanel>
         </Border>
 
-        <!-- Floating Coordinates & Location Info Badge (Top Left) -->
-        <Border x:Name="LocationBadgeBorder" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="12,12,0,0"
-                BorderThickness="1" CornerRadius="8" Padding="10,6">
+        <!-- Floating Location Info & My Location Badge (Lower Left) -->
+        <Border x:Name="LocationBadgeBorder" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="12,0,0,12"
+                BorderThickness="1" CornerRadius="8" Padding="10,8">
             <StackPanel Orientation="Vertical">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="📍 " FontSize="12" VerticalAlignment="Center"/>
                     <TextBlock x:Name="TxtCoordinatesValue" Text="{Binding CoordinatesDisplay}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="18,2,0,0">
+                <StackPanel Orientation="Horizontal" Margin="18,2,0,4">
                     <TextBlock x:Name="TxtElevationLabel" Text="Elevation: " FontSize="10"/>
                     <TextBlock x:Name="TxtElevationValue" Text="{Binding ObserverElevationDisplay}" FontSize="10" FontWeight="SemiBold"/>
                 </StackPanel>
+                <Button x:Name="BtnMyLocation" Content="📍 My Location" Click="BtnMyLocation_Click"
+                        Style="{StaticResource PillButtonStyle}" Padding="8,4" Margin="0,2,0,0"
+                        FontSize="10" FontWeight="Bold" HorizontalAlignment="Left"
+                        ToolTipService.ToolTip="Acquire current GPS position and move observer there" />
             </StackPanel>
-        </Border>
-
-        <!-- Help Hint at Bottom Left -->
-        <Border x:Name="HelpHintBorder" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="12,0,0,12"
-                BorderThickness="1" CornerRadius="6" Padding="8,4">
-            <TextBlock x:Name="TxtHelpHint" Text="💡 Click map to set location · Drag arrow tip to rotate direction · Drag red pin to move"
-                       FontSize="11"/>
         </Border>
     </Grid>
 </UserControl>

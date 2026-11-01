@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -14,6 +15,8 @@ public partial class LeafletMapControl : UserControl
     private bool _isMapInitializing;
     private bool _isUpdatingFromInternal;
 
+    public event EventHandler? ConfigurePmTilesRequested;
+
     private MainViewModel? ViewModel => DataContext as MainViewModel;
 
     public LeafletMapControl()
@@ -28,6 +31,11 @@ public partial class LeafletMapControl : UserControl
             Dispatcher.BeginInvoke(() => UpdateTheme(ThemeManager.Current.IsDark));
         };
 
+        OfflineDataService.ConfigChanged += (s, e) =>
+        {
+            Dispatcher.BeginInvoke(UpdatePmTilesLayers);
+        };
+
         LeafletScrollIsolationHelper.ProtectControl(this, MapContainer);
     }
 
@@ -39,15 +47,35 @@ public partial class LeafletMapControl : UserControl
 
     private void LeafletMapControl_SizeChanged(object sender, SizeChangedEventArgs e)
     {
+        // Hide direction bar (with directions and slider) on small screens
+        bool isSmallScreen = e.NewSize.Width < 768 || (e.NewSize.Height > 0 && e.NewSize.Height < 600);
+        if (DirectionToolbarBorder != null)
+        {
+            DirectionToolbarBorder.Visibility = isSmallScreen ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        if (!isSmallScreen)
+        {
+            bool isCompact = e.NewSize.Width < 900;
+            if (BtnCardNE != null) BtnCardNE.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+            if (BtnCardSE != null) BtnCardSE.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+            if (BtnCardSW != null) BtnCardSW.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+            if (BtnCardNW != null) BtnCardNW.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+            if (TxtDirectionLabel != null) TxtDirectionLabel.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        ResizeMap();
+    }
+
+    public void ResizeMap()
+    {
         if (_isMapInitialized)
         {
             try
             {
                 Interop.ExecuteJavaScriptVoid("if (window.pointedMap && window.pointedMap.invalidateSize) { window.pointedMap.invalidateSize(); }");
             }
-            catch
-            {
-            }
+            catch { }
         }
         else
         {
@@ -114,10 +142,11 @@ public partial class LeafletMapControl : UserControl
             LocationBadgeBorder.BorderBrush = overlayBorder;
         }
 
-        if (HelpHintBorder != null)
+        if (BtnMyLocation != null)
         {
-            HelpHintBorder.Background = overlayBg;
-            HelpHintBorder.BorderBrush = overlayBorder;
+            BtnMyLocation.Background = tm.ButtonInactiveBackground;
+            BtnMyLocation.BorderBrush = tm.ButtonInactiveBorder;
+            BtnMyLocation.Foreground = tm.Accent;
         }
 
         if (ToolbarDivider != null)
@@ -132,8 +161,6 @@ public partial class LeafletMapControl : UserControl
         if (TxtCoordinatesValue != null) TxtCoordinatesValue.Foreground = tm.TextPrimary;
         if (TxtElevationLabel != null) TxtElevationLabel.Foreground = tm.TextSecondary;
         if (TxtElevationValue != null) TxtElevationValue.Foreground = tm.Accent;
-
-        if (TxtHelpHint != null) TxtHelpHint.Foreground = tm.TextSecondary;
 
         void StyleMajorCard(Button btn)
         {
@@ -222,6 +249,22 @@ public partial class LeafletMapControl : UserControl
         }
     }
 
+    private async void BtnMyLocation_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel == null) return;
+        ViewModel.StatusMessage = "Acquiring current GPS location...";
+        var pos = await GeolocationService.GetCurrentPositionAsync(timeoutSeconds: 8);
+        if (pos != null)
+        {
+            ViewModel.SetLocation(pos.Latitude, pos.Longitude, "Current Location", panMap: true);
+            ViewModel.StatusMessage = $"Moved to GPS location: {pos.Latitude:F4}°, {pos.Longitude:F4}° (±{pos.AccuracyM:F0}m)";
+        }
+        else
+        {
+            ViewModel.StatusMessage = "GPS location unavailable or permission denied.";
+        }
+    }
+
     private void InitializeMap()
     {
         if (_isMapInitialized || _isMapInitializing) return;
@@ -273,6 +316,11 @@ public partial class LeafletMapControl : UserControl
             });
         };
 
+        Action onConfigurePmTiles = () =>
+        {
+            Dispatcher.BeginInvoke(() => ConfigurePmTilesRequested?.Invoke(this, EventArgs.Empty));
+        };
+
         double initLat = ViewModel?.Latitude ?? 32.4431;
         double initLon = ViewModel?.Longitude ?? -110.7884;
         double initBearing = ViewModel?.Azimuth ?? 270.0;
@@ -281,12 +329,13 @@ public partial class LeafletMapControl : UserControl
         try
         {
             Interop.ExecuteJavaScriptVoid(@"
-                (function(container, lat, lon, bearing, fov, locCb, dirCb) {
+                (function(container, lat, lon, bearing, fov, locCb, dirCb, cfgCb) {
                     function tryInit() {
-                        if (typeof L === 'undefined' || !window.pointedMap || !window.pointedMap.init) {
+                        if (typeof maplibregl === 'undefined' || !window.pointedMap || !window.pointedMap.init) {
                             setTimeout(tryInit, 50);
                             return;
                         }
+                        window.pointedMap.onConfigurePmTilesRequested = cfgCb;
                         window.pointedMap.init(container, {
                             lat: lat,
                             lon: lon,
@@ -299,10 +348,11 @@ public partial class LeafletMapControl : UserControl
                         });
                     }
                     tryInit();
-                })($0, $1, $2, $3, $4, $5, $6);
-            ", div, initLat, initLon, initBearing, initFov, onLocationPicked, onDirectionChanged);
+                })($0, $1, $2, $3, $4, $5, $6, $7);
+            ", div, initLat, initLon, initBearing, initFov, onLocationPicked, onDirectionChanged, onConfigurePmTiles);
 
             _isMapInitialized = true;
+            UpdatePmTilesLayers();
         }
         catch
         {
@@ -329,6 +379,34 @@ public partial class LeafletMapControl : UserControl
         }
         catch
         {
+        }
+    }
+
+    public void UpdatePmTilesLayers()
+    {
+        if (!_isMapInitialized) return;
+        try
+        {
+            var payload = OfflineDataService.GetPmTilesConfigPayload();
+            string json = System.Text.Json.JsonSerializer.Serialize(payload);
+            Interop.ExecuteJavaScriptVoid("if (window.pointedMap && window.pointedMap.setPmTilesLayers) { window.pointedMap.setPmTilesLayers(JSON.parse($0)); }", json);
+        }
+        catch (System.Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[LeafletMapControl] UpdatePmTilesLayers error: {ex.Message}");
+        }
+    }
+
+    public void SetBaseLayer(string layerKey)
+    {
+        if (!_isMapInitialized) return;
+        try
+        {
+            Interop.ExecuteJavaScriptVoid("if (window.pointedMap && window.pointedMap.setBaseLayer) { window.pointedMap.setBaseLayer($0); }", layerKey);
+        }
+        catch (System.Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[LeafletMapControl] SetBaseLayer error: {ex.Message}");
         }
     }
 

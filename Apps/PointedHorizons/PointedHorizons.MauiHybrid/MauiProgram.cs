@@ -1,8 +1,22 @@
-﻿using Microsoft.AspNetCore.Components.WebView.Maui;
+using Microsoft.AspNetCore.Components.WebView.Maui;
 using Microsoft.Extensions.Logging;
 using OpenSilver.MauiHybrid.Runner;
 
+#if ANDROID
+using Android.Webkit;
+#endif
+
 namespace PointedHorizons.MauiHybrid;
+
+#if ANDROID
+internal class GeolocationWebChromeClient : WebChromeClient
+{
+    public override void OnGeolocationPermissionsShowPrompt(string? origin, GeolocationPermissions.ICallback? callback)
+    {
+        callback?.Invoke(origin, true, false);
+    }
+}
+#endif
 
 public static class MauiProgram
 {
@@ -19,6 +33,39 @@ public static class MauiProgram
             {
 #if ANDROID
                 conf.AddHandler<BlazorWebView, AndroidWebViewHandler>();
+                Microsoft.AspNetCore.Components.WebView.Maui.BlazorWebViewHandler.BlazorWebViewMapper.AppendToMapping("GeolocationPermission", (handler, view) =>
+                {
+                    handler.PlatformView.Settings.SetGeolocationEnabled(true);
+                    handler.PlatformView.SetWebChromeClient(new GeolocationWebChromeClient());
+                });
+
+                PointedHorizons.Services.BackgroundLocationBridge.ToggleForegroundService = (start) =>
+                {
+                    try
+                    {
+                        var context = Android.App.Application.Context;
+                        var intent = new Android.Content.Intent(context, typeof(LocationTrackingService));
+                        if (start)
+                        {
+                            if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.O)
+                            {
+                                context.StartForegroundService(intent);
+                            }
+                            else
+                            {
+                                context.StartService(intent);
+                            }
+                        }
+                        else
+                        {
+                            context.StopService(intent);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Android.Util.Log.Warn("MauiProgram", $"ToggleForegroundService error: {ex.Message}");
+                    }
+                };
 #endif
             });
 

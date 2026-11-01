@@ -1,5 +1,6 @@
 using OpenSilver.Photino;
 using Photino.NET;
+using PointedHorizons.Services;
 
 namespace PointedHorizons.Photino
 {
@@ -8,6 +9,9 @@ namespace PointedHorizons.Photino
         [STAThread]
         static void Main(string[] args)
         {
+            OfflineDataService.Initialize();
+            LocalTileServer.StartServer();
+
             string windowTitle = "PointedHorizons";
 
             var window = new PhotinoWindow()

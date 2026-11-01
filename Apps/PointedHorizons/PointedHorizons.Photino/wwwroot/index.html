@@ -5,9 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'></svg>">
-    <link rel="stylesheet" href="applibs/leaflet/leaflet.css" />
-    <link rel="stylesheet" href="applibs/leaflet-gesture-handling.min.css" />
-    <link rel="stylesheet" href="applibs/L.Control.Locate.min.css" />
+    <link rel="stylesheet" href="applibs/maplibre/maplibre-gl.css" />
     <style>
         html, body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -22,12 +20,12 @@
             background-color: #070A10;
         }
     </style>
-    <script src="applibs/leaflet/leaflet.js"></script>
-    <script src="applibs/leaflet-gesture-handling.min.js"></script>
-    <script src="applibs/L.Control.Locate.min.js"></script>
+    <script src="applibs/maplibre/pmtiles.js"></script>
+    <script src="applibs/maplibre/maplibre-gl.js"></script>
     <script src="js/horizon-canvas.js"></script>
     <script src="js/directions-bar.js"></script>
     <script src="js/pointed-map.js"></script>
+    <script src="js/fullscreen-map.js"></script>
     <title>PointedHorizons</title>
 </head>
 <body>

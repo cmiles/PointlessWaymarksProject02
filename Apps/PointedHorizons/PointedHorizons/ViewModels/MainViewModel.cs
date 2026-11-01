@@ -18,8 +18,8 @@ public class MainViewModel : INotifyPropertyChanged
     private double _longitude = -110.60845;
     private double _observerElevationM = 1064.0;
     private double _azimuth = 83.5;          // Looking East across the Rincon ridges
-    private double _fieldOfView = 45.0;
-    private bool _isMetric = true;
+    private double _fieldOfView = 54.3924;   // 35mm full-frame focal length (~54.4° FOV)
+    private bool _isMetric = false;          // Feet by default
     private bool _isDarkTheme = false;
     private bool _isBusy;
     private string _statusMessage = "Ready. Click on the map or drag the arrow to compute horizon.";
@@ -55,7 +55,7 @@ public class MainViewModel : INotifyPropertyChanged
 
     public List<LocationPreset> Presets { get; } =
     [
-        new("Tucson East (Rincon Ridges), AZ", 32.10646, -110.60845, 83.5, 45.0, "East-facing panorama towards the Rincon Mountains and Mica Mountain as seen in PeakFinder"),
+        new("Tucson East (Rincon Ridges), AZ", 32.10646, -110.60845, 83.5, 54.3924, "East-facing panorama towards the Rincon Mountains and Mica Mountain as seen in PeakFinder"),
         new("Mount Lemmon, AZ", 32.4431, -110.7884, 270.0, 90.0, "Spectacular ridge view over Santa Catalina peaks and Tucson basin"),
         new("Mount Rainier (Paradise), WA", 46.7865, -121.7350, 350.0, 90.0, "Iconic alpine skyline gazing north towards Mount Rainier and glaciers"),
         new("Grand Canyon (Mather Point), AZ", 36.0617, -112.1077, 345.0, 90.0, "Expansive canyon rim panoramas across Bright Angel and North Rim"),
@@ -142,12 +142,14 @@ public class MainViewModel : INotifyPropertyChanged
         get => _fieldOfView;
         set
         {
-            double clamped = Math.Clamp(value, 30.0, 160.0);
-            if (Math.Abs(_fieldOfView - clamped) > 0.1)
+            double clamped = Math.Clamp(value, 3.0, 160.0);
+            if (Math.Abs(_fieldOfView - clamped) > 0.01)
             {
                 _fieldOfView = clamped;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(FieldOfViewDisplay));
+                OnPropertyChanged(nameof(FocalLength));
+                OnPropertyChanged(nameof(FocalLengthDisplay));
                 MapFovRequested?.Invoke(_fieldOfView);
                 ViewParametersChanged?.Invoke(null, _fieldOfView);
             }
@@ -155,6 +157,31 @@ public class MainViewModel : INotifyPropertyChanged
     }
 
     public string FieldOfViewDisplay => $"{Math.Round(FieldOfView)}°";
+
+    public double FocalLength => FieldOfViewToFocalLength(_fieldOfView);
+
+    public string FocalLengthDisplay => $"{Math.Round(FocalLength)} mm";
+
+    public static double FocalLengthToFieldOfView(double focalLengthMm)
+    {
+        // 35mm full frame sensor width is 36mm.
+        // HFOV = 2 * atan((36 / 2) / f) = 2 * atan(18 / f)
+        double clampedFl = Math.Max(1.0, focalLengthMm);
+        return 2.0 * Math.Atan(18.0 / clampedFl) * (180.0 / Math.PI);
+    }
+
+    public static double FieldOfViewToFocalLength(double fovDeg)
+    {
+        // f = 18 / tan(fov * pi / 360)
+        double clampedFov = Math.Clamp(fovDeg, 1.0, 175.0);
+        double halfAngleRad = (clampedFov * Math.PI) / 360.0;
+        return 18.0 / Math.Tan(halfAngleRad);
+    }
+
+    public void SetFocalLength(double focalLengthMm)
+    {
+        FieldOfView = FocalLengthToFieldOfView(focalLengthMm);
+    }
 
     public bool IsMetric
     {
@@ -275,6 +302,23 @@ public class MainViewModel : INotifyPropertyChanged
         ScheduleFarthestVisibleFeatureCalculation();
     }
 
+    public void SetLocation(double lat, double lon, string locationName = "Current Location", bool panMap = true)
+    {
+        _locationPresetName = locationName;
+        OnPropertyChanged(nameof(LocationPresetName));
+
+        _latitude = Math.Clamp(lat, 24.0, 50.5);
+        _longitude = Math.Clamp(lon, -126.0, -66.0);
+        OnPropertyChanged(nameof(Latitude));
+        OnPropertyChanged(nameof(Longitude));
+        OnPropertyChanged(nameof(CoordinatesDisplay));
+
+        MapLocationRequested?.Invoke(_latitude, _longitude, panMap);
+
+        ScheduleHorizonGeneration(immediate: true);
+        ScheduleFarthestVisibleFeatureCalculation();
+    }
+
     public void UpdateDirectionFromMap(double bearing)
     {
         double normalized = (bearing % 360 + 360) % 360;
@@ -303,12 +347,14 @@ public class MainViewModel : INotifyPropertyChanged
 
     public void SetFovFromView(double fov)
     {
-        double clamped = Math.Clamp(fov, 30.0, 160.0);
-        if (Math.Abs(_fieldOfView - clamped) > 0.1)
+        double clamped = Math.Clamp(fov, 3.0, 160.0);
+        if (Math.Abs(_fieldOfView - clamped) > 0.01)
         {
             _fieldOfView = clamped;
             OnPropertyChanged(nameof(FieldOfView));
             OnPropertyChanged(nameof(FieldOfViewDisplay));
+            OnPropertyChanged(nameof(FocalLength));
+            OnPropertyChanged(nameof(FocalLengthDisplay));
             MapFovRequested?.Invoke(_fieldOfView);
         }
     }
@@ -335,6 +381,8 @@ public class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(AzimuthDisplay));
         OnPropertyChanged(nameof(FieldOfView));
         OnPropertyChanged(nameof(FieldOfViewDisplay));
+        OnPropertyChanged(nameof(FocalLength));
+        OnPropertyChanged(nameof(FocalLengthDisplay));
 
         MapLocationRequested?.Invoke(_latitude, _longitude, true);
         MapDirectionRequested?.Invoke(_azimuth);

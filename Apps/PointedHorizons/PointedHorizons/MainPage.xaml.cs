@@ -11,6 +11,9 @@ namespace PointedHorizons;
 
 public partial class MainPage : Page
 {
+    private string _currentTab = "FullScreenMap";
+    private bool _isSmallScreen;
+
     public MainViewModel ViewModel { get; }
 
     public MainPage()
@@ -23,6 +26,21 @@ public partial class MainPage : Page
         ViewModel.PropertyChanged += ViewModel_PropertyChanged;
         ThemeManager.Current.ThemeChanged += ThemeManager_ThemeChanged;
         Loaded += MainPage_Loaded;
+        SizeChanged += MainPage_SizeChanged;
+
+        if (FullScreenMapControlView != null)
+        {
+            FullScreenMapControlView.ConfigurePmTilesRequested += (s, e) => ShowPmTilesModal();
+        }
+        if (LeafletMap != null)
+        {
+            LeafletMap.ConfigurePmTilesRequested += (s, e) => ShowPmTilesModal();
+        }
+        if (PmTilesConfigModal != null)
+        {
+            PmTilesConfigModal.CloseRequested += (s, e) => HidePmTilesModal();
+            PmTilesConfigModal.ApplyAndUseRequested += (s, e) => ApplyPmTilesOnMaps();
+        }
     }
 
     private void ThemeManager_ThemeChanged(object? sender, EventArgs e)
@@ -43,14 +61,305 @@ public partial class MainPage : Page
         {
             UpdatePresetButtonsTheme(ViewModel.IsDarkTheme);
         }
+        else if (e.PropertyName == nameof(MainViewModel.IsMetric))
+        {
+            UpdateUnitsButtonsTheme(ViewModel.IsDarkTheme);
+        }
     }
 
     private void MainPage_Loaded(object sender, RoutedEventArgs e)
     {
         UpdateTheme(ViewModel.IsDarkTheme);
+        UpdateResponsiveLayout(ActualWidth, ActualHeight);
+        UpdateUnitsButtonsTheme(ViewModel.IsDarkTheme);
+
+        // 1. Make the full screen map the first page on launch
+        SwitchTab("FullScreenMap");
+
+        // Schedule background horizon calculations so data is ready when navigating to Horizon
         ViewModel.ScheduleHorizonGeneration(immediate: true);
         ViewModel.ScheduleFarthestVisibleFeatureCalculation();
     }
+
+    private void MainPage_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        UpdateResponsiveLayout(e.NewSize.Width, e.NewSize.Height);
+    }
+
+    private void UpdateResponsiveLayout(double width, double height)
+    {
+        if (width <= 0) return;
+
+        bool isSmall = width < 768 || (height > 0 && height < 600);
+        bool modeChanged = isSmall != _isSmallScreen;
+        _isSmallScreen = isSmall;
+
+        // Responsive branding title
+        if (TxtAppTitle != null)
+        {
+            if (width < 500)
+            {
+                TxtAppTitle.Visibility = Visibility.Collapsed;
+            }
+            else if (width < 700)
+            {
+                TxtAppTitle.Visibility = Visibility.Visible;
+                TxtAppTitle.Text = "Horizons";
+            }
+            else
+            {
+                TxtAppTitle.Visibility = Visibility.Visible;
+                TxtAppTitle.Text = "Pointed Horizons";
+            }
+        }
+
+        // Tab button labels and availability (Aim Map sits BEFORE Horizon on small screens)
+        if (BtnTabMap != null)
+        {
+            BtnTabMap.Content = isSmall ? "🗺️ Map" : "🗺️ Full Screen Map";
+        }
+        if (BtnTabAimMap != null)
+        {
+            BtnTabAimMap.Visibility = isSmall ? Visibility.Visible : Visibility.Collapsed;
+        }
+        if (BtnTabHorizon != null)
+        {
+            BtnTabHorizon.Content = isSmall ? "🌄 Horizon" : "🌄 Horizon View";
+        }
+
+        if (modeChanged)
+        {
+            if (!isSmall && _currentTab == "HorizonMap")
+            {
+                _currentTab = "Horizon";
+            }
+            ApplyTabLayout();
+        }
+    }
+
+    public void SwitchTab(string tabName)
+    {
+        // On large screens, "HorizonMap" collapses into the split "Horizon" view
+        if (!_isSmallScreen && tabName == "HorizonMap")
+        {
+            tabName = "Horizon";
+        }
+
+        _currentTab = tabName;
+        ApplyTabLayout();
+    }
+
+    private void ApplyTabLayout()
+    {
+        var tm = ThemeManager.Current;
+
+        if (_currentTab == "FullScreenMap")
+        {
+            if (ViewFullScreenMapTab != null) ViewFullScreenMapTab.Visibility = Visibility.Visible;
+            if (ViewHorizonTab != null) ViewHorizonTab.Visibility = Visibility.Collapsed;
+
+            FullScreenMapControlView?.ResizeMap();
+        }
+        else
+        {
+            if (ViewFullScreenMapTab != null) ViewFullScreenMapTab.Visibility = Visibility.Collapsed;
+            if (ViewHorizonTab != null) ViewHorizonTab.Visibility = Visibility.Visible;
+
+            if (_isSmallScreen)
+            {
+                // On small screens, make each view in Horizon its own full page
+                if (_currentTab == "HorizonMap")
+                {
+                    // Dedicated Horizon Aiming Map Page (100% height)
+                    if (RowHorizonTop != null)
+                    {
+                        RowHorizonTop.Height = new GridLength(0);
+                        RowHorizonTop.MinHeight = 0;
+                    }
+                    if (RowDirectionsBar != null)
+                    {
+                        RowDirectionsBar.Height = new GridLength(0);
+                    }
+                    if (RowHorizonBottom != null)
+                    {
+                        RowHorizonBottom.Height = new GridLength(1, GridUnitType.Star);
+                        RowHorizonBottom.MinHeight = 0;
+                    }
+
+                    if (HorizonViewer != null) HorizonViewer.Visibility = Visibility.Collapsed;
+                    if (SplitBarBorder != null) SplitBarBorder.Visibility = Visibility.Collapsed;
+                    if (LeafletMap != null)
+                    {
+                        LeafletMap.Visibility = Visibility.Visible;
+                        LeafletMap.ResizeMap();
+                    }
+                }
+                else
+                {
+                    // Dedicated Horizon Ray-Traced Panorama Page (100% height)
+                    if (RowHorizonTop != null)
+                    {
+                        RowHorizonTop.Height = new GridLength(1, GridUnitType.Star);
+                        RowHorizonTop.MinHeight = 0;
+                    }
+                    if (RowDirectionsBar != null)
+                    {
+                        RowDirectionsBar.Height = GridLength.Auto;
+                    }
+                    if (RowHorizonBottom != null)
+                    {
+                        RowHorizonBottom.Height = new GridLength(0);
+                        RowHorizonBottom.MinHeight = 0;
+                    }
+
+                    if (HorizonViewer != null)
+                    {
+                        HorizonViewer.Visibility = Visibility.Visible;
+                        HorizonViewer.Redraw();
+                    }
+                    if (SplitBarBorder != null) SplitBarBorder.Visibility = Visibility.Visible;
+                    if (DirectionsBar != null) DirectionsBar.Redraw();
+                    if (LeafletMap != null) LeafletMap.Visibility = Visibility.Collapsed;
+                }
+            }
+            else
+            {
+                // On large screens, Split View with both Horizon on top and Map on bottom
+                if (RowHorizonTop != null)
+                {
+                    RowHorizonTop.Height = new GridLength(1.1, GridUnitType.Star);
+                    RowHorizonTop.MinHeight = 220;
+                }
+                if (RowDirectionsBar != null)
+                {
+                    RowDirectionsBar.Height = GridLength.Auto;
+                }
+                if (RowHorizonBottom != null)
+                {
+                    RowHorizonBottom.Height = new GridLength(1.0, GridUnitType.Star);
+                    RowHorizonBottom.MinHeight = 200;
+                }
+
+                if (HorizonViewer != null)
+                {
+                    HorizonViewer.Visibility = Visibility.Visible;
+                    HorizonViewer.Redraw();
+                }
+                if (SplitBarBorder != null) SplitBarBorder.Visibility = Visibility.Visible;
+                if (DirectionsBar != null) DirectionsBar.Redraw();
+                if (LeafletMap != null)
+                {
+                    LeafletMap.Visibility = Visibility.Visible;
+                    LeafletMap.ResizeMap();
+                }
+            }
+        }
+
+        UpdateTabButtonsTheme(tm.IsDark);
+    }
+
+    private void BtnTabMap_Click(object sender, RoutedEventArgs e) => SwitchTab("FullScreenMap");
+    private void BtnTabAimMap_Click(object sender, RoutedEventArgs e) => SwitchTab("HorizonMap");
+    private void BtnTabHorizon_Click(object sender, RoutedEventArgs e) => SwitchTab("Horizon");
+
+    #region Options Hamburger & Presets
+
+    private void BtnOptions_Click(object sender, RoutedEventArgs e)
+    {
+        if (OptionsPanel != null)
+        {
+            bool willShow = OptionsPanel.Visibility != Visibility.Visible;
+            OptionsPanel.Visibility = willShow ? Visibility.Visible : Visibility.Collapsed;
+            if (OptionsBackdrop != null) OptionsBackdrop.Visibility = willShow ? Visibility.Visible : Visibility.Collapsed;
+
+            if (willShow)
+            {
+                UpdateUnitsButtonsTheme(ThemeManager.Current.IsDark);
+                UpdatePresetButtonsTheme(ThemeManager.Current.IsDark);
+            }
+        }
+    }
+
+    private void BtnCloseOptions_Click(object sender, RoutedEventArgs e)
+    {
+        if (OptionsPanel != null) OptionsPanel.Visibility = Visibility.Collapsed;
+        if (OptionsBackdrop != null) OptionsBackdrop.Visibility = Visibility.Collapsed;
+    }
+
+    private void BtnUnitFeet_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.IsMetric = false;
+        UpdateUnitsButtonsTheme(ThemeManager.Current.IsDark);
+    }
+
+    private void BtnUnitMeters_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.IsMetric = true;
+        UpdateUnitsButtonsTheme(ThemeManager.Current.IsDark);
+    }
+
+    private void BtnToggleAppTheme_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.IsDarkTheme = !ViewModel.IsDarkTheme;
+    }
+
+    private void UpdateUnitsButtonsTheme(bool isDark)
+    {
+        var tm = ThemeManager.Current;
+        bool isMetric = ViewModel.IsMetric;
+
+        void StyleUnitBtn(Button btn, bool active)
+        {
+            if (btn == null) return;
+            btn.Background = active ? tm.ButtonActiveBackground : tm.ButtonInactiveBackground;
+            btn.BorderBrush = active ? tm.ButtonActiveBorder : tm.ButtonInactiveBorder;
+            btn.Foreground = active ? tm.ButtonActiveForeground : tm.ButtonInactiveForeground;
+            btn.FontWeight = active ? FontWeights.Bold : FontWeights.SemiBold;
+        }
+
+        StyleUnitBtn(BtnUnitFeet, !isMetric);
+        StyleUnitBtn(BtnUnitMeters, isMetric);
+    }
+
+    public void ShowPmTilesModal()
+    {
+        if (OptionsPanel != null) OptionsPanel.Visibility = Visibility.Collapsed;
+        if (OptionsBackdrop != null) OptionsBackdrop.Visibility = Visibility.Collapsed;
+
+        if (PmTilesModalBackdrop != null) PmTilesModalBackdrop.Visibility = Visibility.Visible;
+        if (PmTilesConfigModal != null)
+        {
+            PmTilesConfigModal.Visibility = Visibility.Visible;
+            PmTilesConfigModal.RefreshView();
+        }
+    }
+
+    public void HidePmTilesModal()
+    {
+        if (PmTilesModalBackdrop != null) PmTilesModalBackdrop.Visibility = Visibility.Collapsed;
+        if (PmTilesConfigModal != null) PmTilesConfigModal.Visibility = Visibility.Collapsed;
+    }
+
+    private void BtnOpenPmTilesConfig_Click(object sender, RoutedEventArgs e)
+    {
+        ShowPmTilesModal();
+    }
+
+    private void BtnClosePmTilesModal_Click(object sender, RoutedEventArgs e)
+    {
+        HidePmTilesModal();
+    }
+
+    private void ApplyPmTilesOnMaps()
+    {
+        FullScreenMapControlView?.UpdatePmTilesLayers();
+        FullScreenMapControlView?.SetBaseLayer("pmtiles");
+        LeafletMap?.UpdatePmTilesLayers();
+        LeafletMap?.SetBaseLayer("pmtiles");
+        ViewModel.StatusMessage = "Applied offline PMTiles map layer(s).";
+    }
+
+    #endregion
 
     private void UpdateTheme(bool isDark)
     {
@@ -66,13 +375,20 @@ public partial class MainPage : Page
         {
             TxtAppTitle.Foreground = tm.TextPrimary;
         }
-        if (TxtAppSubtitle != null)
+
+        // Tabs container
+        if (TabsBorder != null)
         {
-            TxtAppSubtitle.Foreground = tm.TextSecondary;
+            TabsBorder.Background = tm.ButtonInactiveBackground;
+            TabsBorder.BorderBrush = tm.ButtonInactiveBorder;
         }
-        if (TxtPresetsLabel != null)
+
+        // Options button
+        if (BtnOptions != null)
         {
-            TxtPresetsLabel.Foreground = tm.TextSecondary;
+            BtnOptions.Background = tm.ButtonInactiveBackground;
+            BtnOptions.BorderBrush = tm.ButtonInactiveBorder;
+            BtnOptions.Foreground = tm.TextPrimary;
         }
 
         // 2. Main Root Grid Background
@@ -94,8 +410,58 @@ public partial class MainPage : Page
             BtnRefresh.Foreground = tm.Accent;
         }
 
-        // 4. Update Preset Buttons
+        // 4. Options Dropdown Panel
+        if (OptionsPanel != null)
+        {
+            OptionsPanel.Background = tm.HeaderBackground;
+            OptionsPanel.BorderBrush = tm.HeaderBorder;
+        }
+        if (OptionsDivider1 != null) OptionsDivider1.Background = tm.HeaderBorder;
+        if (OptionsDivider2 != null) OptionsDivider2.Background = tm.HeaderBorder;
+        if (OptionsDivider3 != null) OptionsDivider3.Background = tm.HeaderBorder;
+        if (OptionsDivider4 != null) OptionsDivider4.Background = tm.HeaderBorder;
+        if (TxtOptionsTitle != null) TxtOptionsTitle.Foreground = tm.TextPrimary;
+        if (TxtSectionUnits != null) TxtSectionUnits.Foreground = tm.TextSecondary;
+        if (TxtSectionPresets != null) TxtSectionPresets.Foreground = tm.TextSecondary;
+        if (TxtSectionOffline != null) TxtSectionOffline.Foreground = tm.TextSecondary;
+        if (TxtSectionTheme != null) TxtSectionTheme.Foreground = tm.TextSecondary;
+
+        if (BtnOpenPmTilesConfig != null)
+        {
+            BtnOpenPmTilesConfig.Background = tm.ButtonInactiveBackground;
+            BtnOpenPmTilesConfig.BorderBrush = tm.ButtonInactiveBorder;
+            BtnOpenPmTilesConfig.Foreground = tm.TextPrimary;
+        }
+
+        if (BtnToggleAppTheme != null)
+        {
+            BtnToggleAppTheme.Background = tm.ButtonInactiveBackground;
+            BtnToggleAppTheme.BorderBrush = tm.ButtonInactiveBorder;
+            BtnToggleAppTheme.Foreground = tm.ButtonInactiveForeground;
+        }
+
+        // 5. Update Tab Buttons & Preset Buttons
+        UpdateTabButtonsTheme(isDark);
+        UpdateUnitsButtonsTheme(isDark);
         UpdatePresetButtonsTheme(isDark);
+    }
+
+    private void UpdateTabButtonsTheme(bool isDark)
+    {
+        var tm = ThemeManager.Current;
+
+        void StyleTabBtn(Button btn, bool isSelected)
+        {
+            if (btn == null) return;
+            btn.Background = isSelected ? tm.ButtonActiveBackground : Brushes.Transparent;
+            btn.BorderBrush = isSelected ? tm.ButtonActiveBorder : Brushes.Transparent;
+            btn.Foreground = isSelected ? tm.ButtonActiveForeground : tm.TextPrimary;
+            btn.FontWeight = isSelected ? FontWeights.Bold : FontWeights.SemiBold;
+        }
+
+        StyleTabBtn(BtnTabMap, _currentTab == "FullScreenMap");
+        StyleTabBtn(BtnTabAimMap, _currentTab == "HorizonMap");
+        StyleTabBtn(BtnTabHorizon, _currentTab == "Horizon");
     }
 
     private void UpdatePresetButtonsTheme(bool isDark)
@@ -132,33 +498,35 @@ public partial class MainPage : Page
     }
 
     private void BtnPresetRincon_Click(object sender, RoutedEventArgs e) =>
-        ApplyPresetByName("Tucson East (Rincon Ridges), AZ");
+        ApplyPresetAndClose("Tucson East (Rincon Ridges), AZ");
 
     private void BtnPresetLemmon_Click(object sender, RoutedEventArgs e) =>
-        ApplyPresetByName("Mount Lemmon, AZ");
+        ApplyPresetAndClose("Mount Lemmon, AZ");
 
     private void BtnPresetRainier_Click(object sender, RoutedEventArgs e) =>
-        ApplyPresetByName("Mount Rainier (Paradise), WA");
+        ApplyPresetAndClose("Mount Rainier (Paradise), WA");
 
     private void BtnPresetCanyon_Click(object sender, RoutedEventArgs e) =>
-        ApplyPresetByName("Grand Canyon (Mather Point), AZ");
+        ApplyPresetAndClose("Grand Canyon (Mather Point), AZ");
 
     private void BtnPresetPikes_Click(object sender, RoutedEventArgs e) =>
-        ApplyPresetByName("Pikes Peak, CO");
+        ApplyPresetAndClose("Pikes Peak, CO");
 
     private void BtnPresetYosemite_Click(object sender, RoutedEventArgs e) =>
-        ApplyPresetByName("Yosemite (Glacier Point), CA");
+        ApplyPresetAndClose("Yosemite (Glacier Point), CA");
 
     private void BtnPresetWashington_Click(object sender, RoutedEventArgs e) =>
-        ApplyPresetByName("Mount Washington, NH");
+        ApplyPresetAndClose("Mount Washington, NH");
 
-    private void ApplyPresetByName(string name)
+    private void ApplyPresetAndClose(string name)
     {
         var preset = ViewModel.Presets.FirstOrDefault(p => p.Name == name);
         if (preset != null)
         {
             ViewModel.ApplyPreset(preset);
+            UpdatePresetButtonsTheme(ThemeManager.Current.IsDark);
         }
+        BtnCloseOptions_Click(this, new RoutedEventArgs());
     }
 
     private void BtnRefresh_Click(object sender, RoutedEventArgs e)

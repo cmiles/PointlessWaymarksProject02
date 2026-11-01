@@ -658,11 +658,11 @@
             }
         });
 
-        // Mouse Wheel for Smooth Field Of View Zooming (30° - 160°)
+        // Mouse Wheel for Smooth Field Of View Zooming (3° - 160°)
         canvas.addEventListener('wheel', function (e) {
             e.preventDefault();
             const delta = e.deltaY > 0 ? 3 : -3;
-            fov = Math.max(30, Math.min(160, fov + delta));
+            fov = Math.max(3, Math.min(160, fov + delta));
             render();
 
             if (window.setDirectionsBarParams) {
@@ -687,7 +687,7 @@
                     centerAz = normalizeAngle(newAz);
                 }
                 if (newFov != null) {
-                    fov = Math.max(30, Math.min(160, newFov));
+                    fov = Math.max(3, Math.min(160, newFov));
                 }
                 if (newTilt != null) {
                     verticalTiltDeg = newTilt;

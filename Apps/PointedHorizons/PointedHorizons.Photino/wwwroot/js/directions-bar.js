@@ -278,7 +278,7 @@
         currentInstance = {
             setParams: function (newAz, newFov, newDark) {
                 if (newAz != null) centerAz = normalizeAngle(newAz);
-                if (newFov != null) fov = Math.max(30, Math.min(160, newFov));
+                if (newFov != null) fov = Math.max(3, Math.min(160, newFov));
                 if (newDark != null) isDark = newDark;
                 render();
             }

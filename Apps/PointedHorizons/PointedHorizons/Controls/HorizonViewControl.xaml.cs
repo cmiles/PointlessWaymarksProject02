@@ -11,6 +11,7 @@ namespace PointedHorizons.Controls;
 public partial class HorizonViewControl : UserControl
 {
     private bool _isInitialized;
+    private bool _isEditingFocalLength;
     private MainViewModel? ViewModel => DataContext as MainViewModel;
 
     public HorizonViewControl()
@@ -38,6 +39,11 @@ public partial class HorizonViewControl : UserControl
     }
 
     private void HorizonViewControl_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        RenderScene();
+    }
+
+    public void Redraw()
     {
         RenderScene();
     }
@@ -74,13 +80,6 @@ public partial class HorizonViewControl : UserControl
             ToolbarDivider.Background = tm.MapOverlayBorder;
         }
 
-        if (BtnToggleUnits != null)
-        {
-            BtnToggleUnits.Background = tm.ButtonInactiveBackground;
-            BtnToggleUnits.BorderBrush = tm.ButtonInactiveBorder;
-            BtnToggleUnits.Foreground = tm.Accent;
-        }
-
         if (BtnToggleTheme != null)
         {
             BtnToggleTheme.Background = tm.ButtonInactiveBackground;
@@ -88,7 +87,23 @@ public partial class HorizonViewControl : UserControl
             BtnToggleTheme.Foreground = tm.TextPrimary;
         }
 
-        UpdateFovButtons(ViewModel?.FieldOfView ?? 45.0);
+        if (FocalLengthBoxBorder != null)
+        {
+            FocalLengthBoxBorder.Background = tm.ButtonInactiveBackground;
+            FocalLengthBoxBorder.BorderBrush = tm.ButtonInactiveBorder;
+        }
+
+        if (TxtFocalLength != null)
+        {
+            TxtFocalLength.Foreground = tm.TextPrimary;
+        }
+
+        if (TxtFocalLengthUnit != null)
+        {
+            TxtFocalLengthUnit.Foreground = tm.TextSecondary;
+        }
+
+        UpdateFovButtons(ViewModel?.FieldOfView ?? 54.39);
     }
 
     private void Vm_ViewParametersChanged(double? azimuth, double? fov)
@@ -219,16 +234,35 @@ public partial class HorizonViewControl : UserControl
             btn.FontWeight = active ? FontWeights.Bold : FontWeights.SemiBold;
         }
 
-        StyleBtn(BtnFov45, Math.Abs(fov - 45) < 1);
-        StyleBtn(BtnFov60, Math.Abs(fov - 60) < 1);
-        StyleBtn(BtnFov90, Math.Abs(fov - 90) < 1);
-        StyleBtn(BtnFov120, Math.Abs(fov - 120) < 1);
+        double fl = MainViewModel.FieldOfViewToFocalLength(fov);
+
+        StyleBtn(BtnFov15, Math.Abs(fl - 15.0) < 2.0);
+        StyleBtn(BtnFov35, Math.Abs(fl - 35.0) < 3.0);
+        StyleBtn(BtnFov50, Math.Abs(fl - 50.0) < 4.0);
+        StyleBtn(BtnFov90, Math.Abs(fl - 90.0) < 6.0);
+
+        if (!_isEditingFocalLength && TxtFocalLength != null)
+        {
+            TxtFocalLength.Text = (Math.Abs(fl - Math.Round(fl)) < 0.05)
+                ? Math.Round(fl).ToString()
+                : fl.ToString("0.#");
+        }
     }
 
-    private void BtnFov45_Click(object sender, RoutedEventArgs e) => SetFov(45);
-    private void BtnFov60_Click(object sender, RoutedEventArgs e) => SetFov(60);
-    private void BtnFov90_Click(object sender, RoutedEventArgs e) => SetFov(90);
-    private void BtnFov120_Click(object sender, RoutedEventArgs e) => SetFov(120);
+    private void BtnFov15_Click(object sender, RoutedEventArgs e) => SetFocalLength(15.0);
+    private void BtnFov35_Click(object sender, RoutedEventArgs e) => SetFocalLength(35.0);
+    private void BtnFov50_Click(object sender, RoutedEventArgs e) => SetFocalLength(50.0);
+    private void BtnFov90_Click(object sender, RoutedEventArgs e) => SetFocalLength(90.0);
+
+    private void SetFocalLength(double focalLengthMm)
+    {
+        if (ViewModel != null)
+        {
+            double fov = MainViewModel.FocalLengthToFieldOfView(focalLengthMm);
+            ViewModel.FieldOfView = fov;
+            UpdateFovButtons(fov);
+        }
+    }
 
     private void SetFov(double fov)
     {
@@ -239,12 +273,46 @@ public partial class HorizonViewControl : UserControl
         }
     }
 
-    private void BtnToggleUnits_Click(object sender, RoutedEventArgs e)
+    private void TxtFocalLength_GotFocus(object sender, RoutedEventArgs e)
     {
-        if (ViewModel != null)
+        _isEditingFocalLength = true;
+        TxtFocalLength?.SelectAll();
+    }
+
+    private void TxtFocalLength_LostFocus(object sender, RoutedEventArgs e)
+    {
+        CommitFocalLengthInput();
+    }
+
+    private void TxtFocalLength_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key == System.Windows.Input.Key.Enter)
         {
-            ViewModel.IsMetric = !ViewModel.IsMetric;
+            CommitFocalLengthInput();
+            e.Handled = true;
         }
+    }
+
+    private void CommitFocalLengthInput()
+    {
+        _isEditingFocalLength = false;
+        if (TxtFocalLength == null || ViewModel == null) return;
+
+        string text = TxtFocalLength.Text?.Trim() ?? string.Empty;
+        if (double.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double fl)
+            || double.TryParse(text, out fl))
+        {
+            if (fl > 0)
+            {
+                fl = Math.Clamp(fl, 5.0, 600.0);
+                double fov = MainViewModel.FocalLengthToFieldOfView(fl);
+                ViewModel.FieldOfView = fov;
+                UpdateFovButtons(fov);
+                return;
+            }
+        }
+
+        UpdateFovButtons(ViewModel.FieldOfView);
     }
 
     private void BtnToggleTheme_Click(object sender, RoutedEventArgs e)

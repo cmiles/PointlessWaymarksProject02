@@ -15,6 +15,8 @@ namespace PointedHorizons
             this.InitializeComponent();
 
             ThemeManager.Current.Initialize();
+            OfflineDataService.Initialize();
+            LocalTileServer.StartServer();
 
             var mainPage = new MainPage();
             this.RootVisual = mainPage;

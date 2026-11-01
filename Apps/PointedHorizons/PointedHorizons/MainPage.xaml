@@ -10,83 +10,192 @@
 
     <Grid x:Name="MainRootGrid">
         <Grid.RowDefinitions>
-            <!-- Top App Bar (Header, Presets) -->
+            <!-- Top App Bar (Header, Tabs, Options Hamburger) -->
             <RowDefinition Height="Auto" />
-            <!-- Main Content: Split Top Horizon / Middle Directions Bar / Bottom Map -->
+            <!-- Main Content: Tabs -->
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Top Header Navigation & Presets Bar -->
-        <Border x:Name="TopHeaderBorder" Grid.Row="0" BorderThickness="0,0,0,1" Padding="14,10">
+        <!-- Top Header Navigation & Options Bar (Present on ALL pages) -->
+        <Border x:Name="TopHeaderBorder" Grid.Row="0" BorderThickness="0,0,0,1" Padding="12,8">
             <Grid>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
                 <!-- App Branding -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="🌄" FontSize="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <TextBlock x:Name="TxtAppTitle" Text="Pointed Horizons" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="TxtAppSubtitle" Text=" · PeakFinder Horizon &amp; Map" FontSize="12" VerticalAlignment="Center" Margin="6,2,0,0"/>
+                <StackPanel x:Name="AppBrandingPanel" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,0">
+                    <TextBlock Text="🌄" FontSize="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock x:Name="TxtAppTitle" Text="Pointed Horizons" FontSize="15" FontWeight="Bold" VerticalAlignment="Center"/>
                 </StackPanel>
 
-                <!-- Center Presets Quick Switcher -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <TextBlock x:Name="TxtPresetsLabel" Text="Presets:" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                    <Button x:Name="BtnPresetRincon" Content="Rincon (Screenshot)" Click="BtnPresetRincon_Click"
-                            Style="{StaticResource PillButtonStyle}" FontSize="11" Margin="2" />
-                    <Button x:Name="BtnPresetLemmon" Content="Mount Lemmon" Click="BtnPresetLemmon_Click"
-                            Style="{StaticResource PillButtonStyle}" FontSize="11" Margin="2" />
-                    <Button x:Name="BtnPresetRainier" Content="Mount Rainier" Click="BtnPresetRainier_Click"
-                            Style="{StaticResource PillButtonStyle}" FontSize="11" Margin="2" />
-                    <Button x:Name="BtnPresetCanyon" Content="Grand Canyon" Click="BtnPresetCanyon_Click"
-                            Style="{StaticResource PillButtonStyle}" FontSize="11" Margin="2" />
-                    <Button x:Name="BtnPresetPikes" Content="Pikes Peak" Click="BtnPresetPikes_Click"
-                            Style="{StaticResource PillButtonStyle}" FontSize="11" Margin="2" />
-                    <Button x:Name="BtnPresetYosemite" Content="Yosemite" Click="BtnPresetYosemite_Click"
-                            Style="{StaticResource PillButtonStyle}" FontSize="11" Margin="2" />
-                    <Button x:Name="BtnPresetWashington" Content="Mount Washington" Click="BtnPresetWashington_Click"
-                            Style="{StaticResource PillButtonStyle}" FontSize="11" Margin="2" />
+                <!-- Main View Tabs (Full Screen Map is FIRST; On small screens: Aim Map is BEFORE Horizon) -->
+                <Border x:Name="TabsBorder" Grid.Column="1" BorderThickness="1" CornerRadius="16" Padding="3" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <!-- 1. Full Screen Map Tab (First tab) -->
+                        <Button x:Name="BtnTabMap" Content="🗺️ Full Screen Map" Click="BtnTabMap_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="10,4" Margin="1"
+                                FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="Interactive full-screen map with GPS tracking, recording and tools" />
+
+                        <!-- 2. Aim Map Tab (Before Horizon page on small screens; collapsed on large screen) -->
+                        <Button x:Name="BtnTabAimMap" Content="🧭 Aim Map" Click="BtnTabAimMap_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="10,4" Margin="1"
+                                FontSize="11" FontWeight="SemiBold" Visibility="Collapsed"
+                                ToolTipService.ToolTip="Observer location, direction cone, and horizon targeting map" />
+
+                        <!-- 3. Horizon Tab (On large screen: Split view; On small screen: Horizon Panorama only, after Aim Map) -->
+                        <Button x:Name="BtnTabHorizon" Content="🌄 Horizon View" Click="BtnTabHorizon_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="10,4" Margin="1"
+                                FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="Ray-traced skyline horizon panorama" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Right Side: Options Hamburger Button (Present on ALL pages) -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button x:Name="BtnOptions" Content="☰ Options" Click="BtnOptions_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="10,5" Margin="2"
+                            FontSize="11" FontWeight="Bold"
+                            ToolTipService.ToolTip="Options, Units (Feet/Meters), Presets &amp; Settings" />
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- Main Split Screen -->
-        <Grid Grid.Row="1">
-            <Grid.RowDefinitions>
-                <!-- Top Half: Horizon Ray-Traced View (PeakFinder style) -->
-                <RowDefinition Height="1.1*" MinHeight="220" />
-                <!-- Middle Split Bar: Moving Directions Bar & Refresh Button -->
-                <RowDefinition Height="Auto" />
-                <!-- Bottom Half: Leaflet Interactive Map -->
-                <RowDefinition Height="1*" MinHeight="200" />
-            </Grid.RowDefinitions>
+        <!-- Main Tab Content Area -->
+        <Grid Grid.Row="1" x:Name="TabContentGrid">
+            <!-- TAB 1: Full Screen Interactive Map (FIRST PAGE, Default Visible) -->
+            <Grid x:Name="ViewFullScreenMapTab" Visibility="Visible">
+                <controls:FullScreenMapControl x:Name="FullScreenMapControlView" />
+            </Grid>
 
-            <!-- Top Horizon View Control -->
-            <controls:HorizonViewControl Grid.Row="0" x:Name="HorizonViewer" />
+            <!-- TAB 2: Horizon View (Supports both Split View on large screens and dedicated Single View on small screens) -->
+            <Grid x:Name="ViewHorizonTab" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <!-- Top Half: Horizon Ray-Traced View (PeakFinder style) -->
+                    <RowDefinition x:Name="RowHorizonTop" Height="1.1*" MinHeight="220" />
+                    <!-- Middle Split Bar: Moving Directions Bar & Refresh Button -->
+                    <RowDefinition x:Name="RowDirectionsBar" Height="Auto" />
+                    <!-- Bottom Half: Leaflet Interactive Map -->
+                    <RowDefinition x:Name="RowHorizonBottom" Height="1*" MinHeight="200" />
+                </Grid.RowDefinitions>
 
-            <!-- Middle Bar: Directions Bar (Moving compass ticks, cardinals) & Refresh Button -->
-            <Border x:Name="SplitBarBorder" Grid.Row="1" BorderThickness="0,1,0,1" Height="36">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+                <!-- Top Horizon View Control -->
+                <controls:HorizonViewControl Grid.Row="0" x:Name="HorizonViewer" />
 
-                    <!-- Moving Directions Bar (Cardinals N, NE, E, SE... with dynamic ticks) -->
-                    <controls:DirectionsBarControl Grid.Column="0" x:Name="DirectionsBar" />
+                <!-- Middle Bar: Directions Bar & Refresh Button -->
+                <Border x:Name="SplitBarBorder" Grid.Row="1" BorderThickness="0,1,0,1" Height="36">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
 
-                    <!-- Refresh Button -->
-                    <Button x:Name="BtnRefresh" Grid.Column="1" Content="↻ Refresh Horizon" Click="BtnRefresh_Click"
-                            Style="{StaticResource PillButtonStyle}"
-                            Padding="10,4" Margin="6,3,10,3" VerticalAlignment="Center"
-                            FontSize="11" FontWeight="SemiBold" />
-                </Grid>
-            </Border>
+                        <!-- Moving Directions Bar -->
+                        <controls:DirectionsBarControl Grid.Column="0" x:Name="DirectionsBar" />
 
-            <!-- Bottom Leaflet Map Control -->
-            <controls:LeafletMapControl Grid.Row="2" x:Name="LeafletMap" />
+                        <!-- Refresh Button -->
+                        <Button x:Name="BtnRefresh" Grid.Column="1" Content="↻ Refresh Horizon" Click="BtnRefresh_Click"
+                                Style="{StaticResource PillButtonStyle}"
+                                Padding="10,4" Margin="6,3,10,3" VerticalAlignment="Center"
+                                FontSize="11" FontWeight="SemiBold" />
+                    </Grid>
+                </Border>
+
+                <!-- Bottom Leaflet Map Control (Observer Location & Aiming) -->
+                <controls:LeafletMapControl Grid.Row="2" x:Name="LeafletMap" />
+            </Grid>
         </Grid>
+
+        <!-- Options & Presets Hamburger Dropdown / Modal Overlay (Present on ALL pages) -->
+        <Border x:Name="OptionsBackdrop" Grid.Row="0" Grid.RowSpan="2" Background="#40000000"
+                HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Visibility="Collapsed"
+                MouseLeftButtonDown="BtnCloseOptions_Click" />
+
+        <Border x:Name="OptionsPanel" Grid.Row="0" Grid.RowSpan="2" HorizontalAlignment="Right" VerticalAlignment="Top"
+                Margin="0,52,14,0" Width="310" MaxHeight="600" Visibility="Collapsed"
+                BorderThickness="1" CornerRadius="12" Padding="14,12">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Orientation="Vertical">
+                    <!-- Header -->
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="TxtOptionsTitle" Text="⚙️ Options &amp; Presets" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" />
+                        <Button x:Name="BtnCloseOptions" Grid.Column="1" Content="✕" Click="BtnCloseOptions_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="6,2" FontSize="11" />
+                    </Grid>
+
+                    <Border x:Name="OptionsDivider1" Height="1" Margin="0,0,0,10" />
+
+                    <!-- 1. Elevation & Distance Units (Feet by default) -->
+                    <TextBlock x:Name="TxtSectionUnits" Text="ELEVATION &amp; DISTANCE UNITS" FontSize="10" FontWeight="Bold" Margin="0,0,0,6" />
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button x:Name="BtnUnitFeet" Content="Feet (ft / mi)" Click="BtnUnitFeet_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="12,5" Margin="0,0,6,0"
+                                FontSize="11" FontWeight="Bold" />
+                        <Button x:Name="BtnUnitMeters" Content="Meters (m / km)" Click="BtnUnitMeters_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="12,5"
+                                FontSize="11" FontWeight="SemiBold" />
+                    </StackPanel>
+
+                    <Border x:Name="OptionsDivider2" Height="1" Margin="0,0,0,10" />
+
+                    <!-- 2. Location Presets -->
+                    <TextBlock x:Name="TxtSectionPresets" Text="LOCATION PRESETS" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
+                    <StackPanel Orientation="Vertical" Margin="0,0,0,10">
+                        <Button x:Name="BtnPresetRincon" Content="Tucson East (Rincon Ridges), AZ" Click="BtnPresetRincon_Click"
+                                Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                Padding="8,5" Margin="0,2" FontSize="11" />
+                        <Button x:Name="BtnPresetLemmon" Content="Mount Lemmon, AZ" Click="BtnPresetLemmon_Click"
+                                Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                Padding="8,5" Margin="0,2" FontSize="11" />
+                        <Button x:Name="BtnPresetRainier" Content="Mount Rainier (Paradise), WA" Click="BtnPresetRainier_Click"
+                                Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                Padding="8,5" Margin="0,2" FontSize="11" />
+                        <Button x:Name="BtnPresetCanyon" Content="Grand Canyon (Mather Point), AZ" Click="BtnPresetCanyon_Click"
+                                Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                Padding="8,5" Margin="0,2" FontSize="11" />
+                        <Button x:Name="BtnPresetPikes" Content="Pikes Peak, CO" Click="BtnPresetPikes_Click"
+                                Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                Padding="8,5" Margin="0,2" FontSize="11" />
+                        <Button x:Name="BtnPresetYosemite" Content="Yosemite (Glacier Point), CA" Click="BtnPresetYosemite_Click"
+                                Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                Padding="8,5" Margin="0,2" FontSize="11" />
+                        <Button x:Name="BtnPresetWashington" Content="Mount Washington, NH" Click="BtnPresetWashington_Click"
+                                Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                Padding="8,5" Margin="0,2" FontSize="11" />
+                    </StackPanel>
+
+                    <Border x:Name="OptionsDivider3" Height="1" Margin="0,0,0,10" />
+
+                    <!-- 3. Offline PMTiles & DEM Storage -->
+                    <TextBlock x:Name="TxtSectionOffline" Text="OFFLINE MAPS &amp; LOCAL DEMS" FontSize="10" FontWeight="Bold" Margin="0,0,0,6" />
+                    <Button x:Name="BtnOpenPmTilesConfig" Content="🗺️ Configure PMTiles &amp; DEMs..." Click="BtnOpenPmTilesConfig_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,5" Margin="0,0,0,10" FontSize="11" FontWeight="SemiBold"
+                            ToolTipService.ToolTip="Configure offline PMTiles files, layer ordering, and local DEM directories" />
+
+                    <Border x:Name="OptionsDivider4" Height="1" Margin="0,0,0,10" />
+
+                    <!-- 4. Appearance & Theme -->
+                    <TextBlock x:Name="TxtSectionTheme" Text="APPEARANCE" FontSize="10" FontWeight="Bold" Margin="0,0,0,6" />
+                    <Button x:Name="BtnToggleAppTheme" Content="🌓 Toggle Dark / Light Theme" Click="BtnToggleAppTheme_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,5" FontSize="11" FontWeight="SemiBold" />
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- PMTiles Configuration Pop-up Modal Dialog Overlay -->
+        <Border x:Name="PmTilesModalBackdrop" Grid.Row="0" Grid.RowSpan="2" Background="#66000000"
+                HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Visibility="Collapsed"
+                MouseLeftButtonDown="BtnClosePmTilesModal_Click" />
+
+        <controls:PmTilesConfigControl x:Name="PmTilesConfigModal" Grid.Row="0" Grid.RowSpan="2"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Visibility="Collapsed" />
     </Grid>
 </Page>

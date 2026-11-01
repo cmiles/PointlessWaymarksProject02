@@ -10,29 +10,40 @@
         <!-- Canvas Host Container for PeakFinder Horizon -->
         <Border x:Name="CanvasContainer" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent" />
 
-        <!-- Top Right Quick Toolbar (FOV, Units, Dark Mode) -->
-        <Border x:Name="QuickToolbarBorder" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,80,0"
+        <!-- Top Right Quick Toolbar (Focal Length, Units, Dark Mode) -->
+        <Border x:Name="QuickToolbarBorder" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,10,12,0"
                 BorderThickness="1" CornerRadius="20" Padding="8,4">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <Button x:Name="BtnFov45" Content="45°" Click="BtnFov45_Click"
+                <Button x:Name="BtnFov15" Content="15" Click="BtnFov15_Click"
                         Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
-                        FontSize="11" FontWeight="SemiBold" />
-                <Button x:Name="BtnFov60" Content="60°" Click="BtnFov60_Click"
+                        FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="15mm Ultra-Wide (~100° FOV)" />
+                <Button x:Name="BtnFov35" Content="35" Click="BtnFov35_Click"
                         Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
-                        FontSize="11" FontWeight="SemiBold" />
-                <Button x:Name="BtnFov90" Content="90°" Click="BtnFov90_Click"
+                        FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="35mm Wide (~54° FOV)" />
+                <Button x:Name="BtnFov50" Content="50" Click="BtnFov50_Click"
                         Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
-                        FontSize="11" FontWeight="SemiBold" />
-                <Button x:Name="BtnFov120" Content="120°" Click="BtnFov120_Click"
+                        FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="50mm Standard (~40° FOV)" />
+                <Button x:Name="BtnFov90" Content="90" Click="BtnFov90_Click"
                         Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
-                        FontSize="11" FontWeight="SemiBold" />
+                        FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="90mm Telephoto (~23° FOV)" />
+
+                <!-- Current Focal Length Input Box -->
+                <Border x:Name="FocalLengthBoxBorder" CornerRadius="4" BorderThickness="1" Margin="3,2,2,2" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="2,0,4,0">
+                        <TextBox x:Name="TxtFocalLength" Width="34" Height="20"
+                                 BorderThickness="0" Background="Transparent"
+                                 TextAlignment="Center" VerticalContentAlignment="Center"
+                                 FontSize="11" FontWeight="SemiBold"
+                                 GotFocus="TxtFocalLength_GotFocus"
+                                 LostFocus="TxtFocalLength_LostFocus"
+                                 KeyDown="TxtFocalLength_KeyDown"
+                                 ToolTipService.ToolTip="Current 35mm full-frame focal length in mm. Type a value and press Enter." />
+                        <TextBlock x:Name="TxtFocalLengthUnit" Text="mm" VerticalAlignment="Center"
+                                   FontSize="10" FontWeight="SemiBold" Margin="1,0,0,0" />
+                    </StackPanel>
+                </Border>
 
                 <Border x:Name="ToolbarDivider" Width="1" Margin="4,2" Height="14" VerticalAlignment="Center"/>
-
-                <!-- Units Toggle -->
-                <Button x:Name="BtnToggleUnits" Content="m / ft" Click="BtnToggleUnits_Click"
-                        Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
-                        FontSize="11" FontWeight="SemiBold" />
 
                 <!-- Dark / Light Theme Toggle -->
                 <Button x:Name="BtnToggleTheme" Content="🌓" Click="BtnToggleTheme_Click"
