@@ -149,52 +149,6 @@
         uiOverlay.style.zIndex = '10';
         container.appendChild(uiOverlay);
 
-        // 1. Compass Rose Widget (Top Right)
-        const compassContainer = document.createElement('div');
-        compassContainer.style.position = 'absolute';
-        compassContainer.style.top = '16px';
-        compassContainer.style.right = '20px';
-        compassContainer.style.display = 'flex';
-        compassContainer.style.flexDirection = 'column';
-        compassContainer.style.alignItems = 'center';
-        compassContainer.style.pointerEvents = 'auto';
-        compassContainer.style.cursor = 'pointer';
-
-        const compassCircle = document.createElement('div');
-        compassCircle.style.width = '48px';
-        compassCircle.style.height = '48px';
-        compassCircle.style.borderRadius = '50%';
-        compassCircle.style.backgroundColor = isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.96)';
-        compassCircle.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.12)';
-        compassCircle.style.border = isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.08)';
-        compassCircle.style.display = 'flex';
-        compassCircle.style.alignItems = 'center';
-        compassCircle.style.justifyContent = 'center';
-
-        const compassSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        compassSvg.setAttribute('viewBox', '0 0 40 40');
-        compassSvg.setAttribute('width', '32');
-        compassSvg.setAttribute('height', '32');
-        compassSvg.innerHTML = `
-            <circle cx="20" cy="20" r="18" fill="none" stroke="${isDark ? '#475569' : '#E2E8F0'}" stroke-width="1"/>
-            <polygon points="20,5 24,20 20,17 16,20" fill="#0284C7"/>
-            <polygon points="20,35 24,20 20,23 16,20" fill="${isDark ? '#94A3B8' : '#64748B'}"/>
-            <circle cx="20" cy="20" r="2.5" fill="${isDark ? '#F8FAFC' : '#0F172A'}"/>
-        `;
-        compassCircle.appendChild(compassSvg);
-
-        const compassLabel = document.createElement('div');
-        compassLabel.style.marginTop = '4px';
-        compassLabel.style.fontFamily = 'Inter, -apple-system, sans-serif';
-        compassLabel.style.fontSize = '12px';
-        compassLabel.style.fontWeight = '700';
-        compassLabel.style.color = isDark ? '#F8FAFC' : '#1E293B';
-        compassLabel.innerText = `${Math.round(centerAz)}°`;
-
-        compassContainer.appendChild(compassCircle);
-        compassContainer.appendChild(compassLabel);
-        uiOverlay.appendChild(compassContainer);
-
         // 2. Vertical Tilt Chevrons (Center Left)
         const tiltContainer = document.createElement('div');
         tiltContainer.style.position = 'absolute';
@@ -305,10 +259,6 @@
                 const altSpan = Math.max(2.0, maxAlt - minAlt);
 
                 const startAz = centerAz - fov / 2.0;
-
-                // Update Compass Rose Widget
-                compassSvg.style.transform = `rotate(${-centerAz}deg)`;
-                compassLabel.innerText = `${Math.round(centerAz)}°`;
 
                 // Theme Palette (PeakFinder Light Paper default)
                 const paperBg = isDark ? '#0A0E17' : '#FFFFFF';

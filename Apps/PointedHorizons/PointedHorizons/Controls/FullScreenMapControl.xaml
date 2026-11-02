@@ -21,23 +21,36 @@
 
             <!-- Pointer Location Badge -->
             <Border x:Name="CoordsBadgeBorder" BorderThickness="1" CornerRadius="8" Padding="12,6" VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock x:Name="TxtPointerCoords" Text="📍 32.2226°, -110.9747°" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <Border x:Name="BadgeDividerElev" Width="1" Margin="8,2" Height="14" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="TxtPointerElevation" Text="⛰️ --" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
                     <Border x:Name="BadgeDivider" Width="1" Margin="8,2" Height="14" VerticalAlignment="Center"/>
                     <TextBlock x:Name="TxtGpsIndicator" Text="GPS Ready" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"/>
                 </StackPanel>
             </Border>
         </StackPanel>
 
-        <!-- Top-Right Floating Controls: Current Location Button -->
-        <Border x:Name="CurrentLocationBorder" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,14,0"
-                BorderThickness="1" CornerRadius="20" Padding="4">
+        <!-- Top-Right Floating Controls: Current Location & 3D Toggle Buttons -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,14,0">
             <Button x:Name="BtnCurrentLocation" Content="📍 Current Location" Click="BtnCurrentLocation_Click"
                     Style="{StaticResource PillButtonStyle}"
-                    Padding="12,6"
+                    Padding="12,6" Margin="0,0,8,0"
                     FontSize="11" FontWeight="SemiBold"
                     ToolTipService.ToolTip="Center on current GPS position and move pointer (if not tracking)" />
-        </Border>
+
+            <Button x:Name="BtnToggle3d" Content="🏔️ 3D" Click="BtnToggle3d_Click"
+                    Style="{StaticResource PillButtonStyle}"
+                    Padding="12,6" Margin="0,0,8,0"
+                    FontSize="11" FontWeight="SemiBold"
+                    ToolTipService.ToolTip="Toggle 3D terrain perspective view (right-click / Ctrl-drag to orbit)" />
+
+            <Button x:Name="BtnResetView" Content="↺ Reset" Click="BtnResetView_Click"
+                    Style="{StaticResource PillButtonStyle}"
+                    Padding="10,6"
+                    FontSize="11" FontWeight="SemiBold"
+                    ToolTipService.ToolTip="Reset camera to flat top-down 2D view and recover if stuck" />
+        </StackPanel>
 
         <!-- Crash Recovery Notification Banner -->
         <Border x:Name="CrashRecoveryNotice" HorizontalAlignment="Center" VerticalAlignment="Top"
@@ -114,7 +127,13 @@
 
                 <Border x:Name="MenuDivider3" Height="1" Margin="0,0,0,10" />
 
-                <!-- 5. Base Map Layer Switcher -->
+                <!-- 5. Reset Camera / Recovery Option -->
+                <Button x:Name="BtnMenuResetView" Content="↺ Reset Map View" Click="BtnResetView_Click"
+                        Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                        Padding="8,6" Margin="0,0,0,10" FontSize="11" FontWeight="SemiBold"
+                        ToolTipService.ToolTip="Reset camera to flat top-down 2D view and recover if stuck" />
+
+                <!-- 6. Base Map Layer Switcher -->
                 <TextBlock x:Name="TxtSectionLayer" Text="BASE MAP LAYER" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
                 <StackPanel Orientation="Horizontal" Margin="0,2,0,6">
                     <Button x:Name="BtnLayerTopo" Content="Topo" Click="BtnLayerTopo_Click"

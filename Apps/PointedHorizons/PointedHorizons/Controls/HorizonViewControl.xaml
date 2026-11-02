@@ -10,10 +10,23 @@
         <!-- Canvas Host Container for PeakFinder Horizon -->
         <Border x:Name="CanvasContainer" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent" />
 
-        <!-- Top Right Quick Toolbar (Focal Length, Units, Dark Mode) -->
+        <!-- Top Right Quick Toolbar (Compass, Focal Length, Units, Dark Mode) -->
         <Border x:Name="QuickToolbarBorder" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,10,12,0"
                 BorderThickness="1" CornerRadius="20" Padding="8,4">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <!-- Integrated Compass Rose / Azimuth Display -->
+                <Button x:Name="BtnCompass" Click="BtnCompass_Click"
+                        Style="{StaticResource PillButtonStyle}" Padding="8,3" Margin="2"
+                        FontSize="11" FontWeight="Bold"
+                        ToolTipService.ToolTip="Current viewing azimuth. Click to snap North (0°)." >
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="🧭" FontSize="11" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="TxtCompassHeading" Text="270°" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <Border x:Name="CompassDivider" Width="1" Margin="4,2" Height="14" VerticalAlignment="Center"/>
+
                 <Button x:Name="BtnFov15" Content="15" Click="BtnFov15_Click"
                         Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
                         FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="15mm Ultra-Wide (~100° FOV)" />
@@ -28,18 +41,21 @@
                         FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="90mm Telephoto (~23° FOV)" />
 
                 <!-- Current Focal Length Input Box -->
-                <Border x:Name="FocalLengthBoxBorder" CornerRadius="4" BorderThickness="1" Margin="3,2,2,2" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="2,0,4,0">
-                        <TextBox x:Name="TxtFocalLength" Width="34" Height="20"
+                <Border x:Name="FocalLengthBoxBorder" CornerRadius="6" BorderThickness="1"
+                        Margin="3,2,2,2" Padding="4,1" Height="26" VerticalAlignment="Center"
+                        ToolTipService.ToolTip="Custom 35mm equivalent focal length in mm. Click to edit, press Enter to apply.">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBox x:Name="TxtFocalLength" Width="44" Height="22"
                                  BorderThickness="0" Background="Transparent"
-                                 TextAlignment="Center" VerticalContentAlignment="Center"
+                                 Padding="2,0"
+                                 TextAlignment="Right" VerticalContentAlignment="Center"
                                  FontSize="11" FontWeight="SemiBold"
                                  GotFocus="TxtFocalLength_GotFocus"
                                  LostFocus="TxtFocalLength_LostFocus"
                                  KeyDown="TxtFocalLength_KeyDown"
-                                 ToolTipService.ToolTip="Current 35mm full-frame focal length in mm. Type a value and press Enter." />
+                                 ToolTipService.ToolTip="Custom 35mm equivalent focal length in mm. Type a value and press Enter." />
                         <TextBlock x:Name="TxtFocalLengthUnit" Text="mm" VerticalAlignment="Center"
-                                   FontSize="10" FontWeight="SemiBold" Margin="1,0,0,0" />
+                                   FontSize="11" FontWeight="SemiBold" Margin="2,0,4,0" />
                     </StackPanel>
                 </Border>
 

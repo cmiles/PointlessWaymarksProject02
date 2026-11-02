@@ -75,6 +75,18 @@ public partial class HorizonViewControl : UserControl
             QuickToolbarBorder.BorderBrush = tm.MapOverlayBorder;
         }
 
+        if (BtnCompass != null)
+        {
+            BtnCompass.Background = tm.ButtonInactiveBackground;
+            BtnCompass.BorderBrush = tm.ButtonInactiveBorder;
+            BtnCompass.Foreground = tm.Accent;
+        }
+
+        if (CompassDivider != null)
+        {
+            CompassDivider.Background = tm.MapOverlayBorder;
+        }
+
         if (ToolbarDivider != null)
         {
             ToolbarDivider.Background = tm.MapOverlayBorder;
@@ -106,6 +118,14 @@ public partial class HorizonViewControl : UserControl
         UpdateFovButtons(ViewModel?.FieldOfView ?? 54.39);
     }
 
+    public void SetCompactMode(bool isCompact)
+    {
+        if (QuickToolbarBorder != null)
+        {
+            QuickToolbarBorder.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        }
+    }
+
     private void Vm_ViewParametersChanged(double? azimuth, double? fov)
     {
         Dispatcher.BeginInvoke(() =>
@@ -113,6 +133,10 @@ public partial class HorizonViewControl : UserControl
             if (fov.HasValue)
             {
                 UpdateFovButtons(fov.Value);
+            }
+            if (azimuth.HasValue && TxtCompassHeading != null)
+            {
+                TxtCompassHeading.Text = $"{Math.Round(azimuth.Value)}°";
             }
 
             object div = Interop.GetDiv(CanvasContainer);
@@ -139,9 +163,21 @@ public partial class HorizonViewControl : UserControl
             if (ViewModel != null)
             {
                 UpdateFovButtons(ViewModel.FieldOfView);
+                if (TxtCompassHeading != null)
+                {
+                    TxtCompassHeading.Text = ViewModel.AzimuthDisplay;
+                }
             }
             RenderScene();
         });
+    }
+
+    private void BtnCompass_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel != null)
+        {
+            ViewModel.Azimuth = 0.0;
+        }
     }
 
     private void InitializeCanvas()
@@ -276,11 +312,19 @@ public partial class HorizonViewControl : UserControl
     private void TxtFocalLength_GotFocus(object sender, RoutedEventArgs e)
     {
         _isEditingFocalLength = true;
+        if (FocalLengthBoxBorder != null)
+        {
+            FocalLengthBoxBorder.BorderBrush = ThemeManager.Current.ButtonActiveBorder;
+        }
         TxtFocalLength?.SelectAll();
     }
 
     private void TxtFocalLength_LostFocus(object sender, RoutedEventArgs e)
     {
+        if (FocalLengthBoxBorder != null)
+        {
+            FocalLengthBoxBorder.BorderBrush = ThemeManager.Current.ButtonInactiveBorder;
+        }
         CommitFocalLengthInput();
     }
 

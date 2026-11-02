@@ -40,6 +40,7 @@ public partial class FullScreenMapControl : UserControl
         InitializeComponent();
         Loaded += FullScreenMapControl_Loaded;
         SizeChanged += FullScreenMapControl_SizeChanged;
+        DataContextChanged += FullScreenMapControl_DataContextChanged;
 
         ThemeManager.Current.ThemeChanged += (s, e) =>
         {
@@ -67,6 +68,15 @@ public partial class FullScreenMapControl : UserControl
 
     private void FullScreenMapControl_Loaded(object sender, RoutedEventArgs e)
     {
+        OfflineDataService.EnsureSettingsLoaded();
+
+        if (!OfflineDataService.IsPmTilesSupported)
+        {
+            if (BtnLayerPmTiles != null) BtnLayerPmTiles.Visibility = Visibility.Collapsed;
+            if (BtnConfigurePmTiles != null) BtnConfigurePmTiles.Visibility = Visibility.Collapsed;
+            if (_currentBaseLayer == "pmtiles") _currentBaseLayer = "topo";
+        }
+
         UpdateTheme(ThemeManager.Current.IsDark);
         InitializeMap();
         _ = CheckCrashRecoveryAndRefreshTracksAsync();
@@ -94,6 +104,8 @@ public partial class FullScreenMapControl : UserControl
     {
         if (_isInitialized) return;
 
+        OfflineDataService.EnsureSettingsLoaded();
+
         object div = Interop.GetDiv(MapContainer);
         if (div == null)
         {
@@ -111,18 +123,21 @@ public partial class FullScreenMapControl : UserControl
                 {
                     TxtPointerCoords.Text = $"📍 {lat:F4}°, {lon:F4}°";
                 }
+                UpdateElevationDisplay(lat, lon);
             });
         };
 
+        bool pmtilesSupported = OfflineDataService.IsPmTilesSupported;
         try
         {
             Interop.ExecuteJavaScriptVoid(@"
-                (function(container, initLat, initLon, movedCb) {
+                (function(container, initLat, initLon, movedCb, pmtilesSupported) {
                     function tryInit() {
                         if (typeof window.fullScreenMap === 'undefined' || typeof window.maplibregl === 'undefined') {
                             setTimeout(tryInit, 50);
                             return;
                         }
+                        window.fullScreenMap.isPmTilesSupported = pmtilesSupported;
                         window.fullScreenMap.init(container, {
                             lat: initLat,
                             lon: initLon,
@@ -132,11 +147,15 @@ public partial class FullScreenMapControl : UserControl
                         });
                     }
                     tryInit();
-                })($0, $1, $2, $3);
-            ", div, _lastPointerLat, _lastPointerLon, onPointerMoved);
+                })($0, $1, $2, $3, $4);
+            ", div, _lastPointerLat, _lastPointerLon, onPointerMoved, pmtilesSupported);
 
             _isInitialized = true;
-            UpdatePmTilesLayers();
+            UpdateElevationDisplay(_lastPointerLat, _lastPointerLon);
+            if (pmtilesSupported)
+            {
+                UpdatePmTilesLayers();
+            }
         }
         catch (Exception ex)
         {
@@ -201,12 +220,6 @@ public partial class FullScreenMapControl : UserControl
             CoordsBadgeBorder.BorderBrush = tm.MapOverlayBorder;
         }
 
-        if (CurrentLocationBorder != null)
-        {
-            CurrentLocationBorder.Background = tm.MapOverlayBackground;
-            CurrentLocationBorder.BorderBrush = tm.MapOverlayBorder;
-        }
-
         if (CrashRecoveryNotice != null)
         {
             CrashRecoveryNotice.Background = isDark
@@ -243,8 +256,10 @@ public partial class FullScreenMapControl : UserControl
         if (MenuDivider3 != null) MenuDivider3.Background = tm.HeaderBorder;
         if (TracksDivider != null) TracksDivider.Background = tm.HeaderBorder;
         if (BadgeDivider != null) BadgeDivider.Background = tm.HeaderBorder;
+        if (BadgeDividerElev != null) BadgeDividerElev.Background = tm.HeaderBorder;
 
         if (TxtPointerCoords != null) TxtPointerCoords.Foreground = tm.TextPrimary;
+        if (TxtPointerElevation != null) TxtPointerElevation.Foreground = tm.Accent;
         if (TxtGpsIndicator != null) TxtGpsIndicator.Foreground = _isTrackingActive ? tm.Accent : tm.TextSecondary;
         if (TxtMenuTitle != null) TxtMenuTitle.Foreground = tm.TextPrimary;
         if (TxtTracksTitle != null) TxtTracksTitle.Foreground = tm.TextPrimary;
@@ -259,6 +274,20 @@ public partial class FullScreenMapControl : UserControl
         if (TxtBatterySaverDetails != null) TxtBatterySaverDetails.Foreground = tm.TextMuted;
         if (TxtTracksSummary != null) TxtTracksSummary.Foreground = tm.TextMuted;
         if (TxtRecordingStats != null) TxtRecordingStats.Foreground = tm.TextPrimary;
+
+        if (BtnResetView != null)
+        {
+            BtnResetView.Background = tm.ButtonInactiveBackground;
+            BtnResetView.BorderBrush = tm.ButtonInactiveBorder;
+            BtnResetView.Foreground = tm.TextPrimary;
+        }
+
+        if (BtnMenuResetView != null)
+        {
+            BtnMenuResetView.Background = tm.ButtonInactiveBackground;
+            BtnMenuResetView.BorderBrush = tm.ButtonInactiveBorder;
+            BtnMenuResetView.Foreground = tm.Accent;
+        }
 
         // Update button states
         UpdateTrackingButtonState();
@@ -321,6 +350,7 @@ public partial class FullScreenMapControl : UserControl
                 {
                     TxtPointerCoords.Text = $"📍 {pos.Latitude:F4}°, {pos.Longitude:F4}°";
                 }
+                UpdateElevationDisplay(pos.Latitude, pos.Longitude);
             }
 
             if (TxtGpsIndicator != null)
@@ -336,6 +366,51 @@ public partial class FullScreenMapControl : UserControl
                 TxtGpsIndicator.Text = "GPS Unavailable";
                 TxtGpsIndicator.Foreground = new SolidColorBrush(Colors.Red);
             }
+        }
+    }
+
+    private bool _is3dActive;
+
+    private void BtnToggle3d_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            _is3dActive = !_is3dActive;
+            BtnToggle3d.Content = _is3dActive ? "🗺️ 2D" : "🏔️ 3D";
+            ToolTipService.SetToolTip(BtnToggle3d, _is3dActive ? "Switch to flat 2D top-down view" : "Switch to 3D perspective terrain view (right-click / Ctrl-drag to orbit)");
+
+            Interop.ExecuteJavaScriptVoid(@"
+                if (window.fullScreenMap && window.fullScreenMap.toggle3d) {
+                    window.fullScreenMap.toggle3d($0);
+                }
+            ", !_is3dActive);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[FullScreenMap] Error toggling 3D: {ex.Message}");
+        }
+    }
+
+    private void BtnResetView_Click(object sender, RoutedEventArgs e)
+    {
+        _is3dActive = false;
+        if (BtnToggle3d != null)
+        {
+            BtnToggle3d.Content = "🏔️ 3D";
+            ToolTipService.SetToolTip(BtnToggle3d, "Toggle 3D terrain perspective view (right-click / Ctrl-drag to orbit)");
+        }
+        if (HamburgerPanel != null)
+        {
+            HamburgerPanel.Visibility = Visibility.Collapsed;
+        }
+
+        try
+        {
+            Interop.ExecuteJavaScriptVoid("if (window.fullScreenMap && window.fullScreenMap.resetView) { window.fullScreenMap.resetView(); }");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[FullScreenMap] Error in resetView: {ex.Message}");
         }
     }
 
@@ -1044,6 +1119,11 @@ public partial class FullScreenMapControl : UserControl
 
     private void BtnLayerPmTiles_Click(object sender, RoutedEventArgs e)
     {
+        if (!OfflineDataService.IsPmTilesSupported) return;
+
+        OfflineDataService.EnsureSettingsLoaded();
+        UpdatePmTilesLayers();
+
         var layers = OfflineDataService.GetConfiguredLayers();
         if (layers.Any(l => l.IsEnabled))
         {
@@ -1057,13 +1137,15 @@ public partial class FullScreenMapControl : UserControl
 
     private void BtnConfigurePmTiles_Click(object sender, RoutedEventArgs e)
     {
+        if (!OfflineDataService.IsPmTilesSupported) return;
+
         if (HamburgerPanel != null) HamburgerPanel.Visibility = Visibility.Collapsed;
         ConfigurePmTilesRequested?.Invoke(this, EventArgs.Empty);
     }
 
     public void UpdatePmTilesLayers()
     {
-        if (!_isInitialized) return;
+        if (!_isInitialized || !OfflineDataService.IsPmTilesSupported) return;
         try
         {
             var payload = OfflineDataService.GetPmTilesConfigPayload();
@@ -1078,6 +1160,11 @@ public partial class FullScreenMapControl : UserControl
 
     public void SetBaseLayer(string layerName)
     {
+        if (!OfflineDataService.IsPmTilesSupported && layerName == "pmtiles")
+        {
+            layerName = "topo";
+        }
+
         _currentBaseLayer = layerName;
         try
         {
@@ -1096,7 +1183,13 @@ public partial class FullScreenMapControl : UserControl
     {
         var tm = ThemeManager.Current;
 
-        void StyleLayerBtn(Button btn, bool active)
+        if (!OfflineDataService.IsPmTilesSupported)
+        {
+            if (BtnLayerPmTiles != null) BtnLayerPmTiles.Visibility = Visibility.Collapsed;
+            if (BtnConfigurePmTiles != null) BtnConfigurePmTiles.Visibility = Visibility.Collapsed;
+        }
+
+        void StyleLayerBtn(Button? btn, bool active)
         {
             if (btn == null) return;
             btn.Background = active ? tm.ButtonActiveBackground : tm.ButtonInactiveBackground;
@@ -1128,5 +1221,58 @@ public partial class FullScreenMapControl : UserControl
                    Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
         double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
         return R * c;
+    }
+
+    private void FullScreenMapControl_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (e.OldValue is MainViewModel oldVm)
+        {
+            oldVm.PropertyChanged -= ViewModel_PropertyChanged;
+        }
+        if (e.NewValue is MainViewModel newVm)
+        {
+            newVm.PropertyChanged += ViewModel_PropertyChanged;
+            UpdateElevationDisplay(_lastPointerLat, _lastPointerLon);
+        }
+    }
+
+    private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainViewModel.ObserverElevationDisplay) ||
+            e.PropertyName == nameof(MainViewModel.IsMetric))
+        {
+            Dispatcher.BeginInvoke(() => UpdateElevationDisplay(_lastPointerLat, _lastPointerLon));
+        }
+    }
+
+    private async void UpdateElevationDisplay(double lat, double lon)
+    {
+        if (TxtPointerElevation == null) return;
+
+        bool isMetric = ViewModel?.IsMetric ?? false;
+
+        // Try getting elevation from DEM tiles
+        double? elev = DemService.GetElevation(lat, lon);
+        if (!elev.HasValue)
+        {
+            elev = await DemService.GetElevationAsync(lat, lon);
+        }
+
+        if (elev.HasValue && elev.Value > -500)
+        {
+            double m = elev.Value;
+            double ft = m * 3.28084;
+            TxtPointerElevation.Text = isMetric
+                ? $"⛰️ {Math.Round(m):N0} m"
+                : $"⛰️ {Math.Round(ft):N0} ft";
+        }
+        else if (ViewModel != null && Math.Abs(ViewModel.Latitude - lat) < 0.001 && Math.Abs(ViewModel.Longitude - lon) < 0.001)
+        {
+            TxtPointerElevation.Text = $"⛰️ {ViewModel.ObserverElevationDisplay}";
+        }
+        else
+        {
+            TxtPointerElevation.Text = "⛰️ --";
+        }
     }
 }

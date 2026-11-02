@@ -41,7 +41,9 @@ public partial class LeafletMapControl : UserControl
 
     private void LeafletMapControl_Loaded(object sender, RoutedEventArgs e)
     {
+        OfflineDataService.EnsureSettingsLoaded();
         UpdateTheme(ThemeManager.Current.IsDark);
+        UpdateLayerButtons();
         InitializeMap();
     }
 
@@ -148,6 +150,45 @@ public partial class LeafletMapControl : UserControl
             BtnMyLocation.BorderBrush = tm.ButtonInactiveBorder;
             BtnMyLocation.Foreground = tm.Accent;
         }
+
+        if (BtnAimReset != null)
+        {
+            BtnAimReset.Background = tm.ButtonInactiveBackground;
+            BtnAimReset.BorderBrush = tm.ButtonInactiveBorder;
+            BtnAimReset.Foreground = tm.TextPrimary;
+        }
+
+        if (BtnMenuAimReset != null)
+        {
+            BtnMenuAimReset.Background = tm.ButtonInactiveBackground;
+            BtnMenuAimReset.BorderBrush = tm.ButtonInactiveBorder;
+            BtnMenuAimReset.Foreground = tm.Accent;
+        }
+
+        if (BtnHamburger != null)
+        {
+            BtnHamburger.Background = tm.ButtonInactiveBackground;
+            BtnHamburger.BorderBrush = tm.ButtonInactiveBorder;
+            BtnHamburger.Foreground = tm.TextPrimary;
+        }
+
+        if (HamburgerPanel != null)
+        {
+            HamburgerPanel.Background = overlayBg;
+            HamburgerPanel.BorderBrush = overlayBorder;
+        }
+
+        if (TxtMenuTitle != null) TxtMenuTitle.Foreground = tm.TextPrimary;
+        if (TxtSectionLayer != null) TxtSectionLayer.Foreground = tm.TextSecondary;
+        if (MenuDivider != null) MenuDivider.Background = overlayBorder;
+        if (BtnCloseMenu != null)
+        {
+            BtnCloseMenu.Background = tm.ButtonInactiveBackground;
+            BtnCloseMenu.BorderBrush = tm.ButtonInactiveBorder;
+            BtnCloseMenu.Foreground = tm.TextPrimary;
+        }
+
+        UpdateLayerButtons();
 
         if (ToolbarDivider != null)
         {
@@ -265,9 +306,56 @@ public partial class LeafletMapControl : UserControl
         }
     }
 
+    private bool _isAim3dActive;
+
+    private void BtnAim3d_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            _isAim3dActive = !_isAim3dActive;
+            BtnAim3d.Content = _isAim3dActive ? "🗺️ 2D" : "🏔️ 3D";
+            ToolTipService.SetToolTip(BtnAim3d, _isAim3dActive ? "Switch to flat 2D top-down view" : "Switch to 3D terrain perspective view along azimuth");
+
+            Interop.ExecuteJavaScriptVoid(@"
+                if (window.pointedMap && window.pointedMap.toggle3d) {
+                    window.pointedMap.toggle3d($0);
+                }
+            ", !_isAim3dActive);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[LeafletMap] Error toggling 3D: {ex.Message}");
+        }
+    }
+
+    private void BtnAimReset_Click(object sender, RoutedEventArgs e)
+    {
+        _isAim3dActive = false;
+        if (BtnAim3d != null)
+        {
+            BtnAim3d.Content = "🏔️ 3D";
+            ToolTipService.SetToolTip(BtnAim3d, "Toggle 3D terrain perspective view along azimuth");
+        }
+        if (HamburgerPanel != null)
+        {
+            HamburgerPanel.Visibility = Visibility.Collapsed;
+        }
+
+        try
+        {
+            Interop.ExecuteJavaScriptVoid("if (window.pointedMap && window.pointedMap.resetView) { window.pointedMap.resetView(); }");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[LeafletMap] Error in resetView: {ex.Message}");
+        }
+    }
+
     private void InitializeMap()
     {
         if (_isMapInitialized || _isMapInitializing) return;
+
+        OfflineDataService.EnsureSettingsLoaded();
 
         object div = Interop.GetDiv(MapContainer);
         if (div == null)
@@ -326,15 +414,17 @@ public partial class LeafletMapControl : UserControl
         double initBearing = ViewModel?.Azimuth ?? 270.0;
         double initFov = ViewModel?.FieldOfView ?? 90.0;
 
+        bool pmtilesSupported = OfflineDataService.IsPmTilesSupported;
         try
         {
             Interop.ExecuteJavaScriptVoid(@"
-                (function(container, lat, lon, bearing, fov, locCb, dirCb, cfgCb) {
+                (function(container, lat, lon, bearing, fov, locCb, dirCb, cfgCb, pmtilesSupported) {
                     function tryInit() {
                         if (typeof maplibregl === 'undefined' || !window.pointedMap || !window.pointedMap.init) {
                             setTimeout(tryInit, 50);
                             return;
                         }
+                        window.pointedMap.isPmTilesSupported = pmtilesSupported;
                         window.pointedMap.onConfigurePmTilesRequested = cfgCb;
                         window.pointedMap.init(container, {
                             lat: lat,
@@ -348,11 +438,14 @@ public partial class LeafletMapControl : UserControl
                         });
                     }
                     tryInit();
-                })($0, $1, $2, $3, $4, $5, $6, $7);
-            ", div, initLat, initLon, initBearing, initFov, onLocationPicked, onDirectionChanged, onConfigurePmTiles);
+                })($0, $1, $2, $3, $4, $5, $6, $7, $8);
+            ", div, initLat, initLon, initBearing, initFov, onLocationPicked, onDirectionChanged, onConfigurePmTiles, pmtilesSupported);
 
             _isMapInitialized = true;
-            UpdatePmTilesLayers();
+            if (pmtilesSupported)
+            {
+                UpdatePmTilesLayers();
+            }
         }
         catch
         {
@@ -384,7 +477,7 @@ public partial class LeafletMapControl : UserControl
 
     public void UpdatePmTilesLayers()
     {
-        if (!_isMapInitialized) return;
+        if (!_isMapInitialized || !OfflineDataService.IsPmTilesSupported) return;
         try
         {
             var payload = OfflineDataService.GetPmTilesConfigPayload();
@@ -397,8 +490,16 @@ public partial class LeafletMapControl : UserControl
         }
     }
 
+    private string _currentBaseLayer = "osm";
+
     public void SetBaseLayer(string layerKey)
     {
+        if (!OfflineDataService.IsPmTilesSupported && layerKey == "pmtiles")
+        {
+            layerKey = "osm";
+        }
+
+        _currentBaseLayer = layerKey;
         if (!_isMapInitialized) return;
         try
         {
@@ -407,6 +508,83 @@ public partial class LeafletMapControl : UserControl
         catch (System.Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[LeafletMapControl] SetBaseLayer error: {ex.Message}");
+        }
+
+        UpdateLayerButtons();
+    }
+
+    private void BtnHamburger_Click(object sender, RoutedEventArgs e)
+    {
+        if (HamburgerPanel == null) return;
+        HamburgerPanel.Visibility = (HamburgerPanel.Visibility == Visibility.Visible)
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+    }
+
+    private void BtnCloseMenu_Click(object sender, RoutedEventArgs e)
+    {
+        if (HamburgerPanel != null) HamburgerPanel.Visibility = Visibility.Collapsed;
+    }
+
+    private void BtnLayerTopo_Click(object sender, RoutedEventArgs e) => SetBaseLayer("topo");
+    private void BtnLayerStreets_Click(object sender, RoutedEventArgs e) => SetBaseLayer("streets");
+    private void BtnLayerSatellite_Click(object sender, RoutedEventArgs e) => SetBaseLayer("satellite");
+
+    private void BtnLayerPmTiles_Click(object sender, RoutedEventArgs e)
+    {
+        if (!OfflineDataService.IsPmTilesSupported) return;
+
+        OfflineDataService.EnsureSettingsLoaded();
+        UpdatePmTilesLayers();
+
+        var layers = OfflineDataService.GetConfiguredLayers();
+        if (layers.Any(l => l.IsEnabled))
+        {
+            SetBaseLayer("pmtiles");
+        }
+        else
+        {
+            BtnConfigurePmTiles_Click(sender, e);
+        }
+    }
+
+    private void BtnConfigurePmTiles_Click(object sender, RoutedEventArgs e)
+    {
+        if (!OfflineDataService.IsPmTilesSupported) return;
+
+        if (HamburgerPanel != null) HamburgerPanel.Visibility = Visibility.Collapsed;
+        ConfigurePmTilesRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void UpdateLayerButtons()
+    {
+        var tm = ThemeManager.Current;
+
+        if (!OfflineDataService.IsPmTilesSupported)
+        {
+            if (BtnLayerPmTiles != null) BtnLayerPmTiles.Visibility = Visibility.Collapsed;
+            if (BtnConfigurePmTiles != null) BtnConfigurePmTiles.Visibility = Visibility.Collapsed;
+        }
+
+        void StyleLayerBtn(Button? btn, bool active)
+        {
+            if (btn == null) return;
+            btn.Background = active ? tm.ButtonActiveBackground : tm.ButtonInactiveBackground;
+            btn.BorderBrush = active ? tm.ButtonActiveBorder : tm.ButtonInactiveBorder;
+            btn.Foreground = active ? tm.ButtonActiveForeground : tm.ButtonInactiveForeground;
+            btn.FontWeight = active ? FontWeights.Bold : FontWeights.SemiBold;
+        }
+
+        StyleLayerBtn(BtnLayerTopo, _currentBaseLayer == "topo");
+        StyleLayerBtn(BtnLayerStreets, _currentBaseLayer == "streets" || _currentBaseLayer == "osm");
+        StyleLayerBtn(BtnLayerSatellite, _currentBaseLayer == "satellite");
+        StyleLayerBtn(BtnLayerPmTiles, _currentBaseLayer == "pmtiles");
+
+        if (BtnConfigurePmTiles != null)
+        {
+            BtnConfigurePmTiles.Background = tm.ButtonInactiveBackground;
+            BtnConfigurePmTiles.BorderBrush = tm.ButtonInactiveBorder;
+            BtnConfigurePmTiles.Foreground = tm.Accent;
         }
     }
 

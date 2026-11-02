@@ -10,6 +10,58 @@
         <!-- Leaflet Map Container -->
         <Border x:Name="MapContainer" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
 
+        <!-- Top-Left Floating Controls: Hamburger Menu Button -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="12,12,0,0">
+            <Button x:Name="BtnHamburger" Content="☰" Click="BtnHamburger_Click"
+                    Style="{StaticResource PillButtonStyle}"
+                    Padding="10,6"
+                    FontSize="16" FontWeight="Bold"
+                    ToolTipService.ToolTip="Open Map Choices Menu" />
+        </StackPanel>
+
+        <!-- Floating Hamburger Dropdown Menu Panel -->
+        <Border x:Name="HamburgerPanel" HorizontalAlignment="Left" VerticalAlignment="Top"
+                Margin="12,50,0,0" Width="260" Visibility="Collapsed"
+                BorderThickness="1" CornerRadius="12" Padding="14,12">
+            <StackPanel Orientation="Vertical">
+                <!-- Header -->
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="TxtMenuTitle" Text="🗺️ Map Choices" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" />
+                    <Button x:Name="BtnCloseMenu" Grid.Column="1" Content="✕" Click="BtnCloseMenu_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="6,2" FontSize="11" />
+                </Grid>
+
+                <Border x:Name="MenuDivider" Height="1" Margin="0,0,0,10" />
+
+                <!-- Base Map Layer Switcher -->
+                <TextBlock x:Name="TxtSectionLayer" Text="BASE MAP LAYER" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
+                <StackPanel Orientation="Horizontal" Margin="0,2,0,6">
+                    <Button x:Name="BtnLayerTopo" Content="Topo" Click="BtnLayerTopo_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,3,0" FontSize="10" FontWeight="SemiBold" />
+                    <Button x:Name="BtnLayerStreets" Content="Streets" Click="BtnLayerStreets_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,3,0" FontSize="10" FontWeight="SemiBold" />
+                    <Button x:Name="BtnLayerSatellite" Content="Satellite" Click="BtnLayerSatellite_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,3,0" FontSize="10" FontWeight="SemiBold" />
+                    <Button x:Name="BtnLayerPmTiles" Content="PMTiles" Click="BtnLayerPmTiles_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="9,4" FontSize="10" FontWeight="Bold" />
+                </StackPanel>
+
+                <Button x:Name="BtnConfigurePmTiles" Content="⚙️ Configure PMTiles..." Click="BtnConfigurePmTiles_Click"
+                        Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                        Padding="8,5" Margin="0,0,0,4" FontSize="10" FontWeight="SemiBold"
+                        ToolTipService.ToolTip="Select PMTiles files and configure layers" />
+
+                <Button x:Name="BtnMenuAimReset" Content="↺ Reset Map View" Click="BtnAimReset_Click"
+                        Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                        Padding="8,5" Margin="0,4,0,0" FontSize="10" FontWeight="SemiBold"
+                        ToolTipService.ToolTip="Reset camera to flat top-down 2D view and recover if stuck" />
+            </StackPanel>
+        </Border>
+
         <!-- Floating Azimuth & Direction Toolbar Overlay (Top Center) -->
         <Border x:Name="DirectionToolbarBorder" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="10,12,10,0"
                 BorderThickness="1" CornerRadius="10" Padding="12,8">
@@ -64,10 +116,20 @@
                     <TextBlock x:Name="TxtElevationLabel" Text="Elevation: " FontSize="10"/>
                     <TextBlock x:Name="TxtElevationValue" Text="{Binding ObserverElevationDisplay}" FontSize="10" FontWeight="SemiBold"/>
                 </StackPanel>
-                <Button x:Name="BtnMyLocation" Content="📍 My Location" Click="BtnMyLocation_Click"
-                        Style="{StaticResource PillButtonStyle}" Padding="8,4" Margin="0,2,0,0"
-                        FontSize="10" FontWeight="Bold" HorizontalAlignment="Left"
-                        ToolTipService.ToolTip="Acquire current GPS position and move observer there" />
+                <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                    <Button x:Name="BtnMyLocation" Content="📍 My Location" Click="BtnMyLocation_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="8,4" Margin="0,0,6,0"
+                            FontSize="10" FontWeight="Bold" HorizontalAlignment="Left"
+                            ToolTipService.ToolTip="Acquire current GPS position and move observer there" />
+                    <Button x:Name="BtnAim3d" Content="🏔️ 3D" Click="BtnAim3d_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="8,4" Margin="0,0,6,0"
+                            FontSize="10" FontWeight="Bold" HorizontalAlignment="Left"
+                            ToolTipService.ToolTip="Toggle 3D terrain perspective view along azimuth" />
+                    <Button x:Name="BtnAimReset" Content="↺ Reset" Click="BtnAimReset_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="8,4"
+                            FontSize="10" FontWeight="Bold" HorizontalAlignment="Left"
+                            ToolTipService.ToolTip="Reset camera to flat top-down 2D view and recover if stuck" />
+                </StackPanel>
             </StackPanel>
         </Border>
     </Grid>

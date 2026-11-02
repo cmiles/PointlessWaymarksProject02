@@ -63,8 +63,15 @@ public static class OfflineDataService
     private static string? _androidBaseDir;
     private static string? _selectedStyleFile;
     private static List<PmTileLayerConfig>? _cachedLayers;
+    private static bool _settingsLoaded;
 
     public static event EventHandler? ConfigChanged;
+
+    /// <summary>
+    /// Gets whether PMTiles and local filesystem offline storage are supported on the current platform.
+    /// Returns false in WebAssembly/Browser where local filesystem access and local loopback server are unavailable.
+    /// </summary>
+    public static bool IsPmTilesSupported => !OperatingSystem.IsBrowser();
 
     /// <summary>
     /// Gets whether running on Android platform.
@@ -72,9 +79,18 @@ public static class OfflineDataService
     public static bool IsAndroid => OperatingSystem.IsAndroid();
 
     /// <summary>
-    /// Gets whether path configuration is allowed (enabled on desktop, disabled on Android).
+    /// Gets whether path configuration is allowed (enabled on desktop, disabled on Android and Browser).
     /// </summary>
-    public static bool CanConfigurePaths => !IsAndroid;
+    public static bool CanConfigurePaths => !IsAndroid && IsPmTilesSupported;
+
+    /// <summary>
+    /// Ensures that persistent settings have been loaded from localStorage if the JS environment is ready.
+    /// </summary>
+    public static void EnsureSettingsLoaded()
+    {
+        if (_settingsLoaded) return;
+        LoadSettings();
+    }
 
     /// <summary>
     /// Gets or sets the selected style JSON file name (located in the PMTiles directory).
@@ -82,7 +98,11 @@ public static class OfflineDataService
     /// </summary>
     public static string? SelectedStyleFile
     {
-        get => _selectedStyleFile;
+        get
+        {
+            EnsureSettingsLoaded();
+            return _selectedStyleFile;
+        }
         set => SetSelectedStyleFile(value);
     }
 
@@ -129,6 +149,7 @@ public static class OfflineDataService
     {
         get
         {
+            EnsureSettingsLoaded();
             if (IsAndroid)
             {
                 string baseDir = GetAndroidBaseDirectory();
@@ -151,6 +172,7 @@ public static class OfflineDataService
     {
         get
         {
+            EnsureSettingsLoaded();
             if (IsAndroid)
             {
                 string baseDir = GetAndroidBaseDirectory();
@@ -180,6 +202,8 @@ public static class OfflineDataService
     /// </summary>
     public static void EnsureDirectoriesExist()
     {
+        if (!IsPmTilesSupported) return;
+
         try
         {
             string pmtilesDir = PmTilesDirectory;
@@ -216,6 +240,7 @@ public static class OfflineDataService
 
         _customPmTilesDir = string.IsNullOrWhiteSpace(pmtilesDir) ? null : pmtilesDir.Trim();
         _customDemDir = string.IsNullOrWhiteSpace(demDir) ? null : demDir.Trim();
+        _cachedLayers = null;
 
         SaveSettings();
         EnsureDirectoriesExist();
@@ -231,6 +256,7 @@ public static class OfflineDataService
 
         _customPmTilesDir = null;
         _customDemDir = null;
+        _cachedLayers = null;
 
         SaveSettings();
         EnsureDirectoriesExist();
@@ -243,6 +269,8 @@ public static class OfflineDataService
     public static List<PmTileFileInfo> GetAvailablePmTileFiles()
     {
         var result = new List<PmTileFileInfo>();
+        if (!IsPmTilesSupported) return result;
+
         try
         {
             string dir = PmTilesDirectory;
@@ -304,6 +332,8 @@ public static class OfflineDataService
     /// </summary>
     public static List<PmTileLayerConfig> GetConfiguredLayers()
     {
+        if (!IsPmTilesSupported) return new List<PmTileLayerConfig>();
+        EnsureSettingsLoaded();
         if (_cachedLayers != null) return _cachedLayers;
 
         var available = GetAvailablePmTileFiles();
@@ -369,6 +399,8 @@ public static class OfflineDataService
     public static List<string> GetAvailableStyleFiles()
     {
         var result = new List<string>();
+        if (!IsPmTilesSupported) return result;
+
         try
         {
             string dir = PmTilesDirectory;
@@ -394,6 +426,7 @@ public static class OfflineDataService
     /// </summary>
     public static string? GetSelectedStyleJson()
     {
+        if (!IsPmTilesSupported) return null;
         if (string.IsNullOrWhiteSpace(_selectedStyleFile)) return null;
 
         try
@@ -424,6 +457,20 @@ public static class OfflineDataService
     /// </summary>
     public static object GetPmTilesConfigPayload()
     {
+        if (!IsPmTilesSupported)
+        {
+            return new
+            {
+                layers = new List<object>(),
+                styleFileName = (string?)null,
+                styleUrl = (string?)null,
+                styleJson = (string?)null,
+                tileServerBase = string.Empty
+            };
+        }
+
+        EnsureSettingsLoaded();
+
         var layers = GetConfiguredLayers().Where(l => l.IsEnabled).OrderBy(l => l.Order).Select(l => new
         {
             fileName = l.FileName,
@@ -450,6 +497,7 @@ public static class OfflineDataService
     /// </summary>
     public static string? FindLocalDemFile(string tileKey)
     {
+        if (!IsPmTilesSupported) return null;
         if (string.IsNullOrWhiteSpace(tileKey)) return null;
         string dir = DemDirectory;
         if (!Directory.Exists(dir)) return null;
@@ -490,6 +538,7 @@ public static class OfflineDataService
     /// </summary>
     public static async Task SaveDownloadedDemAsync(string tileKey, byte[] hgtBytes)
     {
+        if (!IsPmTilesSupported) return;
         if (string.IsNullOrWhiteSpace(tileKey) || hgtBytes == null || hgtBytes.Length == 0) return;
 
         try
@@ -518,6 +567,7 @@ public static class OfflineDataService
     /// </summary>
     public static int GetLocalDemFileCount()
     {
+        if (!IsPmTilesSupported) return 0;
         try
         {
             string dir = DemDirectory;
@@ -557,6 +607,22 @@ public static class OfflineDataService
 
     private static void LoadSettings()
     {
+        try
+        {
+            // Verify Interop/DOM localStorage is accessible before marking settings as loaded
+            object? test = Interop.ExecuteJavaScript("typeof localStorage !== 'undefined' ? 'ok' : 'no'");
+            if (test?.ToString() != "ok")
+            {
+                return;
+            }
+        }
+        catch
+        {
+            return;
+        }
+
+        _settingsLoaded = true;
+
         // Load style selection on all platforms (Photino, Browser, Android)
         try
         {
@@ -579,11 +645,19 @@ public static class OfflineDataService
                 var root = doc.RootElement;
                 if (root.TryGetProperty("pmtilesDir", out var pProp) && pProp.ValueKind == JsonValueKind.String)
                 {
-                    _customPmTilesDir = pProp.GetString();
+                    string? dir = pProp.GetString();
+                    if (!string.IsNullOrWhiteSpace(dir))
+                    {
+                        _customPmTilesDir = dir.Trim();
+                    }
                 }
                 if (root.TryGetProperty("demDir", out var dProp) && dProp.ValueKind == JsonValueKind.String)
                 {
-                    _customDemDir = dProp.GetString();
+                    string? dir = dProp.GetString();
+                    if (!string.IsNullOrWhiteSpace(dir))
+                    {
+                        _customDemDir = dir.Trim();
+                    }
                 }
             }
         }

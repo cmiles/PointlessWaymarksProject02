@@ -4,6 +4,8 @@
     window.fullScreenMap = window.fullScreenMap || {};
 
     let map = null;
+    let mapContainerElement = null;
+    let pendingPmTilesConfig = null;
     let pointerMarker = null;
     let liveMarker = null;
     let isLoaded = false;
@@ -12,6 +14,7 @@
     let currentPointerLon = -110.9747;
     let isLiveTracking = false;
     let recordedPoints = []; // Array of [lon, lat]
+    let activeTerrainSourceId = null;
 
     let onPointerMovedCb = null;
 
@@ -219,6 +222,8 @@
             ]
         };
 
+        mapContainerElement = container;
+
         map = new window.maplibregl.Map({
             container: container,
             style: style,
@@ -226,6 +231,10 @@
             zoom: initialZoom,
             minZoom: 3,
             maxZoom: 18,
+            maxPitch: 85,
+            pitchWithRotate: true,
+            dragRotate: true,
+            touchPitch: true,
             attributionControl: true
         });
 
@@ -278,8 +287,27 @@
             }
         });
 
-        map.on('load', function () {
+        // Defensive check: if camera ever penetrates terrain into NaN coordinates, auto-recover
+        map.on('move', function () {
+            const center = map.getCenter();
+            if (!center || isNaN(center.lat) || isNaN(center.lng)) {
+                console.warn("[FullScreenMap] Detected NaN center during move, auto-recovering...");
+                recoverMapState(null, null, null);
+            }
+        });
+
+        map.on('load', async function () {
             isLoaded = true;
+            if (pendingPmTilesConfig) {
+                try {
+                    await window.fullScreenMap.setPmTilesLayers(pendingPmTilesConfig);
+                } catch (e) {
+                    console.warn("[FullScreenMap] Error applying pending PMTiles:", e);
+                }
+            }
+            if (currentSelectedBaseLayer) {
+                window.fullScreenMap.setBaseLayer(currentSelectedBaseLayer);
+            }
             window.fullScreenMap.resize();
         });
     };
@@ -454,9 +482,19 @@
                 try { map.removeSource(sid); } catch (e) { }
             }
         }
+
+        if (map && typeof map.getTerrain === 'function' && map.getTerrain()) {
+            try { map.setTerrain(null); } catch (e) { }
+        }
+        activeTerrainSourceId = null;
     }
 
     window.fullScreenMap.setPmTilesLayers = async function (config) {
+        if (window.fullScreenMap && window.fullScreenMap.isPmTilesSupported === false) {
+            clearPmTilesLayers();
+            return;
+        }
+
         let layers = [];
         let styleJson = null;
         let styleFileName = null;
@@ -474,7 +512,11 @@
         }
 
         configuredPmTiles = layers;
-        if (!map || !isLoaded) return;
+        pendingPmTilesConfig = config;
+        if (!map || !isLoaded) {
+            console.info("[FullScreenMap] setPmTilesLayers saved as pending (map not loaded yet)");
+            return;
+        }
         clearPmTilesLayers();
 
         const enabledLayers = configuredPmTiles.filter(l => l.isEnabled !== false);
@@ -574,6 +616,13 @@
                                 resolvedUrl = `pmtiles://${ras.url}`;
                                 consumedFileNames.add(ras.fileName);
                             }
+                        } else if (sCopy.type === 'raster-dem') {
+                            const dem = enabledLayers.find(l => !consumedFileNames.has(l.fileName) && (l.fileName.toLowerCase().includes('terrain') || l.fileName.toLowerCase().includes('dem') || l.fileName.toLowerCase().includes('rgb'))) ||
+                                        enabledLayers.find(l => l.fileName.toLowerCase().includes('terrain') || l.fileName.toLowerCase().includes('dem') || l.fileName.toLowerCase().includes('rgb'));
+                            if (dem) {
+                                resolvedUrl = `pmtiles://${dem.url}`;
+                                consumedFileNames.add(dem.fileName);
+                            }
                         }
                     }
 
@@ -592,6 +641,12 @@
 
                     if (sCopy.type === 'raster' && !sCopy.tileSize) {
                         sCopy.tileSize = 256;
+                    }
+
+                    if (sCopy.type === 'raster-dem') {
+                        if (!sCopy.tileSize) sCopy.tileSize = 256;
+                        if (!sCopy.encoding) sCopy.encoding = 'mapbox';
+                        activeTerrainSourceId = sId;
                     }
 
                     if (!map.getSource(sId)) {
@@ -644,6 +699,31 @@
                     activePmTileLayerIds.push(lCopy.id);
                 } catch (lErr) {
                     console.warn("[FullScreenMap] Error adding style layer:", lDef.id, lErr);
+                }
+            }
+
+            // Apply 3D terrain from style if defined, or from detected raster-dem source
+            if (styleObj.terrain && styleObj.terrain.source && map.getSource(styleObj.terrain.source)) {
+                activeTerrainSourceId = styleObj.terrain.source;
+                if (map.getPitch() > 20) {
+                    try {
+                        map.setTerrain({
+                            source: styleObj.terrain.source,
+                            exaggeration: styleObj.terrain.exaggeration != null ? styleObj.terrain.exaggeration : 1.25
+                        });
+                        console.info("[FullScreenMap] 3D Terrain enabled from style:", styleObj.terrain.source);
+                    } catch (tErr) {
+                        console.warn("[FullScreenMap] Error applying style terrain:", tErr);
+                    }
+                }
+            } else if (activeTerrainSourceId && map.getSource(activeTerrainSourceId)) {
+                if (map.getPitch() > 20) {
+                    try {
+                        map.setTerrain({ source: activeTerrainSourceId, exaggeration: 1.25 });
+                        console.info("[FullScreenMap] 3D Terrain enabled from source:", activeTerrainSourceId);
+                    } catch (tErr) {
+                        console.warn("[FullScreenMap] Error applying terrain source:", tErr);
+                    }
                 }
             }
         }
@@ -770,8 +850,14 @@
         }
     };
 
-    window.fullScreenMap.setBaseLayer = function (layerName) {
-        if (!map || !isLoaded) return;
+    window.fullScreenMap.setBaseLayer = async function (layerName) {
+        if (!map || !isLoaded) {
+            currentSelectedBaseLayer = layerName;
+            return;
+        }
+        if (layerName === 'pmtiles' && window.fullScreenMap && window.fullScreenMap.isPmTilesSupported === false) {
+            layerName = 'topo';
+        }
         currentSelectedBaseLayer = layerName;
 
         const layers = ['topo-layer', 'osm-layer', 'satellite-layer'];
@@ -782,6 +868,15 @@
         });
 
         if (layerName === 'pmtiles') {
+            // If PMTiles layers have not been loaded yet, load them now!
+            if (activePmTileLayerIds.length === 0 && pendingPmTilesConfig) {
+                try {
+                    await window.fullScreenMap.setPmTilesLayers(pendingPmTilesConfig);
+                } catch (e) {
+                    console.warn("[FullScreenMap] Error loading pending PMTiles in setBaseLayer:", e);
+                }
+            }
+
             activePmTileLayerIds.forEach(id => {
                 if (map.getLayer(id)) {
                     map.setLayoutProperty(id, 'visibility', 'visible');
@@ -804,6 +899,132 @@
         if (map.getLayer(targetId)) {
             map.setLayoutProperty(targetId, 'visibility', 'visible');
         }
+    };
+
+    function recreateMap(lat, lon) {
+        if (!mapContainerElement) return;
+        try {
+            if (map) {
+                try { map.remove(); } catch (e) { }
+                map = null;
+            }
+        } catch (e) { }
+
+        try {
+            mapContainerElement.innerHTML = '';
+        } catch (e) { }
+
+        isLoaded = false;
+        const initLat = (typeof lat === 'number' && !isNaN(lat)) ? lat : currentPointerLat;
+        const initLon = (typeof lon === 'number' && !isNaN(lon)) ? lon : currentPointerLon;
+
+        window.fullScreenMap.init(
+            mapContainerElement,
+            { lat: initLat, lon: initLon, zoom: 12 },
+            onPointerMovedCb
+        );
+        if (pendingPmTilesConfig) {
+            window.fullScreenMap.setPmTilesLayers(pendingPmTilesConfig);
+        }
+        if (currentSelectedBaseLayer) {
+            window.fullScreenMap.setBaseLayer(currentSelectedBaseLayer);
+        }
+    }
+
+    function recoverMapState(centerLon, centerLat, zoom) {
+        let targetLon = (typeof centerLon === 'number' && !isNaN(centerLon)) ? centerLon : currentPointerLon;
+        let targetLat = (typeof centerLat === 'number' && !isNaN(centerLat)) ? centerLat : currentPointerLat;
+        if (typeof targetLon !== 'number' || isNaN(targetLon) || typeof targetLat !== 'number' || isNaN(targetLat)) {
+            targetLon = -110.9747;
+            targetLat = 32.2226;
+        }
+
+        if (!map) {
+            recreateMap(targetLat, targetLon);
+            return;
+        }
+
+        try {
+            // 1. Immediately halt any active momentum / ease animations
+            map.stop();
+
+            // 2. Unload the 3D elevation mesh
+            try { map.setTerrain(null); } catch (e) { }
+
+            // 3. Force jump to safe top-down 2D
+            map.jumpTo({
+                center: [targetLon, targetLat],
+                zoom: (typeof zoom === 'number' && !isNaN(zoom)) ? zoom : 12,
+                pitch: 0,
+                bearing: 0
+            });
+
+            // 4. If map transform state is still degenerate or NaN, recreate the map
+            const center = map.getCenter();
+            const pitch = map.getPitch();
+            if (!center || isNaN(center.lat) || isNaN(center.lng) || isNaN(pitch) || pitch !== 0) {
+                console.warn("[FullScreenMap] Map transform state corrupt after jumpTo; recreating map");
+                recreateMap(targetLat, targetLon);
+                return;
+            }
+
+            // 5. Force canvas resize and repaint
+            setTimeout(function () {
+                try {
+                    map.resize();
+                    map.triggerRepaint();
+                } catch (e) {
+                    recreateMap(targetLat, targetLon);
+                }
+            }, 50);
+        } catch (err) {
+            console.warn("[FullScreenMap] Error in recoverMapState, recreating map:", err);
+            recreateMap(targetLat, targetLon);
+        }
+    }
+
+    window.fullScreenMap.toggle3d = function (force2d) {
+        if (!map) {
+            recreateMap(currentPointerLat, currentPointerLon);
+            return false;
+        }
+        let currentPitch = map.getPitch();
+        let center = map.getCenter();
+        const isDegenerate = isNaN(currentPitch) || !center || isNaN(center.lat) || isNaN(center.lng);
+        if (isDegenerate) {
+            console.warn("[FullScreenMap] Map is degenerate in toggle3d; recreating clean 2D map");
+            recreateMap(currentPointerLat, currentPointerLon);
+            return false;
+        }
+
+        const isCurrently3d = (force2d === true) ? true : (force2d === false ? false : (currentPitch > 20));
+
+        if (isCurrently3d) {
+            // Toggling 3D OFF: remove terrain mesh and ease cleanly to flat 2D
+            recoverMapState(currentPointerLon, currentPointerLat, null);
+            return false;
+        } else {
+            // Toggling 3D ON: enable terrain and pitch
+            if (activeTerrainSourceId && map.getSource(activeTerrainSourceId)) {
+                try {
+                    map.setTerrain({ source: activeTerrainSourceId, exaggeration: 1.25 });
+                } catch (e) { }
+            }
+            map.easeTo({
+                pitch: 65,
+                duration: 800
+            });
+            return true;
+        }
+    };
+
+    window.fullScreenMap.resetView = function () {
+        // Guaranteed 100% recovery by tearing down and creating a fresh map instance
+        recreateMap(currentPointerLat, currentPointerLon);
+    };
+
+    window.fullScreenMap.is3d = function () {
+        return map ? (map.getPitch() > 25) : false;
     };
 
     window.fullScreenMap.resize = function () {

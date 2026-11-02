@@ -65,10 +65,23 @@ public partial class MainPage : Page
         {
             UpdateUnitsButtonsTheme(ViewModel.IsDarkTheme);
         }
+        else if (e.PropertyName == nameof(MainViewModel.FieldOfView))
+        {
+            UpdateOptFovButtonsTheme(ViewModel.IsDarkTheme);
+        }
     }
 
     private void MainPage_Loaded(object sender, RoutedEventArgs e)
     {
+        if (!OfflineDataService.IsPmTilesSupported)
+        {
+            if (BtnOpenPmTilesConfig != null) BtnOpenPmTilesConfig.Visibility = Visibility.Collapsed;
+            if (TxtSectionOffline != null) TxtSectionOffline.Visibility = Visibility.Collapsed;
+            if (OptionsDivider3 != null) OptionsDivider3.Visibility = Visibility.Collapsed;
+            if (PmTilesConfigModal != null) PmTilesConfigModal.Visibility = Visibility.Collapsed;
+            if (PmTilesModalBackdrop != null) PmTilesModalBackdrop.Visibility = Visibility.Collapsed;
+        }
+
         UpdateTheme(ViewModel.IsDarkTheme);
         UpdateResponsiveLayout(ActualWidth, ActualHeight);
         UpdateUnitsButtonsTheme(ViewModel.IsDarkTheme);
@@ -126,6 +139,8 @@ public partial class MainPage : Page
         {
             BtnTabHorizon.Content = isSmall ? "🌄 Horizon" : "🌄 Horizon View";
         }
+
+        HorizonViewer?.SetCompactMode(isSmall);
 
         if (modeChanged)
         {
@@ -298,6 +313,38 @@ public partial class MainPage : Page
         UpdateUnitsButtonsTheme(ThemeManager.Current.IsDark);
     }
 
+    private void BtnOptFov15_Click(object sender, RoutedEventArgs e) => SetOptFocalLength(15.0);
+    private void BtnOptFov35_Click(object sender, RoutedEventArgs e) => SetOptFocalLength(35.0);
+    private void BtnOptFov50_Click(object sender, RoutedEventArgs e) => SetOptFocalLength(50.0);
+    private void BtnOptFov90_Click(object sender, RoutedEventArgs e) => SetOptFocalLength(90.0);
+
+    private void SetOptFocalLength(double mm)
+    {
+        double fov = MainViewModel.FocalLengthToFieldOfView(mm);
+        ViewModel.FieldOfView = fov;
+        UpdateOptFovButtonsTheme(ThemeManager.Current.IsDark);
+    }
+
+    private void UpdateOptFovButtonsTheme(bool isDark)
+    {
+        var tm = ThemeManager.Current;
+        double fl = MainViewModel.FieldOfViewToFocalLength(ViewModel.FieldOfView);
+
+        void StyleFovBtn(Button btn, bool active)
+        {
+            if (btn == null) return;
+            btn.Background = active ? tm.ButtonActiveBackground : tm.ButtonInactiveBackground;
+            btn.BorderBrush = active ? tm.ButtonActiveBorder : tm.ButtonInactiveBorder;
+            btn.Foreground = active ? tm.ButtonActiveForeground : tm.ButtonInactiveForeground;
+            btn.FontWeight = active ? FontWeights.Bold : FontWeights.SemiBold;
+        }
+
+        StyleFovBtn(BtnOptFov15, Math.Abs(fl - 15.0) < 2.0);
+        StyleFovBtn(BtnOptFov35, Math.Abs(fl - 35.0) < 3.0);
+        StyleFovBtn(BtnOptFov50, Math.Abs(fl - 50.0) < 4.0);
+        StyleFovBtn(BtnOptFov90, Math.Abs(fl - 90.0) < 6.0);
+    }
+
     private void BtnToggleAppTheme_Click(object sender, RoutedEventArgs e)
     {
         ViewModel.IsDarkTheme = !ViewModel.IsDarkTheme;
@@ -323,6 +370,8 @@ public partial class MainPage : Page
 
     public void ShowPmTilesModal()
     {
+        if (!OfflineDataService.IsPmTilesSupported) return;
+
         if (OptionsPanel != null) OptionsPanel.Visibility = Visibility.Collapsed;
         if (OptionsBackdrop != null) OptionsBackdrop.Visibility = Visibility.Collapsed;
 
@@ -352,6 +401,8 @@ public partial class MainPage : Page
 
     private void ApplyPmTilesOnMaps()
     {
+        if (!OfflineDataService.IsPmTilesSupported) return;
+
         FullScreenMapControlView?.UpdatePmTilesLayers();
         FullScreenMapControlView?.SetBaseLayer("pmtiles");
         LeafletMap?.UpdatePmTilesLayers();
@@ -416,15 +467,19 @@ public partial class MainPage : Page
             OptionsPanel.Background = tm.HeaderBackground;
             OptionsPanel.BorderBrush = tm.HeaderBorder;
         }
+        if (OptionsDivider0 != null) OptionsDivider0.Background = tm.HeaderBorder;
         if (OptionsDivider1 != null) OptionsDivider1.Background = tm.HeaderBorder;
         if (OptionsDivider2 != null) OptionsDivider2.Background = tm.HeaderBorder;
         if (OptionsDivider3 != null) OptionsDivider3.Background = tm.HeaderBorder;
         if (OptionsDivider4 != null) OptionsDivider4.Background = tm.HeaderBorder;
         if (TxtOptionsTitle != null) TxtOptionsTitle.Foreground = tm.TextPrimary;
+        if (TxtSectionFov != null) TxtSectionFov.Foreground = tm.TextSecondary;
         if (TxtSectionUnits != null) TxtSectionUnits.Foreground = tm.TextSecondary;
         if (TxtSectionPresets != null) TxtSectionPresets.Foreground = tm.TextSecondary;
         if (TxtSectionOffline != null) TxtSectionOffline.Foreground = tm.TextSecondary;
         if (TxtSectionTheme != null) TxtSectionTheme.Foreground = tm.TextSecondary;
+
+        UpdateOptFovButtonsTheme(isDark);
 
         if (BtnOpenPmTilesConfig != null)
         {

@@ -156,7 +156,9 @@ public partial class PmTilesConfigControl : UserControl
                 Text = layer.FileName,
                 FontSize = 11,
                 FontWeight = FontWeights.SemiBold,
-                Foreground = tm.TextPrimary
+                Foreground = tm.TextPrimary,
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                TextWrapping = TextWrapping.NoWrap
             };
             var txtSize = new TextBlock
             {
@@ -166,7 +168,9 @@ public partial class PmTilesConfigControl : UserControl
                 FontSize = 10,
                 Foreground = (fileInfo != null && !fileInfo.IsValidArchive)
                     ? new SolidColorBrush(Color.FromArgb(255, 239, 68, 68))
-                    : tm.TextSecondary
+                    : tm.TextSecondary,
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                TextWrapping = TextWrapping.NoWrap
             };
             namePanel.Children.Add(txtName);
             namePanel.Children.Add(txtSize);

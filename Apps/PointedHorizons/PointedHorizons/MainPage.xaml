@@ -128,6 +128,25 @@
                                 Style="{StaticResource PillButtonStyle}" Padding="6,2" FontSize="11" />
                     </Grid>
 
+                    <Border x:Name="OptionsDivider0" Height="1" Margin="0,0,0,10" />
+
+                    <!-- Field of View / Focal Length Options (available on all screen sizes, essential on small screens) -->
+                    <TextBlock x:Name="TxtSectionFov" Text="FIELD OF VIEW / FOCAL LENGTH" FontSize="10" FontWeight="Bold" Margin="0,0,0,6" />
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button x:Name="BtnOptFov15" Content="15mm" Click="BtnOptFov15_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,4,0" FontSize="10" FontWeight="SemiBold"
+                                ToolTipService.ToolTip="15mm Ultra-Wide (~100° FOV)" />
+                        <Button x:Name="BtnOptFov35" Content="35mm" Click="BtnOptFov35_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,4,0" FontSize="10" FontWeight="SemiBold"
+                                ToolTipService.ToolTip="35mm Wide (~54° FOV)" />
+                        <Button x:Name="BtnOptFov50" Content="50mm" Click="BtnOptFov50_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,4,0" FontSize="10" FontWeight="SemiBold"
+                                ToolTipService.ToolTip="50mm Standard (~40° FOV)" />
+                        <Button x:Name="BtnOptFov90" Content="90mm" Click="BtnOptFov90_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="9,4" FontSize="10" FontWeight="SemiBold"
+                                ToolTipService.ToolTip="90mm Telephoto (~23° FOV)" />
+                    </StackPanel>
+
                     <Border x:Name="OptionsDivider1" Height="1" Margin="0,0,0,10" />
 
                     <!-- 1. Elevation & Distance Units (Feet by default) -->
@@ -195,7 +214,7 @@
                 MouseLeftButtonDown="BtnClosePmTilesModal_Click" />
 
         <controls:PmTilesConfigControl x:Name="PmTilesConfigModal" Grid.Row="0" Grid.RowSpan="2"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                                        Visibility="Collapsed" />
     </Grid>
 </Page>
