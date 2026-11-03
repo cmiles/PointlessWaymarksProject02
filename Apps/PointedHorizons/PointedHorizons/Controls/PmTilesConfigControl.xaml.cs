@@ -37,12 +37,15 @@ public partial class PmTilesConfigControl : UserControl
     {
         TxtPmTilesDir.Text = OfflineDataService.PmTilesDirectory;
         TxtDemDir.Text = OfflineDataService.DemDirectory;
+        TxtGpxDir.Text = OfflineDataService.GpxDirectory;
 
         bool canConfig = OfflineDataService.CanConfigurePaths;
         TxtPmTilesDir.IsReadOnly = !canConfig;
         TxtDemDir.IsReadOnly = !canConfig;
+        TxtGpxDir.IsReadOnly = !canConfig;
         BtnResetPmTiles.Visibility = canConfig ? Visibility.Visible : Visibility.Collapsed;
         BtnResetDem.Visibility = canConfig ? Visibility.Visible : Visibility.Collapsed;
+        BtnResetGpx.Visibility = canConfig ? Visibility.Visible : Visibility.Collapsed;
 
         if (OfflineDataService.IsAndroid)
         {
@@ -267,6 +270,11 @@ public partial class PmTilesConfigControl : UserControl
         TxtDemDir.Text = OfflineDataService.DefaultPhotinoDemDir;
     }
 
+    private void BtnResetGpx_Click(object sender, RoutedEventArgs e)
+    {
+        TxtGpxDir.Text = OfflineDataService.DefaultPhotinoGpxDir;
+    }
+
     private void BtnClose_Click(object sender, RoutedEventArgs e)
     {
         CloseRequested?.Invoke(this, EventArgs.Empty);
@@ -289,7 +297,7 @@ public partial class PmTilesConfigControl : UserControl
     {
         if (OfflineDataService.CanConfigurePaths)
         {
-            OfflineDataService.SetCustomPaths(TxtPmTilesDir.Text, TxtDemDir.Text);
+            OfflineDataService.SetCustomPaths(TxtPmTilesDir.Text, TxtDemDir.Text, TxtGpxDir.Text);
         }
 
         // Save selected style file
@@ -354,6 +362,13 @@ public partial class PmTilesConfigControl : UserControl
             TxtDemDir.Background = tm.ButtonInactiveBackground;
             TxtDemDir.Foreground = tm.TextPrimary;
             TxtDemDir.BorderBrush = tm.ButtonInactiveBorder;
+        }
+
+        if (TxtGpxDir != null)
+        {
+            TxtGpxDir.Background = tm.ButtonInactiveBackground;
+            TxtGpxDir.Foreground = tm.TextPrimary;
+            TxtGpxDir.BorderBrush = tm.ButtonInactiveBorder;
         }
 
         if (StorageInfoBadge != null)

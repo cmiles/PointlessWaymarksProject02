@@ -73,6 +73,18 @@ public class MainActivity : MauiAppCompatActivity
 
             if (!string.IsNullOrEmpty(target))
             {
+                // Ensure pmtiles, dem, and gpx folders are created beside each other on startup
+                try
+                {
+                    string pmtiles = System.IO.Path.Combine(target, "pmtiles");
+                    string dem = System.IO.Path.Combine(target, "dem");
+                    string gpx = System.IO.Path.Combine(target, "gpx");
+                    if (!System.IO.Directory.Exists(pmtiles)) System.IO.Directory.CreateDirectory(pmtiles);
+                    if (!System.IO.Directory.Exists(dem)) System.IO.Directory.CreateDirectory(dem);
+                    if (!System.IO.Directory.Exists(gpx)) System.IO.Directory.CreateDirectory(gpx);
+                }
+                catch { }
+
                 PointedHorizons.Services.OfflineDataService.SetAndroidBaseDirectory(target);
             }
             PointedHorizons.Services.OfflineDataService.Initialize();

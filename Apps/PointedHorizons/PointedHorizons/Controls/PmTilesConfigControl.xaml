@@ -54,6 +54,18 @@
                                 Style="{StaticResource PillButtonStyle}" Margin="4,0,0,0" Padding="6,4" FontSize="10" VerticalAlignment="Center"/>
                     </Grid>
 
+                    <!-- GPX & Tracks Folder -->
+                    <TextBlock Text="Tracks Directory (.gpx, .tcx, .fit files):" FontSize="11" FontWeight="SemiBold" Margin="0,2,0,3"/>
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="TxtGpxDir" Grid.Column="0" FontSize="11" Padding="6,4" VerticalAlignment="Center" />
+                        <Button x:Name="BtnResetGpx" Grid.Column="1" Content="Reset" Click="BtnResetGpx_Click"
+                                Style="{StaticResource PillButtonStyle}" Margin="4,0,0,0" Padding="6,4" FontSize="10" VerticalAlignment="Center"/>
+                    </Grid>
+
                     <!-- Platform Storage Note / DEM Status Badge -->
                     <Border x:Name="StorageInfoBadge" BorderThickness="1" CornerRadius="6" Padding="8,6" Margin="0,2,0,10">
                         <StackPanel Orientation="Vertical">

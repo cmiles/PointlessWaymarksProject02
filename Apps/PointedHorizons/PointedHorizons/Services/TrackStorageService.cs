@@ -206,7 +206,7 @@ public static class TrackStorageService
     }
 
     /// <summary>
-    /// Finishes an active track session.
+    /// Finishes an active track session and exports the final GPX file to the default GPX folder.
     /// </summary>
     public static async Task FinishTrackAsync(RecordedTrack track)
     {
@@ -216,6 +216,22 @@ public static class TrackStorageService
         track.EndTime = DateTime.UtcNow;
         await SaveTrackAsync(track);
         RemoveLocalStorageItem(ActiveIdKey);
+
+        // Save into the designated GPX directory as requested
+        try
+        {
+            if (track.Points.Count > 0 && OfflineDataService.IsPmTilesSupported)
+            {
+                string gpxDir = OfflineDataService.GpxDirectory;
+                await TrackParserService.ExportRecordedTrackToGpxAsync(track, gpxDir);
+                _ = TrackIndexService.RefreshAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[TrackStorageService] Export GPX on finish error: {ex.Message}");
+        }
+
         TracksUpdated?.Invoke(null, EventArgs.Empty);
     }
 

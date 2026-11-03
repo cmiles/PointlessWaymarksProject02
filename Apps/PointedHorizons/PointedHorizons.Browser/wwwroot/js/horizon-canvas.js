@@ -292,6 +292,16 @@
                     return (diff / fov) * width;
                 }
 
+                // Helper: Azimuth to Screen X coordinate centered on centerAz (smooth across screen)
+                function azToScreenX(az) {
+                    let diff = az - centerAz;
+                    while (diff < -180) diff += 360;
+                    while (diff > 180) diff -= 360;
+                    return (width / 2) + (diff / fov) * width;
+                }
+
+                const celestial = data.celestial || data.Celestial || null;
+
                 // 2. Draw 0° Horizontal Eye-Level Reference Line
                 if (minAlt <= 0 && maxAlt >= 0) {
                     const zeroY = altToY(0);
@@ -308,6 +318,122 @@
                     ctx.font = '10px Inter, -apple-system, sans-serif';
                     ctx.fillText('0° (eye-level)', 12, zeroY - 4);
                     ctx.restore();
+                }
+
+                // 2b. Draw Celestial Arcs (Sun in Yellow, Moon in Blue) & Current Bodies (Sky Layer)
+                if (celestial) {
+                    function drawCelestialArc(arcPoints, strokeColor, lineWidth, lineDash) {
+                        if (!arcPoints || arcPoints.length < 2) return;
+                        ctx.save();
+                        ctx.strokeStyle = strokeColor;
+                        ctx.lineWidth = lineWidth;
+                        if (lineDash) ctx.setLineDash(lineDash);
+                        ctx.beginPath();
+                        let started = false;
+                        let prevX = null;
+
+                        for (let i = 0; i < arcPoints.length; i++) {
+                            const pt = arcPoints[i];
+                            const az = pt.az ?? pt.Azimuth ?? 0;
+                            const alt = pt.alt ?? pt.Altitude ?? 0;
+                            const x = azToScreenX(az);
+                            const y = altToY(alt);
+
+                            if (prevX !== null && Math.abs(x - prevX) > width * 0.7) {
+                                started = false;
+                            }
+
+                            if (x >= -40 && x <= width + 40 && y >= -150 && y <= height + 150) {
+                                if (!started) {
+                                    ctx.moveTo(x, y);
+                                    started = true;
+                                } else {
+                                    ctx.lineTo(x, y);
+                                }
+                            } else {
+                                started = false;
+                            }
+                            prevX = x;
+                        }
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+
+                    // 1. Sun Arc (Yellow)
+                    const sunStroke = isDark ? '#FBBF24' : '#F59E0B';
+                    drawCelestialArc(celestial.sunArc || celestial.SunArc, sunStroke, 2.0, null);
+
+                    // 2. Moon Arc (Blue)
+                    const moonStroke = isDark ? '#38BDF8' : '#0284C7';
+                    drawCelestialArc(celestial.moonArc || celestial.MoonArc, moonStroke, 1.8, [6, 4]);
+
+                    // 3. Current Sun marker if in FOV and above baseline
+                    const curSun = celestial.currentSun || celestial.CurrentSun;
+                    if (curSun) {
+                        const csAz = curSun.az ?? curSun.Azimuth ?? 0;
+                        const csAlt = curSun.alt ?? curSun.Altitude ?? 0;
+                        const csX = azToScreenX(csAz);
+                        const csY = altToY(csAlt);
+                        if (csX >= -10 && csX <= width + 10 && csY >= -20 && csY <= height + 50) {
+                            ctx.save();
+                            const sunGlow = ctx.createRadialGradient(csX, csY, 2, csX, csY, 14);
+                            sunGlow.addColorStop(0, 'rgba(251, 191, 36, 0.9)');
+                            sunGlow.addColorStop(0.5, 'rgba(245, 158, 11, 0.4)');
+                            sunGlow.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
+                            ctx.fillStyle = sunGlow;
+                            ctx.beginPath();
+                            ctx.arc(csX, csY, 14, 0, Math.PI * 2);
+                            ctx.fill();
+
+                            ctx.fillStyle = '#F59E0B';
+                            ctx.beginPath();
+                            ctx.arc(csX, csY, 5.5, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.strokeStyle = '#FFFFFF';
+                            ctx.lineWidth = 1.5;
+                            ctx.stroke();
+
+                            ctx.font = 'bold 9px Inter, -apple-system, sans-serif';
+                            ctx.fillStyle = isDark ? '#FDE68A' : '#D97706';
+                            ctx.textAlign = 'center';
+                            ctx.fillText('☀️ Sun', csX, csY - 10);
+                            ctx.restore();
+                        }
+                    }
+
+                    // 4. Current Moon marker if in FOV
+                    const curMoon = celestial.currentMoon || celestial.CurrentMoon;
+                    if (curMoon) {
+                        const cmAz = curMoon.az ?? curMoon.Azimuth ?? 0;
+                        const cmAlt = curMoon.alt ?? curMoon.Altitude ?? 0;
+                        const cmX = azToScreenX(cmAz);
+                        const cmY = altToY(cmAlt);
+                        if (cmX >= -10 && cmX <= width + 10 && cmY >= -20 && cmY <= height + 50) {
+                            ctx.save();
+                            const moonGlow = ctx.createRadialGradient(cmX, cmY, 2, cmX, cmY, 12);
+                            moonGlow.addColorStop(0, 'rgba(56, 189, 248, 0.85)');
+                            moonGlow.addColorStop(0.5, 'rgba(2, 132, 199, 0.35)');
+                            moonGlow.addColorStop(1, 'rgba(2, 132, 199, 0.0)');
+                            ctx.fillStyle = moonGlow;
+                            ctx.beginPath();
+                            ctx.arc(cmX, cmY, 12, 0, Math.PI * 2);
+                            ctx.fill();
+
+                            ctx.fillStyle = isDark ? '#38BDF8' : '#0284C7';
+                            ctx.beginPath();
+                            ctx.arc(cmX, cmY, 5, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.strokeStyle = '#FFFFFF';
+                            ctx.lineWidth = 1.5;
+                            ctx.stroke();
+
+                            ctx.font = 'bold 9px Inter, -apple-system, sans-serif';
+                            ctx.fillStyle = isDark ? '#BAE6FD' : '#0284C7';
+                            ctx.textAlign = 'center';
+                            ctx.fillText('🌙 Moon', cmX, cmY - 10);
+                            ctx.restore();
+                        }
+                    }
                 }
 
                 // Resolution of continuous slice rendering across screen
@@ -482,6 +608,97 @@
                         ctx.font = '9px Inter, -apple-system, sans-serif';
                         ctx.fillStyle = textMuted;
                         ctx.fillText(`${elevStr} · ${distStr}`, px, labelY + 9);
+
+                        ctx.restore();
+                    });
+                }
+
+                // 5b. Draw Topographic Rise & Set Intersection Badges (Sun in Yellow, Moon in Blue)
+                if (celestial) {
+                    const cEvents = [
+                        { key: 'sunrise', evt: celestial.sunrise || celestial.Sunrise, label: 'Sunrise', icon: '☀️', isSun: true },
+                        { key: 'sunset', evt: celestial.sunset || celestial.Sunset, label: 'Sunset', icon: '☀️', isSun: true },
+                        { key: 'moonrise', evt: celestial.moonrise || celestial.Moonrise, label: 'Moonrise', icon: '🌙', isSun: false },
+                        { key: 'moonset', evt: celestial.moonset || celestial.Moonset, label: 'Moonset', icon: '🌙', isSun: false }
+                    ];
+
+                    cEvents.forEach((item) => {
+                        if (!item.evt) return;
+                        const az = item.evt.az ?? item.evt.Azimuth;
+                        const alt = item.evt.alt ?? item.evt.Altitude;
+                        const timeStr = item.evt.time ?? item.evt.Time ?? '';
+                        if (az == null || alt == null) return;
+
+                        const px = azToScreenX(az);
+                        // Check if within visible FOV bounds
+                        if (px < 15 || px > width - 15) return;
+
+                        const py = altToY(alt);
+                        const isSun = item.isSun;
+                        const eventColor = isSun
+                            ? (isDark ? '#FBBF24' : '#F59E0B')
+                            : (isDark ? '#38BDF8' : '#0284C7');
+                        const eventBorder = isSun
+                            ? (isDark ? '#F59E0B' : '#D97706')
+                            : (isDark ? '#0284C7' : '#0369A1');
+
+                        ctx.save();
+
+                        // A. Marker pin on horizon ridge intersection
+                        ctx.strokeStyle = eventColor;
+                        ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.arc(px, py, 6.5, 0, Math.PI * 2);
+                        ctx.stroke();
+
+                        ctx.fillStyle = eventColor;
+                        ctx.beginPath();
+                        ctx.arc(px, py, 3.5, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.strokeStyle = '#FFFFFF';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+
+                        // B. Vertical dashed indicator line
+                        const badgeH = 28;
+                        const badgeY = Math.max(26, Math.min(height - 40, py - 42));
+
+                        ctx.strokeStyle = eventColor;
+                        ctx.lineWidth = 1;
+                        ctx.setLineDash([2, 3]);
+                        ctx.beginPath();
+                        ctx.moveTo(px, py > badgeY ? py - 7 : py + 7);
+                        ctx.lineTo(px, py > badgeY ? badgeY + badgeH : badgeY);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+
+                        // C. Pill badge container
+                        const line1 = `${item.icon} ${item.label} ${timeStr}`;
+                        const line2 = `Ridge ${alt >= 0 ? '+' : ''}${alt.toFixed(1)}° · ${Math.round(az)}° ${getCardinal(az)}`;
+
+                        ctx.font = 'bold 11px Inter, -apple-system, sans-serif';
+                        const textW1 = ctx.measureText(line1).width;
+                        ctx.font = '9px Inter, -apple-system, sans-serif';
+                        const textW2 = ctx.measureText(line2).width;
+                        const badgeW = Math.max(textW1, textW2) + 16;
+                        const badgeX = Math.max(8, Math.min(width - badgeW - 8, px - badgeW / 2));
+
+                        // Pill background & border
+                        ctx.fillStyle = isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.96)';
+                        ctx.strokeStyle = eventBorder;
+                        ctx.lineWidth = 1.5;
+                        drawRoundRect(ctx, badgeX, badgeY, badgeW, badgeH, 6);
+
+                        // Pill text: Title
+                        ctx.font = 'bold 10px Inter, -apple-system, sans-serif';
+                        ctx.fillStyle = eventBorder;
+                        ctx.textAlign = 'center';
+                        ctx.fillText(line1, badgeX + badgeW / 2, badgeY + 12);
+
+                        // Pill text: Subtitle (topography altitude angle & cardinal)
+                        ctx.font = '9px Inter, -apple-system, sans-serif';
+                        ctx.fillStyle = textMuted;
+                        ctx.fillText(line2, badgeX + badgeW / 2, badgeY + 23);
 
                         ctx.restore();
                     });

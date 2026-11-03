@@ -151,6 +151,13 @@ public partial class LeafletMapControl : UserControl
             BtnMyLocation.Foreground = tm.Accent;
         }
 
+        if (BtnAim3d != null)
+        {
+            BtnAim3d.Background = _isAim3dActive ? tm.ButtonActiveBackground : tm.ButtonInactiveBackground;
+            BtnAim3d.BorderBrush = _isAim3dActive ? tm.ButtonActiveBorder : tm.ButtonInactiveBorder;
+            BtnAim3d.Foreground = _isAim3dActive ? tm.ButtonActiveForeground : tm.TextPrimary;
+        }
+
         if (BtnAimReset != null)
         {
             BtnAimReset.Background = tm.ButtonInactiveBackground;
@@ -313,7 +320,11 @@ public partial class LeafletMapControl : UserControl
         try
         {
             _isAim3dActive = !_isAim3dActive;
+            var tm = ThemeManager.Current;
             BtnAim3d.Content = _isAim3dActive ? "🗺️ 2D" : "🏔️ 3D";
+            BtnAim3d.Background = _isAim3dActive ? tm.ButtonActiveBackground : tm.ButtonInactiveBackground;
+            BtnAim3d.BorderBrush = _isAim3dActive ? tm.ButtonActiveBorder : tm.ButtonInactiveBorder;
+            BtnAim3d.Foreground = _isAim3dActive ? tm.ButtonActiveForeground : tm.TextPrimary;
             ToolTipService.SetToolTip(BtnAim3d, _isAim3dActive ? "Switch to flat 2D top-down view" : "Switch to 3D terrain perspective view along azimuth");
 
             Interop.ExecuteJavaScriptVoid(@"
@@ -333,7 +344,11 @@ public partial class LeafletMapControl : UserControl
         _isAim3dActive = false;
         if (BtnAim3d != null)
         {
+            var tm = ThemeManager.Current;
             BtnAim3d.Content = "🏔️ 3D";
+            BtnAim3d.Background = tm.ButtonInactiveBackground;
+            BtnAim3d.BorderBrush = tm.ButtonInactiveBorder;
+            BtnAim3d.Foreground = tm.TextPrimary;
             ToolTipService.SetToolTip(BtnAim3d, "Toggle 3D terrain perspective view along azimuth");
         }
         if (HamburgerPanel != null)

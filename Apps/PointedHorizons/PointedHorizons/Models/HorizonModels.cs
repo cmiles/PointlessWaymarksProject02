@@ -52,4 +52,5 @@ public class HorizonSceneData
     public List<HorizonRidgeLayer> RidgeLayers { get; set; } = [];
     public List<string> TileKeysUsed { get; set; } = [];
     public double CalculationTimeMs { get; set; }
+    public CelestialDayData? Celestial { get; set; }
 }

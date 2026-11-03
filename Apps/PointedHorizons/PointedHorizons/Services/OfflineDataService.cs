@@ -60,6 +60,7 @@ public static class OfflineDataService
 
     private static string? _customPmTilesDir;
     private static string? _customDemDir;
+    private static string? _customGpxDir;
     private static string? _androidBaseDir;
     private static string? _selectedStyleFile;
     private static List<PmTileLayerConfig>? _cachedLayers;
@@ -189,6 +190,51 @@ public static class OfflineDataService
     }
 
     /// <summary>
+    /// Gets the default GPX/tracks folder on Photino (stored under MyDocuments\PointedHorizons\gpx).
+    /// </summary>
+    public static string DefaultPhotinoGpxDir
+    {
+        get
+        {
+            try
+            {
+                string docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                if (!string.IsNullOrEmpty(docs))
+                {
+                    return Path.Combine(docs, "PointedHorizons", "gpx");
+                }
+            }
+            catch { }
+            return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "gpx");
+        }
+    }
+
+    /// <summary>
+    /// Gets the active GPX / Tracks directory (.gpx, .tcx, .fit files).
+    /// On Android, located beside 'dem' and 'pmtiles' inside the PointedHorizons base folder.
+    /// On Photino, defaults to MyDocuments\PointedHorizons\gpx or user-configured folder.
+    /// </summary>
+    public static string GpxDirectory
+    {
+        get
+        {
+            EnsureSettingsLoaded();
+            if (IsAndroid)
+            {
+                string baseDir = GetAndroidBaseDirectory();
+                return Path.Combine(baseDir, "gpx");
+            }
+
+            if (!string.IsNullOrWhiteSpace(_customGpxDir))
+            {
+                return _customGpxDir;
+            }
+
+            return DefaultPhotinoGpxDir;
+        }
+    }
+
+    /// <summary>
     /// Initializes directories and loads persistent offline settings.
     /// </summary>
     public static void Initialize()
@@ -198,7 +244,7 @@ public static class OfflineDataService
     }
 
     /// <summary>
-    /// Ensures both pmtiles and dem directories exist if possible.
+    /// Ensures pmtiles, dem, and gpx directories exist if possible.
     /// </summary>
     public static void EnsureDirectoriesExist()
     {
@@ -229,19 +275,49 @@ public static class OfflineDataService
         {
             Debug.WriteLine($"[OfflineDataService] Ensure DEM dir error: {ex.Message}");
         }
+
+        try
+        {
+            string gpxDir = GpxDirectory;
+            if (!Directory.Exists(gpxDir))
+            {
+                Directory.CreateDirectory(gpxDir);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[OfflineDataService] Ensure GPX dir error: {ex.Message}");
+        }
     }
 
     /// <summary>
     /// Updates custom paths (desktop only).
     /// </summary>
-    public static void SetCustomPaths(string? pmtilesDir, string? demDir)
+    public static void SetCustomPaths(string? pmtilesDir, string? demDir, string? gpxDir = null)
     {
         if (!CanConfigurePaths) return;
 
         _customPmTilesDir = string.IsNullOrWhiteSpace(pmtilesDir) ? null : pmtilesDir.Trim();
         _customDemDir = string.IsNullOrWhiteSpace(demDir) ? null : demDir.Trim();
+        if (gpxDir != null)
+        {
+            _customGpxDir = string.IsNullOrWhiteSpace(gpxDir) ? null : gpxDir.Trim();
+        }
         _cachedLayers = null;
 
+        SaveSettings();
+        EnsureDirectoriesExist();
+        ConfigChanged?.Invoke(null, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Updates custom GPX / tracks directory (desktop only).
+    /// </summary>
+    public static void SetCustomGpxDirectory(string? gpxDir)
+    {
+        if (!CanConfigurePaths) return;
+
+        _customGpxDir = string.IsNullOrWhiteSpace(gpxDir) ? null : gpxDir.Trim();
         SaveSettings();
         EnsureDirectoriesExist();
         ConfigChanged?.Invoke(null, EventArgs.Empty);
@@ -256,6 +332,7 @@ public static class OfflineDataService
 
         _customPmTilesDir = null;
         _customDemDir = null;
+        _customGpxDir = null;
         _cachedLayers = null;
 
         SaveSettings();
@@ -659,6 +736,14 @@ public static class OfflineDataService
                         _customDemDir = dir.Trim();
                     }
                 }
+                if (root.TryGetProperty("gpxDir", out var gProp) && gProp.ValueKind == JsonValueKind.String)
+                {
+                    string? dir = gProp.GetString();
+                    if (!string.IsNullOrWhiteSpace(dir))
+                    {
+                        _customGpxDir = dir.Trim();
+                    }
+                }
             }
         }
         catch { }
@@ -673,7 +758,8 @@ public static class OfflineDataService
             var data = new Dictionary<string, string?>
             {
                 ["pmtilesDir"] = _customPmTilesDir,
-                ["demDir"] = _customDemDir
+                ["demDir"] = _customDemDir,
+                ["gpxDir"] = _customGpxDir
             };
             string json = JsonSerializer.Serialize(data);
             SetLocalStorageItem(SettingsStorageKey, json);

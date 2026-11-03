@@ -14,6 +14,7 @@
     let currentPointerLon = -110.9747;
     let isLiveTracking = false;
     let recordedPoints = []; // Array of [lon, lat]
+    let allImportedTracks = []; // Array of { id, name, color, isVisible, minLon, maxLon, minLat, maxLat, coordinates }
     let activeTerrainSourceId = null;
 
     let onPointerMovedCb = null;
@@ -161,6 +162,13 @@
                             coordinates: [[]]
                         }
                     }
+                },
+                "imported-tracks-source": {
+                    type: "geojson",
+                    data: {
+                        type: "FeatureCollection",
+                        features: []
+                    }
                 }
             },
             layers: [
@@ -184,6 +192,34 @@
                     source: "satellite-source",
                     layout: { visibility: "none" },
                     paint: { "raster-opacity": 1.0 }
+                },
+                {
+                    id: "imported-tracks-casing",
+                    type: "line",
+                    source: "imported-tracks-source",
+                    paint: {
+                        "line-color": "#000000",
+                        "line-width": 4.5,
+                        "line-opacity": 0.45
+                    },
+                    layout: {
+                        "line-cap": "round",
+                        "line-join": "round"
+                    }
+                },
+                {
+                    id: "imported-tracks-line",
+                    type: "line",
+                    source: "imported-tracks-source",
+                    paint: {
+                        "line-color": ["coalesce", ["get", "color"], "#3B82F6"],
+                        "line-width": 3.0,
+                        "line-opacity": 0.95
+                    },
+                    layout: {
+                        "line-cap": "round",
+                        "line-join": "round"
+                    }
                 },
                 {
                     id: "live-accuracy-fill",
@@ -296,6 +332,11 @@
             }
         });
 
+        // Dynamic viewport filtering for imported GPX/FIT tracks
+        map.on('moveend', function () {
+            refreshImportedTracksInView();
+        });
+
         map.on('load', async function () {
             isLoaded = true;
             if (pendingPmTilesConfig) {
@@ -308,6 +349,7 @@
             if (currentSelectedBaseLayer) {
                 window.fullScreenMap.setBaseLayer(currentSelectedBaseLayer);
             }
+            refreshImportedTracksInView();
             window.fullScreenMap.resize();
         });
     };
@@ -547,8 +589,8 @@
             }
         }
 
-        // Anchor layer beneath which PMTiles are rendered (so UI overlays like live accuracy stay on top)
-        const anchorLayer = map.getLayer('live-accuracy-fill') ? 'live-accuracy-fill' : undefined;
+        // Anchor layer beneath which PMTiles are rendered (so UI overlays like live accuracy and imported tracks stay on top)
+        const anchorLayer = map.getLayer('imported-tracks-casing') ? 'imported-tracks-casing' : (map.getLayer('live-accuracy-fill') ? 'live-accuracy-fill' : undefined);
 
         // Track PMTile files consumed by style sources
         const consumedFileNames = new Set();
@@ -602,23 +644,23 @@
                     if (!resolvedUrl) {
                         if (sCopy.type === 'vector') {
                             const vec = enabledLayers.find(l => !consumedFileNames.has(l.fileName) && !l.fileName.toLowerCase().includes('hillshade') && !l.fileName.toLowerCase().includes('raster')) ||
-                                        enabledLayers.find(l => !l.fileName.toLowerCase().includes('hillshade') && !l.fileName.toLowerCase().includes('raster')) ||
-                                        enabledLayers[0];
+                                enabledLayers.find(l => !l.fileName.toLowerCase().includes('hillshade') && !l.fileName.toLowerCase().includes('raster')) ||
+                                enabledLayers[0];
                             if (vec) {
                                 resolvedUrl = `pmtiles://${vec.url}`;
                                 consumedFileNames.add(vec.fileName);
                             }
                         } else if (sCopy.type === 'raster') {
                             const ras = enabledLayers.find(l => !consumedFileNames.has(l.fileName) && (l.fileName.toLowerCase().includes('hillshade') || l.fileName.toLowerCase().includes('raster'))) ||
-                                        enabledLayers.find(l => l.fileName.toLowerCase().includes('hillshade') || l.fileName.toLowerCase().includes('raster')) ||
-                                        enabledLayers[0];
+                                enabledLayers.find(l => l.fileName.toLowerCase().includes('hillshade') || l.fileName.toLowerCase().includes('raster')) ||
+                                enabledLayers[0];
                             if (ras) {
                                 resolvedUrl = `pmtiles://${ras.url}`;
                                 consumedFileNames.add(ras.fileName);
                             }
                         } else if (sCopy.type === 'raster-dem') {
                             const dem = enabledLayers.find(l => !consumedFileNames.has(l.fileName) && (l.fileName.toLowerCase().includes('terrain') || l.fileName.toLowerCase().includes('dem') || l.fileName.toLowerCase().includes('rgb'))) ||
-                                        enabledLayers.find(l => l.fileName.toLowerCase().includes('terrain') || l.fileName.toLowerCase().includes('dem') || l.fileName.toLowerCase().includes('rgb'));
+                                enabledLayers.find(l => l.fileName.toLowerCase().includes('terrain') || l.fileName.toLowerCase().includes('dem') || l.fileName.toLowerCase().includes('rgb'));
                             if (dem) {
                                 resolvedUrl = `pmtiles://${dem.url}`;
                                 consumedFileNames.add(dem.fileName);
@@ -929,6 +971,9 @@
         if (currentSelectedBaseLayer) {
             window.fullScreenMap.setBaseLayer(currentSelectedBaseLayer);
         }
+        if (allImportedTracks && allImportedTracks.length > 0) {
+            refreshImportedTracksInView();
+        }
     }
 
     function recoverMapState(centerLon, centerLat, zoom) {
@@ -1016,6 +1061,124 @@
             });
             return true;
         }
+    };
+
+    function refreshImportedTracksInView() {
+        if (!map || !isLoaded) return;
+        const source = map.getSource('imported-tracks-source');
+        if (!source) return;
+
+        if (!allImportedTracks || allImportedTracks.length === 0) {
+            source.setData({
+                type: "FeatureCollection",
+                features: []
+            });
+            return;
+        }
+
+        let bounds;
+        try {
+            bounds = map.getBounds();
+        } catch (e) {
+            return;
+        }
+        if (!bounds) return;
+
+        const west = bounds.getWest();
+        const east = bounds.getEast();
+        const south = bounds.getSouth();
+        const north = bounds.getNorth();
+
+        // 30% viewport buffer to eliminate popping during pan/zoom
+        const padLon = Math.abs(east - west) * 0.3;
+        const padLat = Math.abs(north - south) * 0.3;
+        const minViewLon = Math.min(west, east) - padLon;
+        const maxViewLon = Math.max(west, east) + padLon;
+        const minViewLat = Math.min(south, north) - padLat;
+        const maxViewLat = Math.max(south, north) + padLat;
+
+        const visibleFeatures = [];
+        for (let i = 0; i < allImportedTracks.length; i++) {
+            const t = allImportedTracks[i];
+            if (!t || t.isVisible === false) continue;
+            if (!t.coordinates || t.coordinates.length < 2) continue;
+
+            // Fast bounding box intersection test against buffered viewport
+            const overlaps = (t.maxLon >= minViewLon && t.minLon <= maxViewLon &&
+                              t.maxLat >= minViewLat && t.minLat <= maxViewLat);
+            if (overlaps) {
+                visibleFeatures.push({
+                    type: "Feature",
+                    properties: {
+                        id: t.id,
+                        name: t.name || t.fileName || "Track",
+                        color: t.color || "#3B82F6"
+                    },
+                    geometry: {
+                        type: "LineString",
+                        coordinates: t.coordinates
+                    }
+                });
+            }
+        }
+
+        source.setData({
+            type: "FeatureCollection",
+            features: visibleFeatures
+        });
+    }
+
+    window.fullScreenMap.setAvailableTracks = function (tracksData) {
+        if (typeof tracksData === 'string') {
+            try {
+                allImportedTracks = JSON.parse(tracksData);
+            } catch (e) {
+                console.warn("[FullScreenMap] Failed to parse tracksData JSON:", e);
+                allImportedTracks = [];
+            }
+        } else if (Array.isArray(tracksData)) {
+            allImportedTracks = tracksData;
+        } else {
+            allImportedTracks = [];
+        }
+        refreshImportedTracksInView();
+    };
+
+    window.fullScreenMap.zoomToTrack = function (minLon, minLat, maxLon, maxLat, trackId) {
+        if (!map) return;
+        if (typeof minLon !== 'number' || typeof minLat !== 'number' ||
+            typeof maxLon !== 'number' || typeof maxLat !== 'number' ||
+            isNaN(minLon) || isNaN(minLat) || isNaN(maxLon) || isNaN(maxLat)) {
+            return;
+        }
+
+        if (trackId && allImportedTracks) {
+            for (let i = 0; i < allImportedTracks.length; i++) {
+                if (allImportedTracks[i].id === trackId) {
+                    allImportedTracks[i].isVisible = true;
+                    break;
+                }
+            }
+        }
+
+        if (Math.abs(maxLon - minLon) < 0.0001 && Math.abs(maxLat - minLat) < 0.0001) {
+            map.flyTo({
+                center: [minLon, minLat],
+                zoom: 14,
+                essential: true
+            });
+        } else {
+            map.fitBounds([
+                [minLon, minLat],
+                [maxLon, maxLat]
+            ], {
+                padding: { top: 60, bottom: 60, left: 60, right: 60 },
+                maxZoom: 16,
+                duration: 900
+            });
+        }
+
+        setTimeout(refreshImportedTracksInView, 950);
     };
 
     window.fullScreenMap.resetView = function () {

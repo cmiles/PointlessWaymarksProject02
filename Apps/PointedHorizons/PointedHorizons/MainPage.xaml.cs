@@ -31,6 +31,15 @@ public partial class MainPage : Page
         if (FullScreenMapControlView != null)
         {
             FullScreenMapControlView.ConfigurePmTilesRequested += (s, e) => ShowPmTilesModal();
+            FullScreenMapControlView.OpenTracksPageRequested += (s, e) => SwitchTab("Tracks");
+        }
+        if (TracksControlView != null)
+        {
+            TracksControlView.TrackZoomRequested += (s, track) =>
+            {
+                SwitchTab("FullScreenMap");
+                FullScreenMapControlView?.ZoomToTrack(track);
+            };
         }
         if (LeafletMap != null)
         {
@@ -89,6 +98,9 @@ public partial class MainPage : Page
         // 1. Make the full screen map the first page on launch
         SwitchTab("FullScreenMap");
 
+        // Start background scan of GPX track folder
+        TrackIndexService.InitializeBackgroundScan();
+
         // Schedule background horizon calculations so data is ready when navigating to Horizon
         ViewModel.ScheduleHorizonGeneration(immediate: true);
         ViewModel.ScheduleFarthestVisibleFeatureCalculation();
@@ -139,6 +151,10 @@ public partial class MainPage : Page
         {
             BtnTabHorizon.Content = isSmall ? "🌄 Horizon" : "🌄 Horizon View";
         }
+        if (BtnTabTracks != null)
+        {
+            BtnTabTracks.Content = isSmall ? "📁 Tracks" : "📁 Tracks Library";
+        }
 
         HorizonViewer?.SetCompactMode(isSmall);
 
@@ -172,13 +188,23 @@ public partial class MainPage : Page
         {
             if (ViewFullScreenMapTab != null) ViewFullScreenMapTab.Visibility = Visibility.Visible;
             if (ViewHorizonTab != null) ViewHorizonTab.Visibility = Visibility.Collapsed;
+            if (ViewTracksTab != null) ViewTracksTab.Visibility = Visibility.Collapsed;
 
             FullScreenMapControlView?.ResizeMap();
+        }
+        else if (_currentTab == "Tracks")
+        {
+            if (ViewFullScreenMapTab != null) ViewFullScreenMapTab.Visibility = Visibility.Collapsed;
+            if (ViewHorizonTab != null) ViewHorizonTab.Visibility = Visibility.Collapsed;
+            if (ViewTracksTab != null) ViewTracksTab.Visibility = Visibility.Visible;
+
+            TracksControlView?.RefreshView();
         }
         else
         {
             if (ViewFullScreenMapTab != null) ViewFullScreenMapTab.Visibility = Visibility.Collapsed;
             if (ViewHorizonTab != null) ViewHorizonTab.Visibility = Visibility.Visible;
+            if (ViewTracksTab != null) ViewTracksTab.Visibility = Visibility.Collapsed;
 
             if (_isSmallScreen)
             {
@@ -276,6 +302,7 @@ public partial class MainPage : Page
     private void BtnTabMap_Click(object sender, RoutedEventArgs e) => SwitchTab("FullScreenMap");
     private void BtnTabAimMap_Click(object sender, RoutedEventArgs e) => SwitchTab("HorizonMap");
     private void BtnTabHorizon_Click(object sender, RoutedEventArgs e) => SwitchTab("Horizon");
+    private void BtnTabTracks_Click(object sender, RoutedEventArgs e) => SwitchTab("Tracks");
 
     #region Options Hamburger & Presets
 
@@ -469,15 +496,32 @@ public partial class MainPage : Page
         }
         if (OptionsDivider0 != null) OptionsDivider0.Background = tm.HeaderBorder;
         if (OptionsDivider1 != null) OptionsDivider1.Background = tm.HeaderBorder;
+        if (OptionsDividerSunMoon != null) OptionsDividerSunMoon.Background = tm.HeaderBorder;
         if (OptionsDivider2 != null) OptionsDivider2.Background = tm.HeaderBorder;
         if (OptionsDivider3 != null) OptionsDivider3.Background = tm.HeaderBorder;
         if (OptionsDivider4 != null) OptionsDivider4.Background = tm.HeaderBorder;
         if (TxtOptionsTitle != null) TxtOptionsTitle.Foreground = tm.TextPrimary;
         if (TxtSectionFov != null) TxtSectionFov.Foreground = tm.TextSecondary;
+        if (TxtSectionSunMoon != null) TxtSectionSunMoon.Foreground = tm.TextSecondary;
         if (TxtSectionUnits != null) TxtSectionUnits.Foreground = tm.TextSecondary;
         if (TxtSectionPresets != null) TxtSectionPresets.Foreground = tm.TextSecondary;
         if (TxtSectionOffline != null) TxtSectionOffline.Foreground = tm.TextSecondary;
         if (TxtSectionTheme != null) TxtSectionTheme.Foreground = tm.TextSecondary;
+
+        if (SunMoonCardBorder != null)
+        {
+            SunMoonCardBorder.Background = tm.ButtonInactiveBackground;
+            SunMoonCardBorder.BorderBrush = tm.ButtonInactiveBorder;
+        }
+        if (SunMoonCardDivider != null) SunMoonCardDivider.Background = tm.ButtonInactiveBorder;
+        if (TxtCelestialDate != null) TxtCelestialDate.Foreground = tm.TextSecondary;
+        if (TxtSunriseTopo != null) TxtSunriseTopo.Foreground = tm.TextPrimary;
+        if (TxtSunsetTopo != null) TxtSunsetTopo.Foreground = tm.TextPrimary;
+        if (TxtMoonriseTopo != null) TxtMoonriseTopo.Foreground = tm.TextPrimary;
+        if (TxtMoonsetTopo != null) TxtMoonsetTopo.Foreground = tm.TextPrimary;
+        if (TxtDaylightSummary != null) TxtDaylightSummary.Foreground = tm.TextSecondary;
+        if (TxtMoonPhase != null) TxtMoonPhase.Foreground = tm.TextSecondary;
+        if (TxtSunAstroComparison != null) TxtSunAstroComparison.Foreground = tm.TextSecondary;
 
         UpdateOptFovButtonsTheme(isDark);
 
@@ -517,6 +561,7 @@ public partial class MainPage : Page
         StyleTabBtn(BtnTabMap, _currentTab == "FullScreenMap");
         StyleTabBtn(BtnTabAimMap, _currentTab == "HorizonMap");
         StyleTabBtn(BtnTabHorizon, _currentTab == "Horizon");
+        StyleTabBtn(BtnTabTracks, _currentTab == "Tracks");
     }
 
     private void UpdatePresetButtonsTheme(bool isDark)

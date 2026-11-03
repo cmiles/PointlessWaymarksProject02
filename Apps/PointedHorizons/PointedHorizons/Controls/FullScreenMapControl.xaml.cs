@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using OpenSilver;
+using PointedHorizons.Models;
 using PointedHorizons.Services;
 using PointedHorizons.ViewModels;
 
@@ -29,6 +30,7 @@ public partial class FullScreenMapControl : UserControl
     private RecordedTrack? _currentTrack;
 
     public event EventHandler? ConfigurePmTilesRequested;
+    public event EventHandler? OpenTracksPageRequested;
 
     private double _lastPointerLat = 32.2226;
     private double _lastPointerLon = -110.9747;
@@ -56,6 +58,11 @@ public partial class FullScreenMapControl : UserControl
             {
                 await RefreshSavedTracksSummaryAsync();
             });
+        };
+
+        TrackIndexService.TracksChanged += (s, e) =>
+        {
+            Dispatcher.BeginInvoke(UpdateImportedTracksOnMap);
         };
 
         OfflineDataService.ConfigChanged += (s, e) =>
@@ -156,11 +163,55 @@ public partial class FullScreenMapControl : UserControl
             {
                 UpdatePmTilesLayers();
             }
+            UpdateImportedTracksOnMap();
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[FullScreenMapControl] Init error: {ex.Message}");
         }
+    }
+
+    public void UpdateImportedTracksOnMap()
+    {
+        if (!_isInitialized) return;
+        try
+        {
+            string tracksJson = TrackIndexService.GetMapTracksJson();
+            Interop.ExecuteJavaScriptVoid(@"
+                if (window.fullScreenMap && window.fullScreenMap.setAvailableTracks) {
+                    window.fullScreenMap.setAvailableTracks($0);
+                }
+            ", tracksJson);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[FullScreenMapControl] Error updating tracks on map: {ex.Message}");
+        }
+    }
+
+    public void ZoomToTrack(TrackFileInfo track)
+    {
+        if (track == null || !track.HasValidBounds) return;
+        try
+        {
+            TrackIndexService.SetTrackVisibility(track.Id, true);
+
+            Interop.ExecuteJavaScriptVoid(@"
+                if (window.fullScreenMap && window.fullScreenMap.zoomToTrack) {
+                    window.fullScreenMap.zoomToTrack($0, $1, $2, $3, $4);
+                }
+            ", track.MinLon, track.MinLat, track.MaxLon, track.MaxLat, track.Id);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[FullScreenMapControl] Error zooming to track: {ex.Message}");
+        }
+    }
+
+    private void BtnOpenTracksLibrary_Click(object sender, RoutedEventArgs e)
+    {
+        if (HamburgerPanel != null) HamburgerPanel.Visibility = Visibility.Collapsed;
+        OpenTracksPageRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private async Task CheckCrashRecoveryAndRefreshTracksAsync()
@@ -275,6 +326,27 @@ public partial class FullScreenMapControl : UserControl
         if (TxtTracksSummary != null) TxtTracksSummary.Foreground = tm.TextMuted;
         if (TxtRecordingStats != null) TxtRecordingStats.Foreground = tm.TextPrimary;
 
+        if (BtnHamburger != null)
+        {
+            BtnHamburger.Background = tm.ButtonInactiveBackground;
+            BtnHamburger.BorderBrush = tm.ButtonInactiveBorder;
+            BtnHamburger.Foreground = tm.TextPrimary;
+        }
+
+        if (BtnCurrentLocation != null)
+        {
+            BtnCurrentLocation.Background = tm.ButtonInactiveBackground;
+            BtnCurrentLocation.BorderBrush = tm.ButtonInactiveBorder;
+            BtnCurrentLocation.Foreground = tm.Accent;
+        }
+
+        if (BtnToggle3d != null)
+        {
+            BtnToggle3d.Background = _is3dActive ? tm.ButtonActiveBackground : tm.ButtonInactiveBackground;
+            BtnToggle3d.BorderBrush = _is3dActive ? tm.ButtonActiveBorder : tm.ButtonInactiveBorder;
+            BtnToggle3d.Foreground = _is3dActive ? tm.ButtonActiveForeground : tm.TextPrimary;
+        }
+
         if (BtnResetView != null)
         {
             BtnResetView.Background = tm.ButtonInactiveBackground;
@@ -376,7 +448,11 @@ public partial class FullScreenMapControl : UserControl
         try
         {
             _is3dActive = !_is3dActive;
+            var tm = ThemeManager.Current;
             BtnToggle3d.Content = _is3dActive ? "🗺️ 2D" : "🏔️ 3D";
+            BtnToggle3d.Background = _is3dActive ? tm.ButtonActiveBackground : tm.ButtonInactiveBackground;
+            BtnToggle3d.BorderBrush = _is3dActive ? tm.ButtonActiveBorder : tm.ButtonInactiveBorder;
+            BtnToggle3d.Foreground = _is3dActive ? tm.ButtonActiveForeground : tm.TextPrimary;
             ToolTipService.SetToolTip(BtnToggle3d, _is3dActive ? "Switch to flat 2D top-down view" : "Switch to 3D perspective terrain view (right-click / Ctrl-drag to orbit)");
 
             Interop.ExecuteJavaScriptVoid(@"
@@ -396,7 +472,11 @@ public partial class FullScreenMapControl : UserControl
         _is3dActive = false;
         if (BtnToggle3d != null)
         {
+            var tm = ThemeManager.Current;
             BtnToggle3d.Content = "🏔️ 3D";
+            BtnToggle3d.Background = tm.ButtonInactiveBackground;
+            BtnToggle3d.BorderBrush = tm.ButtonInactiveBorder;
+            BtnToggle3d.Foreground = tm.TextPrimary;
             ToolTipService.SetToolTip(BtnToggle3d, "Toggle 3D terrain perspective view (right-click / Ctrl-drag to orbit)");
         }
         if (HamburgerPanel != null)

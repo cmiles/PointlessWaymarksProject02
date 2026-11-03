@@ -1,0 +1,320 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using PointedHorizons.Models;
+
+namespace PointedHorizons.Services;
+
+/// <summary>
+/// Fast spatial index and disk cache manager for GPX, TCX, and FIT files.
+/// Scans on startup and when requested, updating an incremental cache so large directories
+/// load in milliseconds without re-parsing files.
+/// </summary>
+public static class TrackIndexService
+{
+    private static readonly List<TrackFileInfo> _tracks = new();
+    private static readonly object _syncLock = new();
+    private static bool _isScanning;
+    private static bool _initialized;
+
+    public static event EventHandler? TracksChanged;
+    public static event EventHandler? ScanCompleted;
+
+    public static IReadOnlyList<TrackFileInfo> Tracks
+    {
+        get
+        {
+            lock (_syncLock)
+            {
+                return _tracks.ToList();
+            }
+        }
+    }
+
+    public static bool IsScanning => _isScanning;
+
+    public static string CacheFilePath
+    {
+        get
+        {
+            try
+            {
+                string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                if (!string.IsNullOrEmpty(appData))
+                {
+                    return Path.Combine(appData, "PointedHorizons", "gpx_track_index.json");
+                }
+            }
+            catch { }
+            return "gpx_track_index.json";
+        }
+    }
+
+    /// <summary>
+    /// Initializes the track index on startup in the background.
+    /// </summary>
+    public static void InitializeBackgroundScan()
+    {
+        if (_initialized) return;
+        _initialized = true;
+
+        Task.Run(async () =>
+        {
+            try
+            {
+                await RefreshAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[TrackIndexService] Startup scan error: {ex.Message}");
+            }
+        });
+    }
+
+    /// <summary>
+    /// Scans the GPX directory, using the cache for unchanged files and parsing new/modified files.
+    /// </summary>
+    public static async Task RefreshAsync(bool forceFullRescan = false)
+    {
+        if (_isScanning) return;
+        _isScanning = true;
+
+        await Task.Run(async () =>
+        {
+            try
+            {
+                string gpxDir = OfflineDataService.GpxDirectory;
+                OfflineDataService.EnsureDirectoriesExist();
+
+                if (!Directory.Exists(gpxDir))
+                {
+                    lock (_syncLock) { _tracks.Clear(); }
+                    return;
+                }
+
+                // 1. Load cached index
+                var cachedMap = new Dictionary<string, TrackFileInfo>(StringComparer.OrdinalIgnoreCase);
+                if (!forceFullRescan)
+                {
+                    var cache = LoadCacheFromDisk();
+                    if (cache != null && cache.Entries != null)
+                    {
+                        foreach (var entry in cache.Entries)
+                        {
+                            if (!string.IsNullOrEmpty(entry.FilePath))
+                            {
+                                cachedMap[entry.FilePath] = entry;
+                            }
+                        }
+                    }
+                }
+
+                // 2. Discover all .gpx, .tcx, .fit files in the GPX directory
+                var supportedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ".gpx", ".tcx", ".fit"
+                };
+
+                var files = Directory.GetFiles(gpxDir)
+                    .Where(f => supportedExtensions.Contains(Path.GetExtension(f)))
+                    .ToList();
+
+                var updatedTracks = new List<TrackFileInfo>();
+                bool cacheChanged = false;
+
+                foreach (var file in files)
+                {
+                    try
+                    {
+                        var fi = new FileInfo(file);
+                        string quickHash = TrackParserService.ComputeQuickFileHash(file, fi.Length, fi.LastWriteTimeUtc);
+
+                        // Check cache hit
+                        if (cachedMap.TryGetValue(file, out var cachedItem) &&
+                            cachedItem.FileSizeBytes == fi.Length &&
+                            cachedItem.LastModifiedUtc == fi.LastWriteTimeUtc &&
+                            cachedItem.FileHash == quickHash &&
+                            cachedItem.SimplifiedCoordinates.Count > 0)
+                        {
+                            updatedTracks.Add(cachedItem);
+                        }
+                        else
+                        {
+                            // Cache miss or modified file: parse in background
+                            var parsed = await TrackParserService.ParseTrackFileAsync(file);
+                            if (parsed != null)
+                            {
+                                updatedTracks.Add(parsed);
+                                cacheChanged = true;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"[TrackIndexService] Error processing file '{file}': {ex.Message}");
+                    }
+                }
+
+                // Sort by date newest first
+                updatedTracks.Sort((a, b) =>
+                {
+                    DateTime ta = a.StartTimeUtc ?? a.LastModifiedUtc;
+                    DateTime tb = b.StartTimeUtc ?? b.LastModifiedUtc;
+                    return tb.CompareTo(ta);
+                });
+
+                lock (_syncLock)
+                {
+                    _tracks.Clear();
+                    _tracks.AddRange(updatedTracks);
+                }
+
+                if (cacheChanged || updatedTracks.Count != cachedMap.Count)
+                {
+                    SaveCacheToDisk(updatedTracks, gpxDir);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[TrackIndexService] Refresh error: {ex.Message}");
+            }
+            finally
+            {
+                _isScanning = false;
+            }
+        });
+
+        TracksChanged?.Invoke(null, EventArgs.Empty);
+        ScanCompleted?.Invoke(null, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Gets all active tracks whose bounding box overlaps the given coordinate viewport.
+    /// </summary>
+    public static List<TrackFileInfo> GetTracksInBounds(double minLon, double minLat, double maxLon, double maxLat, bool onlyVisible = true)
+    {
+        lock (_syncLock)
+        {
+            return _tracks.Where(t =>
+                (!onlyVisible || t.IsVisibleOnMap) &&
+                t.HasValidBounds &&
+                t.MaxLon >= minLon && t.MinLon <= maxLon &&
+                t.MaxLat >= minLat && t.MinLat <= maxLat
+            ).ToList();
+        }
+    }
+
+    /// <summary>
+    /// Toggles map visibility for an individual track.
+    /// </summary>
+    public static void SetTrackVisibility(string id, bool isVisible)
+    {
+        lock (_syncLock)
+        {
+            var t = _tracks.FirstOrDefault(x => x.Id == id);
+            if (t != null)
+            {
+                t.IsVisibleOnMap = isVisible;
+            }
+        }
+        TracksChanged?.Invoke(null, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Sets visibility for all tracks.
+    /// </summary>
+    public static void SetAllVisibility(bool isVisible)
+    {
+        lock (_syncLock)
+        {
+            foreach (var t in _tracks)
+            {
+                t.IsVisibleOnMap = isVisible;
+            }
+        }
+        TracksChanged?.Invoke(null, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Generates lightweight payload of visible tracks for MapLibre viewport rendering.
+    /// </summary>
+    public static object GetMapTracksPayload()
+    {
+        lock (_syncLock)
+        {
+            return _tracks.Select(t => new
+            {
+                id = t.Id,
+                name = t.TrackName,
+                fileName = t.FileName,
+                format = t.FileFormat,
+                color = t.DisplayColor,
+                isVisible = t.IsVisibleOnMap,
+                minLon = t.MinLon,
+                maxLon = t.MaxLon,
+                minLat = t.MinLat,
+                maxLat = t.MaxLat,
+                distance = t.TotalDistanceKm,
+                duration = t.FormattedDuration,
+                coordinates = t.SimplifiedCoordinates
+            }).ToList();
+        }
+    }
+
+    /// <summary>
+    /// Generates JSON string of all tracks for MapLibre viewport rendering.
+    /// </summary>
+    public static string GetMapTracksJson()
+    {
+        var payload = GetMapTracksPayload();
+        return JsonSerializer.Serialize(payload);
+    }
+
+    private static TrackIndexCache? LoadCacheFromDisk()
+    {
+        try
+        {
+            string path = CacheFilePath;
+            if (File.Exists(path))
+            {
+                string json = File.ReadAllText(path);
+                return JsonSerializer.Deserialize<TrackIndexCache>(json);
+            }
+        }
+        catch { }
+        return null;
+    }
+
+    private static void SaveCacheToDisk(List<TrackFileInfo> tracks, string gpxDir)
+    {
+        try
+        {
+            string path = CacheFilePath;
+            string? dir = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
+            var cache = new TrackIndexCache
+            {
+                CacheVersion = 1,
+                GpxDirectory = gpxDir,
+                LastScanTimeUtc = DateTime.UtcNow,
+                Entries = tracks
+            };
+
+            string json = JsonSerializer.Serialize(cache, new JsonSerializerOptions { WriteIndented = false });
+            File.WriteAllText(path, json);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[TrackIndexService] Save cache error: {ex.Message}");
+        }
+    }
+}

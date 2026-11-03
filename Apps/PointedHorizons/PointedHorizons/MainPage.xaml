@@ -49,6 +49,11 @@
                         <Button x:Name="BtnTabHorizon" Content="🌄 Horizon View" Click="BtnTabHorizon_Click"
                                 Style="{StaticResource PillButtonStyle}" Padding="10,4" Margin="1"
                                 FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="Ray-traced skyline horizon panorama" />
+
+                        <!-- 4. Tracks Tab -->
+                        <Button x:Name="BtnTabTracks" Content="📁 Tracks" Click="BtnTabTracks_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="10,4" Margin="1"
+                                FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="Import, view, and manage GPX, TCX, and FIT track files" />
                     </StackPanel>
                 </Border>
 
@@ -105,6 +110,11 @@
                 <!-- Bottom Leaflet Map Control (Observer Location & Aiming) -->
                 <controls:LeafletMapControl Grid.Row="2" x:Name="LeafletMap" />
             </Grid>
+
+            <!-- TAB 3: Tracks & GPX Files Manager -->
+            <Grid x:Name="ViewTracksTab" Visibility="Collapsed">
+                <controls:TracksManagerControl x:Name="TracksControlView" />
+            </Grid>
         </Grid>
 
         <!-- Options & Presets Hamburger Dropdown / Modal Overlay (Present on ALL pages) -->
@@ -148,6 +158,74 @@
                     </StackPanel>
 
                     <Border x:Name="OptionsDivider1" Height="1" Margin="0,0,0,10" />
+
+                    <!-- Topography-Compensated Sun & Moon Times -->
+                    <TextBlock x:Name="TxtSectionSunMoon" Text="☀️ SUN &amp; 🌙 MOON (TOPOGRAPHY COMPENSATED)" FontSize="10" FontWeight="Bold" Margin="0,0,0,6" />
+                    <Border x:Name="SunMoonCardBorder" CornerRadius="8" BorderThickness="1" Padding="10,8" Margin="0,0,0,10">
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock x:Name="TxtCelestialDate" Text="{Binding CelestialDateDisplay}"
+                                       FontSize="9.5" FontWeight="SemiBold" Margin="0,0,0,6" />
+
+                            <!-- Sun Row -->
+                            <Grid Margin="0,0,0,3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="☀️ Sun" FontWeight="Bold" FontSize="11" Margin="0,0,8,0" Foreground="#F59E0B" />
+                                <TextBlock x:Name="TxtDaylightSummary" Grid.Column="1" HorizontalAlignment="Right"
+                                           Text="{Binding TopographicDaylightDurationDisplay}" FontSize="9.5" />
+                            </Grid>
+
+                            <Grid Margin="0,0,0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Vertical">
+                                    <TextBlock Text="🌅 Topo Sunrise" FontSize="9" FontWeight="SemiBold" Opacity="0.8" />
+                                    <TextBlock x:Name="TxtSunriseTopo" Text="{Binding TopographicSunriseDisplay}" FontSize="10.5" FontWeight="Bold" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Right">
+                                    <TextBlock Text="🌇 Topo Sunset" FontSize="9" FontWeight="SemiBold" Opacity="0.8" HorizontalAlignment="Right" />
+                                    <TextBlock x:Name="TxtSunsetTopo" Text="{Binding TopographicSunsetDisplay}" FontSize="10.5" FontWeight="Bold" HorizontalAlignment="Right" />
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock x:Name="TxtSunAstroComparison" Text="{Binding AstronomicalSunTimesDisplay}"
+                                       FontSize="8.5" Opacity="0.75" Margin="0,2,0,5" />
+
+                            <Border x:Name="SunMoonCardDivider" Height="1" Margin="0,2,0,5" />
+
+                            <!-- Moon Row -->
+                            <Grid Margin="0,0,0,3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="🌙 Moon" FontWeight="Bold" FontSize="11" Margin="0,0,8,0" Foreground="#0284C7" />
+                                <TextBlock x:Name="TxtMoonPhase" Grid.Column="1" HorizontalAlignment="Right"
+                                           Text="{Binding MoonPhaseDisplay}" FontSize="9.5" />
+                            </Grid>
+
+                            <Grid Margin="0,0,0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Vertical">
+                                    <TextBlock Text="Topo Moonrise" FontSize="9" FontWeight="SemiBold" Opacity="0.8" />
+                                    <TextBlock x:Name="TxtMoonriseTopo" Text="{Binding TopographicMoonriseDisplay}" FontSize="10.5" FontWeight="Bold" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Right">
+                                    <TextBlock Text="Topo Moonset" FontSize="9" FontWeight="SemiBold" Opacity="0.8" HorizontalAlignment="Right" />
+                                    <TextBlock x:Name="TxtMoonsetTopo" Text="{Binding TopographicMoonsetDisplay}" FontSize="10.5" FontWeight="Bold" HorizontalAlignment="Right" />
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="OptionsDividerSunMoon" Height="1" Margin="0,0,0,10" />
 
                     <!-- 1. Elevation & Distance Units (Feet by default) -->
                     <TextBlock x:Name="TxtSectionUnits" Text="ELEVATION &amp; DISTANCE UNITS" FontSize="10" FontWeight="Bold" Margin="0,0,0,6" />

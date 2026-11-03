@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
@@ -289,6 +290,63 @@ public class MainViewModel : INotifyPropertyChanged
         ? $"DEM Tiles: {string.Join(", ", CurrentSceneData.TileKeysUsed)} ({CurrentSceneData.CalculationTimeMs:F0} ms)"
         : string.Empty;
 
+    // --- Celestial (Sun & Moon) Properties ---
+    private string _topographicSunriseDisplay = "—";
+    public string TopographicSunriseDisplay
+    {
+        get => _topographicSunriseDisplay;
+        private set { _topographicSunriseDisplay = value; OnPropertyChanged(); }
+    }
+
+    private string _topographicSunsetDisplay = "—";
+    public string TopographicSunsetDisplay
+    {
+        get => _topographicSunsetDisplay;
+        private set { _topographicSunsetDisplay = value; OnPropertyChanged(); }
+    }
+
+    private string _topographicMoonriseDisplay = "—";
+    public string TopographicMoonriseDisplay
+    {
+        get => _topographicMoonriseDisplay;
+        private set { _topographicMoonriseDisplay = value; OnPropertyChanged(); }
+    }
+
+    private string _topographicMoonsetDisplay = "—";
+    public string TopographicMoonsetDisplay
+    {
+        get => _topographicMoonsetDisplay;
+        private set { _topographicMoonsetDisplay = value; OnPropertyChanged(); }
+    }
+
+    private string _astronomicalSunTimesDisplay = string.Empty;
+    public string AstronomicalSunTimesDisplay
+    {
+        get => _astronomicalSunTimesDisplay;
+        private set { _astronomicalSunTimesDisplay = value; OnPropertyChanged(); }
+    }
+
+    private string _topographicDaylightDurationDisplay = string.Empty;
+    public string TopographicDaylightDurationDisplay
+    {
+        get => _topographicDaylightDurationDisplay;
+        private set { _topographicDaylightDurationDisplay = value; OnPropertyChanged(); }
+    }
+
+    private string _moonPhaseDisplay = "—";
+    public string MoonPhaseDisplay
+    {
+        get => _moonPhaseDisplay;
+        private set { _moonPhaseDisplay = value; OnPropertyChanged(); }
+    }
+
+    private string _celestialDateDisplay = string.Empty;
+    public string CelestialDateDisplay
+    {
+        get => _celestialDateDisplay;
+        private set { _celestialDateDisplay = value; OnPropertyChanged(); }
+    }
+
     public void UpdateLocationFromMap(double lat, double lon)
     {
         _locationPresetName = "Custom Location";
@@ -558,9 +616,13 @@ public class MainViewModel : INotifyPropertyChanged
 
             scene.ObserverName = LocationPresetName;
 
+            // Calculate celestial arcs and topography-compensated rise/set times
+            scene.Celestial = CelestialService.CalculateDayCelestialData(lat, lon, ObserverElevationM, DateTime.Today, scene.ProfilePoints);
+
             RunOnUIThread(() =>
             {
                 CurrentSceneData = scene;
+                UpdateCelestialDisplays(scene.Celestial);
                 UpdateSceneJson();
                 StatusMessage = $"360° panorama calculated in {scene.CalculationTimeMs:F0} ms. {scene.Peaks.Count} peaks detected around horizon.";
             });
@@ -581,9 +643,120 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    private void UpdateCelestialDisplays(CelestialDayData? c)
+    {
+        if (c == null)
+        {
+            TopographicSunriseDisplay = "—";
+            TopographicSunsetDisplay = "—";
+            TopographicMoonriseDisplay = "—";
+            TopographicMoonsetDisplay = "—";
+            AstronomicalSunTimesDisplay = string.Empty;
+            TopographicDaylightDurationDisplay = string.Empty;
+            MoonPhaseDisplay = "—";
+            CelestialDateDisplay = string.Empty;
+            return;
+        }
+
+        CelestialDateDisplay = c.LocalDateText;
+        TopographicSunriseDisplay = c.TopographicSunrise != null
+            ? $"{c.TopographicSunrise.TimeText} ({c.TopographicSunrise.AzimuthText})"
+            : "No sunrise today";
+
+        TopographicSunsetDisplay = c.TopographicSunset != null
+            ? $"{c.TopographicSunset.TimeText} ({c.TopographicSunset.AzimuthText})"
+            : "No sunset today";
+
+        TopographicMoonriseDisplay = c.TopographicMoonrise != null
+            ? $"{c.TopographicMoonrise.TimeText} ({c.TopographicMoonrise.AzimuthText})"
+            : "No moonrise today";
+
+        TopographicMoonsetDisplay = c.TopographicMoonset != null
+            ? $"{c.TopographicMoonset.TimeText} ({c.TopographicMoonset.AzimuthText})"
+            : "No moonset today";
+
+        if (c.AstronomicalSunrise != null && c.AstronomicalSunset != null)
+        {
+            AstronomicalSunTimesDisplay = $"Standard sea-level: {c.AstronomicalSunrise.TimeText} – {c.AstronomicalSunset.TimeText}";
+        }
+        else
+        {
+            AstronomicalSunTimesDisplay = string.Empty;
+        }
+
+        if (c.TopographicSunrise != null && c.TopographicSunset != null)
+        {
+            var span = c.TopographicSunset.LocalTime - c.TopographicSunrise.LocalTime;
+            if (span.TotalMinutes > 0)
+            {
+                int hrs = (int)span.TotalHours;
+                int mins = span.Minutes;
+                TopographicDaylightDurationDisplay = $"Daylight: {hrs}h {mins}m";
+            }
+            else
+            {
+                TopographicDaylightDurationDisplay = string.Empty;
+            }
+        }
+        else
+        {
+            TopographicDaylightDurationDisplay = string.Empty;
+        }
+
+        MoonPhaseDisplay = !string.IsNullOrEmpty(c.MoonPhaseName)
+            ? $"{c.MoonPhaseName} ({Math.Round(c.MoonIllumination * 100)}%)"
+            : "—";
+    }
+
     private void UpdateSceneJson()
     {
         if (CurrentSceneData == null) return;
+
+        object? celestialPayload = null;
+        if (CurrentSceneData.Celestial != null)
+        {
+            var c = CurrentSceneData.Celestial;
+            celestialPayload = new
+            {
+                localDateText = c.LocalDateText,
+                sunrise = c.TopographicSunrise != null ? new
+                {
+                    time = c.TopographicSunrise.TimeText,
+                    az = c.TopographicSunrise.Azimuth,
+                    alt = c.TopographicSunrise.Altitude,
+                    azText = c.TopographicSunrise.AzimuthText
+                } : null,
+                sunset = c.TopographicSunset != null ? new
+                {
+                    time = c.TopographicSunset.TimeText,
+                    az = c.TopographicSunset.Azimuth,
+                    alt = c.TopographicSunset.Altitude,
+                    azText = c.TopographicSunset.AzimuthText
+                } : null,
+                moonrise = c.TopographicMoonrise != null ? new
+                {
+                    time = c.TopographicMoonrise.TimeText,
+                    az = c.TopographicMoonrise.Azimuth,
+                    alt = c.TopographicMoonrise.Altitude,
+                    azText = c.TopographicMoonrise.AzimuthText
+                } : null,
+                moonset = c.TopographicMoonset != null ? new
+                {
+                    time = c.TopographicMoonset.TimeText,
+                    az = c.TopographicMoonset.Azimuth,
+                    alt = c.TopographicMoonset.Altitude,
+                    azText = c.TopographicMoonset.AzimuthText
+                } : null,
+                astroSunrise = c.AstronomicalSunrise?.TimeText,
+                astroSunset = c.AstronomicalSunset?.TimeText,
+                moonPhase = c.MoonPhaseName,
+                moonIllumination = c.MoonIllumination,
+                currentSun = c.CurrentSun.HasValue ? new { az = c.CurrentSun.Value.Azimuth, alt = c.CurrentSun.Value.Altitude } : null,
+                currentMoon = c.CurrentMoon.HasValue ? new { az = c.CurrentMoon.Value.Azimuth, alt = c.CurrentMoon.Value.Altitude } : null,
+                sunArc = c.SunArc.Select(p => new { az = p.Azimuth, alt = p.Altitude, hour = p.HourLocal }).ToList(),
+                moonArc = c.MoonArc.Select(p => new { az = p.Azimuth, alt = p.Altitude, hour = p.HourLocal }).ToList()
+            };
+        }
 
         var payload = new
         {
@@ -601,7 +774,8 @@ public class MainViewModel : INotifyPropertyChanged
             calculationTimeMs = CurrentSceneData.CalculationTimeMs,
             profilePoints = CurrentSceneData.ProfilePoints,
             peaks = CurrentSceneData.Peaks,
-            ridgeLayers = CurrentSceneData.RidgeLayers
+            ridgeLayers = CurrentSceneData.RidgeLayers,
+            celestial = celestialPayload
         };
 
         CurrentSceneJson = JsonSerializer.Serialize(payload, _jsonOptions);
