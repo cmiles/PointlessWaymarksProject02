@@ -138,6 +138,13 @@ public static class Combiner
         return outputFileName;
     }
 
+    public static async Task<string> StitchImagesVertical(List<string> imagesToStitch, string outputFileFullName,
+        int quality, IProgress<string> progress)
+    {
+        return await SingleColumnImageStitcher.StitchImageFilesVertical(imagesToStitch, outputFileFullName, quality,
+            progress);
+    }
+
     private static SKBitmap DrawImage(SKBitmap image, int maxWidth, int maxHeight)
     {
         var width = image.Width;
