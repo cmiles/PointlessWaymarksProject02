@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using PointedHorizons.Models;
 using PointedHorizons.Services;
 
@@ -42,6 +43,16 @@ public class MainViewModel : INotifyPropertyChanged
 
     public MainViewModel()
     {
+        CloseUpdateWindowCommand = new RelayCommand(() =>
+        {
+            if (!IsDownloadingUpdate)
+            {
+                IsUpdateWindowOpen = false;
+            }
+        });
+        StartUpdateCommand = new RelayCommand(async () => await StartUpdateAsync());
+        CheckForUpdatesManualCommand = new RelayCommand(async () => await CheckForUpdatesAsync(silent: false));
+
         _isDarkTheme = ThemeManager.Current.IsDark;
         ThemeManager.Current.ThemeChanged += (s, e) =>
         {
@@ -786,6 +797,379 @@ public class MainViewModel : INotifyPropertyChanged
         string[] cardinals = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
         int idx = (int)Math.Round(deg / 22.5) % 16;
         return cardinals[idx];
+    }
+
+    #region Application Updates
+
+    private bool _isUpdateWindowOpen;
+    public bool IsUpdateWindowOpen
+    {
+        get => _isUpdateWindowOpen;
+        set
+        {
+            if (SetProperty(ref _isUpdateWindowOpen, value))
+            {
+                OnPropertyChanged(nameof(UpdateWindowVisibility));
+            }
+        }
+    }
+
+    public System.Windows.Visibility UpdateWindowVisibility => IsUpdateWindowOpen ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+
+    private SoftwareReleaseEntry? _availableRelease;
+    public SoftwareReleaseEntry? AvailableRelease
+    {
+        get => _availableRelease;
+        set
+        {
+            if (SetProperty(ref _availableRelease, value))
+            {
+                ((RelayCommand)StartUpdateCommand)?.RaiseCanExecuteChanged();
+            }
+        }
+    }
+
+    private string _updateCurrentVersion = "Unknown";
+    public string UpdateCurrentVersion
+    {
+        get => _updateCurrentVersion;
+        set => SetProperty(ref _updateCurrentVersion, value);
+    }
+
+    private string _updateNewVersion = string.Empty;
+    public string UpdateNewVersion
+    {
+        get => _updateNewVersion;
+        set => SetProperty(ref _updateNewVersion, value);
+    }
+
+    private string _updateInstallerFileName = string.Empty;
+    public string UpdateInstallerFileName
+    {
+        get => _updateInstallerFileName;
+        set => SetProperty(ref _updateInstallerFileName, value);
+    }
+
+    private string _updateWindowTitle = "Pointed Horizons Updates";
+    public string UpdateWindowTitle
+    {
+        get => _updateWindowTitle;
+        set => SetProperty(ref _updateWindowTitle, value);
+    }
+
+    private string _updateDismissButtonText = "Close";
+    public string UpdateDismissButtonText
+    {
+        get => _updateDismissButtonText;
+        set => SetProperty(ref _updateDismissButtonText, value);
+    }
+
+    private System.Windows.Visibility _updateButtonVisibility = System.Windows.Visibility.Visible;
+    public System.Windows.Visibility UpdateButtonVisibility
+    {
+        get => _updateButtonVisibility;
+        set => SetProperty(ref _updateButtonVisibility, value);
+    }
+
+    private System.Windows.Visibility _updateInstallerInfoVisibility = System.Windows.Visibility.Visible;
+    public System.Windows.Visibility UpdateInstallerInfoVisibility
+    {
+        get => _updateInstallerInfoVisibility;
+        set => SetProperty(ref _updateInstallerInfoVisibility, value);
+    }
+
+    private string _updateStatusMessage = "A newer version of Pointed Horizons is available.";
+    public string UpdateStatusMessage
+    {
+        get => _updateStatusMessage;
+        set => SetProperty(ref _updateStatusMessage, value);
+    }
+
+    private string _updatePackageInstructionText = "Click 'Update Now' to download and install the update.";
+    public string UpdatePackageInstructionText
+    {
+        get => _updatePackageInstructionText;
+        set => SetProperty(ref _updatePackageInstructionText, value);
+    }
+
+    private System.Windows.Visibility _updateSavedLocationVisibility = System.Windows.Visibility.Collapsed;
+    public System.Windows.Visibility UpdateSavedLocationVisibility
+    {
+        get => _updateSavedLocationVisibility;
+        set => SetProperty(ref _updateSavedLocationVisibility, value);
+    }
+
+    private string _updateDownloadedPath = string.Empty;
+    public string UpdateDownloadedPath
+    {
+        get => _updateDownloadedPath;
+        set => SetProperty(ref _updateDownloadedPath, value);
+    }
+
+    private bool _isDownloadingUpdate;
+    public bool IsDownloadingUpdate
+    {
+        get => _isDownloadingUpdate;
+        set
+        {
+            if (SetProperty(ref _isDownloadingUpdate, value))
+            {
+                OnPropertyChanged(nameof(IsNotDownloadingUpdate));
+                OnPropertyChanged(nameof(DownloadSectionVisibility));
+                OnPropertyChanged(nameof(UpdateActionButtonText));
+                ((RelayCommand)StartUpdateCommand)?.RaiseCanExecuteChanged();
+                ((RelayCommand)CloseUpdateWindowCommand)?.RaiseCanExecuteChanged();
+            }
+        }
+    }
+
+    public bool IsNotDownloadingUpdate => !IsDownloadingUpdate;
+    public System.Windows.Visibility DownloadSectionVisibility => IsDownloadingUpdate ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+
+    private string _updateActionButtonText = "Download & Install Now";
+    public string UpdateActionButtonText
+    {
+        get => IsDownloadingUpdate ? "Downloading..." : _updateActionButtonText;
+        set => SetProperty(ref _updateActionButtonText, value);
+    }
+
+    private double _updateDownloadPercent;
+    public double UpdateDownloadPercent
+    {
+        get => _updateDownloadPercent;
+        set => SetProperty(ref _updateDownloadPercent, value);
+    }
+
+    private string _updateDownloadProgressText = "0%";
+    public string UpdateDownloadProgressText
+    {
+        get => _updateDownloadProgressText;
+        set => SetProperty(ref _updateDownloadProgressText, value);
+    }
+
+    private string _downloadOperationStatus = "Connecting...";
+    public string DownloadOperationStatus
+    {
+        get => _downloadOperationStatus;
+        set => SetProperty(ref _downloadOperationStatus, value);
+    }
+
+    private bool _isUpdateFailed;
+    public bool IsUpdateFailed
+    {
+        get => _isUpdateFailed;
+        set
+        {
+            if (SetProperty(ref _isUpdateFailed, value))
+            {
+                OnPropertyChanged(nameof(UpdateErrorVisibility));
+            }
+        }
+    }
+
+    public System.Windows.Visibility UpdateErrorVisibility => _isUpdateFailed ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+
+    private string _updateErrorMessage = string.Empty;
+    public string UpdateErrorMessage
+    {
+        get => _updateErrorMessage;
+        set => SetProperty(ref _updateErrorMessage, value);
+    }
+
+    public ICommand CloseUpdateWindowCommand { get; }
+    public ICommand StartUpdateCommand { get; }
+    public ICommand CheckForUpdatesManualCommand { get; }
+
+    public async Task CheckForUpdatesAsync(bool silent = true)
+    {
+        try
+        {
+            if (!silent)
+            {
+                System.Diagnostics.Debug.WriteLine("[Update] Checking online catalog for application updates...");
+                UpdateWindowTitle = "Checking for Updates...";
+                UpdateStatusMessage = "Connecting to update server and checking installed version...";
+                UpdateCurrentVersion = "Checking...";
+                UpdateNewVersion = "...";
+                UpdateInstallerFileName = string.Empty;
+                UpdateInstallerInfoVisibility = System.Windows.Visibility.Collapsed;
+                UpdateButtonVisibility = System.Windows.Visibility.Collapsed;
+                UpdateSavedLocationVisibility = System.Windows.Visibility.Collapsed;
+                UpdateDismissButtonText = "Close";
+                IsUpdateFailed = false;
+                UpdateErrorMessage = string.Empty;
+                IsDownloadingUpdate = false;
+                IsUpdateWindowOpen = true;
+            }
+
+            var result = await AppUpdateService.CheckForUpdatesAsync();
+
+            string probeSummary = result.ProbedDirectories.Count > 0
+                ? string.Join("; ", result.ProbedDirectories)
+                : "(none)";
+
+            AvailableRelease = result.AvailableRelease;
+            UpdateCurrentVersion = !string.IsNullOrEmpty(result.InstalledVersionString) ? result.InstalledVersionString : "Unversioned / Dev";
+            UpdateNewVersion = result.AvailableRelease?.ApplicationVersion ?? "Unavailable";
+            UpdateInstallerFileName = result.AvailableRelease?.InstallerFileName ?? string.Empty;
+            IsUpdateFailed = false;
+            UpdateErrorMessage = string.Empty;
+            IsDownloadingUpdate = false;
+            UpdateDownloadPercent = 0;
+            UpdateDownloadProgressText = "0%";
+            UpdateSavedLocationVisibility = System.Windows.Visibility.Collapsed;
+            UpdateDownloadedPath = string.Empty;
+
+            if (result.IsAndroid)
+            {
+                UpdatePackageInstructionText = "When you click 'Download Update Now', the signed APK will be downloaded to your device Downloads folder.";
+            }
+            else
+            {
+                UpdatePackageInstructionText = "When you click 'Update Now', the application will automatically download the installer, verify its checksum, launch the setup wizard, and close this app so files update cleanly.";
+            }
+
+            if (result.HasUpdate && result.AvailableRelease != null)
+            {
+                UpdateWindowTitle = "Pointed Horizons Update Available";
+                UpdateStatusMessage = $"A newer version of Pointed Horizons is available ({result.AvailableRelease.ApplicationVersion}).";
+                UpdateInstallerInfoVisibility = System.Windows.Visibility.Visible;
+                UpdateButtonVisibility = System.Windows.Visibility.Visible;
+                UpdateActionButtonText = result.IsAndroid ? "Download Update Now" : "Download & Install Now";
+                UpdateDismissButtonText = "Later / Dismiss";
+
+                ((RelayCommand)StartUpdateCommand)?.RaiseCanExecuteChanged();
+                ((RelayCommand)CloseUpdateWindowCommand)?.RaiseCanExecuteChanged();
+
+                IsUpdateWindowOpen = true;
+                System.Diagnostics.Debug.WriteLine($"[Update] Update available: {UpdateNewVersion} (Installed: {UpdateCurrentVersion}).");
+            }
+            else if (result.IsDevelopmentOrPortableMode)
+            {
+                UpdateWindowTitle = "Pointed Horizons Version Status";
+                UpdateStatusMessage = $"No installed version marker ({result.SearchPattern}) was found in probed directories:\n{probeSummary}\n\n" +
+                    (result.AvailableRelease != null
+                        ? $"The latest online release is {result.AvailableRelease.ApplicationVersion}."
+                        : "Could not find compatible releases in the online catalog.");
+
+                UpdateInstallerInfoVisibility = result.AvailableRelease != null ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+                UpdateButtonVisibility = result.AvailableRelease != null ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+                UpdateActionButtonText = result.IsAndroid ? "Download Latest APK" : "Download & Install Latest";
+                UpdateDismissButtonText = "Close";
+
+                ((RelayCommand)StartUpdateCommand)?.RaiseCanExecuteChanged();
+                ((RelayCommand)CloseUpdateWindowCommand)?.RaiseCanExecuteChanged();
+
+                if (!silent)
+                {
+                    IsUpdateWindowOpen = true;
+                }
+                System.Diagnostics.Debug.WriteLine($"[Update] {result.Message ?? "Running in unversioned development mode."}");
+            }
+            else
+            {
+                UpdateWindowTitle = "Pointed Horizons is Up to Date";
+                UpdateStatusMessage = result.IsBrowser
+                    ? result.Message ?? "Pointed Horizons is running live in the browser."
+                    : $"You are running the latest version of Pointed Horizons ({result.InstalledVersionString}). No update is required.";
+                UpdateInstallerInfoVisibility = System.Windows.Visibility.Collapsed;
+                UpdateButtonVisibility = System.Windows.Visibility.Collapsed;
+                UpdateDismissButtonText = "Close";
+
+                ((RelayCommand)CloseUpdateWindowCommand)?.RaiseCanExecuteChanged();
+
+                if (!silent)
+                {
+                    IsUpdateWindowOpen = true;
+                }
+                System.Diagnostics.Debug.WriteLine($"[Update] {result.Message ?? "Pointed Horizons is up to date."}");
+            }
+        }
+        catch (Exception ex)
+        {
+            string errMsg = $"Update check failed: {ex.Message}";
+            UpdateWindowTitle = "Update Check Failed";
+            UpdateStatusMessage = errMsg;
+            UpdateCurrentVersion = UpdateCurrentVersion ?? "Unknown";
+            UpdateNewVersion = "Unavailable";
+            UpdateInstallerInfoVisibility = System.Windows.Visibility.Collapsed;
+            UpdateButtonVisibility = System.Windows.Visibility.Collapsed;
+            UpdateDismissButtonText = "Close";
+            IsUpdateFailed = true;
+            UpdateErrorMessage = ex.Message;
+
+            if (!silent)
+            {
+                IsUpdateWindowOpen = true;
+            }
+            System.Diagnostics.Debug.WriteLine($"[Update] Error: {errMsg}");
+        }
+    }
+
+    public async Task StartUpdateAsync()
+    {
+        if (AvailableRelease == null || IsDownloadingUpdate) return;
+
+        IsDownloadingUpdate = true;
+        IsUpdateFailed = false;
+        UpdateErrorMessage = string.Empty;
+        UpdateDownloadPercent = 0;
+        UpdateDownloadProgressText = "0%";
+        UpdateSavedLocationVisibility = System.Windows.Visibility.Collapsed;
+        DownloadOperationStatus = "Connecting to update server...";
+
+        var progress = new Progress<(long bytesDownloaded, long totalBytes, double percent)>(p =>
+        {
+            UpdateDownloadPercent = Math.Round(p.percent, 1);
+            if (p.totalBytes > 0)
+            {
+                UpdateDownloadProgressText = $"{p.bytesDownloaded / (1024.0 * 1024.0):F1} MB / {p.totalBytes / (1024.0 * 1024.0):F1} MB ({p.percent:F0}%)";
+            }
+            else
+            {
+                UpdateDownloadProgressText = $"{p.bytesDownloaded / (1024.0 * 1024.0):F1} MB downloaded";
+            }
+        });
+
+        try
+        {
+            System.Diagnostics.Debug.WriteLine($"[Update] Downloading installer/APK: {AvailableRelease.InstallerFileName}...");
+            string downloadedPath = await AppUpdateService.DownloadAndExecuteInstallerAsync(
+                AvailableRelease,
+                progress,
+                status => DownloadOperationStatus = status
+            );
+
+            if (AppUpdateService.IsAndroidPlatform)
+            {
+                IsDownloadingUpdate = false;
+                UpdateDownloadedPath = downloadedPath;
+                UpdateSavedLocationVisibility = System.Windows.Visibility.Visible;
+                DownloadOperationStatus = "Download complete!";
+                UpdateActionButtonText = "Downloaded";
+                UpdateButtonVisibility = System.Windows.Visibility.Collapsed;
+                UpdateDismissButtonText = "Close";
+            }
+        }
+        catch (Exception ex)
+        {
+            IsDownloadingUpdate = false;
+            IsUpdateFailed = true;
+            UpdateErrorMessage = ex.Message;
+            System.Diagnostics.Debug.WriteLine($"[Update] Error during update installation: {ex.Message}");
+        }
+    }
+
+    #endregion
+
+    protected bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(storage, value))
+            return false;
+
+        storage = value;
+        OnPropertyChanged(propertyName);
+        return true;
     }
 
     protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)

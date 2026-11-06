@@ -1,0 +1,41 @@
+# 1. Define your paths
+$projectPath = ".\PointedHorizons\PointedHorizons.Photino\PointedHorizons.Photino.csproj"
+$targetDir = "M:\PointlessWaymarksPublications\PointedHorizonsWin"
+# Define the source path for the icon
+$iconPath = ".\PointedHorizons\PointedHorizons.Photino\app.ico" 
+
+# Capture start timestamp for publication versioning
+$version = Get-Date -Format "yyyy-MM-dd-HH-mm"
+Write-Host "Publish Version Timestamp: $version" -ForegroundColor Green
+
+# 2. Clear the target directory if it exists, or create it if it doesn't
+if (Test-Path $targetDir) {
+    Write-Host "Clearing existing files in $targetDir..." -ForegroundColor Yellow
+    Remove-Item -Path "$targetDir\*" -Recurse -Force -ErrorAction SilentlyContinue
+} else {
+    Write-Host "Creating target directory $targetDir..." -ForegroundColor Yellow
+    New-Item -ItemType Directory -Path $targetDir | Out-Null
+}
+
+# 3. Run the publish command directly to the output directory
+Write-Host "Publishing OpenSilver Photino app..." -ForegroundColor Cyan
+
+dotnet publish $projectPath -c Release -r win-x64 --self-contained true `
+    -p:DebugType=None `
+    -p:DebugSymbols=false `
+    -o $targetDir
+
+# 4. Copy the icon to the publish target directory
+if (Test-Path $iconPath) {
+    Write-Host "Copying app.ico to publish target..." -ForegroundColor Cyan
+    Copy-Item -Path $iconPath -Destination $targetDir -Force
+} else {
+    Write-Host "Warning: app.ico not found at $iconPath" -ForegroundColor Red
+}
+
+# 5. Compile the Inno Setup Installer with Version definition
+Write-Host "Compiling Inno Setup Installer with Version $version..." -ForegroundColor Cyan
+& "C:\Program Files\Inno Setup 7\ISCC.exe" "/DVersion=$version" ".\Publish-InnoSetupInstaller-PointedHorizonsWin.iss"
+
+if ($lastexitcode -ne 0) { throw ("Exec failed with exit code: " + $lastexitcode) }
+

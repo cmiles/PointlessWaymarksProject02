@@ -20,6 +20,8 @@
     <!-- Links & Accents -->
     <SolidColorBrush x:Key="HyperlinkBrush" Color="#0284C7" />
     <SolidColorBrush x:Key="SkyAccentBrush" Color="#0284C7" />
+    <SolidColorBrush x:Key="EmeraldAccentBrush" Color="#059669" />
+    <SolidColorBrush x:Key="RedAccentBrush" Color="#DC2626" />
 
     <!-- Map & Canvas Overlays -->
     <SolidColorBrush x:Key="MapOverlayBackgroundBrush" Color="#F0FFFFFF" />

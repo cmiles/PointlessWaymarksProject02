@@ -1,0 +1,334 @@
+<UserControl x:Class="PointedHorizons.Controls.CelestialInfoControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="500">
+
+    <Grid x:Name="DialogRoot">
+        <Border x:Name="CardBorder" BorderThickness="1" CornerRadius="12" Padding="14,12"
+                HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="500" Margin="8,10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <!-- Header -->
+                    <RowDefinition Height="Auto" />
+                    <!-- Divider -->
+                    <RowDefinition Height="Auto" />
+                    <!-- Mode Selector -->
+                    <RowDefinition Height="Auto" />
+                    <!-- Scrollable Content Area -->
+                    <RowDefinition Height="*" MaxHeight="520" />
+                    <!-- Footer Buttons -->
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- 1. Header Bar -->
+                <Grid Grid.Row="0" Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="☀️" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                        <TextBlock x:Name="TxtDialogTitle" Text="Sun &amp; Moon Horizon Times (±12h)" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <Button x:Name="BtnCloseDialog" Grid.Column="1" Content="✕" Click="BtnClose_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="8,3" FontSize="11" FontWeight="Bold"
+                            ToolTipService.ToolTip="Close" />
+                </Grid>
+
+                <Border x:Name="Divider1" Grid.Row="1" Height="1" Margin="0,0,0,8" />
+
+                <!-- 2. Location Source Selector (Segmented Bar) -->
+                <Grid Grid.Row="2" x:Name="PanelModeSelector" Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button x:Name="BtnOptionGps" Grid.Column="0" Content="📍 Current GPS Fix" Click="BtnOptionGps_Click"
+                            Style="{StaticResource PillButtonStyle}" Margin="0,0,4,0" Padding="10,6"
+                            FontSize="11" FontWeight="Bold" HorizontalAlignment="Stretch"
+                            ToolTipService.ToolTip="Acquire current satellite GPS coordinates" />
+
+                    <Button x:Name="BtnOptionMap" Grid.Column="1" Content="🗺️ Map Location" Click="BtnOptionMap_Click"
+                            Style="{StaticResource PillButtonStyle}" Margin="4,0,0,0" Padding="10,6"
+                            FontSize="11" FontWeight="Bold" HorizontalAlignment="Stretch"
+                            ToolTipService.ToolTip="Use current map coordinates" />
+                </Grid>
+
+                <!-- 3. Scrollable Main Content -->
+                <ScrollViewer Grid.Row="3" x:Name="ContentScrollViewer"
+                              VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                              Margin="0,0,0,8">
+                    <StackPanel Orientation="Vertical">
+
+                        <!-- Choice View (When first launched, prior to running calculation) -->
+                        <StackPanel x:Name="InitialChoicePanel" Orientation="Vertical" Margin="0,6,0,6">
+                            <TextBlock x:Name="TxtChoicePrompt"
+                                       Text="Choose a location source to calculate topography-compensated rise/set times for the past 12 hours and next 12 hours:"
+                                       FontSize="11" Margin="2,0,2,12" TextWrapping="Wrap" />
+
+                            <Border x:Name="BtnBigGpsCard" BorderThickness="1" CornerRadius="10" Padding="12,10" Margin="0,0,0,10"
+                                    Cursor="Hand" MouseLeftButtonDown="BtnOptionGps_Click">
+                                <StackPanel Orientation="Vertical">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                        <TextBlock Text="📍" FontSize="15" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                        <TextBlock x:Name="TxtBigGpsTitle" Text="Acquire Current GPS Fix" FontSize="12.5" FontWeight="Bold" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <TextBlock x:Name="TxtBigGpsSub" Text="Acquires live satellite GPS coordinates from your device and calculates topography compensation at your physical location."
+                                               FontSize="10" Margin="23,0,0,0" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border x:Name="BtnBigMapCard" BorderThickness="1" CornerRadius="10" Padding="12,10" Margin="0,0,0,6"
+                                    Cursor="Hand" MouseLeftButtonDown="BtnOptionMap_Click">
+                                <StackPanel Orientation="Vertical">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                        <TextBlock Text="🗺️" FontSize="15" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                        <TextBlock x:Name="TxtBigMapTitle" Text="Use Map Location" FontSize="12.5" FontWeight="Bold" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <TextBlock x:Name="TxtBigMapSub" Text="Calculates topography-compensated horizon times for the current map view location."
+                                               FontSize="10" Margin="23,0,0,0" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Loading & Status Indicator -->
+                        <StackPanel x:Name="LoadingPanel" Orientation="Vertical" Visibility="Collapsed" Margin="0,16,0,16">
+                            <ProgressBar x:Name="CalculationProgressBar" IsIndeterminate="True" Height="4" Margin="0,0,0,10" />
+                            <TextBlock x:Name="TxtLoadingStatus" Text="Acquiring GPS fix..."
+                                       FontSize="11.5" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,0,0,4" />
+                            <TextBlock x:Name="TxtLoadingSub" Text="Evaluating 360° terrain profile and celestial arcs..."
+                                       FontSize="10" HorizontalAlignment="Center" TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <!-- Results View -->
+                        <StackPanel x:Name="ResultsPanel" Orientation="Vertical" Visibility="Collapsed">
+
+                            <!-- Location & Window Summary Card -->
+                            <Border x:Name="SummaryCardBorder" BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="0,0,0,10">
+                                <StackPanel Orientation="Vertical">
+                                    <!-- Coords and Elevation -->
+                                    <Grid Margin="0,0,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="📍 " FontSize="11" VerticalAlignment="Center" />
+                                            <TextBlock x:Name="TxtSummaryCoords" Text="32.2226° N, 110.9747° W" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="⛰️ " FontSize="10.5" VerticalAlignment="Center" />
+                                            <TextBlock x:Name="TxtSummaryElevation" Text="2,840 ft (866 m)" FontSize="10.5" FontWeight="Bold" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- 24-Hour Window -->
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
+                                        <TextBlock Text="🕒 " FontSize="10" VerticalAlignment="Center" />
+                                        <TextBlock x:Name="TxtSummaryWindow" Text="8:30 PM yesterday → 8:30 PM today (±12h)" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    </StackPanel>
+
+                                    <!-- Moon Phase Snapshot -->
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="🌙 " FontSize="10" VerticalAlignment="Center" />
+                                        <TextBlock x:Name="TxtSummaryMoonPhase" Text="Moon: Waxing Crescent (14% illuminated)" FontSize="10" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Section Header -->
+                            <TextBlock x:Name="TxtSectionEvents" Text="HORIZON CELESTIAL EVENTS (±12 HOURS)" FontSize="9.5" FontWeight="Bold" Margin="2,0,0,6" />
+
+                            <!-- Horizon Events Container (Dynamically ordered from farthest past to most in the future) -->
+                            <StackPanel x:Name="EventsCardsContainer" Orientation="Vertical">
+
+                                <!-- 1. Sunrise Card -->
+                                <Border x:Name="CardSunrise" BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="0,0,0,8">
+                                <StackPanel Orientation="Vertical">
+                                    <!-- Event Header: Icon, Name & Countdown Badge -->
+                                    <Grid Margin="0,0,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="🌅" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                            <TextBlock x:Name="TxtSunriseTitle" Text="SUNRISE" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                        <Border x:Name="BadgeSunrise" Grid.Column="1" CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
+                                            <TextBlock x:Name="TxtSunriseBadge" Text="⏳ in 3h 15m" FontSize="10" FontWeight="Bold" />
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- PROMINENT Topography Time -->
+                                    <Grid Margin="0,2,0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="TxtSunriseTopoTime" Grid.Column="0" Text="6:48 AM" FontSize="17" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                        <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center">
+                                            <TextBlock x:Name="TxtSunriseTopoAz" Text="108° ESE  •  Ridge: +4.8°" FontSize="10.5" FontWeight="SemiBold" />
+                                            <TextBlock x:Name="TxtSunriseTopoTag" Text="★ Topography Horizon" FontSize="9" FontWeight="Bold" Foreground="#38BDF8" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Standard Flat Comparison & Delay Shift -->
+                                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                        <TextBlock x:Name="TxtSunriseStandard" Text="Standard: 6:22 AM" FontSize="10" VerticalAlignment="Center" />
+                                        <TextBlock Text="  •  " FontSize="9.5" VerticalAlignment="Center" Opacity="0.5" />
+                                        <TextBlock x:Name="TxtSunriseShift" Text="+26 min delay" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 2. Sunset Card -->
+                            <Border x:Name="CardSunset" BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="0,0,0,8">
+                                <StackPanel Orientation="Vertical">
+                                    <!-- Event Header: Icon, Name & Countdown Badge -->
+                                    <Grid Margin="0,0,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="🌇" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                            <TextBlock x:Name="TxtSunsetTitle" Text="SUNSET" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                        <Border x:Name="BadgeSunset" Grid.Column="1" CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
+                                            <TextBlock x:Name="TxtSunsetBadge" Text="⏳ in 10h 42m" FontSize="10" FontWeight="Bold" />
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- PROMINENT Topography Time -->
+                                    <Grid Margin="0,2,0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="TxtSunsetTopoTime" Grid.Column="0" Text="5:18 PM" FontSize="17" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                        <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center">
+                                            <TextBlock x:Name="TxtSunsetTopoAz" Text="247° WSW  •  Ridge: +3.2°" FontSize="10.5" FontWeight="SemiBold" />
+                                            <TextBlock x:Name="TxtSunsetTopoTag" Text="★ Topography Horizon" FontSize="9" FontWeight="Bold" Foreground="#38BDF8" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Standard Flat Comparison & Delay Shift -->
+                                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                        <TextBlock x:Name="TxtSunsetStandard" Text="Standard: 5:35 PM" FontSize="10" VerticalAlignment="Center" />
+                                        <TextBlock Text="  •  " FontSize="9.5" VerticalAlignment="Center" Opacity="0.5" />
+                                        <TextBlock x:Name="TxtSunsetShift" Text="-17 min earlier" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 3. Moonrise Card -->
+                            <Border x:Name="CardMoonrise" BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="0,0,0,8">
+                                <StackPanel Orientation="Vertical">
+                                    <!-- Event Header: Icon, Name & Countdown Badge -->
+                                    <Grid Margin="0,0,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="🌙" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                            <TextBlock x:Name="TxtMoonriseTitle" Text="MOONRISE" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                        <Border x:Name="BadgeMoonrise" Grid.Column="1" CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
+                                            <TextBlock x:Name="TxtMoonriseBadge" Text="Passed 2h ago" FontSize="10" FontWeight="Bold" />
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- PROMINENT Topography Time -->
+                                    <Grid Margin="0,2,0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="TxtMoonriseTopoTime" Grid.Column="0" Text="9:40 AM" FontSize="17" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                        <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center">
+                                            <TextBlock x:Name="TxtMoonriseTopoAz" Text="112° ESE  •  Ridge: +4.1°" FontSize="10.5" FontWeight="SemiBold" />
+                                            <TextBlock x:Name="TxtMoonriseTopoTag" Text="★ Topography Horizon" FontSize="9" FontWeight="Bold" Foreground="#38BDF8" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Standard Flat Comparison & Delay Shift -->
+                                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                        <TextBlock x:Name="TxtMoonriseStandard" Text="Standard: 9:18 AM" FontSize="10" VerticalAlignment="Center" />
+                                        <TextBlock Text="  •  " FontSize="9.5" VerticalAlignment="Center" Opacity="0.5" />
+                                        <TextBlock x:Name="TxtMoonriseShift" Text="+22 min delay" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 4. Moonset Card -->
+                            <Border x:Name="CardMoonset" BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="0,0,0,4">
+                                <StackPanel Orientation="Vertical">
+                                    <!-- Event Header: Icon, Name & Countdown Badge -->
+                                    <Grid Margin="0,0,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="🌘" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                            <TextBlock x:Name="TxtMoonsetTitle" Text="MOONSET" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                        <Border x:Name="BadgeMoonset" Grid.Column="1" CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
+                                            <TextBlock x:Name="TxtMoonsetBadge" Text="⏳ in 8h 20m" FontSize="10" FontWeight="Bold" />
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- PROMINENT Topography Time -->
+                                    <Grid Margin="0,2,0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="TxtMoonsetTopoTime" Grid.Column="0" Text="10:15 PM" FontSize="17" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                        <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center">
+                                            <TextBlock x:Name="TxtMoonsetTopoAz" Text="254° WSW  •  Ridge: +2.9°" FontSize="10.5" FontWeight="SemiBold" />
+                                            <TextBlock x:Name="TxtMoonsetTopoTag" Text="★ Topography Horizon" FontSize="9" FontWeight="Bold" Foreground="#38BDF8" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Standard Flat Comparison & Delay Shift -->
+                                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                        <TextBlock x:Name="TxtMoonsetStandard" Text="Standard: 10:31 PM" FontSize="10" VerticalAlignment="Center" />
+                                        <TextBlock Text="  •  " FontSize="9.5" VerticalAlignment="Center" Opacity="0.5" />
+                                        <TextBlock x:Name="TxtMoonsetShift" Text="-16 min earlier" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- 4. Footer Bar -->
+                <Grid Grid.Row="4" Margin="0,4,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button x:Name="BtnRefresh" Grid.Column="0" Content="↺ Refresh" Click="BtnRefresh_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Left"
+                            Padding="12,5" FontSize="11" FontWeight="SemiBold" Visibility="Collapsed"
+                            ToolTipService.ToolTip="Recalculate for current time and coordinates" />
+
+                    <Button x:Name="BtnCancelBottom" Grid.Column="1" Content="✕ Close" Click="BtnClose_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="14,5" FontSize="11" FontWeight="SemiBold"
+                            ToolTipService.ToolTip="Close" />
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
+

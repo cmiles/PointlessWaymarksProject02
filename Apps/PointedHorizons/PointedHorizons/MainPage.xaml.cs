@@ -66,17 +66,9 @@ public partial class MainPage : Page
         {
             UpdateTheme(ViewModel.IsDarkTheme);
         }
-        else if (e.PropertyName == nameof(MainViewModel.LocationPresetName))
-        {
-            UpdatePresetButtonsTheme(ViewModel.IsDarkTheme);
-        }
         else if (e.PropertyName == nameof(MainViewModel.IsMetric))
         {
             UpdateUnitsButtonsTheme(ViewModel.IsDarkTheme);
-        }
-        else if (e.PropertyName == nameof(MainViewModel.FieldOfView))
-        {
-            UpdateOptFovButtonsTheme(ViewModel.IsDarkTheme);
         }
     }
 
@@ -86,7 +78,7 @@ public partial class MainPage : Page
         {
             if (BtnOpenPmTilesConfig != null) BtnOpenPmTilesConfig.Visibility = Visibility.Collapsed;
             if (TxtSectionOffline != null) TxtSectionOffline.Visibility = Visibility.Collapsed;
-            if (OptionsDivider3 != null) OptionsDivider3.Visibility = Visibility.Collapsed;
+            if (OptionsDivider2 != null) OptionsDivider2.Visibility = Visibility.Collapsed;
             if (PmTilesConfigModal != null) PmTilesConfigModal.Visibility = Visibility.Collapsed;
             if (PmTilesModalBackdrop != null) PmTilesModalBackdrop.Visibility = Visibility.Collapsed;
         }
@@ -104,6 +96,55 @@ public partial class MainPage : Page
         // Schedule background horizon calculations so data is ready when navigating to Horizon
         ViewModel.ScheduleHorizonGeneration(immediate: true);
         ViewModel.ScheduleFarthestVisibleFeatureCalculation();
+
+        // Wire up GeoNames search modal
+        if (GeoNamesSearchModal != null)
+        {
+            GeoNamesSearchModal.CloseRequested += (s, ev) => HideGeoNamesSearchModal();
+            GeoNamesSearchModal.LocationSelected += (s, loc) =>
+            {
+                ViewModel.SetLocation(loc.Latitude, loc.Longitude, loc.TitleDisplay, panMap: true);
+                if (loc.ElevationM.HasValue && loc.ElevationM.Value > -500)
+                {
+                    ViewModel.ObserverElevationM = loc.ElevationM.Value;
+                }
+                FullScreenMapControlView?.CenterOn(loc.Latitude, loc.Longitude);
+                if (_currentTab == "Tracks")
+                {
+                    SwitchTab("FullScreenMap");
+                }
+                HideGeoNamesSearchModal();
+            };
+        }
+
+        // Wire up location search requested from full screen map menu
+        if (FullScreenMapControlView != null)
+        {
+            FullScreenMapControlView.SearchLocationRequested += (s, ev) => ShowGeoNamesSearchModal();
+            FullScreenMapControlView.CelestialInfoRequested += (s, ev) => ShowCelestialInfoModal(ev.Latitude, ev.Longitude);
+        }
+
+        if (LeafletMap != null)
+        {
+            LeafletMap.CelestialInfoRequested += (s, ev) => ShowCelestialInfoModal(ev.Latitude, ev.Longitude);
+        }
+
+        if (CelestialInfoModal != null)
+        {
+            CelestialInfoModal.CloseRequested += (s, ev) => HideCelestialInfoModal();
+        }
+
+        GeoNamesService.ConfigurationChanged += (s, ev) =>
+        {
+            Dispatcher.BeginInvoke(UpdateGeoNamesConfigDisplay);
+        };
+        UpdateGeoNamesConfigDisplay();
+
+        // Check for application updates silently on startup (Photino and Android)
+        if (!OperatingSystem.IsBrowser())
+        {
+            _ = ViewModel.CheckForUpdatesAsync(silent: true);
+        }
     }
 
     private void MainPage_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -138,22 +179,40 @@ public partial class MainPage : Page
             }
         }
 
-        // Tab button labels and availability (Aim Map sits BEFORE Horizon on small screens)
+        // Responsive header elements: On small screens, collapse top bar tabs to compact nav selector
+        if (TabsBorder != null)
+        {
+            TabsBorder.Visibility = isSmall ? Visibility.Collapsed : Visibility.Visible;
+        }
+        if (CompactNavBorder != null)
+        {
+            CompactNavBorder.Visibility = isSmall ? Visibility.Visible : Visibility.Collapsed;
+        }
+        if (BtnOptions != null)
+        {
+            BtnOptions.Content = isSmall ? "⚙️" : "⚙️ Options";
+        }
+        if (!isSmall)
+        {
+            CloseCompactNav();
+        }
+
+        // Tab button labels and availability (when header tabs are visible on large screens)
         if (BtnTabMap != null)
         {
-            BtnTabMap.Content = isSmall ? "🗺️ Map" : "🗺️ Full Screen Map";
+            BtnTabMap.Content = "🗺️ Full Screen Map";
         }
         if (BtnTabAimMap != null)
         {
-            BtnTabAimMap.Visibility = isSmall ? Visibility.Visible : Visibility.Collapsed;
+            BtnTabAimMap.Visibility = Visibility.Collapsed;
         }
         if (BtnTabHorizon != null)
         {
-            BtnTabHorizon.Content = isSmall ? "🌄 Horizon" : "🌄 Horizon View";
+            BtnTabHorizon.Content = "🌄 Horizon View";
         }
         if (BtnTabTracks != null)
         {
-            BtnTabTracks.Content = isSmall ? "📁 Tracks" : "📁 Tracks Library";
+            BtnTabTracks.Content = "📁 Tracks Library";
         }
 
         HorizonViewer?.SetCompactMode(isSmall);
@@ -296,7 +355,20 @@ public partial class MainPage : Page
             }
         }
 
+        if (BtnCompactNav != null)
+        {
+            BtnCompactNav.Content = _currentTab switch
+            {
+                "FullScreenMap" => "🗺️ Full Screen Map ▾",
+                "HorizonMap" => "🧭 Aim Map ▾",
+                "Horizon" => "🌄 Horizon View ▾",
+                "Tracks" => "📁 Tracks ▾",
+                _ => "🗺️ Map ▾"
+            };
+        }
+
         UpdateTabButtonsTheme(tm.IsDark);
+        UpdateCompactNavButtonsTheme(tm.IsDark);
     }
 
     private void BtnTabMap_Click(object sender, RoutedEventArgs e) => SwitchTab("FullScreenMap");
@@ -304,7 +376,57 @@ public partial class MainPage : Page
     private void BtnTabHorizon_Click(object sender, RoutedEventArgs e) => SwitchTab("Horizon");
     private void BtnTabTracks_Click(object sender, RoutedEventArgs e) => SwitchTab("Tracks");
 
-    #region Options Hamburger & Presets
+    private void BtnCompactNav_Click(object sender, RoutedEventArgs e)
+    {
+        if (CompactNavPanel == null) return;
+        bool willShow = CompactNavPanel.Visibility != Visibility.Visible;
+        CompactNavPanel.Visibility = willShow ? Visibility.Visible : Visibility.Collapsed;
+        if (CompactNavBackdrop != null)
+        {
+            CompactNavBackdrop.Visibility = willShow ? Visibility.Visible : Visibility.Collapsed;
+        }
+        if (willShow)
+        {
+            UpdateCompactNavButtonsTheme(ThemeManager.Current.IsDark);
+        }
+    }
+
+    private void BtnCloseCompactNav_Click(object sender, RoutedEventArgs e)
+    {
+        CloseCompactNav();
+    }
+
+    private void CloseCompactNav()
+    {
+        if (CompactNavPanel != null) CompactNavPanel.Visibility = Visibility.Collapsed;
+        if (CompactNavBackdrop != null) CompactNavBackdrop.Visibility = Visibility.Collapsed;
+    }
+
+    private void BtnNavPageMap_Click(object sender, RoutedEventArgs e)
+    {
+        SwitchTab("FullScreenMap");
+        CloseCompactNav();
+    }
+
+    private void BtnNavPageAimMap_Click(object sender, RoutedEventArgs e)
+    {
+        SwitchTab("HorizonMap");
+        CloseCompactNav();
+    }
+
+    private void BtnNavPageHorizon_Click(object sender, RoutedEventArgs e)
+    {
+        SwitchTab("Horizon");
+        CloseCompactNav();
+    }
+
+    private void BtnNavPageTracks_Click(object sender, RoutedEventArgs e)
+    {
+        SwitchTab("Tracks");
+        CloseCompactNav();
+    }
+
+    #region Options Hamburger (Application-Wide Settings)
 
     private void BtnOptions_Click(object sender, RoutedEventArgs e)
     {
@@ -317,7 +439,6 @@ public partial class MainPage : Page
             if (willShow)
             {
                 UpdateUnitsButtonsTheme(ThemeManager.Current.IsDark);
-                UpdatePresetButtonsTheme(ThemeManager.Current.IsDark);
             }
         }
     }
@@ -338,38 +459,6 @@ public partial class MainPage : Page
     {
         ViewModel.IsMetric = true;
         UpdateUnitsButtonsTheme(ThemeManager.Current.IsDark);
-    }
-
-    private void BtnOptFov15_Click(object sender, RoutedEventArgs e) => SetOptFocalLength(15.0);
-    private void BtnOptFov35_Click(object sender, RoutedEventArgs e) => SetOptFocalLength(35.0);
-    private void BtnOptFov50_Click(object sender, RoutedEventArgs e) => SetOptFocalLength(50.0);
-    private void BtnOptFov90_Click(object sender, RoutedEventArgs e) => SetOptFocalLength(90.0);
-
-    private void SetOptFocalLength(double mm)
-    {
-        double fov = MainViewModel.FocalLengthToFieldOfView(mm);
-        ViewModel.FieldOfView = fov;
-        UpdateOptFovButtonsTheme(ThemeManager.Current.IsDark);
-    }
-
-    private void UpdateOptFovButtonsTheme(bool isDark)
-    {
-        var tm = ThemeManager.Current;
-        double fl = MainViewModel.FieldOfViewToFocalLength(ViewModel.FieldOfView);
-
-        void StyleFovBtn(Button btn, bool active)
-        {
-            if (btn == null) return;
-            btn.Background = active ? tm.ButtonActiveBackground : tm.ButtonInactiveBackground;
-            btn.BorderBrush = active ? tm.ButtonActiveBorder : tm.ButtonInactiveBorder;
-            btn.Foreground = active ? tm.ButtonActiveForeground : tm.ButtonInactiveForeground;
-            btn.FontWeight = active ? FontWeights.Bold : FontWeights.SemiBold;
-        }
-
-        StyleFovBtn(BtnOptFov15, Math.Abs(fl - 15.0) < 2.0);
-        StyleFovBtn(BtnOptFov35, Math.Abs(fl - 35.0) < 3.0);
-        StyleFovBtn(BtnOptFov50, Math.Abs(fl - 50.0) < 4.0);
-        StyleFovBtn(BtnOptFov90, Math.Abs(fl - 90.0) < 6.0);
     }
 
     private void BtnToggleAppTheme_Click(object sender, RoutedEventArgs e)
@@ -414,6 +503,89 @@ public partial class MainPage : Page
     {
         if (PmTilesModalBackdrop != null) PmTilesModalBackdrop.Visibility = Visibility.Collapsed;
         if (PmTilesConfigModal != null) PmTilesConfigModal.Visibility = Visibility.Collapsed;
+    }
+
+    public void ShowGeoNamesSearchModal()
+    {
+        if (OptionsPanel != null) OptionsPanel.Visibility = Visibility.Collapsed;
+        if (OptionsBackdrop != null) OptionsBackdrop.Visibility = Visibility.Collapsed;
+
+        if (GeoNamesSearchBackdrop != null) GeoNamesSearchBackdrop.Visibility = Visibility.Visible;
+        if (GeoNamesSearchModal != null)
+        {
+            GeoNamesSearchModal.Visibility = Visibility.Visible;
+            GeoNamesSearchModal.FocusSearchInput();
+        }
+    }
+
+    public void HideGeoNamesSearchModal()
+    {
+        if (GeoNamesSearchBackdrop != null) GeoNamesSearchBackdrop.Visibility = Visibility.Collapsed;
+        if (GeoNamesSearchModal != null) GeoNamesSearchModal.Visibility = Visibility.Collapsed;
+    }
+
+    private void BtnCloseGeoNamesSearch_Click(object sender, RoutedEventArgs e)
+    {
+        HideGeoNamesSearchModal();
+    }
+
+    public void ShowCelestialInfoModal(double lat, double lon)
+    {
+        if (OptionsPanel != null) OptionsPanel.Visibility = Visibility.Collapsed;
+        if (OptionsBackdrop != null) OptionsBackdrop.Visibility = Visibility.Collapsed;
+
+        if (CelestialInfoBackdrop != null) CelestialInfoBackdrop.Visibility = Visibility.Visible;
+        if (CelestialInfoModal != null)
+        {
+            CelestialInfoModal.Visibility = Visibility.Visible;
+            CelestialInfoModal.Open(lat, lon);
+        }
+    }
+
+    public void HideCelestialInfoModal()
+    {
+        if (CelestialInfoBackdrop != null) CelestialInfoBackdrop.Visibility = Visibility.Collapsed;
+        if (CelestialInfoModal != null) CelestialInfoModal.Visibility = Visibility.Collapsed;
+    }
+
+    private void BtnCloseCelestialInfo_Click(object sender, RoutedEventArgs e)
+    {
+        HideCelestialInfoModal();
+    }
+
+    private void UpdateGeoNamesConfigDisplay()
+    {
+        bool isConfigured = GeoNamesService.IsConfigured;
+        if (TxtGeoNamesUsernameInput != null)
+        {
+            TxtGeoNamesUsernameInput.Text = GeoNamesService.Username ?? "";
+        }
+        if (TxtGeoNamesConfigStatus != null)
+        {
+            if (isConfigured)
+            {
+                TxtGeoNamesConfigStatus.Text = $"Active account: {GeoNamesService.Username}";
+                TxtGeoNamesConfigStatus.Foreground = ThemeManager.Current.Accent;
+            }
+            else
+            {
+                TxtGeoNamesConfigStatus.Text = "No username configured. Register free at geonames.org to enable location search.";
+                TxtGeoNamesConfigStatus.Foreground = ThemeManager.Current.TextMuted;
+            }
+        }
+        GeoNamesSearchModal?.UpdateAccountInfo();
+    }
+
+    private void BtnSaveGeoNamesUsername_Click(object sender, RoutedEventArgs e)
+    {
+        string username = TxtGeoNamesUsernameInput?.Text?.Trim() ?? "";
+        GeoNamesService.Username = username;
+        UpdateGeoNamesConfigDisplay();
+        if (GeoNamesService.IsConfigured && TxtGeoNamesConfigStatus != null)
+        {
+            TxtGeoNamesConfigStatus.Text = $"Saved! Active account: {GeoNamesService.Username}";
+            TxtGeoNamesConfigStatus.Foreground = ThemeManager.Current.Accent;
+        }
     }
 
     private void BtnOpenPmTilesConfig_Click(object sender, RoutedEventArgs e)
@@ -461,7 +633,7 @@ public partial class MainPage : Page
             TabsBorder.BorderBrush = tm.ButtonInactiveBorder;
         }
 
-        // Options button
+        // Header Buttons
         if (BtnOptions != null)
         {
             BtnOptions.Background = tm.ButtonInactiveBackground;
@@ -496,34 +668,35 @@ public partial class MainPage : Page
         }
         if (OptionsDivider0 != null) OptionsDivider0.Background = tm.HeaderBorder;
         if (OptionsDivider1 != null) OptionsDivider1.Background = tm.HeaderBorder;
-        if (OptionsDividerSunMoon != null) OptionsDividerSunMoon.Background = tm.HeaderBorder;
         if (OptionsDivider2 != null) OptionsDivider2.Background = tm.HeaderBorder;
         if (OptionsDivider3 != null) OptionsDivider3.Background = tm.HeaderBorder;
         if (OptionsDivider4 != null) OptionsDivider4.Background = tm.HeaderBorder;
+
         if (TxtOptionsTitle != null) TxtOptionsTitle.Foreground = tm.TextPrimary;
-        if (TxtSectionFov != null) TxtSectionFov.Foreground = tm.TextSecondary;
-        if (TxtSectionSunMoon != null) TxtSectionSunMoon.Foreground = tm.TextSecondary;
         if (TxtSectionUnits != null) TxtSectionUnits.Foreground = tm.TextSecondary;
-        if (TxtSectionPresets != null) TxtSectionPresets.Foreground = tm.TextSecondary;
         if (TxtSectionOffline != null) TxtSectionOffline.Foreground = tm.TextSecondary;
         if (TxtSectionTheme != null) TxtSectionTheme.Foreground = tm.TextSecondary;
-
-        if (SunMoonCardBorder != null)
+        if (TxtSectionGeoNames != null) TxtSectionGeoNames.Foreground = tm.TextSecondary;
+        if (TxtGeoNamesHelp != null) TxtGeoNamesHelp.Foreground = tm.TextMuted;
+        if (TxtGeoNamesUsernameInput != null)
         {
-            SunMoonCardBorder.Background = tm.ButtonInactiveBackground;
-            SunMoonCardBorder.BorderBrush = tm.ButtonInactiveBorder;
+            TxtGeoNamesUsernameInput.Background = tm.ButtonInactiveBackground;
+            TxtGeoNamesUsernameInput.Foreground = tm.TextPrimary;
+            TxtGeoNamesUsernameInput.BorderBrush = tm.ButtonInactiveBorder;
         }
-        if (SunMoonCardDivider != null) SunMoonCardDivider.Background = tm.ButtonInactiveBorder;
-        if (TxtCelestialDate != null) TxtCelestialDate.Foreground = tm.TextSecondary;
-        if (TxtSunriseTopo != null) TxtSunriseTopo.Foreground = tm.TextPrimary;
-        if (TxtSunsetTopo != null) TxtSunsetTopo.Foreground = tm.TextPrimary;
-        if (TxtMoonriseTopo != null) TxtMoonriseTopo.Foreground = tm.TextPrimary;
-        if (TxtMoonsetTopo != null) TxtMoonsetTopo.Foreground = tm.TextPrimary;
-        if (TxtDaylightSummary != null) TxtDaylightSummary.Foreground = tm.TextSecondary;
-        if (TxtMoonPhase != null) TxtMoonPhase.Foreground = tm.TextSecondary;
-        if (TxtSunAstroComparison != null) TxtSunAstroComparison.Foreground = tm.TextSecondary;
-
-        UpdateOptFovButtonsTheme(isDark);
+        if (BtnSaveGeoNamesUsername != null)
+        {
+            BtnSaveGeoNamesUsername.Background = tm.ButtonInactiveBackground;
+            BtnSaveGeoNamesUsername.BorderBrush = tm.ButtonInactiveBorder;
+            BtnSaveGeoNamesUsername.Foreground = tm.TextPrimary;
+        }
+        if (TxtSectionUpdates != null) TxtSectionUpdates.Foreground = tm.TextSecondary;
+        if (BtnCheckUpdates != null)
+        {
+            BtnCheckUpdates.Background = tm.ButtonInactiveBackground;
+            BtnCheckUpdates.BorderBrush = tm.ButtonInactiveBorder;
+            BtnCheckUpdates.Foreground = tm.Accent;
+        }
 
         if (BtnOpenPmTilesConfig != null)
         {
@@ -539,17 +712,41 @@ public partial class MainPage : Page
             BtnToggleAppTheme.Foreground = tm.ButtonInactiveForeground;
         }
 
-        // 5. Update Tab Buttons & Preset Buttons
+        // Compact Nav selector & popup styling
+        if (BtnCompactNav != null)
+        {
+            BtnCompactNav.Background = tm.ButtonInactiveBackground;
+            BtnCompactNav.BorderBrush = tm.ButtonInactiveBorder;
+            BtnCompactNav.Foreground = tm.TextPrimary;
+        }
+        if (CompactNavPanel != null)
+        {
+            CompactNavPanel.Background = tm.HeaderBackground;
+            CompactNavPanel.BorderBrush = tm.HeaderBorder;
+        }
+        if (CompactNavDivider != null) CompactNavDivider.Background = tm.HeaderBorder;
+        if (TxtCompactNavTitle != null) TxtCompactNavTitle.Foreground = tm.TextSecondary;
+        if (BtnCloseCompactNav != null)
+        {
+            BtnCloseCompactNav.Background = tm.ButtonInactiveBackground;
+            BtnCloseCompactNav.BorderBrush = tm.ButtonInactiveBorder;
+            BtnCloseCompactNav.Foreground = tm.TextPrimary;
+        }
+
+        GeoNamesSearchModal?.UpdateTheme(isDark);
+        CelestialInfoModal?.UpdateTheme(isDark);
+
+        // 5. Update Tab Buttons & Compact Nav Buttons
         UpdateTabButtonsTheme(isDark);
+        UpdateCompactNavButtonsTheme(isDark);
         UpdateUnitsButtonsTheme(isDark);
-        UpdatePresetButtonsTheme(isDark);
     }
 
     private void UpdateTabButtonsTheme(bool isDark)
     {
         var tm = ThemeManager.Current;
 
-        void StyleTabBtn(Button btn, bool isSelected)
+        void StyleTabBtn(Button? btn, bool isSelected)
         {
             if (btn == null) return;
             btn.Background = isSelected ? tm.ButtonActiveBackground : Brushes.Transparent;
@@ -564,73 +761,33 @@ public partial class MainPage : Page
         StyleTabBtn(BtnTabTracks, _currentTab == "Tracks");
     }
 
-    private void UpdatePresetButtonsTheme(bool isDark)
+    private void UpdateCompactNavButtonsTheme(bool isDark)
     {
-        string selectedName = ViewModel.LocationPresetName;
         var tm = ThemeManager.Current;
 
-        var selectedBg = tm.ButtonActiveBackground;
-        var selectedBorder = tm.ButtonActiveBorder;
-        var selectedFg = tm.ButtonActiveForeground;
-
-        var unselectedBg = tm.ButtonInactiveBackground;
-        var unselectedBorder = tm.ButtonInactiveBorder;
-        var unselectedFg = tm.ButtonInactiveForeground;
-
-        void StylePreset(Button btn, string presetName)
+        void StyleNavBtn(Button? btn, bool isSelected)
         {
             if (btn == null) return;
-            bool isSelected = string.Equals(selectedName, presetName, StringComparison.OrdinalIgnoreCase);
-
-            btn.Background = isSelected ? selectedBg : unselectedBg;
-            btn.BorderBrush = isSelected ? selectedBorder : unselectedBorder;
-            btn.Foreground = isSelected ? selectedFg : unselectedFg;
+            btn.Background = isSelected ? tm.ButtonActiveBackground : tm.ButtonInactiveBackground;
+            btn.BorderBrush = isSelected ? tm.ButtonActiveBorder : tm.ButtonInactiveBorder;
+            btn.Foreground = isSelected ? tm.ButtonActiveForeground : tm.ButtonInactiveForeground;
             btn.FontWeight = isSelected ? FontWeights.Bold : FontWeights.SemiBold;
         }
 
-        StylePreset(BtnPresetRincon, "Tucson East (Rincon Ridges), AZ");
-        StylePreset(BtnPresetLemmon, "Mount Lemmon, AZ");
-        StylePreset(BtnPresetRainier, "Mount Rainier (Paradise), WA");
-        StylePreset(BtnPresetCanyon, "Grand Canyon (Mather Point), AZ");
-        StylePreset(BtnPresetPikes, "Pikes Peak, CO");
-        StylePreset(BtnPresetYosemite, "Yosemite (Glacier Point), CA");
-        StylePreset(BtnPresetWashington, "Mount Washington, NH");
-    }
-
-    private void BtnPresetRincon_Click(object sender, RoutedEventArgs e) =>
-        ApplyPresetAndClose("Tucson East (Rincon Ridges), AZ");
-
-    private void BtnPresetLemmon_Click(object sender, RoutedEventArgs e) =>
-        ApplyPresetAndClose("Mount Lemmon, AZ");
-
-    private void BtnPresetRainier_Click(object sender, RoutedEventArgs e) =>
-        ApplyPresetAndClose("Mount Rainier (Paradise), WA");
-
-    private void BtnPresetCanyon_Click(object sender, RoutedEventArgs e) =>
-        ApplyPresetAndClose("Grand Canyon (Mather Point), AZ");
-
-    private void BtnPresetPikes_Click(object sender, RoutedEventArgs e) =>
-        ApplyPresetAndClose("Pikes Peak, CO");
-
-    private void BtnPresetYosemite_Click(object sender, RoutedEventArgs e) =>
-        ApplyPresetAndClose("Yosemite (Glacier Point), CA");
-
-    private void BtnPresetWashington_Click(object sender, RoutedEventArgs e) =>
-        ApplyPresetAndClose("Mount Washington, NH");
-
-    private void ApplyPresetAndClose(string name)
-    {
-        var preset = ViewModel.Presets.FirstOrDefault(p => p.Name == name);
-        if (preset != null)
-        {
-            ViewModel.ApplyPreset(preset);
-            UpdatePresetButtonsTheme(ThemeManager.Current.IsDark);
-        }
-        BtnCloseOptions_Click(this, new RoutedEventArgs());
+        StyleNavBtn(BtnNavPageMap, _currentTab == "FullScreenMap");
+        StyleNavBtn(BtnNavPageAimMap, _currentTab == "HorizonMap");
+        StyleNavBtn(BtnNavPageHorizon, _currentTab == "Horizon");
+        StyleNavBtn(BtnNavPageTracks, _currentTab == "Tracks");
     }
 
     private void BtnRefresh_Click(object sender, RoutedEventArgs e)
     {
         ViewModel.ScheduleHorizonGeneration(immediate: true);
+    }
+
+    private void BtnUpdates_Click(object sender, RoutedEventArgs e)
+    {
+        BtnCloseOptions_Click(this, new RoutedEventArgs());
+        _ = ViewModel.CheckForUpdatesAsync(silent: false);
     }
 }

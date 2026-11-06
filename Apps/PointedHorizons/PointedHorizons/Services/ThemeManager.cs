@@ -175,6 +175,9 @@ public sealed class ThemeManager : INotifyPropertyChanged
     public SolidColorBrush ButtonInactiveBorder => IsDark ? BrushDarkButtonBorder : BrushLightButtonBorder;
     public SolidColorBrush ButtonInactiveForeground => IsDark ? BrushDarkButtonFg : BrushLightButtonFg;
 
+    public SolidColorBrush InputBoxBackground => IsDark ? BrushDarkInputBg : BrushLightInputBg;
+    public SolidColorBrush InputBoxBorder => IsDark ? BrushDarkInputBorder : BrushLightInputBorder;
+
     public SolidColorBrush CardinalMajorBackground => IsDark ? BrushDarkCardinalMajorBg : BrushLightCardinalMajorBg;
     public SolidColorBrush CardinalMajorBorder => IsDark ? BrushDarkCardinalMajorBorder : BrushLightCardinalMajorBorder;
     public SolidColorBrush CardinalMajorForeground => IsDark ? BrushSkyAccentDark : BrushSkyAccentLight;
@@ -225,6 +228,11 @@ public sealed class ThemeManager : INotifyPropertyChanged
 
     public static readonly SolidColorBrush BrushLightButtonBorder = new(Color.FromArgb(255, 203, 213, 225)); // Slate 300 (#CBD5E1)
     public static readonly SolidColorBrush BrushDarkButtonBorder = new(Color.FromArgb(255, 51, 65, 85));    // Slate 700 (#334155)
+
+    public static readonly SolidColorBrush BrushLightInputBg = new(Color.FromArgb(255, 255, 255, 255));       // Pure White (#FFFFFF)
+    public static readonly SolidColorBrush BrushDarkInputBg = new(Color.FromArgb(255, 11, 15, 25));           // Deep Slate (#0B0F19)
+    public static readonly SolidColorBrush BrushLightInputBorder = new(Color.FromArgb(255, 148, 163, 184));   // Slate 400 (#94A3B8)
+    public static readonly SolidColorBrush BrushDarkInputBorder = new(Color.FromArgb(255, 71, 85, 105));      // Slate 600 (#475569)
 
     public static readonly SolidColorBrush BrushLightButtonFg = new(Color.FromArgb(255, 15, 23, 42));       // Slate 900 (#0F172A)
     public static readonly SolidColorBrush BrushDarkButtonFg = new(Color.FromArgb(255, 248, 250, 252));     // Slate 50 (#F8FAFC)

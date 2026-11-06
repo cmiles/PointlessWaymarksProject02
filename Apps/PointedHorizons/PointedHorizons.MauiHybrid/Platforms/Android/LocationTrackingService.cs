@@ -50,11 +50,13 @@ public class LocationTrackingService : Service, ILocationListener
         try
         {
             // Strictly request satellite GPS fixes to avoid cell tower and Wi-Fi fixes.
-            // 10-second minimum interval, 15-meter minimum distance filter provides high
-            // battery efficiency by allowing the GPS hardware receiver to enter low-duty cycle sleep between fixes.
+            // Power saver interval and 15m distance filter allow GPS hardware receiver to enter low-duty cycle sleep between fixes.
+            long intervalMs = GeolocationService.PowerSaverIntervalSeconds * 1000L;
+            float minDistanceM = 15f;
+
             if (_locationManager.IsProviderEnabled(LocationManager.GpsProvider))
             {
-                _locationManager.RequestLocationUpdates(LocationManager.GpsProvider, 10000, 15f, this);
+                _locationManager.RequestLocationUpdates(LocationManager.GpsProvider, intervalMs, minDistanceM, this);
             }
             else
             {

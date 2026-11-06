@@ -88,16 +88,58 @@ public static class TrackIndexService
         {
             try
             {
-                string gpxDir = OfflineDataService.GpxDirectory;
                 OfflineDataService.EnsureDirectoriesExist();
+                string gpxDir = OfflineDataService.GpxDirectory;
 
-                if (!Directory.Exists(gpxDir))
+                // 1. Ensure any tracks previously saved to localStorage are exported as GPX files on disk
+                try
+                {
+                    await TrackStorageService.EnsureAllSavedTracksExportedToGpxAsync();
+                }
+                catch { }
+
+                // 2. Discover all .gpx, .tcx, .fit files across all candidate directories
+                var supportedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ".gpx", ".tcx", ".fit"
+                };
+
+                var candidateDirs = OfflineDataService.GetGpxCandidateDirectories();
+                var files = new List<string>();
+                var seenFnames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                foreach (var dir in candidateDirs)
+                {
+                    try
+                    {
+                        if (Directory.Exists(dir))
+                        {
+                            foreach (var f in Directory.GetFiles(dir))
+                            {
+                                if (supportedExtensions.Contains(Path.GetExtension(f)))
+                                {
+                                    string fname = Path.GetFileName(f);
+                                    if (seenFnames.Add(fname))
+                                    {
+                                        files.Add(f);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"[TrackIndexService] Error scanning dir '{dir}': {ex.Message}");
+                    }
+                }
+
+                if (files.Count == 0 && !Directory.Exists(gpxDir))
                 {
                     lock (_syncLock) { _tracks.Clear(); }
                     return;
                 }
 
-                // 1. Load cached index
+                // 3. Load cached index
                 var cachedMap = new Dictionary<string, TrackFileInfo>(StringComparer.OrdinalIgnoreCase);
                 if (!forceFullRescan)
                 {
@@ -113,16 +155,6 @@ public static class TrackIndexService
                         }
                     }
                 }
-
-                // 2. Discover all .gpx, .tcx, .fit files in the GPX directory
-                var supportedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-                {
-                    ".gpx", ".tcx", ".fit"
-                };
-
-                var files = Directory.GetFiles(gpxDir)
-                    .Where(f => supportedExtensions.Contains(Path.GetExtension(f)))
-                    .ToList();
 
                 var updatedTracks = new List<TrackFileInfo>();
                 bool cacheChanged = false;
@@ -247,21 +279,30 @@ public static class TrackIndexService
     {
         lock (_syncLock)
         {
-            return _tracks.Select(t => new
+            return _tracks.Select(t =>
             {
-                id = t.Id,
-                name = t.TrackName,
-                fileName = t.FileName,
-                format = t.FileFormat,
-                color = t.DisplayColor,
-                isVisible = t.IsVisibleOnMap,
-                minLon = t.MinLon,
-                maxLon = t.MaxLon,
-                minLat = t.MinLat,
-                maxLat = t.MaxLat,
-                distance = t.TotalDistanceKm,
-                duration = t.FormattedDuration,
-                coordinates = t.SimplifiedCoordinates
+                t.EnsureElevationProfile();
+                return new
+                {
+                    id = t.Id,
+                    name = t.TrackName,
+                    fileName = t.FileName,
+                    format = t.FileFormat,
+                    color = t.DisplayColor,
+                    isVisible = t.IsVisibleOnMap,
+                    minLon = t.MinLon,
+                    maxLon = t.MaxLon,
+                    minLat = t.MinLat,
+                    maxLat = t.MaxLat,
+                    distance = t.TotalDistanceKm,
+                    duration = t.FormattedDuration,
+                    climb = t.TotalClimbM,
+                    descent = t.TotalDescentM,
+                    minElevation = t.MinElevationM,
+                    maxElevation = t.MaxElevationM,
+                    coordinates = t.SimplifiedCoordinates,
+                    profile = t.ElevationProfile
+                };
             }).ToList();
         }
     }

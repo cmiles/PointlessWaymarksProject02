@@ -50,10 +50,10 @@ public partial class TracksManagerControl : UserControl
         RefreshFolderDisplay();
         RefreshView();
 
-        // If index is empty and not yet scanning, trigger initial scan
-        if (TrackIndexService.Tracks.Count == 0 && !TrackIndexService.IsScanning)
+        // Trigger refresh scan when opening to discover newly exported or copied GPX files
+        if (!TrackIndexService.IsScanning)
         {
-            TrackIndexService.InitializeBackgroundScan();
+            _ = TrackIndexService.RefreshAsync(forceFullRescan: false);
         }
     }
 
@@ -255,6 +255,19 @@ public partial class TracksManagerControl : UserControl
             Foreground = isDark ? new SolidColorBrush(Color.FromArgb(255, 203, 213, 225)) : new SolidColorBrush(Color.FromArgb(255, 51, 65, 85))
         };
         bottomRow.Children.Add(txtDist);
+
+        if (track.TotalClimbM > 0 || track.TotalDescentM > 0)
+        {
+            var txtEle = new TextBlock
+            {
+                Text = $"⛰️ +{track.TotalClimbM:F0}m / -{track.TotalDescentM:F0}m",
+                FontSize = 10,
+                FontWeight = FontWeights.SemiBold,
+                Margin = new Thickness(0, 0, 10, 0),
+                Foreground = isDark ? new SolidColorBrush(Color.FromArgb(255, 16, 185, 129)) : new SolidColorBrush(Color.FromArgb(255, 5, 150, 105))
+            };
+            bottomRow.Children.Add(txtEle);
+        }
 
         if (!string.IsNullOrEmpty(track.FormattedDuration) && track.FormattedDuration != "00:00")
         {

@@ -11,18 +11,26 @@
     window.initDirectionsBar = function (container, initialAz, initialFov, isDarkTheme, onPanCallback) {
         if (!container) return;
 
+        if (currentInstance && typeof currentInstance.cleanup === 'function') {
+            try { currentInstance.cleanup(); } catch (e) { }
+            currentInstance = null;
+        }
+
         container.innerHTML = '';
         container.style.position = 'relative';
         container.style.width = '100%';
         container.style.height = '100%';
         container.style.overflow = 'hidden';
         container.style.userSelect = 'none';
+        container.style.webkitUserSelect = 'none';
+        container.style.touchAction = 'none';
 
         const canvas = document.createElement('canvas');
         canvas.style.display = 'block';
         canvas.style.width = '100%';
         canvas.style.height = '100%';
         canvas.style.cursor = 'grab';
+        canvas.style.touchAction = 'none';
         container.appendChild(canvas);
 
         const ctx = canvas.getContext('2d', { alpha: false });
@@ -232,14 +240,14 @@
         }
 
         // Mouse Drag to Pan Azimuth
-        canvas.addEventListener('mousedown', function (e) {
+        function onMouseDown(e) {
             isDragging = true;
             dragStartX = e.clientX;
             dragStartAz = centerAz;
             canvas.style.cursor = 'grabbing';
-        });
+        }
 
-        window.addEventListener('mousemove', function (e) {
+        function onMouseMove(e) {
             if (isDragging) {
                 const deltaX = e.clientX - dragStartX;
                 const rect = canvas.getBoundingClientRect();
@@ -257,9 +265,9 @@
                     onPanCallback(centerAz);
                 }
             }
-        });
+        }
 
-        window.addEventListener('mouseup', function () {
+        function onMouseUp() {
             if (isDragging) {
                 isDragging = false;
                 canvas.style.cursor = 'grab';
@@ -267,12 +275,84 @@
                     onPanCallback(centerAz);
                 }
             }
-        });
+        }
+
+        canvas.addEventListener('mousedown', onMouseDown);
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+
+        // Touch Drag to Pan Azimuth (Mobile)
+        let isTouchDragging = false;
+        let touchStartX = 0;
+        let touchStartAz = centerAz;
+
+        function onTouchStart(e) {
+            if (e.touches.length === 1) {
+                isTouchDragging = true;
+                touchStartX = e.touches[0].clientX;
+                touchStartAz = centerAz;
+                e.preventDefault();
+            }
+        }
+
+        function onTouchMove(e) {
+            if (isTouchDragging && e.touches.length === 1) {
+                const deltaX = e.touches[0].clientX - touchStartX;
+                const rect = canvas.getBoundingClientRect();
+                const deltaAz = -(deltaX / Math.max(1, rect.width)) * fov;
+                centerAz = normalizeAngle(touchStartAz + deltaAz);
+
+                render();
+
+                if (window.setHorizonParams) {
+                    window.setHorizonParams(centerAz);
+                }
+
+                if (onPanCallback) {
+                    onPanCallback(centerAz);
+                }
+                e.preventDefault();
+            }
+        }
+
+        function onTouchEnd(e) {
+            if (isTouchDragging) {
+                isTouchDragging = false;
+                if (onPanCallback) {
+                    onPanCallback(centerAz);
+                }
+            }
+        }
+
+        function onTouchCancel() {
+            isTouchDragging = false;
+        }
+
+        canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+        window.addEventListener('touchmove', onTouchMove, { passive: false });
+        window.addEventListener('touchend', onTouchEnd, { passive: true });
+        window.addEventListener('touchcancel', onTouchCancel, { passive: true });
 
         // ResizeObserver
         if (window.ResizeObserver && !container._directionsObserver) {
             container._directionsObserver = new ResizeObserver(() => render());
             container._directionsObserver.observe(container);
+        }
+
+        function cleanup() {
+            canvas.removeEventListener('mousedown', onMouseDown);
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onMouseUp);
+
+            canvas.removeEventListener('touchstart', onTouchStart);
+            window.removeEventListener('touchmove', onTouchMove);
+            window.removeEventListener('touchend', onTouchEnd);
+            window.removeEventListener('touchcancel', onTouchCancel);
+
+            if (container._directionsObserver) {
+                try { container._directionsObserver.disconnect(); } catch (e) { }
+                container._directionsObserver = null;
+            }
         }
 
         currentInstance = {
@@ -281,7 +361,8 @@
                 if (newFov != null) fov = Math.max(3, Math.min(160, newFov));
                 if (newDark != null) isDark = newDark;
                 render();
-            }
+            },
+            cleanup: cleanup
         };
 
         render();

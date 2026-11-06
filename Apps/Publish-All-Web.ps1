@@ -2,7 +2,7 @@
 .SYNOPSIS
     Runs all Web publish scripts in the Apps directory.
 .DESCRIPTION
-    Discovers and executes all Publish-*Web.ps1 scripts (HistoricTempests, PwImageMetadataViewer,
+    Discovers and executes all Publish-*Web.ps1 scripts (HistoricTempests, PointedHorizons, PwImageMetadataViewer,
     PwTrackTrimmer, WaterDaze, etc.), reporting progress and a final status summary.
 #>
 

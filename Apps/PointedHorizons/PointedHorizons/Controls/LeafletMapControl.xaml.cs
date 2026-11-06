@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using OpenSilver;
+using PointedHorizons.Models;
 using PointedHorizons.Services;
 using PointedHorizons.ViewModels;
 
@@ -16,6 +17,7 @@ public partial class LeafletMapControl : UserControl
     private bool _isUpdatingFromInternal;
 
     public event EventHandler? ConfigurePmTilesRequested;
+    public event EventHandler<CelestialLocationEventArgs>? CelestialInfoRequested;
 
     private MainViewModel? ViewModel => DataContext as MainViewModel;
 
@@ -172,6 +174,13 @@ public partial class LeafletMapControl : UserControl
             BtnMenuAimReset.Foreground = tm.Accent;
         }
 
+        if (BtnMenuCelestialInfo != null)
+        {
+            BtnMenuCelestialInfo.Background = tm.ButtonInactiveBackground;
+            BtnMenuCelestialInfo.BorderBrush = tm.ButtonInactiveBorder;
+            BtnMenuCelestialInfo.Foreground = tm.TextPrimary;
+        }
+
         if (BtnHamburger != null)
         {
             BtnHamburger.Background = tm.ButtonInactiveBackground;
@@ -187,6 +196,8 @@ public partial class LeafletMapControl : UserControl
 
         if (TxtMenuTitle != null) TxtMenuTitle.Foreground = tm.TextPrimary;
         if (TxtSectionLayer != null) TxtSectionLayer.Foreground = tm.TextSecondary;
+        if (TxtSectionPresets != null) TxtSectionPresets.Foreground = tm.TextSecondary;
+        if (TxtSectionViews != null) TxtSectionViews.Foreground = tm.TextSecondary;
         if (MenuDivider != null) MenuDivider.Background = overlayBorder;
         if (BtnCloseMenu != null)
         {
@@ -196,11 +207,15 @@ public partial class LeafletMapControl : UserControl
         }
 
         UpdateLayerButtons();
+        UpdatePresetButtonsTheme(isDark);
 
         if (ToolbarDivider != null)
         {
             ToolbarDivider.Background = overlayBorder;
         }
+
+        if (MenuDivider2 != null) MenuDivider2.Background = overlayBorder;
+        if (MenuDivider3 != null) MenuDivider3.Background = overlayBorder;
 
         if (TxtDirectionLabel != null) TxtDirectionLabel.Foreground = tm.TextSecondary;
         if (TxtAngleLabel != null) TxtAngleLabel.Foreground = tm.TextSecondary;
@@ -314,6 +329,18 @@ public partial class LeafletMapControl : UserControl
     }
 
     private bool _isAim3dActive;
+
+    private void BtnMenuCelestialInfo_Click(object sender, RoutedEventArgs e)
+    {
+        if (HamburgerPanel != null)
+        {
+            HamburgerPanel.Visibility = Visibility.Collapsed;
+        }
+
+        double lat = ViewModel?.Latitude ?? 32.2226;
+        double lon = ViewModel?.Longitude ?? -110.9747;
+        CelestialInfoRequested?.Invoke(this, new CelestialLocationEventArgs(lat, lon));
+    }
 
     private void BtnAim3d_Click(object sender, RoutedEventArgs e)
     {
@@ -534,11 +561,81 @@ public partial class LeafletMapControl : UserControl
         HamburgerPanel.Visibility = (HamburgerPanel.Visibility == Visibility.Visible)
             ? Visibility.Collapsed
             : Visibility.Visible;
+
+        if (HamburgerPanel.Visibility == Visibility.Visible)
+        {
+            UpdatePresetButtonsTheme(ThemeManager.Current.IsDark);
+        }
     }
 
     private void BtnCloseMenu_Click(object sender, RoutedEventArgs e)
     {
         if (HamburgerPanel != null) HamburgerPanel.Visibility = Visibility.Collapsed;
+    }
+
+    private void ApplyPresetAndClose(string name)
+    {
+        var preset = ViewModel?.Presets.FirstOrDefault(p => p.Name == name);
+        if (preset != null && ViewModel != null)
+        {
+            ViewModel.ApplyPreset(preset);
+            UpdatePresetButtonsTheme(ThemeManager.Current.IsDark);
+        }
+        if (HamburgerPanel != null) HamburgerPanel.Visibility = Visibility.Collapsed;
+    }
+
+    private void BtnPresetRincon_Click(object sender, RoutedEventArgs e) =>
+        ApplyPresetAndClose("Tucson East (Rincon Ridges), AZ");
+
+    private void BtnPresetLemmon_Click(object sender, RoutedEventArgs e) =>
+        ApplyPresetAndClose("Mount Lemmon, AZ");
+
+    private void BtnPresetRainier_Click(object sender, RoutedEventArgs e) =>
+        ApplyPresetAndClose("Mount Rainier (Paradise), WA");
+
+    private void BtnPresetGrandCanyon_Click(object sender, RoutedEventArgs e) =>
+        ApplyPresetAndClose("Grand Canyon (Mather Point), AZ");
+
+    private void BtnPresetPikes_Click(object sender, RoutedEventArgs e) =>
+        ApplyPresetAndClose("Pikes Peak, CO");
+
+    private void BtnPresetYosemite_Click(object sender, RoutedEventArgs e) =>
+        ApplyPresetAndClose("Yosemite (Glacier Point), CA");
+
+    private void BtnPresetWashington_Click(object sender, RoutedEventArgs e) =>
+        ApplyPresetAndClose("Mount Washington, NH");
+
+    private void UpdatePresetButtonsTheme(bool isDark)
+    {
+        string? selectedName = ViewModel?.LocationPresetName;
+        var tm = ThemeManager.Current;
+
+        var selectedBg = tm.ButtonActiveBackground;
+        var selectedBorder = tm.ButtonActiveBorder;
+        var selectedFg = tm.ButtonActiveForeground;
+
+        var unselectedBg = tm.ButtonInactiveBackground;
+        var unselectedBorder = tm.ButtonInactiveBorder;
+        var unselectedFg = tm.ButtonInactiveForeground;
+
+        void StylePreset(Button? btn, string presetName)
+        {
+            if (btn == null) return;
+            bool isSelected = string.Equals(selectedName, presetName, StringComparison.OrdinalIgnoreCase);
+
+            btn.Background = isSelected ? selectedBg : unselectedBg;
+            btn.BorderBrush = isSelected ? selectedBorder : unselectedBorder;
+            btn.Foreground = isSelected ? selectedFg : unselectedFg;
+            btn.FontWeight = isSelected ? FontWeights.Bold : FontWeights.SemiBold;
+        }
+
+        StylePreset(BtnPresetRincon, "Tucson East (Rincon Ridges), AZ");
+        StylePreset(BtnPresetLemmon, "Mount Lemmon, AZ");
+        StylePreset(BtnPresetRainier, "Mount Rainier (Paradise), WA");
+        StylePreset(BtnPresetGrandCanyon, "Grand Canyon (Mather Point), AZ");
+        StylePreset(BtnPresetPikes, "Pikes Peak, CO");
+        StylePreset(BtnPresetYosemite, "Yosemite (Glacier Point), CA");
+        StylePreset(BtnPresetWashington, "Mount Washington, NH");
     }
 
     private void BtnLayerTopo_Click(object sender, RoutedEventArgs e) => SetBaseLayer("topo");

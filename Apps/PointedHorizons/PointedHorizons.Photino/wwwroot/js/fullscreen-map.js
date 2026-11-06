@@ -18,6 +18,25 @@
     let activeTerrainSourceId = null;
 
     let onPointerMovedCb = null;
+    let onTrackClickedCb = null;
+
+    // Elevation Profile Card & Interactive Scrubbing State
+    let isMetricUnits = false;
+    let isDarkMode = true;
+    let profileCardElement = null;
+    let profileMapMarker = null;
+    let currentProfileTrack = null;
+    let currentProfilePoints = []; // Array of [distKm, eleM, lat, lon]
+
+    // Route Drawing & Trail Snapping State
+    let isRouteDrawingActive = false;
+    let snapToTrails = true;
+    let routeWaypoints = []; // Array of { lat, lon }
+    let routeLegs = []; // Array of Array of [lon, lat]
+    let routeMarkers = []; // Array of maplibregl.Marker instances
+    let onRouteUpdatedCb = null; // Callback: (distanceKm, pointCount, wpCount, isRouting)
+    let isRoutingInProgress = false;
+    let isRouteClickPending = false;
 
     // Register PMTiles protocol on maplibregl if available
     function registerPmtiles() {
@@ -75,6 +94,27 @@
         return el;
     }
 
+    function createWaypointMarkerElement(index, isStart, isEnd) {
+        const el = document.createElement('div');
+        el.className = 'ph-route-marker';
+        el.style.width = '24px';
+        el.style.height = '24px';
+        el.style.borderRadius = '50%';
+        el.style.backgroundColor = isStart ? '#10B981' : (isEnd ? '#EF4444' : '#8B5CF6');
+        el.style.border = '2px solid #FFFFFF';
+        el.style.boxShadow = '0 2px 6px rgba(0,0,0,0.45)';
+        el.style.display = 'flex';
+        el.style.alignItems = 'center';
+        el.style.justifyContent = 'center';
+        el.style.color = '#FFFFFF';
+        el.style.fontWeight = 'bold';
+        el.style.fontSize = '11px';
+        el.style.cursor = 'pointer';
+        el.style.userSelect = 'none';
+        el.innerText = index.toString();
+        return el;
+    }
+
     // Creates polygon points for a circle around lat/lon of given radius in meters
     function createAccuracyCircle(lat, lon, radiusMeters) {
         if (!radiusMeters || radiusMeters <= 0) return [[]];
@@ -93,7 +133,7 @@
         return [coords];
     }
 
-    window.fullScreenMap.init = function (container, options, onPointerMoved) {
+    window.fullScreenMap.init = function (container, options, onPointerMoved, onTrackClicked) {
         if (typeof container === 'string') {
             container = document.getElementById(container);
         }
@@ -106,6 +146,14 @@
         currentPointerLon = options.lon != null ? options.lon : -110.9747;
         const initialZoom = options.zoom != null ? options.zoom : 12;
         onPointerMovedCb = onPointerMoved;
+        if (onTrackClicked) onTrackClickedCb = onTrackClicked;
+        if (options.isMetric != null) isMetricUnits = options.isMetric === true;
+        if (options.isDark != null) isDarkMode = options.isDark === true;
+
+        profileCardElement = null;
+        profileMapMarker = null;
+
+        ensurePulseStyle();
 
         if (map) {
             try { map.remove(); } catch (e) { }
@@ -169,6 +217,16 @@
                         type: "FeatureCollection",
                         features: []
                     }
+                },
+                "route-draft-line-source": {
+                    type: "geojson",
+                    data: {
+                        type: "Feature",
+                        geometry: {
+                            type: "LineString",
+                            coordinates: []
+                        }
+                    }
                 }
             },
             layers: [
@@ -222,6 +280,48 @@
                     }
                 },
                 {
+                    id: "imported-tracks-hit",
+                    type: "line",
+                    source: "imported-tracks-source",
+                    paint: {
+                        "line-color": "#000000",
+                        "line-width": 20.0,
+                        "line-opacity": 0.001
+                    },
+                    layout: {
+                        "line-cap": "round",
+                        "line-join": "round"
+                    }
+                },
+                {
+                    id: "route-draft-casing",
+                    type: "line",
+                    source: "route-draft-line-source",
+                    paint: {
+                        "line-color": "#FFFFFF",
+                        "line-width": 6.5,
+                        "line-opacity": 0.85
+                    },
+                    layout: {
+                        "line-cap": "round",
+                        "line-join": "round"
+                    }
+                },
+                {
+                    id: "route-draft-line",
+                    type: "line",
+                    source: "route-draft-line-source",
+                    paint: {
+                        "line-color": "#8B5CF6",
+                        "line-width": 4.5,
+                        "line-opacity": 0.95
+                    },
+                    layout: {
+                        "line-cap": "round",
+                        "line-join": "round"
+                    }
+                },
+                {
                     id: "live-accuracy-fill",
                     type: "fill",
                     source: "live-accuracy-source",
@@ -241,6 +341,20 @@
                     }
                 },
                 {
+                    id: "gps-track-casing",
+                    type: "line",
+                    source: "gps-track-source",
+                    paint: {
+                        "line-color": "#FFFFFF",
+                        "line-width": 6.5,
+                        "line-opacity": 0.6
+                    },
+                    layout: {
+                        "line-cap": "round",
+                        "line-join": "round"
+                    }
+                },
+                {
                     id: "gps-track-layer",
                     type: "line",
                     source: "gps-track-source",
@@ -249,6 +363,20 @@
                         "line-width": 4.5,
                         "line-opacity": 0.9,
                         "line-dasharray": [1, 0]
+                    },
+                    layout: {
+                        "line-cap": "round",
+                        "line-join": "round"
+                    }
+                },
+                {
+                    id: "gps-track-hit",
+                    type: "line",
+                    source: "gps-track-source",
+                    paint: {
+                        "line-color": "#000000",
+                        "line-width": 22.0,
+                        "line-opacity": 0.001
                     },
                     layout: {
                         "line-cap": "round",
@@ -306,11 +434,45 @@
             anchor: 'center'
         });
 
-        // Map Click: Move pointer to clicked position if tracking is not active
+        // Track layers cursor & click detection
+        const trackLayers = ['imported-tracks-hit', 'imported-tracks-line', 'gps-track-hit', 'gps-track-layer'];
+        trackLayers.forEach(layerId => {
+            map.on('mouseenter', layerId, () => {
+                if (!isRouteDrawingActive) map.getCanvas().style.cursor = 'pointer';
+            });
+            map.on('mouseleave', layerId, () => {
+                if (!isRouteDrawingActive) map.getCanvas().style.cursor = '';
+            });
+        });
+
+        // Map Click: Handle track selection, route drawing, or move pointer if tracking is not active
         map.on('click', function (e) {
-            // Don't move pointer if user clicked on a control or marker
-            if (e.originalEvent && e.originalEvent.target && e.originalEvent.target.closest('.maplibregl-control-container, .ph-pointer-marker')) {
+            // Don't process if user clicked on a control, marker, or profile card
+            if (e.originalEvent && e.originalEvent.target && e.originalEvent.target.closest('.maplibregl-control-container, .ph-pointer-marker, .ph-route-marker, #ph-elevation-profile-card')) {
                 return;
+            }
+
+            if (isRouteDrawingActive) {
+                handleRouteMapClick(e.lngLat.lat, e.lngLat.lng);
+                return;
+            }
+
+            // Check if user clicked on a track feature (with 8px bounding buffer for easy touch/mouse targeting)
+            const bbox = [[e.point.x - 8, e.point.y - 8], [e.point.x + 8, e.point.y + 8]];
+            const trackFeatures = map.queryRenderedFeatures(bbox, {
+                layers: ['imported-tracks-hit', 'imported-tracks-line', 'gps-track-hit', 'gps-track-layer']
+            });
+
+            if (trackFeatures && trackFeatures.length > 0) {
+                const feat = trackFeatures[0];
+                if (feat.layer && feat.layer.id.startsWith('gps-track')) {
+                    window.fullScreenMap.showElevationProfile('active_gps_track');
+                    return;
+                } else if (feat.properties && feat.properties.id) {
+                    window.fullScreenMap.showElevationProfile(feat.properties.id);
+                    if (onTrackClickedCb) onTrackClickedCb(feat.properties.id);
+                    return;
+                }
             }
 
             if (!isLiveTracking) {
@@ -589,8 +751,8 @@
             }
         }
 
-        // Anchor layer beneath which PMTiles are rendered (so UI overlays like live accuracy and imported tracks stay on top)
-        const anchorLayer = map.getLayer('imported-tracks-casing') ? 'imported-tracks-casing' : (map.getLayer('live-accuracy-fill') ? 'live-accuracy-fill' : undefined);
+        // Anchor layer beneath which PMTiles are rendered (so UI overlays like live accuracy, drawn route, and imported tracks stay on top)
+        const anchorLayer = map.getLayer('imported-tracks-casing') ? 'imported-tracks-casing' : (map.getLayer('route-draft-casing') ? 'route-draft-casing' : (map.getLayer('live-accuracy-fill') ? 'live-accuracy-fill' : undefined));
 
         // Track PMTile files consumed by style sources
         const consumedFileNames = new Set();
@@ -974,6 +1136,12 @@
         if (allImportedTracks && allImportedTracks.length > 0) {
             refreshImportedTracksInView();
         }
+        if (routeWaypoints && routeWaypoints.length > 0) {
+            updateRouteDisplay();
+        }
+        if (isRouteDrawingActive && map && map.getCanvas()) {
+            map.getCanvas().style.cursor = 'crosshair';
+        }
     }
 
     function recoverMapState(centerLon, centerLat, zoom) {
@@ -1181,6 +1349,229 @@
         setTimeout(refreshImportedTracksInView, 950);
     };
 
+    function computeHaversineDistanceKm(coords) {
+        if (!coords || coords.length < 2) return 0;
+        let dist = 0;
+        for (let i = 0; i < coords.length - 1; i++) {
+            const p1 = coords[i];
+            const p2 = coords[i + 1];
+            const dLat = (p2[1] - p1[1]) * Math.PI / 180;
+            const dLon = (p2[0] - p1[0]) * Math.PI / 180;
+            const lat1 = p1[1] * Math.PI / 180;
+            const lat2 = p2[1] * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            dist += 6371 * c;
+        }
+        return dist;
+    }
+
+    async function routeBetweenPoints(p1, p2) {
+        if (!snapToTrails) {
+            return [[p1.lon, p1.lat, p1.ele || null], [p2.lon, p2.lat, p2.ele || null]];
+        }
+
+        try {
+            const url = `https://brouter.de/brouter?lonlats=${p1.lon.toFixed(6)},${p1.lat.toFixed(6)}|${p2.lon.toFixed(6)},${p2.lat.toFixed(6)}&profile=hiking-mountain&alternativeidx=0&format=geojson`;
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 7000);
+
+            const response = await fetch(url, { signal: controller.signal });
+            clearTimeout(timeoutId);
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data && data.features && data.features.length > 0 &&
+                    data.features[0].geometry && data.features[0].geometry.coordinates &&
+                    data.features[0].geometry.coordinates.length > 0) {
+                    return data.features[0].geometry.coordinates.map(c => [
+                        c[0],
+                        c[1],
+                        (c.length > 2 && typeof c[2] === 'number') ? c[2] : null
+                    ]);
+                }
+            }
+        } catch (e) {
+            console.warn("[FullScreenMap] Trail routing request failed or timed out, falling back to direct line:", e);
+        }
+
+        // Direct line fallback
+        return [[p1.lon, p1.lat, p1.ele || null], [p2.lon, p2.lat, p2.ele || null]];
+    }
+
+    function updateRouteDisplay() {
+        if (!map) return;
+
+        // 1. Refresh Waypoint Markers
+        routeMarkers.forEach(m => {
+            try { m.remove(); } catch (e) { }
+        });
+        routeMarkers = [];
+
+        for (let i = 0; i < routeWaypoints.length; i++) {
+            const wp = routeWaypoints[i];
+            const el = createWaypointMarkerElement(i + 1, i === 0, i === routeWaypoints.length - 1);
+            const m = new window.maplibregl.Marker({
+                element: el,
+                anchor: 'center'
+            }).setLngLat([wp.lon, wp.lat]).addTo(map);
+            routeMarkers.push(m);
+        }
+
+        // 2. Refresh GeoJSON Line
+        const allCoords = [];
+        for (const leg of routeLegs) {
+            for (const pt of leg) {
+                if (allCoords.length === 0 || allCoords[allCoords.length - 1][0] !== pt[0] || allCoords[allCoords.length - 1][1] !== pt[1]) {
+                    allCoords.push(pt);
+                }
+            }
+        }
+
+        if (map.getSource('route-draft-line-source')) {
+            map.getSource('route-draft-line-source').setData({
+                type: 'Feature',
+                geometry: {
+                    type: 'LineString',
+                    coordinates: allCoords
+                }
+            });
+        }
+    }
+
+    function notifyRouteUpdated() {
+        if (!onRouteUpdatedCb) return;
+
+        let allCoords = [];
+        for (const leg of routeLegs) {
+            for (const pt of leg) {
+                if (allCoords.length === 0 || allCoords[allCoords.length - 1][0] !== pt[0] || allCoords[allCoords.length - 1][1] !== pt[1]) {
+                    allCoords.push(pt);
+                }
+            }
+        }
+
+        const distKm = computeHaversineDistanceKm(allCoords);
+
+        let climbM = 0;
+        let descentM = 0;
+        let hasElevation = false;
+
+        for (let i = 1; i < allCoords.length; i++) {
+            const e1 = allCoords[i - 1][2];
+            const e2 = allCoords[i][2];
+            if (typeof e1 === 'number' && typeof e2 === 'number' && !isNaN(e1) && !isNaN(e2)) {
+                hasElevation = true;
+                const diff = e2 - e1;
+                if (diff > 0.6) climbM += diff;
+                else if (diff < -0.6) descentM += Math.abs(diff);
+            }
+        }
+
+        onRouteUpdatedCb(distKm, allCoords.length, routeWaypoints.length, isRoutingInProgress, climbM, descentM, hasElevation);
+    }
+
+    async function handleRouteMapClick(lat, lon) {
+        if (isRouteClickPending) return;
+        isRouteClickPending = true;
+
+        try {
+            const newWp = { lat, lon };
+            if (routeWaypoints.length === 0) {
+                routeWaypoints.push(newWp);
+                updateRouteDisplay();
+                notifyRouteUpdated();
+                return;
+            }
+
+            const prevWp = routeWaypoints[routeWaypoints.length - 1];
+            isRoutingInProgress = true;
+            notifyRouteUpdated();
+
+            const legCoords = await routeBetweenPoints(prevWp, newWp);
+            routeWaypoints.push(newWp);
+            routeLegs.push(legCoords);
+        } finally {
+            isRoutingInProgress = false;
+            isRouteClickPending = false;
+            updateRouteDisplay();
+            notifyRouteUpdated();
+        }
+    }
+
+    window.fullScreenMap.startRouteDrawing = function (onRouteUpdated) {
+        isRouteDrawingActive = true;
+        onRouteUpdatedCb = onRouteUpdated;
+        if (map && map.getCanvas()) {
+            map.getCanvas().style.cursor = 'crosshair';
+        }
+        updateRouteDisplay();
+        notifyRouteUpdated();
+    };
+
+    window.fullScreenMap.exitRouteDrawing = function () {
+        isRouteDrawingActive = false;
+        if (map && map.getCanvas()) {
+            map.getCanvas().style.cursor = '';
+        }
+    };
+
+    window.fullScreenMap.isRouteDrawing = function () {
+        return isRouteDrawingActive;
+    };
+
+    window.fullScreenMap.setRouteSnapToTrails = function (enabled) {
+        snapToTrails = enabled === true;
+    };
+
+    window.fullScreenMap.isRouteSnapToTrails = function () {
+        return snapToTrails;
+    };
+
+    window.fullScreenMap.undoLastRoutePoint = function () {
+        if (routeWaypoints.length > 0) {
+            routeWaypoints.pop();
+            if (routeLegs.length > 0) {
+                routeLegs.pop();
+            }
+            updateRouteDisplay();
+            notifyRouteUpdated();
+        }
+    };
+
+    window.fullScreenMap.reverseRoute = function () {
+        if (routeWaypoints.length > 1) {
+            routeWaypoints.reverse();
+            routeLegs = routeLegs.reverse().map(leg => leg.slice().reverse());
+            updateRouteDisplay();
+            notifyRouteUpdated();
+        }
+    };
+
+    window.fullScreenMap.clearRoute = function () {
+        routeWaypoints = [];
+        routeLegs = [];
+        updateRouteDisplay();
+        notifyRouteUpdated();
+    };
+
+    window.fullScreenMap.getRouteCoordinatesJson = function () {
+        const allCoords = [];
+        for (const leg of routeLegs) {
+            for (const pt of leg) {
+                if (allCoords.length === 0 || allCoords[allCoords.length - 1][0] !== pt[0] || allCoords[allCoords.length - 1][1] !== pt[1]) {
+                    allCoords.push(pt);
+                }
+            }
+        }
+        return JSON.stringify(allCoords);
+    };
+
+    window.fullScreenMap.getRouteWaypointsJson = function () {
+        return JSON.stringify(routeWaypoints.map(wp => [wp.lon, wp.lat]));
+    };
+
     window.fullScreenMap.resetView = function () {
         // Guaranteed 100% recovery by tearing down and creating a fresh map instance
         recreateMap(currentPointerLat, currentPointerLon);
@@ -1196,6 +1587,535 @@
                 try { map.resize(); } catch (e) { }
             }, 100);
         }
+    };
+
+    // =========================================================================
+    // Elevation Profile Floating Card & Interactive Profile Scrubbing
+    // =========================================================================
+
+    function ensurePulseStyle() {
+        if (!document.getElementById('ph-profile-marker-style')) {
+            const style = document.createElement('style');
+            style.id = 'ph-profile-marker-style';
+            style.textContent = `
+                @keyframes ph-pulse {
+                    0% { transform: scale(1); }
+                    50% { transform: scale(1.35); }
+                    100% { transform: scale(1); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+
+    function hexToRgba(hex, alpha) {
+        if (!hex || typeof hex !== 'string') return `rgba(59, 130, 246, ${alpha})`;
+        let c = hex.replace('#', '');
+        if (c.length === 3) c = c[0] + c[0] + c[1] + c[1] + c[2] + c[2];
+        if (c.length === 6) {
+            const r = parseInt(c.substring(0, 2), 16);
+            const g = parseInt(c.substring(2, 4), 16);
+            const b = parseInt(c.substring(4, 6), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+        return `rgba(59, 130, 246, ${alpha})`;
+    }
+
+    function createElevationProfileUI() {
+        if (profileCardElement || !mapContainerElement) return;
+
+        const card = document.createElement('div');
+        card.id = 'ph-elevation-profile-card';
+        card.style.cssText = `
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 32px);
+            max-width: 760px;
+            background: rgba(18, 22, 31, 0.94);
+            color: #F8FAFC;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 12px;
+            padding: 10px 14px 10px 14px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 25;
+            display: none;
+            flex-direction: column;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            user-select: none;
+        `;
+
+        card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <div style="display: flex; align-items: center; gap: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    <span id="ph-ep-color-dot" style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #3B82F6; flex-shrink: 0;"></span>
+                    <span id="ph-ep-title" style="font-size: 13px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Track Profile</span>
+                    <span id="ph-ep-badge" style="font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.12); color: #94A3B8;">GPX</span>
+                </div>
+                <button id="ph-ep-close-btn" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #F8FAFC; border-radius: 6px; width: 24px; height: 24px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; padding: 0;" title="Close elevation profile">✕</button>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 12px; font-size: 11px; margin-bottom: 8px; color: #CBD5E1;">
+                <div><span style="color: #94A3B8;">Distance:</span> <b id="ph-ep-dist">0.0 km</b></div>
+                <div><span style="color: #94A3B8;">Climb:</span> <b id="ph-ep-climb" style="color: #10B981;">+0 m</b></div>
+                <div><span style="color: #94A3B8;">Descent:</span> <b id="ph-ep-descent" style="color: #F87171;">-0 m</b></div>
+                <div><span style="color: #94A3B8;">Elev:</span> <b id="ph-ep-range">--</b></div>
+            </div>
+            <div style="position: relative; width: 100%; height: 110px;">
+                <canvas id="ph-ep-canvas" style="width: 100%; height: 110px; display: block;"></canvas>
+                <div id="ph-ep-tooltip" style="position: absolute; display: none; pointer-events: none; background: rgba(15, 23, 42, 0.92); border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; padding: 3px 8px; font-size: 10px; font-weight: 600; color: #F8FAFC; white-space: nowrap; transform: translate(-50%, -100%); margin-top: -6px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 5;"></div>
+            </div>
+        `;
+
+        mapContainerElement.appendChild(card);
+        profileCardElement = card;
+
+        const closeBtn = card.querySelector('#ph-ep-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                window.fullScreenMap.hideElevationProfile();
+            });
+        }
+
+        // Prevent click events on profile card from propagating to map
+        card.addEventListener('click', (e) => e.stopPropagation());
+        card.addEventListener('dblclick', (e) => e.stopPropagation());
+        card.addEventListener('mousedown', (e) => e.stopPropagation());
+
+        setupProfileCanvasEvents();
+    }
+
+    function setupProfileCanvasEvents() {
+        if (!profileCardElement) return;
+        const canvas = profileCardElement.querySelector('#ph-ep-canvas');
+        const tooltip = profileCardElement.querySelector('#ph-ep-tooltip');
+        if (!canvas) return;
+
+        function handleHover(clientX) {
+            if (!currentProfilePoints || currentProfilePoints.length < 2) return;
+            const rect = canvas.getBoundingClientRect();
+            const relX = clientX - rect.left;
+            const padLeft = 44;
+            const padRight = 14;
+            const graphWidth = rect.width - padLeft - padRight;
+            if (graphWidth <= 0) return;
+
+            const clampedX = Math.max(padLeft, Math.min(rect.width - padRight, relX));
+            const progress = (clampedX - padLeft) / graphWidth;
+            const totalDist = currentProfileTrack.distance || currentProfilePoints[currentProfilePoints.length - 1][0];
+            const targetDist = progress * totalDist;
+
+            // Find nearest profile point by distance
+            let nearestIdx = 0;
+            let minDiff = Infinity;
+            for (let i = 0; i < currentProfilePoints.length; i++) {
+                const diff = Math.abs(currentProfilePoints[i][0] - targetDist);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    nearestIdx = i;
+                }
+            }
+
+            const pt = currentProfilePoints[nearestIdx]; // [distKm, eleM, lat, lon]
+            drawElevationProfileCanvas(nearestIdx);
+
+            // Update Map Marker
+            if (map && pt.length >= 4 && !isNaN(pt[2]) && !isNaN(pt[3])) {
+                updateProfileMapMarker(pt[2], pt[3]);
+            }
+
+            // Update Tooltip
+            if (tooltip) {
+                const distStr = isMetricUnits ? `${pt[0].toFixed(2)} km` : `${(pt[0] * 0.621371).toFixed(2)} mi`;
+                const eleStr = isMetricUnits ? `${Math.round(pt[1])} m` : `${Math.round(pt[1] * 3.28084)} ft`;
+                tooltip.innerHTML = `📍 ${distStr} • ⛰️ ${eleStr}`;
+                tooltip.style.left = `${clampedX}px`;
+                tooltip.style.top = `18px`;
+                tooltip.style.display = 'block';
+            }
+        }
+
+        canvas.addEventListener('mousemove', (e) => {
+            handleHover(e.clientX);
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (e.touches && e.touches.length > 0) {
+                handleHover(e.touches[0].clientX);
+            }
+        }, { passive: true });
+
+        const clearHover = () => {
+            drawElevationProfileCanvas(-1);
+            if (tooltip) tooltip.style.display = 'none';
+            removeProfileMapMarker();
+        };
+
+        canvas.addEventListener('mouseleave', clearHover);
+        canvas.addEventListener('touchend', clearHover);
+    }
+
+    function updateProfileMapMarker(lat, lon) {
+        if (!map) return;
+        if (!profileMapMarker) {
+            const el = document.createElement('div');
+            el.className = 'ph-profile-scrub-marker';
+            el.style.cssText = `
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                background: #FFFFFF;
+                border: 3px solid #3B82F6;
+                box-shadow: 0 0 12px #3B82F6, 0 0 4px rgba(0,0,0,0.6);
+                transform: translate(-50%, -50%);
+                pointer-events: none;
+                animation: ph-pulse 1.2s infinite;
+            `;
+            profileMapMarker = new window.maplibregl.Marker({
+                element: el,
+                anchor: 'center'
+            });
+        }
+        const color = (currentProfileTrack && currentProfileTrack.color) || '#3B82F6';
+        profileMapMarker.getElement().style.borderColor = color;
+        profileMapMarker.getElement().style.boxShadow = `0 0 12px ${color}, 0 0 4px rgba(0,0,0,0.6)`;
+        profileMapMarker.setLngLat([lon, lat]).addTo(map);
+    }
+
+    function removeProfileMapMarker() {
+        if (profileMapMarker) {
+            try { profileMapMarker.remove(); } catch (e) { }
+            profileMapMarker = null;
+        }
+    }
+
+    function generateProfileFromCoordinates(coords) {
+        if (!coords || coords.length < 2) return [];
+        const result = [];
+        let cumDist = 0;
+        const sampleCount = Math.min(coords.length, 250);
+        const step = (coords.length - 1) / (sampleCount - 1);
+
+        for (let i = 0; i < sampleCount; i++) {
+            const idx = Math.min(coords.length - 1, Math.round(i * step));
+            const c = coords[idx];
+            if (idx > 0) {
+                const prev = coords[idx - 1];
+                cumDist += computeHaversineDistanceKm([[prev[0], prev[1]], [c[0], c[1]]]);
+            }
+            const ele = (c.length > 2 && typeof c[2] === 'number') ? c[2] : 0;
+            result.push([cumDist, ele, c[1], c[0]]);
+        }
+        return result;
+    }
+
+    function buildActiveGpsTrackProfile() {
+        if (!recordedPoints || recordedPoints.length < 2) return null;
+        const profile = generateProfileFromCoordinates(recordedPoints);
+        let climb = 0, descent = 0, minE = Infinity, maxE = -Infinity;
+        for (let i = 0; i < profile.length; i++) {
+            const e = profile[i][1];
+            if (e > 0) {
+                if (e < minE) minE = e;
+                if (e > maxE) maxE = e;
+                if (i > 0) {
+                    const diff = e - profile[i - 1][1];
+                    if (diff > 0.6) climb += diff;
+                    else if (diff < -0.6) descent += Math.abs(diff);
+                }
+            }
+        }
+        return {
+            id: 'active_gps_track',
+            name: 'Active GPS Track',
+            format: 'GPS',
+            color: '#EF4444',
+            distance: profile[profile.length - 1][0],
+            climb: climb,
+            descent: descent,
+            minElevation: minE === Infinity ? 0 : minE,
+            maxElevation: maxE === -Infinity ? 0 : maxE,
+            profile: profile
+        };
+    }
+
+    function drawElevationProfileCanvas(hoverIdx) {
+        if (!profileCardElement) return;
+        const canvas = profileCardElement.querySelector('#ph-ep-canvas');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        const w = rect.width;
+        const h = rect.height;
+
+        if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+            canvas.width = Math.round(w * dpr);
+            canvas.height = Math.round(h * dpr);
+        }
+
+        ctx.resetTransform();
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, w, h);
+
+        if (!currentProfilePoints || currentProfilePoints.length < 2) {
+            ctx.fillStyle = '#94A3B8';
+            ctx.font = '11px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('No elevation points recorded for this track', w / 2, h / 2);
+            return;
+        }
+
+        const padLeft = 44;
+        const padRight = 14;
+        const padTop = 14;
+        const padBottom = 20;
+        const plotW = w - padLeft - padRight;
+        const plotH = h - padTop - padBottom;
+
+        if (plotW <= 0 || plotH <= 0) return;
+
+        const totalDist = currentProfileTrack.distance || currentProfilePoints[currentProfilePoints.length - 1][0];
+        let minEle = Infinity;
+        let maxEle = -Infinity;
+
+        for (const p of currentProfilePoints) {
+            const e = p[1];
+            if (e < minEle) minEle = e;
+            if (e > maxEle) maxEle = e;
+        }
+
+        if (minEle === Infinity) { minEle = 0; maxEle = 100; }
+        const eleRange = (maxEle - minEle) || 10;
+        const plotMinEle = Math.max(0, minEle - eleRange * 0.08);
+        const plotMaxEle = maxEle + eleRange * 0.08;
+        const plotEleRange = plotMaxEle - plotMinEle;
+
+        const trackColor = (currentProfileTrack && currentProfileTrack.color) || '#3B82F6';
+
+        // 1. Horizontal grid lines & Y-axis labels
+        const gridSteps = 3;
+        ctx.textAlign = 'right';
+        ctx.font = '9.5px sans-serif';
+        for (let i = 0; i <= gridSteps; i++) {
+            const ratio = i / gridSteps;
+            const y = padTop + plotH * (1 - ratio);
+            const eleM = plotMinEle + plotEleRange * ratio;
+            const eleLabel = isMetricUnits ? `${Math.round(eleM)}m` : `${Math.round(eleM * 3.28084)}ft`;
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(padLeft, y);
+            ctx.lineTo(w - padRight, y);
+            ctx.stroke();
+
+            ctx.fillStyle = '#94A3B8';
+            ctx.fillText(eleLabel, padLeft - 6, y + 3);
+        }
+        ctx.setLineDash([]);
+
+        // 2. Bottom X-axis ticks & labels
+        ctx.textAlign = 'center';
+        const distSteps = Math.min(5, Math.max(2, Math.floor(plotW / 80)));
+        for (let i = 0; i <= distSteps; i++) {
+            const ratio = i / distSteps;
+            const x = padLeft + plotW * ratio;
+            const dVal = totalDist * ratio;
+            const dLabel = isMetricUnits ? `${dVal.toFixed(1)}k` : `${(dVal * 0.621371).toFixed(1)}m`;
+
+            ctx.fillStyle = '#94A3B8';
+            ctx.fillText(dLabel, x, h - 4);
+        }
+
+        // 3. Compute plot coordinates
+        const plotPoints = [];
+        for (let i = 0; i < currentProfilePoints.length; i++) {
+            const p = currentProfilePoints[i];
+            const dRatio = totalDist > 0 ? (p[0] / totalDist) : 0;
+            const x = padLeft + plotW * Math.min(1, Math.max(0, dRatio));
+            const eRatio = plotEleRange > 0 ? ((p[1] - plotMinEle) / plotEleRange) : 0.5;
+            const y = padTop + plotH * (1 - Math.min(1, Math.max(0, eRatio)));
+            plotPoints.push({ x, y });
+        }
+
+        // 4. Gradient Fill Area
+        const gradient = ctx.createLinearGradient(0, padTop, 0, padTop + plotH);
+        gradient.addColorStop(0, hexToRgba(trackColor, 0.42));
+        gradient.addColorStop(1, hexToRgba(trackColor, 0.02));
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.moveTo(plotPoints[0].x, padTop + plotH);
+        ctx.lineTo(plotPoints[0].x, plotPoints[0].y);
+        for (let i = 1; i < plotPoints.length; i++) {
+            ctx.lineTo(plotPoints[i].x, plotPoints[i].y);
+        }
+        ctx.lineTo(plotPoints[plotPoints.length - 1].x, padTop + plotH);
+        ctx.closePath();
+        ctx.fill();
+
+        // 5. Profile Stroke Line
+        ctx.strokeStyle = trackColor;
+        ctx.lineWidth = 2.4;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(plotPoints[0].x, plotPoints[0].y);
+        for (let i = 1; i < plotPoints.length; i++) {
+            ctx.lineTo(plotPoints[i].x, plotPoints[i].y);
+        }
+        ctx.stroke();
+
+        // 6. Hover Crosshair & Scrubbing Dot
+        if (hoverIdx >= 0 && hoverIdx < plotPoints.length) {
+            const hPt = plotPoints[hoverIdx];
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+            ctx.lineWidth = 1.2;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(hPt.x, padTop);
+            ctx.lineTo(hPt.x, padTop + plotH);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.fillStyle = hexToRgba(trackColor, 0.35);
+            ctx.beginPath();
+            ctx.arc(hPt.x, hPt.y, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.strokeStyle = trackColor;
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.arc(hPt.x, hPt.y, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+        }
+    }
+
+    window.fullScreenMap.showElevationProfile = function (trackIdOrObj) {
+        createElevationProfileUI();
+        if (!profileCardElement) return;
+
+        let track = null;
+        if (typeof trackIdOrObj === 'string') {
+            if (trackIdOrObj === 'active_gps_track') {
+                track = buildActiveGpsTrackProfile();
+            } else if (allImportedTracks) {
+                track = allImportedTracks.find(t => t.id === trackIdOrObj);
+            }
+        } else if (trackIdOrObj && typeof trackIdOrObj === 'object') {
+            track = trackIdOrObj;
+        }
+
+        if (!track) return;
+        currentProfileTrack = track;
+
+        if (track.profile && Array.isArray(track.profile) && track.profile.length > 1) {
+            currentProfilePoints = track.profile;
+        } else if (track.coordinates && Array.isArray(track.coordinates) && track.coordinates.length > 1) {
+            currentProfilePoints = generateProfileFromCoordinates(track.coordinates);
+        } else {
+            currentProfilePoints = [];
+        }
+
+        const titleEl = profileCardElement.querySelector('#ph-ep-title');
+        const colorDot = profileCardElement.querySelector('#ph-ep-color-dot');
+        const badgeEl = profileCardElement.querySelector('#ph-ep-badge');
+        const distEl = profileCardElement.querySelector('#ph-ep-dist');
+        const climbEl = profileCardElement.querySelector('#ph-ep-climb');
+        const descentEl = profileCardElement.querySelector('#ph-ep-descent');
+        const rangeEl = profileCardElement.querySelector('#ph-ep-range');
+
+        const trackName = track.name || track.fileName || "Track";
+        const color = track.color || "#3B82F6";
+        const dist = track.distance || (currentProfilePoints.length > 0 ? currentProfilePoints[currentProfilePoints.length - 1][0] : 0);
+        const climb = track.climb || 0;
+        const descent = track.descent || 0;
+        const minE = track.minElevation || 0;
+        const maxE = track.maxElevation || 0;
+
+        if (titleEl) titleEl.textContent = trackName;
+        if (colorDot) colorDot.style.background = color;
+        if (badgeEl) badgeEl.textContent = track.format || "GPX";
+
+        if (distEl) {
+            distEl.textContent = isMetricUnits ? `${dist.toFixed(2)} km` : `${(dist * 0.621371).toFixed(2)} mi`;
+        }
+        if (climbEl) {
+            climbEl.textContent = isMetricUnits ? `+${Math.round(climb)} m` : `+${Math.round(climb * 3.28084)} ft`;
+        }
+        if (descentEl) {
+            descentEl.textContent = isMetricUnits ? `-${Math.round(descent)} m` : `-${Math.round(descent * 3.28084)} ft`;
+        }
+        if (rangeEl) {
+            if (minE > 0 || maxE > 0) {
+                rangeEl.textContent = isMetricUnits
+                    ? `${Math.round(minE)} m – ${Math.round(maxE)} m`
+                    : `${Math.round(minE * 3.28084)} ft – ${Math.round(maxE * 3.28084)} ft`;
+            } else {
+                rangeEl.textContent = "--";
+            }
+        }
+
+        profileCardElement.style.display = 'flex';
+        setTimeout(() => {
+            drawElevationProfileCanvas(-1);
+        }, 30);
+    };
+
+    window.fullScreenMap.hideElevationProfile = function () {
+        if (profileCardElement) {
+            profileCardElement.style.display = 'none';
+        }
+        removeProfileMapMarker();
+        currentProfileTrack = null;
+        currentProfilePoints = [];
+    };
+
+    window.fullScreenMap.setIsMetric = function (metric) {
+        isMetricUnits = metric === true;
+        if (profileCardElement && profileCardElement.style.display !== 'none' && currentProfileTrack) {
+            window.fullScreenMap.showElevationProfile(currentProfileTrack);
+        }
+    };
+
+    window.fullScreenMap.setTheme = function (isDark) {
+        isDarkMode = isDark === true;
+        if (profileCardElement) {
+            profileCardElement.style.background = isDarkMode ? 'rgba(18, 22, 31, 0.94)' : 'rgba(255, 255, 255, 0.96)';
+            profileCardElement.style.color = isDarkMode ? '#F8FAFC' : '#0F172A';
+            profileCardElement.style.border = isDarkMode ? '1px solid rgba(255, 255, 255, 0.18)' : '1px solid rgba(0, 0, 0, 0.14)';
+            const tooltip = profileCardElement.querySelector('#ph-ep-tooltip');
+            if (tooltip) {
+                tooltip.style.background = isDarkMode ? 'rgba(15, 23, 42, 0.92)' : 'rgba(255, 255, 255, 0.95)';
+                tooltip.style.color = isDarkMode ? '#F8FAFC' : '#0F172A';
+                tooltip.style.border = isDarkMode ? '1px solid rgba(255, 255, 255, 0.25)' : '1px solid rgba(0, 0, 0, 0.18)';
+            }
+            if (profileCardElement.style.display !== 'none') {
+                drawElevationProfileCanvas(-1);
+            }
+        }
+    };
+
+    window.fullScreenMap.getMapCenterJson = function () {
+        if (map) {
+            const c = map.getCenter();
+            return JSON.stringify({ lat: c.lat, lng: c.lng });
+        }
+        return JSON.stringify({ lat: currentPointerLat, lng: currentPointerLon });
+    };
+
+    window.fullScreenMap.getPointerCoordinatesJson = function () {
+        return JSON.stringify({ lat: currentPointerLat, lng: currentPointerLon });
     };
 })();
 

@@ -45,10 +45,23 @@
     <Page Include="Controls\TracksManagerControl.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\AppUpdateWindowControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\GeoNamesSearchControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\CelestialInfoControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="**\*.cs" Exclude="obj\**;bin\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="IconImage.png" />
   </ItemGroup>
 
 </Project>

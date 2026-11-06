@@ -34,9 +34,34 @@ public class TrackFileInfo
     public string DisplayColor { get; set; } = "#F97316";
 
     /// <summary>
-    /// Decimated [lon, lat] coordinates for fast GeoJSON map streaming.
+    /// Cumulative elevation gain in meters.
+    /// </summary>
+    public double TotalClimbM { get; set; }
+
+    /// <summary>
+    /// Cumulative elevation loss in meters.
+    /// </summary>
+    public double TotalDescentM { get; set; }
+
+    /// <summary>
+    /// Minimum elevation in meters.
+    /// </summary>
+    public double MinElevationM { get; set; }
+
+    /// <summary>
+    /// Maximum elevation in meters.
+    /// </summary>
+    public double MaxElevationM { get; set; }
+
+    /// <summary>
+    /// Decimated [lon, lat] or [lon, lat, ele] coordinates for fast GeoJSON map streaming.
     /// </summary>
     public List<double[]> SimplifiedCoordinates { get; set; } = new();
+
+    /// <summary>
+    /// Downsampled elevation profile points [distanceKm, elevationM, lat, lon] for interactive elevation graph.
+    /// </summary>
+    public List<double[]> ElevationProfile { get; set; } = new();
 
     public TimeSpan Duration => (EndTimeUtc.HasValue && StartTimeUtc.HasValue)
         ? (EndTimeUtc.Value - StartTimeUtc.Value)
@@ -60,6 +85,77 @@ public class TrackFileInfo
             return $"{TotalDistanceKm:F1} km";
         double miles = TotalDistanceKm * 0.621371;
         return $"{miles:F1} mi";
+    }
+
+    public string FormattedClimb(bool isMetric = false)
+    {
+        if (isMetric)
+            return $"↗ +{Math.Round(TotalClimbM):N0} m";
+        double feet = TotalClimbM * 3.28084;
+        return $"↗ +{Math.Round(feet):N0} ft";
+    }
+
+    public string FormattedDescent(bool isMetric = false)
+    {
+        if (isMetric)
+            return $"↘ -{Math.Round(TotalDescentM):N0} m";
+        double feet = TotalDescentM * 3.28084;
+        return $"↘ -{Math.Round(feet):N0} ft";
+    }
+
+    public string FormattedElevationRange(bool isMetric = false)
+    {
+        if (MinElevationM <= 0 && MaxElevationM <= 0) return "--";
+        if (isMetric)
+            return $"{Math.Round(MinElevationM):N0} m – {Math.Round(MaxElevationM):N0} m";
+        double minFt = MinElevationM * 3.28084;
+        double maxFt = MaxElevationM * 3.28084;
+        return $"{Math.Round(minFt):N0} ft – {Math.Round(maxFt):N0} ft";
+    }
+
+    public void EnsureElevationProfile()
+    {
+        if (ElevationProfile.Count > 0 || SimplifiedCoordinates.Count < 2) return;
+
+        double cumDist = 0.0;
+        double minE = double.MaxValue;
+        double maxE = double.MinValue;
+        double climb = 0.0;
+        double descent = 0.0;
+
+        for (int i = 0; i < SimplifiedCoordinates.Count; i++)
+        {
+            var pt = SimplifiedCoordinates[i];
+            if (pt == null || pt.Length < 2) continue;
+            double lon = pt[0];
+            double lat = pt[1];
+            double ele = pt.Length > 2 ? pt[2] : 0.0;
+
+            if (i > 0)
+            {
+                var prev = SimplifiedCoordinates[i - 1];
+                cumDist += PointedHorizons.Services.TrackStorageService.DistanceKm(prev[1], prev[0], lat, lon);
+                if (ele > 0 && prev.Length > 2 && prev[2] > 0)
+                {
+                    double diff = ele - prev[2];
+                    if (diff > 0.6) climb += diff;
+                    else if (diff < -0.6) descent += Math.Abs(diff);
+                }
+            }
+
+            if (ele > 0)
+            {
+                if (ele < minE) minE = ele;
+                if (ele > maxE) maxE = ele;
+            }
+
+            ElevationProfile.Add(new[] { Math.Round(cumDist, 2), Math.Round(ele, 1), lat, lon });
+        }
+
+        if (TotalClimbM <= 0 && climb > 0) TotalClimbM = climb;
+        if (TotalDescentM <= 0 && descent > 0) TotalDescentM = descent;
+        if (MinElevationM <= 0 && minE < double.MaxValue) MinElevationM = minE;
+        if (MaxElevationM <= 0 && maxE > double.MinValue) MaxElevationM = maxE;
     }
 
     public string FormattedDuration

@@ -10,7 +10,7 @@
         <!-- Canvas Host Container for PeakFinder Horizon -->
         <Border x:Name="CanvasContainer" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent" />
 
-        <!-- Top Right Quick Toolbar (Compass, Focal Length, Units, Dark Mode) -->
+        <!-- Top Right Quick Toolbar (Compass, Focal Length, Menu) -->
         <Border x:Name="QuickToolbarBorder" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,10,12,0"
                 BorderThickness="1" CornerRadius="20" Padding="8,4">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -27,27 +27,32 @@
 
                 <Border x:Name="CompassDivider" Width="1" Margin="4,2" Height="14" VerticalAlignment="Center"/>
 
-                <Button x:Name="BtnFov15" Content="15" Click="BtnFov15_Click"
-                        Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
-                        FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="15mm Ultra-Wide (~100° FOV)" />
-                <Button x:Name="BtnFov35" Content="35" Click="BtnFov35_Click"
-                        Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
-                        FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="35mm Wide (~54° FOV)" />
-                <Button x:Name="BtnFov50" Content="50" Click="BtnFov50_Click"
-                        Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
-                        FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="50mm Standard (~40° FOV)" />
-                <Button x:Name="BtnFov90" Content="90" Click="BtnFov90_Click"
-                        Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
-                        FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="90mm Telephoto (~23° FOV)" />
+                <!-- Quick FOV presets (hidden on very small compact view) -->
+                <StackPanel x:Name="QuickFovPanel" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="BtnFov15" Content="15" Click="BtnFov15_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
+                            FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="15mm Ultra-Wide (~100° FOV)" />
+                    <Button x:Name="BtnFov35" Content="35" Click="BtnFov35_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
+                            FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="35mm Wide (~54° FOV)" />
+                    <Button x:Name="BtnFov50" Content="50" Click="BtnFov50_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
+                            FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="50mm Standard (~40° FOV)" />
+                    <Button x:Name="BtnFov90" Content="90" Click="BtnFov90_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
+                            FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="90mm Telephoto (~23° FOV)" />
+                </StackPanel>
 
-                <!-- Current Focal Length Input Box -->
-                <Border x:Name="FocalLengthBoxBorder" CornerRadius="6" BorderThickness="1"
+                <!-- Current Focal Length Input Box (Clear recessed border & background in light/dark mode) -->
+                <Border x:Name="FocalLengthBoxBorder" CornerRadius="6" BorderThickness="1.5"
                         Margin="3,2,2,2" Padding="4,1" Height="26" VerticalAlignment="Center"
                         ToolTipService.ToolTip="Custom 35mm equivalent focal length in mm. Click to edit, press Enter to apply.">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBox x:Name="TxtFocalLength" Width="44" Height="22"
+                        <TextBlock x:Name="TxtFocalLengthPrefix" Text="ƒ:" VerticalAlignment="Center"
+                                   FontSize="11" FontWeight="Bold" Margin="2,0,1,0" />
+                        <TextBox x:Name="TxtFocalLength" Width="40" Height="22"
                                  BorderThickness="0" Background="Transparent"
-                                 Padding="2,0"
+                                 Padding="1,0"
                                  TextAlignment="Right" VerticalContentAlignment="Center"
                                  FontSize="11" FontWeight="SemiBold"
                                  GotFocus="TxtFocalLength_GotFocus"
@@ -61,11 +66,148 @@
 
                 <Border x:Name="ToolbarDivider" Width="1" Margin="4,2" Height="14" VerticalAlignment="Center"/>
 
-                <!-- Dark / Light Theme Toggle -->
-                <Button x:Name="BtnToggleTheme" Content="🌓" Click="BtnToggleTheme_Click"
-                        Style="{StaticResource PillButtonStyle}" Padding="6,3" Margin="2"
-                        FontSize="11" />
+                <!-- Horizon Settings Hamburger Button -->
+                <Button x:Name="BtnHorizonMenu" Content="☰" Click="BtnHorizonMenu_Click"
+                        Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
+                        FontSize="13" FontWeight="Bold"
+                        ToolTipService.ToolTip="Open Horizon Settings &amp; Sun/Moon Data" />
             </StackPanel>
+        </Border>
+
+        <!-- Floating Horizon Settings Menu Dropdown Panel -->
+        <Border x:Name="HorizonMenuPanel" HorizontalAlignment="Right" VerticalAlignment="Top"
+                Margin="0,48,12,0" Width="295" MaxHeight="520" Visibility="Collapsed"
+                BorderThickness="1" CornerRadius="12" Padding="14,12">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Orientation="Vertical">
+                    <!-- Header -->
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="TxtHorizonMenuTitle" Text="🌄 Horizon Settings" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" />
+                        <Button x:Name="BtnCloseHorizonMenu" Grid.Column="1" Content="✕" Click="BtnCloseHorizonMenu_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="6,2" FontSize="11" />
+                    </Grid>
+
+                    <Border x:Name="HorizonMenuDivider1" Height="1" Margin="0,0,0,10" />
+
+                    <!-- Field of View / Focal Length Presets -->
+                    <TextBlock x:Name="TxtHorizonSectionFov" Text="FIELD OF VIEW / FOCAL LENGTH" FontSize="10" FontWeight="Bold" Margin="0,0,0,6" />
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <Button x:Name="BtnMenuFov15" Content="15mm" Click="BtnFov15_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,4,0" FontSize="10" FontWeight="SemiBold"
+                                ToolTipService.ToolTip="15mm Ultra-Wide (~100° FOV)" />
+                        <Button x:Name="BtnMenuFov35" Content="35mm" Click="BtnFov35_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,4,0" FontSize="10" FontWeight="SemiBold"
+                                ToolTipService.ToolTip="35mm Wide (~54° FOV)" />
+                        <Button x:Name="BtnMenuFov50" Content="50mm" Click="BtnFov50_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,4,0" FontSize="10" FontWeight="SemiBold"
+                                ToolTipService.ToolTip="50mm Standard (~40° FOV)" />
+                        <Button x:Name="BtnMenuFov90" Content="90mm" Click="BtnFov90_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="9,4" FontSize="10" FontWeight="SemiBold"
+                                ToolTipService.ToolTip="90mm Telephoto (~23° FOV)" />
+                    </StackPanel>
+
+                    <!-- Custom Focal Length Entry in Menu -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10" VerticalAlignment="Center">
+                        <TextBlock x:Name="TxtMenuCustomFocalLabel" Text="Custom Focal Length:" FontSize="10.5" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <Border x:Name="MenuFocalLengthBorder" CornerRadius="6" BorderThickness="1.5" Height="26" Padding="4,1" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtMenuFocalPrefix" Text="ƒ:" FontSize="11" FontWeight="Bold" Margin="2,0,1,0" VerticalAlignment="Center"/>
+                                <TextBox x:Name="TxtMenuFocalLength" Width="42" Height="22"
+                                         BorderThickness="0" Background="Transparent"
+                                         Padding="1,0" TextAlignment="Right" VerticalContentAlignment="Center"
+                                         FontSize="11" FontWeight="SemiBold"
+                                         KeyDown="TxtMenuFocalLength_KeyDown" LostFocus="TxtMenuFocalLength_LostFocus" />
+                                <TextBlock x:Name="TxtMenuFocalUnit" Text="mm" FontSize="11" FontWeight="SemiBold" Margin="2,0,4,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <Border x:Name="HorizonMenuDivider2" Height="1" Margin="0,0,0,10" />
+
+                    <!-- Topography-Compensated Sun & Moon Times Card -->
+                    <TextBlock x:Name="TxtHorizonSectionSunMoon" Text="☀️ SUN &amp; 🌙 MOON (TOPOGRAPHY COMPENSATED)" FontSize="10" FontWeight="Bold" Margin="0,0,0,6" />
+                    <Border x:Name="HorizonSunMoonCardBorder" CornerRadius="8" BorderThickness="1" Padding="10,8" Margin="0,0,0,10">
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock x:Name="TxtHorizonCelestialDate" Text="{Binding CelestialDateDisplay}"
+                                       FontSize="9.5" FontWeight="SemiBold" Margin="0,0,0,6" />
+
+                            <!-- Sun Row -->
+                            <Grid Margin="0,0,0,3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="☀️ Sun" FontWeight="Bold" FontSize="11" Margin="0,0,8,0" Foreground="#F59E0B" />
+                                <TextBlock x:Name="TxtHorizonDaylightSummary" Grid.Column="1" HorizontalAlignment="Right"
+                                           Text="{Binding TopographicDaylightDurationDisplay}" FontSize="9.5" />
+                            </Grid>
+
+                            <Grid Margin="0,0,0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Vertical">
+                                    <TextBlock Text="🌅 Topo Sunrise" FontSize="9" FontWeight="SemiBold" Opacity="0.8" />
+                                    <TextBlock x:Name="TxtHorizonSunriseTopo" Text="{Binding TopographicSunriseDisplay}" FontSize="10.5" FontWeight="Bold" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Right">
+                                    <TextBlock Text="🌇 Topo Sunset" FontSize="9" FontWeight="SemiBold" Opacity="0.8" HorizontalAlignment="Right" />
+                                    <TextBlock x:Name="TxtHorizonSunsetTopo" Text="{Binding TopographicSunsetDisplay}" FontSize="10.5" FontWeight="Bold" HorizontalAlignment="Right" />
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock x:Name="TxtHorizonSunAstroComparison" Text="{Binding AstronomicalSunTimesDisplay}"
+                                       FontSize="8.5" Opacity="0.75" Margin="0,2,0,5" />
+
+                            <Border x:Name="HorizonSunMoonCardDivider" Height="1" Margin="0,2,0,5" />
+
+                            <!-- Moon Row -->
+                            <Grid Margin="0,0,0,3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="🌙 Moon" FontWeight="Bold" FontSize="11" Margin="0,0,8,0" Foreground="#0284C7" />
+                                <TextBlock x:Name="TxtHorizonMoonPhase" Grid.Column="1" HorizontalAlignment="Right"
+                                           Text="{Binding MoonPhaseDisplay}" FontSize="9.5" />
+                            </Grid>
+
+                            <Grid Margin="0,0,0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Vertical">
+                                    <TextBlock Text="Topo Moonrise" FontSize="9" FontWeight="SemiBold" Opacity="0.8" />
+                                    <TextBlock x:Name="TxtHorizonMoonriseTopo" Text="{Binding TopographicMoonriseDisplay}" FontSize="10.5" FontWeight="Bold" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Right">
+                                    <TextBlock Text="Topo Moonset" FontSize="9" FontWeight="SemiBold" Opacity="0.8" HorizontalAlignment="Right" />
+                                    <TextBlock x:Name="TxtHorizonMoonsetTopo" Text="{Binding TopographicMoonsetDisplay}" FontSize="10.5" FontWeight="Bold" HorizontalAlignment="Right" />
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="HorizonMenuDivider3" Height="1" Margin="0,0,0,10" />
+
+                    <!-- Quick Actions -->
+                    <Button x:Name="BtnMenuRefreshHorizon" Content="↻ Refresh Horizon" Click="BtnMenuRefreshHorizon_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,5" Margin="0,0,0,4" FontSize="10.5" FontWeight="SemiBold" />
+                    <Button x:Name="BtnMenuSnapNorth" Content="🧭 Snap Viewing Direction North (0°)" Click="BtnMenuSnapNorth_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,5" Margin="0,0,0,4" FontSize="10.5" FontWeight="SemiBold" />
+                    <Button x:Name="BtnMenuToggleTheme" Content="🌓 Toggle Dark / Light Theme" Click="BtnToggleTheme_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,5" Margin="0,0,0,2" FontSize="10.5" FontWeight="SemiBold" />
+                </StackPanel>
+            </ScrollViewer>
         </Border>
     </Grid>
 </UserControl>

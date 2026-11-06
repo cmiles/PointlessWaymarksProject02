@@ -75,8 +75,16 @@ public static class TrackParserService
                 double minLat = double.MaxValue, maxLat = double.MinValue;
                 double minLon = double.MaxValue, maxLon = double.MinValue;
                 double totalDistKm = 0.0;
+                double totalClimbM = 0.0;
+                double totalDescentM = 0.0;
+                double minEleM = double.MaxValue;
+                double maxEleM = double.MinValue;
+                bool hasEle = false;
                 DateTime? startTime = null;
                 DateTime? endTime = null;
+
+                var cumulativeDistances = new double[rawPoints.Count];
+                double runDist = 0.0;
 
                 for (int i = 0; i < rawPoints.Count; i++)
                 {
@@ -85,6 +93,14 @@ public static class TrackParserService
                     if (pt.Lat > maxLat) maxLat = pt.Lat;
                     if (pt.Lon < minLon) minLon = pt.Lon;
                     if (pt.Lon > maxLon) maxLon = pt.Lon;
+
+                    if (pt.Ele.HasValue)
+                    {
+                        hasEle = true;
+                        double e = pt.Ele.Value;
+                        if (e < minEleM) minEleM = e;
+                        if (e > maxEleM) maxEleM = e;
+                    }
 
                     if (pt.Time.HasValue)
                     {
@@ -97,9 +113,70 @@ public static class TrackParserService
                     if (i > 0)
                     {
                         var prev = rawPoints[i - 1];
-                        totalDistKm += TrackStorageService.DistanceKm(prev.Lat, prev.Lon, pt.Lat, pt.Lon);
+                        double d = TrackStorageService.DistanceKm(prev.Lat, prev.Lon, pt.Lat, pt.Lon);
+                        runDist += d;
+
+                        if (pt.Ele.HasValue && prev.Ele.HasValue)
+                        {
+                            double dEle = pt.Ele.Value - prev.Ele.Value;
+                            if (dEle > 0.6) totalClimbM += dEle;
+                            else if (dEle < -0.6) totalDescentM += Math.Abs(dEle);
+                        }
+                    }
+                    cumulativeDistances[i] = runDist;
+                }
+                totalDistKm = runDist;
+
+                // Build downsampled elevation profile points [distKm, eleM, lat, lon]
+                var elevationProfile = new List<double[]>();
+                int profileSampleCount = Math.Min(rawPoints.Count, 250);
+                if (profileSampleCount > 1)
+                {
+                    double pStep = (double)(rawPoints.Count - 1) / (profileSampleCount - 1);
+                    for (int k = 0; k < profileSampleCount; k++)
+                    {
+                        int pIdx = (int)Math.Round(k * pStep);
+                        if (pIdx >= rawPoints.Count) pIdx = rawPoints.Count - 1;
+                        var p = rawPoints[pIdx];
+                        double eleVal = p.Ele ?? 0.0;
+                        if (!p.Ele.HasValue && !hasEle)
+                        {
+                            double? demE = DemService.GetElevation(p.Lat, p.Lon);
+                            if (demE.HasValue) eleVal = demE.Value;
+                        }
+                        elevationProfile.Add(new[] {
+                            Math.Round(cumulativeDistances[pIdx], 2),
+                            Math.Round(eleVal, 1),
+                            Math.Round(p.Lat, 6),
+                            Math.Round(p.Lon, 6)
+                        });
                     }
                 }
+
+                // If no file elevation existed but DEM sampled profiles, derive min/max/gain/loss
+                if (!hasEle && elevationProfile.Count > 1)
+                {
+                    double dMin = double.MaxValue, dMax = double.MinValue;
+                    for (int k = 0; k < elevationProfile.Count; k++)
+                    {
+                        double e = elevationProfile[k][1];
+                        if (e > 0)
+                        {
+                            if (e < dMin) dMin = e;
+                            if (e > dMax) dMax = e;
+                            if (k > 0)
+                            {
+                                double diff = e - elevationProfile[k - 1][1];
+                                if (diff > 0.6) totalClimbM += diff;
+                                else if (diff < -0.6) totalDescentM += Math.Abs(diff);
+                            }
+                        }
+                    }
+                    if (dMin < double.MaxValue) minEleM = dMin;
+                    if (dMax > double.MinValue) maxEleM = dMax;
+                }
+
+                if (minEleM == double.MaxValue) { minEleM = 0; maxEleM = 0; }
 
                 // Decimate coordinates for fast MapLibre streaming (max 500 points per track)
                 var simplified = DecimatePoints(rawPoints, maxPoints: 500);
@@ -116,6 +193,10 @@ public static class TrackParserService
                     TrackName = trackName,
                     PointCount = rawPoints.Count,
                     TotalDistanceKm = totalDistKm,
+                    TotalClimbM = totalClimbM,
+                    TotalDescentM = totalDescentM,
+                    MinElevationM = minEleM,
+                    MaxElevationM = maxEleM,
                     MinLat = minLat,
                     MaxLat = maxLat,
                     MinLon = minLon,
@@ -124,7 +205,8 @@ public static class TrackParserService
                     EndTimeUtc = endTime,
                     DisplayColor = color,
                     IsVisibleOnMap = true,
-                    SimplifiedCoordinates = simplified
+                    SimplifiedCoordinates = simplified,
+                    ElevationProfile = elevationProfile
                 };
             }
             catch (Exception ex)
@@ -290,7 +372,11 @@ public static class TrackParserService
         {
             foreach (var p in raw)
             {
-                result.Add(new[] { Math.Round(p.Lon, 6), Math.Round(p.Lat, 6) });
+                result.Add(new[] {
+                    Math.Round(p.Lon, 6),
+                    Math.Round(p.Lat, 6),
+                    p.Ele.HasValue ? Math.Round(p.Ele.Value, 1) : 0.0
+                });
             }
             return result;
         }
@@ -302,7 +388,11 @@ public static class TrackParserService
             int idx = (int)Math.Round(i * step);
             if (idx >= raw.Count) idx = raw.Count - 1;
             var p = raw[idx];
-            result.Add(new[] { Math.Round(p.Lon, 6), Math.Round(p.Lat, 6) });
+            result.Add(new[] {
+                Math.Round(p.Lon, 6),
+                Math.Round(p.Lat, 6),
+                p.Ele.HasValue ? Math.Round(p.Ele.Value, 1) : 0.0
+            });
         }
         return result;
     }
@@ -322,6 +412,30 @@ public static class TrackParserService
     /// <summary>
     /// Exports a recorded track into standard GPX 1.1 format XML in the designated folder.
     /// </summary>
+    /// <summary>
+    /// Sanitizes a string for use as a cross-platform filename across Windows, Android FAT/exFAT, and Linux.
+    /// Replaces colons, slashes, wildcards, and invalid filesystem characters.
+    /// </summary>
+    public static string SanitizeFilename(string? name, string fallback = "Track")
+    {
+        if (string.IsNullOrWhiteSpace(name)) return fallback;
+        char[] invalidChars = new[] { ':', '*', '?', '"', '<', '>', '|', '/', '\\' };
+        var sb = new StringBuilder();
+        foreach (char c in name.Trim())
+        {
+            if (invalidChars.Contains(c) || char.IsControl(c) || Path.GetInvalidFileNameChars().Contains(c))
+            {
+                sb.Append('_');
+            }
+            else
+            {
+                sb.Append(c);
+            }
+        }
+        string result = sb.ToString().Trim(' ', '.', '_');
+        return string.IsNullOrWhiteSpace(result) ? fallback : result;
+    }
+
     public static async Task<string> ExportRecordedTrackToGpxAsync(RecordedTrack track, string destinationFolder)
     {
         return await Task.Run(() =>
@@ -331,8 +445,7 @@ public static class TrackParserService
                 Directory.CreateDirectory(destinationFolder);
             }
 
-            string cleanName = string.Join("_", track.Name.Split(Path.GetInvalidFileNameChars(), StringSplitOptions.RemoveEmptyEntries));
-            if (string.IsNullOrWhiteSpace(cleanName)) cleanName = "Track";
+            string cleanName = SanitizeFilename(track.Name, "Track");
             string fileName = $"{cleanName}_{track.StartTime:yyyyMMdd_HHmmss}.gpx";
             string fullPath = Path.Combine(destinationFolder, fileName);
 
@@ -355,6 +468,60 @@ public static class TrackParserService
                     sb.Append($"<ele>{pt.Ele.Value.ToString("F1", CultureInfo.InvariantCulture)}</ele>");
                 }
                 sb.Append($"<time>{pt.Time:yyyy-MM-ddTHH:mm:ssZ}</time>");
+                sb.AppendLine("</trkpt>");
+            }
+
+            sb.AppendLine("    </trkseg>");
+            sb.AppendLine("  </trk>");
+            sb.AppendLine("</gpx>");
+
+            File.WriteAllText(fullPath, sb.ToString(), Encoding.UTF8);
+            return fullPath;
+        });
+    }
+
+    /// <summary>
+    /// Exports a drawn route of [lon, lat] coordinates into standard GPX 1.1 format XML in the designated folder.
+    /// Embeds local DEM elevation for each point if available in memory.
+    /// </summary>
+    public static async Task<string> ExportDrawnRouteToGpxAsync(string routeName, List<double[]> coordinates, string destinationFolder)
+    {
+        return await Task.Run(() =>
+        {
+            if (!Directory.Exists(destinationFolder))
+            {
+                Directory.CreateDirectory(destinationFolder);
+            }
+
+            string cleanName = SanitizeFilename(routeName, "Route");
+            DateTime now = DateTime.UtcNow;
+            string fileName = $"{cleanName}_{now:yyyyMMdd_HHmmss}.gpx";
+            string fullPath = Path.Combine(destinationFolder, fileName);
+
+            var sb = new StringBuilder();
+            sb.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+            sb.AppendLine("<gpx version=\"1.1\" creator=\"PointedHorizons\" xmlns=\"http://www.topografix.com/GPX/1/1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\">");
+            sb.AppendLine("  <metadata>");
+            sb.AppendLine($"    <name>{System.Security.SecurityElement.Escape(routeName ?? cleanName)}</name>");
+            sb.AppendLine($"    <time>{now:yyyy-MM-ddTHH:mm:ssZ}</time>");
+            sb.AppendLine("  </metadata>");
+            sb.AppendLine("  <trk>");
+            sb.AppendLine($"    <name>{System.Security.SecurityElement.Escape(routeName ?? cleanName)}</name>");
+            sb.AppendLine("    <trkseg>");
+
+            foreach (var pt in coordinates)
+            {
+                if (pt == null || pt.Length < 2) continue;
+                double lon = pt[0];
+                double lat = pt[1];
+                sb.Append($"      <trkpt lat=\"{lat.ToString("F6", CultureInfo.InvariantCulture)}\" lon=\"{lon.ToString("F6", CultureInfo.InvariantCulture)}\">");
+
+                // Embed route elevation: prefer point coordinate elevation (from BRouter), fallback to DEM
+                double? elev = (pt.Length > 2 && pt[2] > 0) ? pt[2] : DemService.GetElevation(lat, lon);
+                if (elev.HasValue)
+                {
+                    sb.Append($"<ele>{elev.Value.ToString("F1", CultureInfo.InvariantCulture)}</ele>");
+                }
                 sb.AppendLine("</trkpt>");
             }
 

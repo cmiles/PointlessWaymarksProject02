@@ -48,6 +48,15 @@ public class PmTileFileInfo
 }
 
 /// <summary>
+/// Platform bridge for storage permissions on Android (e.g. MANAGE_EXTERNAL_STORAGE).
+/// </summary>
+public static class StoragePermissionBridge
+{
+    public static Func<bool>? HasAllFilesAccess;
+    public static Action? RequestAllFilesAccess;
+}
+
+/// <summary>
 /// Coordinates offline PMTiles directories and local DEM (.hgt) caching and discovery
 /// across Photino desktop and Android.
 /// </summary>
@@ -341,7 +350,155 @@ public static class OfflineDataService
     }
 
     /// <summary>
-    /// Scans the PMTiles directory for all available *.pmtiles files.
+    /// Forces a refresh of discovered files and configurations.
+    /// </summary>
+    public static void Refresh()
+    {
+        _cachedLayers = null;
+        ConfigChanged?.Invoke(null, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Returns all candidate directories where PMTiles files may be located.
+    /// On Android, checks Documents/PointedHorizons, Download/PointedHorizons, and subfolders.
+    /// </summary>
+    public static List<string> GetPmTilesCandidateDirectories()
+    {
+        var dirs = new List<string>();
+        string primary = PmTilesDirectory;
+        if (!string.IsNullOrEmpty(primary)) dirs.Add(primary);
+
+        if (IsAndroid)
+        {
+            try
+            {
+                string baseDir = GetAndroidBaseDirectory();
+                if (!string.IsNullOrEmpty(baseDir))
+                {
+                    dirs.Add(baseDir);
+                    dirs.Add(Path.Combine(baseDir, "pmtiles"));
+                }
+
+                dirs.Add("/storage/emulated/0/Documents/PointedHorizons/pmtiles");
+                dirs.Add("/storage/emulated/0/Documents/PointedHorizons");
+                dirs.Add("/storage/emulated/0/Download/PointedHorizons/pmtiles");
+                dirs.Add("/storage/emulated/0/Download/PointedHorizons");
+            }
+            catch { }
+        }
+
+        return dirs.Distinct(StringComparer.OrdinalIgnoreCase).Where(d =>
+        {
+            try { return Directory.Exists(d); } catch { return false; }
+        }).ToList();
+    }
+
+    /// <summary>
+    /// Returns all candidate directories where DEM (.hgt, .zip) files may be located.
+    /// </summary>
+    public static List<string> GetDemCandidateDirectories()
+    {
+        var dirs = new List<string>();
+        string primary = DemDirectory;
+        if (!string.IsNullOrEmpty(primary)) dirs.Add(primary);
+
+        if (IsAndroid)
+        {
+            try
+            {
+                string baseDir = GetAndroidBaseDirectory();
+                if (!string.IsNullOrEmpty(baseDir))
+                {
+                    dirs.Add(baseDir);
+                    dirs.Add(Path.Combine(baseDir, "dem"));
+                }
+
+                dirs.Add("/storage/emulated/0/Documents/PointedHorizons/dem");
+                dirs.Add("/storage/emulated/0/Documents/PointedHorizons");
+                dirs.Add("/storage/emulated/0/Download/PointedHorizons/dem");
+                dirs.Add("/storage/emulated/0/Download/PointedHorizons");
+            }
+            catch { }
+        }
+
+        return dirs.Distinct(StringComparer.OrdinalIgnoreCase).Where(d =>
+        {
+            try { return Directory.Exists(d); } catch { return false; }
+        }).ToList();
+    }
+
+    /// <summary>
+    /// Returns all candidate directories where GPX, TCX, and FIT track files may be located.
+    /// </summary>
+    public static List<string> GetGpxCandidateDirectories()
+    {
+        var dirs = new List<string>();
+        string primary = GpxDirectory;
+        if (!string.IsNullOrEmpty(primary)) dirs.Add(primary);
+
+        if (IsAndroid)
+        {
+            try
+            {
+                string baseDir = GetAndroidBaseDirectory();
+                if (!string.IsNullOrEmpty(baseDir))
+                {
+                    dirs.Add(Path.Combine(baseDir, "gpx"));
+                    dirs.Add(baseDir);
+                }
+
+                dirs.Add("/storage/emulated/0/Documents/PointedHorizons/gpx");
+                dirs.Add("/storage/emulated/0/Documents/PointedHorizons");
+                dirs.Add("/storage/emulated/0/Download/PointedHorizons/gpx");
+                dirs.Add("/storage/emulated/0/Download/PointedHorizons");
+            }
+            catch { }
+        }
+        else
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(DefaultPhotinoGpxDir)) dirs.Add(DefaultPhotinoGpxDir);
+            }
+            catch { }
+        }
+
+        return dirs.Distinct(StringComparer.OrdinalIgnoreCase).Where(d =>
+        {
+            try { return Directory.Exists(d); } catch { return false; }
+        }).ToList();
+    }
+
+    /// <summary>
+    /// Resolves the absolute path to a PMTiles file across all candidate directories.
+    /// </summary>
+    public static string? ResolvePmTileFilePath(string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(fileName)) return null;
+
+        foreach (var dir in GetPmTilesCandidateDirectories())
+        {
+            string candidate = Path.Combine(dir, fileName);
+            if (File.Exists(candidate)) return candidate;
+
+            try
+            {
+                var dirInfo = new DirectoryInfo(dir);
+                var match = dirInfo.GetFiles()
+                    .FirstOrDefault(f => string.Equals(f.Name, fileName, StringComparison.OrdinalIgnoreCase));
+                if (match != null && File.Exists(match.FullName))
+                {
+                    return match.FullName;
+                }
+            }
+            catch { }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Scans the PMTiles directory and public storage folders for all available *.pmtiles files.
     /// </summary>
     public static List<PmTileFileInfo> GetAvailablePmTileFiles()
     {
@@ -350,49 +507,61 @@ public static class OfflineDataService
 
         try
         {
-            string dir = PmTilesDirectory;
-            if (Directory.Exists(dir))
-            {
-                var dirInfo = new DirectoryInfo(dir);
-                foreach (var file in dirInfo.GetFiles("*.pmtiles"))
-                {
-                    bool isValidArchive = false;
-                    string? formatError = null;
-                    try
-                    {
-                        using var fs = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                        byte[] header = new byte[8];
-                        int bytesRead = fs.Read(header, 0, 8);
-                        if (bytesRead >= 7 &&
-                            header[0] == 0x50 && header[1] == 0x4D && header[2] == 0x54 &&
-                            header[3] == 0x69 && header[4] == 0x6C && header[5] == 0x65 && header[6] == 0x73)
-                        {
-                            isValidArchive = true;
-                        }
-                        else if (bytesRead >= 6 && header[0] == 0x53 && header[1] == 0x51 && header[2] == 0x4C && header[3] == 0x69)
-                        {
-                            formatError = "MBTiles (SQLite) format - must be converted to PMTiles";
-                        }
-                        else
-                        {
-                            formatError = "Invalid PMTiles magic bytes";
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        formatError = ex.Message;
-                    }
+            var seenNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                    result.Add(new PmTileFileInfo
+            foreach (var dir in GetPmTilesCandidateDirectories())
+            {
+                try
+                {
+                    var dirInfo = new DirectoryInfo(dir);
+                    if (!dirInfo.Exists) continue;
+
+                    var files = dirInfo.GetFiles()
+                        .Where(f => f.Name.EndsWith(".pmtiles", StringComparison.OrdinalIgnoreCase));
+
+                    foreach (var file in files)
                     {
-                        FileName = file.Name,
-                        FullPath = file.FullName,
-                        SizeBytes = file.Length,
-                        LastModified = file.LastWriteTime,
-                        IsValidArchive = isValidArchive,
-                        ArchiveFormatError = formatError
-                    });
+                        if (!seenNames.Add(file.Name)) continue;
+
+                        bool isValidArchive = false;
+                        string? formatError = null;
+                        try
+                        {
+                            using var fs = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                            byte[] header = new byte[8];
+                            int bytesRead = fs.Read(header, 0, 8);
+                            if (bytesRead >= 7 &&
+                                header[0] == 0x50 && header[1] == 0x4D && header[2] == 0x54 &&
+                                header[3] == 0x69 && header[4] == 0x6C && header[5] == 0x65 && header[6] == 0x73)
+                            {
+                                isValidArchive = true;
+                            }
+                            else if (bytesRead >= 6 && header[0] == 0x53 && header[1] == 0x51 && header[2] == 0x4C && header[3] == 0x69)
+                            {
+                                formatError = "MBTiles (SQLite) format - must be converted to PMTiles";
+                            }
+                            else
+                            {
+                                formatError = "Invalid PMTiles magic bytes";
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            formatError = ex.Message;
+                        }
+
+                        result.Add(new PmTileFileInfo
+                        {
+                            FileName = file.Name,
+                            FullPath = file.FullName,
+                            SizeBytes = file.Length,
+                            LastModified = file.LastWriteTime,
+                            IsValidArchive = isValidArchive,
+                            ArchiveFormatError = formatError
+                        });
+                    }
                 }
+                catch { }
             }
         }
         catch (Exception ex)
@@ -471,7 +640,7 @@ public static class OfflineDataService
     }
 
     /// <summary>
-    /// Scans the PMTiles directory for all available *.json style files.
+    /// Scans candidate PMTiles directories for all available *.json style files.
     /// </summary>
     public static List<string> GetAvailableStyleFiles()
     {
@@ -480,14 +649,23 @@ public static class OfflineDataService
 
         try
         {
-            string dir = PmTilesDirectory;
-            if (Directory.Exists(dir))
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var dir in GetPmTilesCandidateDirectories())
             {
-                var dirInfo = new DirectoryInfo(dir);
-                foreach (var file in dirInfo.GetFiles("*.json"))
+                try
                 {
-                    result.Add(file.Name);
+                    var dirInfo = new DirectoryInfo(dir);
+                    if (!dirInfo.Exists) continue;
+
+                    foreach (var file in dirInfo.GetFiles())
+                    {
+                        if (file.Name.EndsWith(".json", StringComparison.OrdinalIgnoreCase) && seen.Add(file.Name))
+                        {
+                            result.Add(file.Name);
+                        }
+                    }
                 }
+                catch { }
             }
         }
         catch (Exception ex)
@@ -508,8 +686,11 @@ public static class OfflineDataService
 
         try
         {
-            string dir = PmTilesDirectory;
-            string path = Path.Combine(dir, _selectedStyleFile);
+            string? path = ResolvePmTileFilePath(_selectedStyleFile);
+            if (string.IsNullOrEmpty(path))
+            {
+                path = Path.Combine(PmTilesDirectory, _selectedStyleFile);
+            }
             if (File.Exists(path))
             {
                 string text = File.ReadAllText(path);
@@ -570,36 +751,47 @@ public static class OfflineDataService
     }
 
     /// <summary>
-    /// Checks for a local DEM file matching tileKey in the DEM directory (.hgt, .zip, .hgt.zip).
+    /// Checks for a local DEM file matching tileKey in candidate DEM directories (.hgt, .zip, .hgt.zip).
     /// </summary>
     public static string? FindLocalDemFile(string tileKey)
     {
         if (!IsPmTilesSupported) return null;
         if (string.IsNullOrWhiteSpace(tileKey)) return null;
-        string dir = DemDirectory;
-        if (!Directory.Exists(dir)) return null;
 
         try
         {
-            string[] candidateExtensions = [".hgt", ".zip", ".hgt.zip"];
-            foreach (var ext in candidateExtensions)
-            {
-                string path = Path.Combine(dir, $"{tileKey}{ext}");
-                if (File.Exists(path)) return path;
+            string[] candidateExtensions = [".hgt", ".HGT", ".zip", ".ZIP", ".hgt.zip", ".HGT.ZIP"];
 
-                // Also check lowercase
-                string lowerPath = Path.Combine(dir, $"{tileKey.ToLowerInvariant()}{ext}");
-                if (File.Exists(lowerPath)) return lowerPath;
-            }
-
-            // Search directory for prefix match (e.g. N32W111.SRTMGL1.hgt.zip)
-            var dirInfo = new DirectoryInfo(dir);
-            var match = dirInfo.GetFiles($"{tileKey}*")
-                .FirstOrDefault(f => f.Name.EndsWith(".hgt", StringComparison.OrdinalIgnoreCase) ||
-                                     f.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase));
-            if (match != null)
+            foreach (var dir in GetDemCandidateDirectories())
             {
-                return match.FullName;
+                try
+                {
+                    foreach (var ext in candidateExtensions)
+                    {
+                        string path = Path.Combine(dir, $"{tileKey}{ext}");
+                        if (File.Exists(path)) return path;
+
+                        string lowerPath = Path.Combine(dir, $"{tileKey.ToLowerInvariant()}{ext}");
+                        if (File.Exists(lowerPath)) return lowerPath;
+
+                        string upperPath = Path.Combine(dir, $"{tileKey.ToUpperInvariant()}{ext}");
+                        if (File.Exists(upperPath)) return upperPath;
+                    }
+
+                    var dirInfo = new DirectoryInfo(dir);
+                    if (dirInfo.Exists)
+                    {
+                        var match = dirInfo.GetFiles()
+                            .FirstOrDefault(f => f.Name.StartsWith(tileKey, StringComparison.OrdinalIgnoreCase) &&
+                                                 (f.Name.EndsWith(".hgt", StringComparison.OrdinalIgnoreCase) ||
+                                                  f.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)));
+                        if (match != null && File.Exists(match.FullName))
+                        {
+                            return match.FullName;
+                        }
+                    }
+                }
+                catch { }
             }
         }
         catch (Exception ex)
@@ -640,23 +832,43 @@ public static class OfflineDataService
     }
 
     /// <summary>
-    /// Gets the count of DEM files present in the local DEM directory.
+    /// Gets the count of DEM files present across candidate local DEM directories.
     /// </summary>
     public static int GetLocalDemFileCount()
     {
         if (!IsPmTilesSupported) return 0;
         try
         {
-            string dir = DemDirectory;
-            if (Directory.Exists(dir))
+            int count = 0;
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var dir in GetDemCandidateDirectories())
             {
-                var dirInfo = new DirectoryInfo(dir);
-                return dirInfo.GetFiles("*.hgt").Length + dirInfo.GetFiles("*.zip").Length;
+                try
+                {
+                    var dirInfo = new DirectoryInfo(dir);
+                    if (!dirInfo.Exists) continue;
+                    foreach (var file in dirInfo.GetFiles())
+                    {
+                        if ((file.Name.EndsWith(".hgt", StringComparison.OrdinalIgnoreCase) ||
+                             file.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)) &&
+                            seen.Add(file.Name))
+                        {
+                            count++;
+                        }
+                    }
+                }
+                catch { }
             }
+            return count;
         }
         catch { }
         return 0;
     }
+
+    /// <summary>
+    /// Gets the base directory containing the offline dem, pmtiles, and gpx folders on Android.
+    /// </summary>
+    public static string AndroidBaseDirectory => GetAndroidBaseDirectory();
 
     private static string GetAndroidBaseDirectory()
     {

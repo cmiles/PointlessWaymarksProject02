@@ -22,18 +22,26 @@
 
         if (!data) return;
 
+        if (currentInstance && typeof currentInstance.cleanup === 'function') {
+            try { currentInstance.cleanup(); } catch (e) { }
+            currentInstance = null;
+        }
+
         container.innerHTML = '';
         container.style.position = 'relative';
         container.style.width = '100%';
         container.style.height = '100%';
         container.style.overflow = 'hidden';
         container.style.userSelect = 'none';
+        container.style.webkitUserSelect = 'none';
+        container.style.touchAction = 'none';
 
         const canvas = document.createElement('canvas');
         canvas.style.display = 'block';
         canvas.style.width = '100%';
         canvas.style.height = '100%';
         canvas.style.cursor = 'grab';
+        canvas.style.touchAction = 'none';
         container.appendChild(canvas);
 
         const ctx = canvas.getContext('2d', { alpha: false });
@@ -146,6 +154,7 @@
         uiOverlay.style.width = '100%';
         uiOverlay.style.height = '100%';
         uiOverlay.style.pointerEvents = 'none';
+        uiOverlay.style.touchAction = 'none';
         uiOverlay.style.zIndex = '10';
         container.appendChild(uiOverlay);
 
@@ -756,17 +765,19 @@
             }
         }
 
-        // Pointer Events for 360° Infinite Continuous Drag Pan & Pitch Tilt
-        canvas.addEventListener('mousedown', function (e) {
+        // -------------------------------------------------------------
+        // Mouse Events (Desktop)
+        // -------------------------------------------------------------
+        function onMouseDown(e) {
             isDragging = true;
             dragStartX = e.clientX;
             dragStartY = e.clientY;
             dragStartAz = centerAz;
             dragStartTilt = verticalTiltDeg;
             canvas.style.cursor = 'grabbing';
-        });
+        }
 
-        window.addEventListener('mousemove', function (e) {
+        function onMouseMove(e) {
             if (isDragging) {
                 const deltaX = e.clientX - dragStartX;
                 const deltaY = e.clientY - dragStartY;
@@ -805,9 +816,9 @@
                     }
                 }
             }
-        });
+        }
 
-        window.addEventListener('mouseup', function () {
+        function onMouseUp() {
             if (isDragging) {
                 isDragging = false;
                 canvas.style.cursor = 'grab';
@@ -815,18 +826,18 @@
                     onPanCallback(centerAz);
                 }
             }
-        });
+        }
 
-        canvas.addEventListener('mouseleave', function () {
+        function onMouseLeave() {
             if (!isDragging) {
                 mouseX = -1;
                 mouseY = -1;
                 render();
             }
-        });
+        }
 
         // Mouse Wheel for Smooth Field Of View Zooming (3° - 160°)
-        canvas.addEventListener('wheel', function (e) {
+        function onWheel(e) {
             e.preventDefault();
             const delta = e.deltaY > 0 ? 3 : -3;
             fov = Math.max(3, Math.min(160, fov + delta));
@@ -839,12 +850,214 @@
             if (onFovCallback) {
                 onFovCallback(fov);
             }
-        }, { passive: false });
+        }
+
+        canvas.addEventListener('mousedown', onMouseDown);
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+        canvas.addEventListener('mouseleave', onMouseLeave);
+        canvas.addEventListener('wheel', onWheel, { passive: false });
+
+        // -------------------------------------------------------------
+        // Touch Events (Mobile Android / Tablets / Touchscreens)
+        // Supports:
+        // - Single-finger 360° continuous drag pan & pitch tilt
+        // - Two-finger smooth pinch-to-zoom (FOV 3° - 160°)
+        // - Simultaneous pinch zoom + pan
+        // - Tap to inspect summit altitude angle, elevation, & distance
+        // -------------------------------------------------------------
+        let isTouchDragging = false;
+        let isPinching = false;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchStartAz = centerAz;
+        let touchStartTilt = verticalTiltDeg;
+        let pinchStartDist = 0;
+        let pinchStartFov = fov;
+        let pinchStartMidX = 0;
+        let pinchStartMidY = 0;
+        let touchMoved = false;
+
+        function getTouchDist(t0, t1) {
+            return Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
+        }
+
+        function getTouchMid(t0, t1) {
+            return {
+                x: (t0.clientX + t1.clientX) / 2,
+                y: (t0.clientY + t1.clientY) / 2
+            };
+        }
+
+        function onTouchStart(e) {
+            if (e.touches.length === 1) {
+                isTouchDragging = true;
+                isPinching = false;
+                touchMoved = false;
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+                touchStartAz = centerAz;
+                touchStartTilt = verticalTiltDeg;
+                tooltip.style.display = 'none';
+                mouseX = -1;
+                mouseY = -1;
+            } else if (e.touches.length >= 2) {
+                isPinching = true;
+                isTouchDragging = false;
+                touchMoved = true;
+                const t0 = e.touches[0];
+                const t1 = e.touches[1];
+                pinchStartDist = getTouchDist(t0, t1);
+                pinchStartFov = fov;
+                const mid = getTouchMid(t0, t1);
+                pinchStartMidX = mid.x;
+                pinchStartMidY = mid.y;
+                touchStartAz = centerAz;
+                touchStartTilt = verticalTiltDeg;
+                tooltip.style.display = 'none';
+                mouseX = -1;
+                mouseY = -1;
+            }
+            e.preventDefault();
+        }
+
+        function onTouchMove(e) {
+            if (isPinching && e.touches.length >= 2) {
+                const t0 = e.touches[0];
+                const t1 = e.touches[1];
+                const currentDist = getTouchDist(t0, t1);
+
+                if (pinchStartDist > 0 && currentDist > 0) {
+                    const scale = pinchStartDist / currentDist;
+                    fov = Math.max(3, Math.min(160, pinchStartFov * scale));
+                }
+
+                // Two-finger pan while pinching
+                const mid = getTouchMid(t0, t1);
+                const deltaMidX = mid.x - pinchStartMidX;
+                const deltaMidY = mid.y - pinchStartMidY;
+                const rect = canvas.getBoundingClientRect();
+                const deltaAz = -(deltaMidX / Math.max(1, rect.width)) * fov;
+                centerAz = normalizeAngle(touchStartAz + deltaAz);
+
+                const deltaTilt = (deltaMidY / Math.max(1, rect.height)) * 14.0;
+                verticalTiltDeg = Math.max(-25, Math.min(25, touchStartTilt + deltaTilt));
+
+                render();
+
+                if (window.setDirectionsBarParams) {
+                    window.setDirectionsBarParams(centerAz, fov);
+                }
+                if (onFovCallback) {
+                    onFovCallback(fov);
+                }
+                if (onPanCallback) {
+                    onPanCallback(centerAz);
+                }
+                e.preventDefault();
+            } else if (isTouchDragging && e.touches.length === 1) {
+                const deltaX = e.touches[0].clientX - touchStartX;
+                const deltaY = e.touches[0].clientY - touchStartY;
+
+                if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
+                    touchMoved = true;
+                }
+
+                const rect = canvas.getBoundingClientRect();
+
+                // 360° Infinite horizontal drag pan
+                const deltaAz = -(deltaX / Math.max(1, rect.width)) * fov;
+                centerAz = normalizeAngle(touchStartAz + deltaAz);
+
+                // Vertical pitch tilt
+                const deltaTilt = (deltaY / Math.max(1, rect.height)) * 14.0;
+                verticalTiltDeg = Math.max(-25, Math.min(25, touchStartTilt + deltaTilt));
+
+                render();
+
+                if (window.setDirectionsBarParams) {
+                    window.setDirectionsBarParams(centerAz, fov);
+                }
+                if (onPanCallback) {
+                    onPanCallback(centerAz);
+                }
+                e.preventDefault();
+            }
+        }
+
+        function onTouchEnd(e) {
+            if (isPinching) {
+                if (e.touches.length === 1) {
+                    // Transition smoothly to 1-finger drag with remaining finger
+                    isPinching = false;
+                    isTouchDragging = true;
+                    touchStartX = e.touches[0].clientX;
+                    touchStartY = e.touches[0].clientY;
+                    touchStartAz = centerAz;
+                    touchStartTilt = verticalTiltDeg;
+                    touchMoved = true;
+                } else if (e.touches.length === 0) {
+                    isPinching = false;
+                    if (onFovCallback) {
+                        onFovCallback(fov);
+                    }
+                    if (onPanCallback) {
+                        onPanCallback(centerAz);
+                    }
+                }
+            } else if (isTouchDragging) {
+                if (e.touches.length === 0) {
+                    isTouchDragging = false;
+                    if (onPanCallback) {
+                        onPanCallback(centerAz);
+                    }
+
+                    // Quick tap without dragging: inspect clicked summit/terrain point
+                    if (!touchMoved) {
+                        const rect = canvas.getBoundingClientRect();
+                        if (touchStartX >= rect.left && touchStartX <= rect.right &&
+                            touchStartY >= rect.top && touchStartY <= rect.bottom) {
+                            mouseX = touchStartX - rect.left;
+                            mouseY = touchStartY - rect.top;
+                            render();
+                        }
+                    }
+                }
+            }
+        }
+
+        function onTouchCancel() {
+            isTouchDragging = false;
+            isPinching = false;
+        }
+
+        canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+        window.addEventListener('touchmove', onTouchMove, { passive: false });
+        window.addEventListener('touchend', onTouchEnd, { passive: true });
+        window.addEventListener('touchcancel', onTouchCancel, { passive: true });
 
         // ResizeObserver for dynamic responsiveness
         if (window.ResizeObserver && !container._horizonObserver) {
             container._horizonObserver = new ResizeObserver(() => render());
             container._horizonObserver.observe(container);
+        }
+
+        function cleanup() {
+            canvas.removeEventListener('mousedown', onMouseDown);
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onMouseUp);
+            canvas.removeEventListener('mouseleave', onMouseLeave);
+            canvas.removeEventListener('wheel', onWheel);
+
+            canvas.removeEventListener('touchstart', onTouchStart);
+            window.removeEventListener('touchmove', onTouchMove);
+            window.removeEventListener('touchend', onTouchEnd);
+            window.removeEventListener('touchcancel', onTouchCancel);
+
+            if (container._horizonObserver) {
+                try { container._horizonObserver.disconnect(); } catch (e) { }
+                container._horizonObserver = null;
+            }
         }
 
         // Store instance API so C# can update azimuth, FOV or tilt without re-calculating
@@ -860,7 +1073,8 @@
                     verticalTiltDeg = newTilt;
                 }
                 render();
-            }
+            },
+            cleanup: cleanup
         };
 
         render();

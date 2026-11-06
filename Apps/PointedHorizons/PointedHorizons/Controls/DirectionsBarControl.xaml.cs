@@ -96,6 +96,20 @@ public partial class DirectionsBarControl : UserControl
             return;
         }
 
+        try
+        {
+            Interop.ExecuteJavaScriptVoid(@"
+                (function(d) {
+                    if (d && d.style) {
+                        d.style.touchAction = 'none';
+                        d.style.userSelect = 'none';
+                        d.style.webkitUserSelect = 'none';
+                    }
+                })($0);
+            ", div);
+        }
+        catch { }
+
         _isInitialized = true;
 
         Action<double> onPan = (newAzimuth) =>

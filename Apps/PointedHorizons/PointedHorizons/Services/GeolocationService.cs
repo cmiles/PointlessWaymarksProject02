@@ -19,7 +19,56 @@ public static class BackgroundLocationBridge
 public static class GeolocationService
 {
     private static bool _isTracking;
-    public static bool BatterySaverMode { get; set; } = true;
+    public static bool BatterySaverMode
+    {
+        get => true;
+        set { }
+    }
+
+    private const string GpsIntervalStorageKey = "pointedhorizons_gps_interval";
+    private static int _powerSaverIntervalSeconds = 60;
+    private static bool _intervalLoaded;
+
+    public static int NormalizeInterval(int sec)
+    {
+        if (sec <= 20) return 15;
+        if (sec <= 120) return 60;
+        if (sec <= 450) return 300;
+        return 900;
+    }
+
+    public static int PowerSaverIntervalSeconds
+    {
+        get
+        {
+            EnsureIntervalLoaded();
+            return _powerSaverIntervalSeconds;
+        }
+        set
+        {
+            _powerSaverIntervalSeconds = NormalizeInterval(value);
+            try
+            {
+                Interop.ExecuteJavaScriptVoid("localStorage.setItem($0, $1)", GpsIntervalStorageKey, _powerSaverIntervalSeconds.ToString());
+            }
+            catch { }
+        }
+    }
+
+    public static void EnsureIntervalLoaded()
+    {
+        if (_intervalLoaded) return;
+        _intervalLoaded = true;
+        try
+        {
+            object? val = Interop.ExecuteJavaScript("localStorage.getItem($0)", GpsIntervalStorageKey);
+            if (val is string s && int.TryParse(s, out int sec) && sec > 0)
+            {
+                _powerSaverIntervalSeconds = NormalizeInterval(sec);
+            }
+        }
+        catch { }
+    }
 
     /// <summary>
     /// Gets the current GPS position using the HTML5 / WebView Geolocation API.
@@ -44,7 +93,7 @@ public static class GeolocationService
 
         // Always force high accuracy to ensure genuine GPS satellite hardware fixes and avoid cell/wifi positioning
         const bool highAcc = true;
-        int maxAgeMs = BatterySaverMode ? 10000 : 3000;
+        int maxAgeMs = PowerSaverIntervalSeconds * 1000;
 
         try
         {
@@ -136,9 +185,10 @@ public static class GeolocationService
 
         // Always force high accuracy to ensure genuine GPS satellite hardware fixes and avoid cell/wifi positioning
         const bool highAcc = true;
-        // In battery saver mode, accept cached positions up to 10s and avoid aggressive GPS wakeups
-        int maxAgeMs = BatterySaverMode ? 10000 : 3000;
-        int timeoutMs = BatterySaverMode ? 25000 : 15000;
+        // In power saver mode, accept cached positions based on configured interval and avoid aggressive GPS wakeups
+        int intervalMs = PowerSaverIntervalSeconds * 1000;
+        int maxAgeMs = intervalMs;
+        int timeoutMs = Math.Max(intervalMs + 5000, 15000);
 
         try
         {

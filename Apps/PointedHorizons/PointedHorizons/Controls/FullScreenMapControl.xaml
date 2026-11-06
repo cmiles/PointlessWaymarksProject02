@@ -31,8 +31,14 @@
             </Border>
         </StackPanel>
 
-        <!-- Top-Right Floating Controls: Current Location & 3D Toggle Buttons -->
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,14,0">
+        <!-- Top-Right Floating Controls: Route Builder, Current Location & 3D Toggle Buttons -->
+        <StackPanel x:Name="TopRightControlsPanel" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,14,0">
+            <Button x:Name="BtnDrawRoute" Content="✏️ Draw Route" Click="BtnDrawRoute_Click"
+                    Style="{StaticResource PillButtonStyle}"
+                    Padding="12,6" Margin="0,0,8,0"
+                    FontSize="11" FontWeight="SemiBold"
+                    ToolTipService.ToolTip="Draw a custom hiking route with automatic trail snapping" />
+
             <Button x:Name="BtnCurrentLocation" Content="📍 Current Location" Click="BtnCurrentLocation_Click"
                     Style="{StaticResource PillButtonStyle}"
                     Padding="12,6" Margin="0,0,8,0"
@@ -52,6 +58,58 @@
                     ToolTipService.ToolTip="Reset camera to flat top-down 2D view and recover if stuck" />
         </StackPanel>
 
+        <!-- Route Builder Floating Control Panel (Active during route drawing) -->
+        <Border x:Name="RouteBuilderPanel" HorizontalAlignment="Center" VerticalAlignment="Top"
+                Margin="0,14,0,0" CornerRadius="10" BorderThickness="1" Padding="12,8"
+                Visibility="Collapsed">
+            <StackPanel Orientation="Vertical">
+                <Grid Margin="0,0,0,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="✏️" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="TxtRouteBuilderTitle" Text="Route Builder" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Snapping Toggle Pill -->
+                    <Button x:Name="BtnToggleRouteSnap" Grid.Column="2" Content="🥾 Snap to Trails: ON" Click="BtnToggleRouteSnap_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="8,4" FontSize="10.5" FontWeight="Bold"
+                            ToolTipService.ToolTip="Toggle snapping path to OpenStreetMap trails vs straight lines" />
+                </Grid>
+
+                <!-- Live Distance & Waypoints Stats -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,6">
+                    <TextBlock x:Name="TxtRouteStats" Text="Click anywhere on the map to start your route"
+                               FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <TextBlock x:Name="TxtRouteStatus" Text="" FontSize="10.5" FontWeight="Bold"
+                               Foreground="#8B5CF6" Margin="8,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Actions Row -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="BtnRouteUndo" Content="↩️ Undo" Click="BtnRouteUndo_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="8,4" Margin="0,0,5,0" FontSize="10" FontWeight="SemiBold"
+                            ToolTipService.ToolTip="Undo last waypoint" />
+                    <Button x:Name="BtnRouteReverse" Content="🔄 Reverse" Click="BtnRouteReverse_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="8,4" Margin="0,0,5,0" FontSize="10" FontWeight="SemiBold"
+                            ToolTipService.ToolTip="Reverse route direction" />
+                    <Button x:Name="BtnRouteClear" Content="🗑️ Clear" Click="BtnRouteClear_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="8,4" Margin="0,0,5,0" FontSize="10" FontWeight="SemiBold"
+                            ToolTipService.ToolTip="Clear all points" />
+                    <Button x:Name="BtnRouteSave" Content="💾 Save as GPX..." Click="BtnRouteSave_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,5,0" FontSize="10" FontWeight="Bold"
+                            ToolTipService.ToolTip="Save this route to your GPX tracks folder" />
+                    <Button x:Name="BtnRouteDone" Content="✕ Exit" Click="BtnRouteDone_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="8,4" FontSize="10" FontWeight="SemiBold"
+                            ToolTipService.ToolTip="Exit route builder mode" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
         <!-- Crash Recovery Notification Banner -->
         <Border x:Name="CrashRecoveryNotice" HorizontalAlignment="Center" VerticalAlignment="Top"
                 Margin="0,14,0,0" CornerRadius="8" BorderThickness="1" Padding="12,6" Visibility="Collapsed">
@@ -66,95 +124,153 @@
 
         <!-- Floating Hamburger Dropdown Menu Panel -->
         <Border x:Name="HamburgerPanel" HorizontalAlignment="Left" VerticalAlignment="Top"
-                Margin="14,56,0,0" Width="310" Visibility="Collapsed"
+                Margin="14,56,0,0" Width="315" Visibility="Collapsed"
                 BorderThickness="1" CornerRadius="12" Padding="14,12">
-            <StackPanel Orientation="Vertical">
-                <!-- Header -->
-                <Grid Margin="0,0,0,10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock x:Name="TxtMenuTitle" Text="🛰️ Map &amp; GPS Tools" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" />
-                    <Button x:Name="BtnCloseMenu" Grid.Column="1" Content="✕" Click="BtnCloseMenu_Click"
-                            Style="{StaticResource PillButtonStyle}" Padding="6,2" FontSize="11" />
-                </Grid>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="520">
+                <StackPanel Orientation="Vertical">
+                    <!-- Header -->
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="TxtMenuTitle" Text="🛰️ Map &amp; GPS Tools" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" />
+                        <Button x:Name="BtnCloseMenu" Grid.Column="1" Content="✕" Click="BtnCloseMenu_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="6,2" FontSize="11" />
+                    </Grid>
 
-                <Border x:Name="MenuDivider1" Height="1" Margin="0,0,0,10" />
+                    <!-- Pointer Location & Elevation Info Card (Displayed in menu, especially on small screens) -->
+                    <Border x:Name="MenuLocationInfoBorder" BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="0,0,0,10">
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="LOCATION &amp; ELEVATION" FontSize="9.5" FontWeight="Bold" Margin="0,0,0,4" Opacity="0.8" />
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
+                                <TextBlock x:Name="TxtMenuPointerCoords" Text="📍 32.2226°, -110.9747°" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <TextBlock x:Name="TxtMenuGpsIndicator" Text="GPS Ready" FontSize="10" FontWeight="SemiBold" Margin="8,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock x:Name="TxtMenuPointerElevation" Text="⛰️ --" FontSize="10.5" FontWeight="SemiBold" />
+                        </StackPanel>
+                    </Border>
 
-                <!-- 1. Live Location Tracking Option -->
-                <TextBlock x:Name="TxtSectionTrack" Text="LIVE LOCATION TRACKING" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
-                <Button x:Name="BtnToggleTracking" Content="🛰️ Track Location: OFF" Click="BtnToggleTracking_Click"
-                        Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
-                        Padding="8,6" Margin="0,2,0,4" FontSize="11" FontWeight="SemiBold" />
-                <TextBlock x:Name="TxtTrackingDetails" Text="Follows GPS location live as you move" FontSize="10" Margin="2,0,0,10" TextWrapping="Wrap" />
+                    <Border x:Name="MenuDivider1" Height="1" Margin="0,0,0,10" />
 
-                <Border x:Name="MenuDividerPower" Height="1" Margin="0,0,0,10" />
+                    <!-- Location Search (visible when GeoNames API username is configured) -->
+                    <StackPanel x:Name="MenuSearchLocationSection" Orientation="Vertical" Visibility="Collapsed" Margin="0,0,0,10">
+                        <TextBlock x:Name="TxtSectionSearchLocation" Text="LOCATION SEARCH" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
+                        <Button x:Name="BtnMapSearchLocation" Content="🔍 Search Location (GeoNames)..." Click="BtnMapSearchLocation_Click"
+                                Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                Padding="8,6" Margin="0,2,0,4" FontSize="11" FontWeight="SemiBold"
+                                ToolTipService.ToolTip="Search worldwide cities, mountain peaks, and landmarks using GeoNames" />
+                        <Border x:Name="MenuDividerSearch" Height="1" Margin="0,6,0,0" />
+                    </StackPanel>
 
-                <!-- 2. Battery & Efficiency Mode Option -->
-                <TextBlock x:Name="TxtSectionPower" Text="BATTERY &amp; GPS EFFICIENCY" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
-                <Button x:Name="BtnToggleBatterySaver" Content="🔋 GPS Power Saver: ON" Click="BtnToggleBatterySaver_Click"
-                        Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
-                        Padding="8,6" Margin="0,2,0,4" FontSize="11" FontWeight="SemiBold" />
-                <TextBlock x:Name="TxtBatterySaverDetails" Text="Enforces satellite GPS fixes with power-efficient throttling (10s / 15m), avoiding cell/Wi-Fi" FontSize="10" Margin="2,0,0,10" TextWrapping="Wrap" />
+                    <!-- 1. Live Location Tracking Option -->
+                    <TextBlock x:Name="TxtSectionTrack" Text="LIVE LOCATION TRACKING" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
+                    <Button x:Name="BtnToggleTracking" Content="🛰️ Track Location: OFF" Click="BtnToggleTracking_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,6" Margin="0,2,0,4" FontSize="11" FontWeight="SemiBold" />
+                    <TextBlock x:Name="TxtTrackingDetails" Text="Follows GPS location live as you move" FontSize="10" Margin="2,0,0,10" TextWrapping="Wrap" />
 
-                <Border x:Name="MenuDivider2" Height="1" Margin="0,0,0,10" />
+                    <Border x:Name="MenuDividerPower" Height="1" Margin="0,0,0,10" />
 
-                <!-- 3. Record Location / Track Option -->
-                <TextBlock x:Name="TxtSectionRecord" Text="TRACK RECORDING" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
-                <Button x:Name="BtnToggleRecording" Content="⏺️ Record Location" Click="BtnToggleRecording_Click"
-                        Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
-                        Padding="8,6" Margin="0,2,0,4" FontSize="11" FontWeight="SemiBold" />
-                <TextBlock x:Name="TxtRecordingStats" Text="Points: 0 | Distance: 0.00 km | 00:00" FontSize="10" FontWeight="SemiBold" Margin="2,0,0,6" />
+                    <!-- 2. GPS Recording Interval Setting (Power Saver is always permanently active) -->
+                    <TextBlock x:Name="TxtSectionPower" Text="GPS RECORDING INTERVAL" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
 
-                <StackPanel Orientation="Horizontal" Margin="0,2,0,6">
-                    <Button x:Name="BtnClearTrack" Content="🗑️ Clear Track" Click="BtnClearTrack_Click"
-                            Style="{StaticResource PillButtonStyle}" Padding="8,4" Margin="0,0,4,0" FontSize="10" FontWeight="SemiBold" />
-                    <Button x:Name="BtnExportGpx" Content="💾 Export GPX" Click="BtnExportGpx_Click"
-                            Style="{StaticResource PillButtonStyle}" Padding="8,4" Margin="0,0,4,0" FontSize="10" FontWeight="SemiBold" />
-                    <Button x:Name="BtnExportGeoJson" Content="💾 GeoJSON" Click="BtnExportGeoJson_Click"
-                            Style="{StaticResource PillButtonStyle}" Padding="8,4" FontSize="10" FontWeight="SemiBold" />
+                    <StackPanel x:Name="PanelPowerInterval" Orientation="Vertical" Margin="0,2,0,6">
+                        <Grid Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Button x:Name="BtnInterval15s" Grid.Column="0" Content="15 sec" Click="BtnInterval15s_Click"
+                                    Style="{StaticResource PillButtonStyle}" Padding="2,5" Margin="1" FontSize="10" FontWeight="SemiBold" />
+                            <Button x:Name="BtnInterval1m" Grid.Column="1" Content="1 min" Click="BtnInterval1m_Click"
+                                    Style="{StaticResource PillButtonStyle}" Padding="2,5" Margin="1" FontSize="10" FontWeight="SemiBold" />
+                            <Button x:Name="BtnInterval5m" Grid.Column="2" Content="5 min" Click="BtnInterval5m_Click"
+                                    Style="{StaticResource PillButtonStyle}" Padding="2,5" Margin="1" FontSize="10" FontWeight="SemiBold" />
+                            <Button x:Name="BtnInterval15m" Grid.Column="3" Content="15 min" Click="BtnInterval15m_Click"
+                                    Style="{StaticResource PillButtonStyle}" Padding="2,5" Margin="1" FontSize="10" FontWeight="SemiBold" />
+                        </Grid>
+                    </StackPanel>
+
+                    <TextBlock x:Name="TxtBatterySaverDetails" Text="Enforces satellite GPS fixes with power-efficient throttling (1 pt / 1 min / 15m delta). Hardware sleeps between fixes." FontSize="10" Margin="2,0,0,10" TextWrapping="Wrap" />
+
+                    <Border x:Name="MenuDivider2" Height="1" Margin="0,0,0,10" />
+
+                    <!-- 3. Record Location / Track Option -->
+                    <TextBlock x:Name="TxtSectionRecord" Text="TRACK RECORDING" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
+                    <Button x:Name="BtnToggleRecording" Content="⏺️ Record Location" Click="BtnToggleRecording_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,6" Margin="0,2,0,4" FontSize="11" FontWeight="SemiBold" />
+                    <TextBlock x:Name="TxtRecordingStats" Text="Points: 0 | Distance: 0.00 km | 00:00" FontSize="10" FontWeight="SemiBold" Margin="2,0,0,6" />
+
+                    <StackPanel Orientation="Horizontal" Margin="0,2,0,6">
+                        <Button x:Name="BtnClearTrack" Content="🗑️ Clear Track" Click="BtnClearTrack_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="8,4" Margin="0,0,4,0" FontSize="10" FontWeight="SemiBold" />
+                        <Button x:Name="BtnExportGpx" Content="💾 Export GPX" Click="BtnExportGpx_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="8,4" Margin="0,0,4,0" FontSize="10" FontWeight="SemiBold" />
+                        <Button x:Name="BtnExportGeoJson" Content="💾 GeoJSON" Click="BtnExportGeoJson_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="8,4" FontSize="10" FontWeight="SemiBold" />
+                    </StackPanel>
+
+                    <Border x:Name="MenuDividerTracks" Height="1" Margin="0,0,0,10" />
+
+                    <!-- 4. Tracks & GPX Files -->
+                    <TextBlock x:Name="TxtSectionHistory" Text="TRACKS &amp; GPX/FIT FILES" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
+                    <Button x:Name="BtnOpenTracksList" Content="📂 View Recorded Tracks (0)" Click="BtnOpenTracksList_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,6" Margin="0,2,0,4" FontSize="11" FontWeight="SemiBold" />
+                    <Button x:Name="BtnOpenTracksLibrary" Content="📁 Manage GPX/FIT Library..." Click="BtnOpenTracksLibrary_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,6" Margin="0,2,0,4" FontSize="11" FontWeight="SemiBold"
+                            ToolTipService.ToolTip="Browse, show/hide, and zoom to GPX, TCX, and FIT files" />
+                    <Button x:Name="BtnMenuDrawRoute" Content="✏️ Draw Route &amp; Snap to Trails..." Click="BtnMenuDrawRoute_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,6" Margin="0,2,0,4" FontSize="11" FontWeight="SemiBold"
+                            ToolTipService.ToolTip="Draw a custom trail route on the map" />
+                    <TextBlock x:Name="TxtTracksSummary" Text="Auto-saves progress; crash resilient" FontSize="10" Margin="2,0,0,10" TextWrapping="Wrap" />
+
+                    <Border x:Name="MenuDivider3" Height="1" Margin="0,0,0,10" />
+
+                    <!-- 5. View & Camera Controls -->
+                    <TextBlock x:Name="TxtSectionViews" Text="VIEW &amp; AIM CONTROLS" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
+                    <Button x:Name="BtnMenuCelestialInfo" Content="☀️ Sun &amp; Moon Times (±12h)..." Click="BtnMenuCelestialInfo_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,6" Margin="0,2,0,4" FontSize="11" FontWeight="SemiBold"
+                            ToolTipService.ToolTip="View sun and moon rise/set times with topography compensation for the past and next 12 hours" />
+                    <Button x:Name="BtnMenuSetAimLocation" Content="🎯 Set AIM to Map Location" Click="BtnMenuSetAimLocation_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,6" Margin="0,2,0,4" FontSize="11" FontWeight="SemiBold"
+                            ToolTipService.ToolTip="Set the AIM Map and Horizon viewpoint to the current GPS fix if tracking, map marker if placed, or current map center" />
+                    <Button x:Name="BtnMenuToggle3d" Content="🏔️ Toggle 3D Perspective" Click="BtnMenuToggle3d_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,6" Margin="0,2,0,4" FontSize="11" FontWeight="SemiBold"
+                            ToolTipService.ToolTip="Toggle 3D terrain perspective view (right-click / Ctrl-drag to orbit)" />
+                    <Button x:Name="BtnMenuResetView" Content="↺ Reset Map View" Click="BtnMenuResetView_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,6" Margin="0,0,0,10" FontSize="11" FontWeight="SemiBold"
+                            ToolTipService.ToolTip="Reset camera to flat top-down 2D view and recover if stuck" />
+
+                    <!-- 6. Base Map Layer Switcher -->
+                    <TextBlock x:Name="TxtSectionLayer" Text="BASE MAP LAYER" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
+                    <StackPanel Orientation="Horizontal" Margin="0,2,0,6">
+                        <Button x:Name="BtnLayerTopo" Content="Topo" Click="BtnLayerTopo_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,3,0" FontSize="10" FontWeight="SemiBold" />
+                        <Button x:Name="BtnLayerStreets" Content="Streets" Click="BtnLayerStreets_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,3,0" FontSize="10" FontWeight="SemiBold" />
+                        <Button x:Name="BtnLayerSatellite" Content="Satellite" Click="BtnLayerSatellite_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,3,0" FontSize="10" FontWeight="SemiBold" />
+                        <Button x:Name="BtnLayerPmTiles" Content="PMTiles" Click="BtnLayerPmTiles_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="9,4" FontSize="10" FontWeight="Bold" />
+                    </StackPanel>
+
+                    <Button x:Name="BtnConfigurePmTiles" Content="⚙️ Configure PMTiles..." Click="BtnConfigurePmTiles_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,5" Margin="0,0,0,4" FontSize="10" FontWeight="SemiBold"
+                            ToolTipService.ToolTip="Select PMTiles files and configure layers" />
                 </StackPanel>
-
-                <Border x:Name="MenuDividerTracks" Height="1" Margin="0,0,0,10" />
-
-                <!-- 4. Tracks & GPX Files -->
-                <TextBlock x:Name="TxtSectionHistory" Text="TRACKS &amp; GPX/FIT FILES" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
-                <Button x:Name="BtnOpenTracksList" Content="📂 View Recorded Tracks (0)" Click="BtnOpenTracksList_Click"
-                        Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
-                        Padding="8,6" Margin="0,2,0,4" FontSize="11" FontWeight="SemiBold" />
-                <Button x:Name="BtnOpenTracksLibrary" Content="📁 Manage GPX/FIT Library..." Click="BtnOpenTracksLibrary_Click"
-                        Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
-                        Padding="8,6" Margin="0,2,0,4" FontSize="11" FontWeight="SemiBold"
-                        ToolTipService.ToolTip="Browse, show/hide, and zoom to GPX, TCX, and FIT files" />
-                <TextBlock x:Name="TxtTracksSummary" Text="Auto-saves progress; crash resilient" FontSize="10" Margin="2,0,0,10" TextWrapping="Wrap" />
-
-                <Border x:Name="MenuDivider3" Height="1" Margin="0,0,0,10" />
-
-                <!-- 5. Reset Camera / Recovery Option -->
-                <Button x:Name="BtnMenuResetView" Content="↺ Reset Map View" Click="BtnResetView_Click"
-                        Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
-                        Padding="8,6" Margin="0,0,0,10" FontSize="11" FontWeight="SemiBold"
-                        ToolTipService.ToolTip="Reset camera to flat top-down 2D view and recover if stuck" />
-
-                <!-- 6. Base Map Layer Switcher -->
-                <TextBlock x:Name="TxtSectionLayer" Text="BASE MAP LAYER" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
-                <StackPanel Orientation="Horizontal" Margin="0,2,0,6">
-                    <Button x:Name="BtnLayerTopo" Content="Topo" Click="BtnLayerTopo_Click"
-                            Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,3,0" FontSize="10" FontWeight="SemiBold" />
-                    <Button x:Name="BtnLayerStreets" Content="Streets" Click="BtnLayerStreets_Click"
-                            Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,3,0" FontSize="10" FontWeight="SemiBold" />
-                    <Button x:Name="BtnLayerSatellite" Content="Satellite" Click="BtnLayerSatellite_Click"
-                            Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,3,0" FontSize="10" FontWeight="SemiBold" />
-                    <Button x:Name="BtnLayerPmTiles" Content="PMTiles" Click="BtnLayerPmTiles_Click"
-                            Style="{StaticResource PillButtonStyle}" Padding="9,4" FontSize="10" FontWeight="Bold" />
-                </StackPanel>
-
-                <Button x:Name="BtnConfigurePmTiles" Content="⚙️ Configure PMTiles..." Click="BtnConfigurePmTiles_Click"
-                        Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
-                        Padding="8,5" Margin="0,0,0,4" FontSize="10" FontWeight="SemiBold"
-                        ToolTipService.ToolTip="Select PMTiles files and configure layers" />
-            </StackPanel>
+            </ScrollViewer>
         </Border>
 
         <!-- Recorded Tracks Modal Dialog Panel -->
@@ -193,6 +309,24 @@
                     </StackPanel>
                 </ScrollViewer>
             </Grid>
+        </Border>
+
+        <!-- Save Route Modal Dialog Panel -->
+        <Border x:Name="SaveRouteBackdrop" Background="#66000000" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Visibility="Collapsed" MouseLeftButtonDown="BtnCancelSaveRoute_Click" />
+        <Border x:Name="SaveRouteDialog" HorizontalAlignment="Center" VerticalAlignment="Center"
+                Width="380" Visibility="Collapsed" BorderThickness="1" CornerRadius="12" Padding="16,14">
+            <StackPanel Orientation="Vertical">
+                <TextBlock x:Name="TxtSaveRouteTitle" Text="💾 Save Route as GPX" FontSize="13" FontWeight="Bold" Margin="0,0,0,10" />
+                <TextBlock x:Name="TxtSaveRouteNameLabel" Text="Route Name:" FontSize="10.5" FontWeight="SemiBold" Margin="0,0,0,4" />
+                <TextBox x:Name="TxtRouteSaveName" FontSize="11" Padding="6,4" Margin="0,0,0,8" />
+                <TextBlock x:Name="TxtRouteSaveDetails" Text="Distance: 0.00 km | 0 points" FontSize="10" Margin="0,0,0,14" Opacity="0.8" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="BtnCancelSaveRoute" Content="Cancel" Click="BtnCancelSaveRoute_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="10,4" Margin="0,0,8,0" FontSize="10.5" />
+                    <Button x:Name="BtnConfirmSaveRoute" Content="Save Route" Click="BtnConfirmSaveRoute_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="12,4" FontSize="10.5" FontWeight="Bold" />
+                </StackPanel>
+            </StackPanel>
         </Border>
     </Grid>
 </UserControl>

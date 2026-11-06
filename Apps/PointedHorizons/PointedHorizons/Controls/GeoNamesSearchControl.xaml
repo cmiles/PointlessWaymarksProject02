@@ -1,0 +1,93 @@
+<UserControl x:Class="PointedHorizons.Controls.GeoNamesSearchControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="480">
+
+    <Grid x:Name="DialogRoot">
+        <Border x:Name="CardBorder" BorderThickness="1" CornerRadius="12" Padding="14,12"
+                HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="480" Margin="8,10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <!-- Header -->
+                    <RowDefinition Height="Auto" />
+                    <!-- Divider -->
+                    <RowDefinition Height="Auto" />
+                    <!-- Search Input & Instructions -->
+                    <RowDefinition Height="Auto" />
+                    <!-- Results List Area -->
+                    <RowDefinition Height="*" MaxHeight="320" />
+                    <!-- Footer Buttons -->
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- 1. Header Bar -->
+                <Grid Grid.Row="0" Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="🔍" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                        <TextBlock x:Name="TxtDialogTitle" Text="Search Location (GeoNames)" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <Button x:Name="BtnCloseDialog" Grid.Column="1" Content="✕" Click="BtnClose_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="8,3" FontSize="11" FontWeight="Bold"
+                            ToolTipService.ToolTip="Close without selecting" />
+                </Grid>
+
+                <Border x:Name="Divider1" Grid.Row="1" Height="1" Margin="0,0,0,8" />
+
+                <!-- 2. Search Box & Options -->
+                <StackPanel Grid.Row="2" Orientation="Vertical" Margin="0,0,0,6">
+                    <TextBlock x:Name="TxtHelp" Text="Search world places, mountains, peaks, parks, and cities:"
+                               FontSize="10.5" Margin="0,0,0,6" TextWrapping="Wrap" />
+
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox x:Name="TxtSearchQuery" Grid.Column="0" FontSize="12" Padding="8,5"
+                                 VerticalAlignment="Center" KeyDown="TxtSearchQuery_KeyDown" />
+
+                        <Button x:Name="BtnSearch" Grid.Column="1" Content="🔍 Search" Click="BtnSearch_Click"
+                                Style="{StaticResource PillButtonStyle}" Margin="6,0,0,0" Padding="12,5"
+                                FontSize="11" FontWeight="Bold" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <TextBlock x:Name="TxtSearchStatus" Text="Enter a place name and tap Search (or press Enter)."
+                               FontSize="10" Margin="2,2,0,4" TextWrapping="Wrap" />
+
+                    <ProgressBar x:Name="SearchProgressBar" IsIndeterminate="True" Height="3" Margin="0,2,0,4"
+                                 Visibility="Collapsed" />
+                </StackPanel>
+
+                <!-- 3. Results List -->
+                <ScrollViewer Grid.Row="3" x:Name="ResultsScrollViewer"
+                              VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                              Margin="0,2,0,8">
+                    <StackPanel x:Name="ResultsPanel" Orientation="Vertical" />
+                </ScrollViewer>
+
+                <!-- 4. Footer Bar -->
+                <Grid Grid.Row="4" Margin="0,4,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock x:Name="TxtGeoNamesAccount" Text="" FontSize="9.5" VerticalAlignment="Center" TextWrapping="Wrap" />
+
+                    <Button x:Name="BtnCancelBottom" Grid.Column="1" Content="✕ Close" Click="BtnClose_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="14,6" FontSize="11" FontWeight="SemiBold"
+                            ToolTipService.ToolTip="Close without making changes" />
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
+

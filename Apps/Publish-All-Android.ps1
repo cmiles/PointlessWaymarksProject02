@@ -2,7 +2,7 @@
 .SYNOPSIS
     Runs all Android publish scripts in the Apps directory.
 .DESCRIPTION
-    Discovers and executes all Publish-*Android.ps1 scripts (HistoricTempests, PwImageMetadataViewer,
+    Discovers and executes all Publish-*Android.ps1 scripts (HistoricTempests, PointedHorizons, PwImageMetadataViewer,
     PwTrackTrimmer, SiteViewer, WaterDaze, etc.). Accepts a signing password on the command line
     (or prompts once if omitted) and forwards it to all child scripts.
 .PARAMETER Password

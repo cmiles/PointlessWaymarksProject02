@@ -177,10 +177,8 @@ public static class LocalTileServer
                     return;
                 }
 
-                string dir = OfflineDataService.PmTilesDirectory;
-                string filePath = Path.Combine(dir, fileName);
-
-                if (!File.Exists(filePath))
+                string? filePath = OfflineDataService.ResolvePmTileFilePath(fileName);
+                if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
                 {
                     resp.StatusCode = (int)HttpStatusCode.NotFound;
                     resp.Close();

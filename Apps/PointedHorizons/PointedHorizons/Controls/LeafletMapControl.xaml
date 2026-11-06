@@ -21,45 +21,89 @@
 
         <!-- Floating Hamburger Dropdown Menu Panel -->
         <Border x:Name="HamburgerPanel" HorizontalAlignment="Left" VerticalAlignment="Top"
-                Margin="12,50,0,0" Width="260" Visibility="Collapsed"
+                Margin="12,50,0,0" Width="285" MaxHeight="520" Visibility="Collapsed"
                 BorderThickness="1" CornerRadius="12" Padding="14,12">
-            <StackPanel Orientation="Vertical">
-                <!-- Header -->
-                <Grid Margin="0,0,0,10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock x:Name="TxtMenuTitle" Text="🗺️ Map Choices" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" />
-                    <Button x:Name="BtnCloseMenu" Grid.Column="1" Content="✕" Click="BtnCloseMenu_Click"
-                            Style="{StaticResource PillButtonStyle}" Padding="6,2" FontSize="11" />
-                </Grid>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Orientation="Vertical">
+                    <!-- Header -->
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="TxtMenuTitle" Text="🧭 Aim Map Settings" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" />
+                        <Button x:Name="BtnCloseMenu" Grid.Column="1" Content="✕" Click="BtnCloseMenu_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="6,2" FontSize="11" />
+                    </Grid>
 
-                <Border x:Name="MenuDivider" Height="1" Margin="0,0,0,10" />
+                    <Border x:Name="MenuDivider" Height="1" Margin="0,0,0,10" />
 
-                <!-- Base Map Layer Switcher -->
-                <TextBlock x:Name="TxtSectionLayer" Text="BASE MAP LAYER" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
-                <StackPanel Orientation="Horizontal" Margin="0,2,0,6">
-                    <Button x:Name="BtnLayerTopo" Content="Topo" Click="BtnLayerTopo_Click"
-                            Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,3,0" FontSize="10" FontWeight="SemiBold" />
-                    <Button x:Name="BtnLayerStreets" Content="Streets" Click="BtnLayerStreets_Click"
-                            Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,3,0" FontSize="10" FontWeight="SemiBold" />
-                    <Button x:Name="BtnLayerSatellite" Content="Satellite" Click="BtnLayerSatellite_Click"
-                            Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,3,0" FontSize="10" FontWeight="SemiBold" />
-                    <Button x:Name="BtnLayerPmTiles" Content="PMTiles" Click="BtnLayerPmTiles_Click"
-                            Style="{StaticResource PillButtonStyle}" Padding="9,4" FontSize="10" FontWeight="Bold" />
+                    <!-- Location Presets (Aim Viewpoint Settings) -->
+                    <TextBlock x:Name="TxtSectionPresets" Text="LOCATION PRESETS" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
+                    <StackPanel Orientation="Vertical" Margin="0,0,0,8">
+                        <Button x:Name="BtnPresetRincon" Content="Tucson East (Rincon Ridges), AZ" Click="BtnPresetRincon_Click"
+                                Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                Padding="8,5" Margin="0,2" FontSize="11" />
+                        <Button x:Name="BtnPresetLemmon" Content="Mount Lemmon, AZ" Click="BtnPresetLemmon_Click"
+                                Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                Padding="8,5" Margin="0,2" FontSize="11" />
+                        <Button x:Name="BtnPresetRainier" Content="Mount Rainier (Paradise), WA" Click="BtnPresetRainier_Click"
+                                Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                Padding="8,5" Margin="0,2" FontSize="11" />
+                        <Button x:Name="BtnPresetGrandCanyon" Content="Grand Canyon (Mather Point), AZ" Click="BtnPresetGrandCanyon_Click"
+                                Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                Padding="8,5" Margin="0,2" FontSize="11" />
+                        <Button x:Name="BtnPresetPikes" Content="Pikes Peak, CO" Click="BtnPresetPikes_Click"
+                                Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                Padding="8,5" Margin="0,2" FontSize="11" />
+                        <Button x:Name="BtnPresetYosemite" Content="Yosemite (Glacier Point), CA" Click="BtnPresetYosemite_Click"
+                                Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                Padding="8,5" Margin="0,2" FontSize="11" />
+                        <Button x:Name="BtnPresetWashington" Content="Mount Washington, NH" Click="BtnPresetWashington_Click"
+                                Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                Padding="8,5" Margin="0,2" FontSize="11" />
+                    </StackPanel>
+
+                    <Border x:Name="MenuDivider2" Height="1" Margin="0,0,0,10" />
+
+                    <!-- Base Map Layer Switcher -->
+                    <TextBlock x:Name="TxtSectionLayer" Text="BASE MAP LAYER" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
+                    <StackPanel Orientation="Horizontal" Margin="0,2,0,6">
+                        <Button x:Name="BtnLayerTopo" Content="Topo" Click="BtnLayerTopo_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,3,0" FontSize="10" FontWeight="SemiBold" />
+                        <Button x:Name="BtnLayerStreets" Content="Streets" Click="BtnLayerStreets_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,3,0" FontSize="10" FontWeight="SemiBold" />
+                        <Button x:Name="BtnLayerSatellite" Content="Satellite" Click="BtnLayerSatellite_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,3,0" FontSize="10" FontWeight="SemiBold" />
+                        <Button x:Name="BtnLayerPmTiles" Content="PMTiles" Click="BtnLayerPmTiles_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="9,4" FontSize="10" FontWeight="Bold" />
+                    </StackPanel>
+
+                    <Button x:Name="BtnConfigurePmTiles" Content="⚙️ Configure PMTiles..." Click="BtnConfigurePmTiles_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,5" Margin="0,0,0,4" FontSize="10" FontWeight="SemiBold"
+                            ToolTipService.ToolTip="Select PMTiles files and configure layers" />
+
+                    <Border x:Name="MenuDivider3" Height="1" Margin="0,4,0,8" />
+
+                    <!-- View & Camera -->
+                    <TextBlock x:Name="TxtSectionViews" Text="VIEW &amp; POSITION" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
+                    <Button x:Name="BtnMenuCelestialInfo" Content="☀️ Sun &amp; Moon Times (±12h)..." Click="BtnMenuCelestialInfo_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,5" Margin="0,2,0,4" FontSize="10" FontWeight="SemiBold"
+                            ToolTipService.ToolTip="View sun and moon rise/set times with topography compensation for the past and next 12 hours" />
+                    <Button x:Name="BtnMenuMyLocation" Content="📍 Move to My GPS Location" Click="BtnMyLocation_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,5" Margin="0,2,0,4" FontSize="10" FontWeight="SemiBold" />
+                    <Button x:Name="BtnMenuAim3d" Content="🏔️ Toggle 3D Perspective" Click="BtnAim3d_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,5" Margin="0,2,0,4" FontSize="10" FontWeight="SemiBold" />
+                    <Button x:Name="BtnMenuAimReset" Content="↺ Reset Map View" Click="BtnAimReset_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,5" Margin="0,2,0,0" FontSize="10" FontWeight="SemiBold"
+                            ToolTipService.ToolTip="Reset camera to flat top-down 2D view and recover if stuck" />
                 </StackPanel>
-
-                <Button x:Name="BtnConfigurePmTiles" Content="⚙️ Configure PMTiles..." Click="BtnConfigurePmTiles_Click"
-                        Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
-                        Padding="8,5" Margin="0,0,0,4" FontSize="10" FontWeight="SemiBold"
-                        ToolTipService.ToolTip="Select PMTiles files and configure layers" />
-
-                <Button x:Name="BtnMenuAimReset" Content="↺ Reset Map View" Click="BtnAimReset_Click"
-                        Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
-                        Padding="8,5" Margin="0,4,0,0" FontSize="10" FontWeight="SemiBold"
-                        ToolTipService.ToolTip="Reset camera to flat top-down 2D view and recover if stuck" />
-            </StackPanel>
+            </ScrollViewer>
         </Border>
 
         <!-- Floating Azimuth & Direction Toolbar Overlay (Top Center) -->

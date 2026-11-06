@@ -158,7 +158,7 @@ public static class TrackStorageService
     {
         string id = $"track_{DateTime.UtcNow:yyyyMMdd_HHmmss}";
         string name = string.IsNullOrWhiteSpace(customName)
-            ? $"Track {DateTime.Now:yyyy-MM-dd HH:mm}"
+            ? $"Track {DateTime.Now:yyyy-MM-dd HH-mm}"
             : customName;
 
         var track = new RecordedTrack
@@ -224,7 +224,7 @@ public static class TrackStorageService
             {
                 string gpxDir = OfflineDataService.GpxDirectory;
                 await TrackParserService.ExportRecordedTrackToGpxAsync(track, gpxDir);
-                _ = TrackIndexService.RefreshAsync();
+                await TrackIndexService.RefreshAsync(forceFullRescan: true);
             }
         }
         catch (Exception ex)
@@ -233,6 +233,66 @@ public static class TrackStorageService
         }
 
         TracksUpdated?.Invoke(null, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Checks all locally stored recorded tracks and exports any missing ones to the GPX directory on disk.
+    /// This recovers any tracks previously recorded before GPX export or when file export was interrupted.
+    /// </summary>
+    public static async Task EnsureAllSavedTracksExportedToGpxAsync()
+    {
+        try
+        {
+            if (!OfflineDataService.IsPmTilesSupported) return;
+
+            string gpxDir = OfflineDataService.GpxDirectory;
+            if (!Directory.Exists(gpxDir))
+            {
+                Directory.CreateDirectory(gpxDir);
+            }
+
+            var index = await GetTracksIndexAsync();
+            if (index == null || index.Count == 0) return;
+
+            // Collect existing filenames across candidate directories to avoid duplicates
+            var existingFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var dirs = OfflineDataService.GetGpxCandidateDirectories();
+            foreach (var d in dirs)
+            {
+                try
+                {
+                    if (Directory.Exists(d))
+                    {
+                        foreach (var f in Directory.GetFiles(d, "*.gpx"))
+                        {
+                            existingFiles.Add(Path.GetFileNameWithoutExtension(f));
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            foreach (var meta in index)
+            {
+                if (meta == null || meta.PointCount == 0) continue;
+
+                // Check if already exported by matching date stamp or track ID
+                string dateKey = meta.StartTime.ToString("yyyyMMdd");
+                bool alreadyExists = existingFiles.Any(f => f.Contains(dateKey, StringComparison.OrdinalIgnoreCase) || f.Contains(meta.Id, StringComparison.OrdinalIgnoreCase));
+                if (alreadyExists) continue;
+
+                var fullTrack = await GetTrackByIdAsync(meta.Id);
+                if (fullTrack != null && fullTrack.Points.Count > 0)
+                {
+                    Debug.WriteLine($"[TrackStorageService] Backfilling GPX export for saved track: {fullTrack.Name}");
+                    await TrackParserService.ExportRecordedTrackToGpxAsync(fullTrack, gpxDir);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[TrackStorageService] EnsureAllSavedTracksExportedToGpxAsync error: {ex.Message}");
+        }
     }
 
     /// <summary>

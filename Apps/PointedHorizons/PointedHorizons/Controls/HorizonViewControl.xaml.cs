@@ -92,17 +92,50 @@ public partial class HorizonViewControl : UserControl
             ToolbarDivider.Background = tm.MapOverlayBorder;
         }
 
-        if (BtnToggleTheme != null)
+        if (BtnHorizonMenu != null)
         {
-            BtnToggleTheme.Background = tm.ButtonInactiveBackground;
-            BtnToggleTheme.BorderBrush = tm.ButtonInactiveBorder;
-            BtnToggleTheme.Foreground = tm.TextPrimary;
+            BtnHorizonMenu.Background = tm.ButtonInactiveBackground;
+            BtnHorizonMenu.BorderBrush = tm.ButtonInactiveBorder;
+            BtnHorizonMenu.Foreground = tm.TextPrimary;
         }
+
+        if (HorizonMenuPanel != null)
+        {
+            HorizonMenuPanel.Background = tm.MapOverlayBackground;
+            HorizonMenuPanel.BorderBrush = tm.MapOverlayBorder;
+        }
+
+        if (HorizonSunMoonCardBorder != null)
+        {
+            HorizonSunMoonCardBorder.Background = tm.ButtonInactiveBackground;
+            HorizonSunMoonCardBorder.BorderBrush = tm.ButtonInactiveBorder;
+        }
+
+        if (HorizonMenuDivider1 != null) HorizonMenuDivider1.Background = tm.MapOverlayBorder;
+        if (HorizonMenuDivider2 != null) HorizonMenuDivider2.Background = tm.MapOverlayBorder;
+        if (HorizonMenuDivider3 != null) HorizonMenuDivider3.Background = tm.MapOverlayBorder;
+        if (HorizonSunMoonCardDivider != null) HorizonSunMoonCardDivider.Background = tm.MapOverlayBorder;
 
         if (FocalLengthBoxBorder != null)
         {
-            FocalLengthBoxBorder.Background = tm.ButtonInactiveBackground;
-            FocalLengthBoxBorder.BorderBrush = tm.ButtonInactiveBorder;
+            FocalLengthBoxBorder.Background = tm.InputBoxBackground;
+            FocalLengthBoxBorder.BorderBrush = _isEditingFocalLength ? tm.ButtonActiveBorder : tm.InputBoxBorder;
+        }
+
+        if (MenuFocalLengthBorder != null)
+        {
+            MenuFocalLengthBorder.Background = tm.InputBoxBackground;
+            MenuFocalLengthBorder.BorderBrush = tm.InputBoxBorder;
+        }
+
+        if (TxtFocalLengthPrefix != null)
+        {
+            TxtFocalLengthPrefix.Foreground = tm.Accent;
+        }
+
+        if (TxtMenuFocalPrefix != null)
+        {
+            TxtMenuFocalPrefix.Foreground = tm.Accent;
         }
 
         if (TxtFocalLength != null)
@@ -110,9 +143,19 @@ public partial class HorizonViewControl : UserControl
             TxtFocalLength.Foreground = tm.TextPrimary;
         }
 
+        if (TxtMenuFocalLength != null)
+        {
+            TxtMenuFocalLength.Foreground = tm.TextPrimary;
+        }
+
         if (TxtFocalLengthUnit != null)
         {
             TxtFocalLengthUnit.Foreground = tm.TextSecondary;
+        }
+
+        if (TxtMenuFocalUnit != null)
+        {
+            TxtMenuFocalUnit.Foreground = tm.TextSecondary;
         }
 
         UpdateFovButtons(ViewModel?.FieldOfView ?? 54.39);
@@ -120,9 +163,21 @@ public partial class HorizonViewControl : UserControl
 
     public void SetCompactMode(bool isCompact)
     {
+        if (QuickFovPanel != null)
+        {
+            QuickFovPanel.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        }
+        if (FocalLengthBoxBorder != null)
+        {
+            FocalLengthBoxBorder.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        }
+        if (ToolbarDivider != null)
+        {
+            ToolbarDivider.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        }
         if (QuickToolbarBorder != null)
         {
-            QuickToolbarBorder.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+            QuickToolbarBorder.Visibility = Visibility.Visible;
         }
     }
 
@@ -190,6 +245,20 @@ public partial class HorizonViewControl : UserControl
             Dispatcher.BeginInvoke(InitializeCanvas);
             return;
         }
+
+        try
+        {
+            Interop.ExecuteJavaScriptVoid(@"
+                (function(d) {
+                    if (d && d.style) {
+                        d.style.touchAction = 'none';
+                        d.style.userSelect = 'none';
+                        d.style.webkitUserSelect = 'none';
+                    }
+                })($0);
+            ", div);
+        }
+        catch { }
 
         _isInitialized = true;
         RenderScene();
@@ -277,11 +346,23 @@ public partial class HorizonViewControl : UserControl
         StyleBtn(BtnFov50, Math.Abs(fl - 50.0) < 4.0);
         StyleBtn(BtnFov90, Math.Abs(fl - 90.0) < 6.0);
 
+        StyleBtn(BtnMenuFov15, Math.Abs(fl - 15.0) < 2.0);
+        StyleBtn(BtnMenuFov35, Math.Abs(fl - 35.0) < 3.0);
+        StyleBtn(BtnMenuFov50, Math.Abs(fl - 50.0) < 4.0);
+        StyleBtn(BtnMenuFov90, Math.Abs(fl - 90.0) < 6.0);
+
+        string flFormatted = (Math.Abs(fl - Math.Round(fl)) < 0.05)
+            ? Math.Round(fl).ToString()
+            : fl.ToString("0.#");
+
         if (!_isEditingFocalLength && TxtFocalLength != null)
         {
-            TxtFocalLength.Text = (Math.Abs(fl - Math.Round(fl)) < 0.05)
-                ? Math.Round(fl).ToString()
-                : fl.ToString("0.#");
+            TxtFocalLength.Text = flFormatted;
+        }
+
+        if (!_isEditingFocalLength && TxtMenuFocalLength != null)
+        {
+            TxtMenuFocalLength.Text = flFormatted;
         }
     }
 
@@ -323,7 +404,7 @@ public partial class HorizonViewControl : UserControl
     {
         if (FocalLengthBoxBorder != null)
         {
-            FocalLengthBoxBorder.BorderBrush = ThemeManager.Current.ButtonInactiveBorder;
+            FocalLengthBoxBorder.BorderBrush = ThemeManager.Current.InputBoxBorder;
         }
         CommitFocalLengthInput();
     }
@@ -357,6 +438,75 @@ public partial class HorizonViewControl : UserControl
         }
 
         UpdateFovButtons(ViewModel.FieldOfView);
+    }
+
+    private void TxtMenuFocalLength_LostFocus(object sender, RoutedEventArgs e)
+    {
+        CommitMenuFocalLengthInput();
+    }
+
+    private void TxtMenuFocalLength_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key == System.Windows.Input.Key.Enter)
+        {
+            CommitMenuFocalLengthInput();
+            e.Handled = true;
+        }
+    }
+
+    private void CommitMenuFocalLengthInput()
+    {
+        if (TxtMenuFocalLength == null || ViewModel == null) return;
+
+        string text = TxtMenuFocalLength.Text?.Trim() ?? string.Empty;
+        if (double.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double fl)
+            || double.TryParse(text, out fl))
+        {
+            if (fl > 0)
+            {
+                fl = Math.Clamp(fl, 5.0, 600.0);
+                double fov = MainViewModel.FocalLengthToFieldOfView(fl);
+                ViewModel.FieldOfView = fov;
+                UpdateFovButtons(fov);
+                return;
+            }
+        }
+
+        UpdateFovButtons(ViewModel.FieldOfView);
+    }
+
+    private void BtnHorizonMenu_Click(object sender, RoutedEventArgs e)
+    {
+        if (HorizonMenuPanel != null)
+        {
+            HorizonMenuPanel.Visibility = HorizonMenuPanel.Visibility == Visibility.Visible
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+        }
+    }
+
+    private void BtnCloseHorizonMenu_Click(object sender, RoutedEventArgs e)
+    {
+        if (HorizonMenuPanel != null)
+        {
+            HorizonMenuPanel.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void BtnMenuRefreshHorizon_Click(object sender, RoutedEventArgs e)
+    {
+        RenderScene();
+        Redraw();
+        BtnCloseHorizonMenu_Click(sender, e);
+    }
+
+    private void BtnMenuSnapNorth_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel != null)
+        {
+            ViewModel.Azimuth = 0.0;
+        }
+        BtnCloseHorizonMenu_Click(sender, e);
     }
 
     private void BtnToggleTheme_Click(object sender, RoutedEventArgs e)

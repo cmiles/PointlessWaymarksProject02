@@ -426,5 +426,293 @@ public static class CelestialService
         if (a < 0) a += 360.0;
         return a;
     }
+
+    /// <summary>
+    /// Calculates celestial events (sunrise, sunset, moonrise, moonset) across a 24-hour window
+    /// centered at referenceTime (±12 hours), comparing topography-compensated horizon times
+    /// with standard flat sea-level horizon times, and calculating time countdowns for future events.
+    /// </summary>
+    public static CelestialWindowReport CalculateWindowCelestialData(
+        double lat,
+        double lon,
+        double elevM,
+        DateTime referenceTime,
+        List<HorizonProfilePoint>? terrainProfile)
+    {
+        DateTime windowStart = referenceTime.AddHours(-12);
+        DateTime windowEnd = referenceTime.AddHours(12);
+
+        var report = new CelestialWindowReport
+        {
+            Latitude = lat,
+            Longitude = lon,
+            ElevationM = elevM,
+            ReferenceTime = referenceTime,
+            WindowStart = windowStart,
+            WindowEnd = windowEnd,
+            CoordinatesDisplay = $"{Math.Abs(lat):F4}° {(lat >= 0 ? "N" : "S")}, {Math.Abs(lon):F4}° {(lon >= 0 ? "E" : "W")}",
+            ElevationDisplay = $"{Math.Round(elevM * 3.28084):N0} ft ({Math.Round(elevM):N0} m)",
+            WindowDisplay = $"{windowStart:ddd h:mm tt} – {windowEnd:ddd h:mm tt} (±12h)",
+            HasTopography = terrainProfile != null && terrainProfile.Count > 0
+        };
+
+        TimeSpan tzOffset = TimeZoneInfo.Local.GetUtcOffset(referenceTime);
+        Func<double, double> getHorizonAltAtAz = BuildHorizonAltLookup(terrainProfile);
+
+        // Current Moon phase at reference time
+        var (_, _, currMoonPhase, currMoonPhaseName, _) = GetMoonPosition(referenceTime - tzOffset, lat, lon);
+        report.MoonPhaseName = currMoonPhaseName;
+        report.MoonIllumination = Math.Round(currMoonPhase, 3);
+
+        // Search 28 hours (-14h to +14h) in 2-minute steps to reliably detect crossings
+        DateTime searchStart = referenceTime.AddHours(-14);
+        DateTime searchEnd = referenceTime.AddHours(14);
+        const int stepMinutes = 2;
+        int numSteps = (int)((searchEnd - searchStart).TotalMinutes / stepMinutes);
+
+        var sunTopRises = new List<CelestialEvent>();
+        var sunTopSets = new List<CelestialEvent>();
+        var sunAstRises = new List<CelestialEvent>();
+        var sunAstSets = new List<CelestialEvent>();
+
+        var moonTopRises = new List<CelestialEvent>();
+        var moonTopSets = new List<CelestialEvent>();
+        var moonAstRises = new List<CelestialEvent>();
+        var moonAstSets = new List<CelestialEvent>();
+
+        double prevSunTopoDiff = double.NaN;
+        double prevSunAstroDiff = double.NaN;
+        double prevMoonTopoDiff = double.NaN;
+        double prevMoonAstroDiff = double.NaN;
+        DateTime prevStepLocal = DateTime.MinValue;
+
+        for (int i = 0; i <= numSteps; i++)
+        {
+            DateTime stepLocal = searchStart.AddMinutes(i * stepMinutes);
+            DateTime stepUtc = stepLocal - tzOffset;
+
+            // Sun
+            var (sunAz, sunAlt) = GetSunPosition(stepUtc, lat, lon);
+            double topoAltAtSun = getHorizonAltAtAz(sunAz);
+            double sunTopoDiff = (sunAlt + SunAngularRadiusDeg) - topoAltAtSun;
+            double sunAstroDiff = (sunAlt + SunAngularRadiusDeg) - 0.0;
+
+            if (!double.IsNaN(prevSunTopoDiff))
+            {
+                if (prevSunTopoDiff <= 0 && sunTopoDiff > 0)
+                {
+                    sunTopRises.Add(RefineCrossing(lat, lon, prevStepLocal, stepLocal, tzOffset, SunAngularRadiusDeg, getHorizonAltAtAz, isSun: true, isRise: true));
+                }
+                else if (prevSunTopoDiff >= 0 && sunTopoDiff < 0)
+                {
+                    sunTopSets.Add(RefineCrossing(lat, lon, prevStepLocal, stepLocal, tzOffset, SunAngularRadiusDeg, getHorizonAltAtAz, isSun: true, isRise: false));
+                }
+
+                if (prevSunAstroDiff <= 0 && sunAstroDiff > 0)
+                {
+                    sunAstRises.Add(RefineCrossing(lat, lon, prevStepLocal, stepLocal, tzOffset, SunAngularRadiusDeg, _ => 0.0, isSun: true, isRise: true));
+                }
+                else if (prevSunAstroDiff >= 0 && sunAstroDiff < 0)
+                {
+                    sunAstSets.Add(RefineCrossing(lat, lon, prevStepLocal, stepLocal, tzOffset, SunAngularRadiusDeg, _ => 0.0, isSun: true, isRise: false));
+                }
+            }
+            prevSunTopoDiff = sunTopoDiff;
+            prevSunAstroDiff = sunAstroDiff;
+
+            // Moon
+            var (moonAz, moonAlt, _, _, _) = GetMoonPosition(stepUtc, lat, lon);
+            double topoAltAtMoon = getHorizonAltAtAz(moonAz);
+            double moonTopoDiff = (moonAlt + MoonAngularRadiusDeg) - topoAltAtMoon;
+            double moonAstroDiff = (moonAlt + MoonAngularRadiusDeg) - 0.0;
+
+            if (!double.IsNaN(prevMoonTopoDiff))
+            {
+                if (prevMoonTopoDiff <= 0 && moonTopoDiff > 0)
+                {
+                    moonTopRises.Add(RefineCrossing(lat, lon, prevStepLocal, stepLocal, tzOffset, MoonAngularRadiusDeg, getHorizonAltAtAz, isSun: false, isRise: true));
+                }
+                else if (prevMoonTopoDiff >= 0 && moonTopoDiff < 0)
+                {
+                    moonTopSets.Add(RefineCrossing(lat, lon, prevStepLocal, stepLocal, tzOffset, MoonAngularRadiusDeg, getHorizonAltAtAz, isSun: false, isRise: false));
+                }
+
+                if (prevMoonAstroDiff <= 0 && moonAstroDiff > 0)
+                {
+                    moonAstRises.Add(RefineCrossing(lat, lon, prevStepLocal, stepLocal, tzOffset, MoonAngularRadiusDeg, _ => 0.0, isSun: false, isRise: true));
+                }
+                else if (prevMoonAstroDiff >= 0 && moonAstroDiff < 0)
+                {
+                    moonAstSets.Add(RefineCrossing(lat, lon, prevStepLocal, stepLocal, tzOffset, MoonAngularRadiusDeg, _ => 0.0, isSun: false, isRise: false));
+                }
+            }
+            prevMoonTopoDiff = moonTopoDiff;
+            prevMoonAstroDiff = moonAstroDiff;
+            prevStepLocal = stepLocal;
+        }
+
+        // Build the 4 events
+        report.Sunrise = BuildWindowEvent("Sunrise", "🌅", sunTopRises, sunAstRises, referenceTime, windowStart, windowEnd, isRise: true);
+        report.Sunset = BuildWindowEvent("Sunset", "🌇", sunTopSets, sunAstSets, referenceTime, windowStart, windowEnd, isRise: false);
+        report.Moonrise = BuildWindowEvent("Moonrise", "🌙", moonTopRises, moonAstRises, referenceTime, windowStart, windowEnd, isRise: true);
+        report.Moonset = BuildWindowEvent("Moonset", "🌘", moonTopSets, moonAstSets, referenceTime, windowStart, windowEnd, isRise: false);
+
+        return report;
+    }
+
+    private static WindowCelestialEvent BuildWindowEvent(
+        string name,
+        string icon,
+        List<CelestialEvent> topoEvents,
+        List<CelestialEvent> astroEvents,
+        DateTime referenceTime,
+        DateTime windowStart,
+        DateTime windowEnd,
+        bool isRise)
+    {
+        var ev = new WindowCelestialEvent
+        {
+            Name = name,
+            Icon = icon
+        };
+
+        CelestialEvent? bestTopo = SelectBestEvent(topoEvents, referenceTime, windowStart, windowEnd);
+        CelestialEvent? bestAstro = SelectBestEvent(astroEvents, referenceTime, windowStart, windowEnd);
+
+        if (bestTopo != null && astroEvents.Count > 0)
+        {
+            bestAstro = FindClosest(astroEvents, bestTopo.LocalTime);
+        }
+        else if (bestAstro != null && topoEvents.Count > 0)
+        {
+            bestTopo = FindClosest(topoEvents, bestAstro.LocalTime);
+        }
+
+        ev.TopoEvent = bestTopo;
+        ev.AstroEvent = bestAstro;
+
+        DateTime? effectiveTime = bestTopo?.LocalTime ?? bestAstro?.LocalTime;
+        ev.EffectiveTime = effectiveTime;
+
+        if (effectiveTime == null)
+        {
+            ev.HasEvent = false;
+            ev.TopoTimeDisplay = "None in window";
+            ev.AstroTimeDisplay = "--:--";
+            ev.TimeUntilDisplay = "No event in ±12h";
+            return ev;
+        }
+
+        ev.HasEvent = true;
+        ev.IsInWindow = effectiveTime.Value >= windowStart && effectiveTime.Value <= windowEnd;
+        ev.IsFuture = effectiveTime.Value > referenceTime;
+        ev.TimeDifference = ev.IsFuture ? (effectiveTime.Value - referenceTime) : (referenceTime - effectiveTime.Value);
+
+        string durationStr = FormatDuration(ev.TimeDifference);
+        ev.TimeUntilDisplay = ev.IsFuture ? $"in {durationStr}" : $"{durationStr} ago";
+
+        if (bestTopo != null)
+        {
+            string dayPrefix = bestTopo.LocalTime.Date < referenceTime.Date ? "Yesterday " : (bestTopo.LocalTime.Date > referenceTime.Date ? "Tomorrow " : "");
+            ev.TopoTimeDisplay = $"{dayPrefix}{bestTopo.TimeText}";
+            ev.TopoAzimuthDisplay = bestTopo.AzimuthText;
+            ev.TopoElevationDisplay = $"Ridge: {bestTopo.Altitude:F1}°";
+        }
+        else
+        {
+            string dayPrefix = bestAstro != null && bestAstro.LocalTime.Date < referenceTime.Date ? "Yesterday " : (bestAstro != null && bestAstro.LocalTime.Date > referenceTime.Date ? "Tomorrow " : "");
+            ev.TopoTimeDisplay = bestAstro != null ? $"{dayPrefix}{bestAstro.TimeText}" : "--:--";
+            ev.TopoAzimuthDisplay = bestAstro?.AzimuthText ?? "--";
+            ev.TopoElevationDisplay = "Flat: 0.0°";
+        }
+
+        if (bestAstro != null)
+        {
+            string astroDayPrefix = bestAstro.LocalTime.Date < referenceTime.Date ? "Yesterday " : (bestAstro.LocalTime.Date > referenceTime.Date ? "Tomorrow " : "");
+            ev.AstroTimeDisplay = $"{astroDayPrefix}{bestAstro.TimeText} ({bestAstro.AzimuthText})";
+            ev.AstroAzimuthDisplay = bestAstro.AzimuthText;
+        }
+        else
+        {
+            ev.AstroTimeDisplay = "N/A";
+        }
+
+        if (bestTopo != null && bestAstro != null)
+        {
+            double diffMinutes = (bestTopo.LocalTime - bestAstro.LocalTime).TotalMinutes;
+            if (Math.Abs(diffMinutes) < 0.5)
+            {
+                ev.TopoShiftDisplay = "Same as flat sea-level horizon (0.0°)";
+            }
+            else if (diffMinutes > 0)
+            {
+                ev.TopoShiftDisplay = $"+{Math.Round(diffMinutes)} min delay (ridge: {bestTopo.Altitude:F1}°)";
+            }
+            else
+            {
+                ev.TopoShiftDisplay = $"-{Math.Round(Math.Abs(diffMinutes))} min earlier (ridge: {bestTopo.Altitude:F1}°)";
+            }
+        }
+        else
+        {
+            ev.TopoShiftDisplay = "Flat sea-level horizon";
+        }
+
+        return ev;
+    }
+
+    private static CelestialEvent? SelectBestEvent(List<CelestialEvent> events, DateTime refTime, DateTime winStart, DateTime winEnd)
+    {
+        if (events == null || events.Count == 0) return null;
+
+        var inWindow = events.FindAll(e => e.LocalTime >= winStart && e.LocalTime <= winEnd);
+        if (inWindow.Count > 0)
+        {
+            CelestialEvent best = inWindow[0];
+            double bestDiff = Math.Abs((best.LocalTime - refTime).TotalMinutes);
+            for (int i = 1; i < inWindow.Count; i++)
+            {
+                double diff = Math.Abs((inWindow[i].LocalTime - refTime).TotalMinutes);
+                if (diff < bestDiff)
+                {
+                    best = inWindow[i];
+                    bestDiff = diff;
+                }
+            }
+            return best;
+        }
+
+        return FindClosest(events, refTime);
+    }
+
+    private static CelestialEvent? FindClosest(List<CelestialEvent> events, DateTime targetTime)
+    {
+        if (events == null || events.Count == 0) return null;
+        CelestialEvent best = events[0];
+        double bestDiff = Math.Abs((best.LocalTime - targetTime).TotalMinutes);
+        for (int i = 1; i < events.Count; i++)
+        {
+            double diff = Math.Abs((events[i].LocalTime - targetTime).TotalMinutes);
+            if (diff < bestDiff)
+            {
+                best = events[i];
+                bestDiff = diff;
+            }
+        }
+        return best;
+    }
+
+    private static string FormatDuration(TimeSpan ts)
+    {
+        if (ts.TotalHours >= 1.0)
+        {
+            return $"{(int)ts.TotalHours}h {ts.Minutes}m";
+        }
+        if (ts.TotalMinutes >= 1.0)
+        {
+            return $"{Math.Max(1, (int)ts.TotalMinutes)}m";
+        }
+        return "< 1m";
+    }
 }
 
