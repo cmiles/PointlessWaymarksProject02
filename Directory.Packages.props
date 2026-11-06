@@ -4,9 +4,9 @@
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="AngleSharp" Version="1.8.5" />
+    <PackageVersion Include="AngleSharp" Version="1.9.1" />
     <PackageVersion Include="AngleSharp.Io" Version="1.1.0" />
-    <PackageVersion Include="AngleSharp.Js" Version="1.1.1" />
+    <PackageVersion Include="AngleSharp.Js" Version="1.1.4" />
     <PackageVersion Include="AnyClone" Version="1.1.6" />
     <PackageVersion Include="AvalonEdit" Version="6.3.1.120" />
     <PackageVersion Include="Avalonia" Version="11.3.2" />
@@ -47,7 +47,7 @@
     <PackageVersion Include="FluentScheduler" Version="6.0.0" />
     <PackageVersion Include="Flurl.Http" Version="4.0.2" />
     <PackageVersion Include="Fractions" Version="8.3.2" />
-    <PackageVersion Include="Garmin.FIT.Sdk" Version="21.218.0" />
+    <PackageVersion Include="Garmin.FIT.Sdk" Version="21.221.0" />
     <PackageVersion Include="GeoAPI" Version="1.7.5" />
     <PackageVersion Include="GeoTimeZone" Version="6.1.0" />
     <PackageVersion Include="gong-wpf-dragdrop" Version="4.0.0" />
@@ -65,21 +65,21 @@
     <PackageVersion Include="MathNet.Numerics" Version="5.0.0" />
     <PackageVersion Include="MdXaml.Plugins" Version="1.27.0" />
     <PackageVersion Include="MetadataExtractor" Version="2.9.3" />
-    <PackageVersion Include="Metalama.Framework" Version="2026.1.30" />
-    <PackageVersion Include="Metalama.Patterns.Observability" Version="2026.1.30" />
+    <PackageVersion Include="Metalama.Framework" Version="2026.1.31" />
+    <PackageVersion Include="Metalama.Patterns.Observability" Version="2026.1.31" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.9.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.14" />
     <PackageVersion Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.11" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.11" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Maui.Controls" Version="10.0.101" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
-    <PackageVersion Include="Microsoft.Playwright" Version="1.63.0" />
-    <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.6.7" />
-    <PackageVersion Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
+    <PackageVersion Include="Microsoft.Playwright" Version="1.64.1" />
+    <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.6.9" />
+    <PackageVersion Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
     <PackageVersion Include="Microsoft.Web.WebView2.DevToolsProtocolExtension" Version="1.0.2901" />
     <PackageVersion Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.142" />
     <PackageVersion Include="Mjml.Net" Version="4.15.0" />
@@ -118,16 +118,16 @@
     <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageVersion Include="SharpVectors.Wpf" Version="1.8.5" />
     <PackageVersion Include="SimMetricsCore" Version="2.1.0" />
-    <PackageVersion Include="SkiaSharp" Version="4.153.1" />
-    <PackageVersion Include="SkiaSharp.HarfBuzz" Version="4.153.1" />
-    <PackageVersion Include="SkiaSharp.Views.WPF" Version="4.153.1" />
-    <PackageVersion Include="System.CodeDom" Version="10.0.13" />
+    <PackageVersion Include="SkiaSharp" Version="4.154.0" />
+    <PackageVersion Include="SkiaSharp.HarfBuzz" Version="4.154.0" />
+    <PackageVersion Include="SkiaSharp.Views.WPF" Version="4.154.0" />
+    <PackageVersion Include="System.CodeDom" Version="10.0.14" />
     <PackageVersion Include="System.Data.SQLite" Version="2.0.4" />
     <PackageVersion Include="System.Data.SQLite.Core" Version="1.0.119" />
-    <PackageVersion Include="System.Drawing.Common" Version="10.0.13" />
+    <PackageVersion Include="System.Drawing.Common" Version="10.0.14" />
     <PackageVersion Include="System.Linq.Dynamic.Core" Version="1.7.3" />
-    <PackageVersion Include="System.Runtime.Caching" Version="10.0.13" />
-    <PackageVersion Include="System.ServiceModel.Syndication" Version="10.0.13" />
+    <PackageVersion Include="System.Runtime.Caching" Version="10.0.14" />
+    <PackageVersion Include="System.ServiceModel.Syndication" Version="10.0.14" />
     <PackageVersion Include="TagLibSharp" Version="2.3.0" />
     <PackageVersion Include="TinyIpc" Version="5.2.1" />
     <PackageVersion Include="TypeSupport" Version="1.2.0" />
