@@ -428,9 +428,9 @@ public static class CelestialService
     }
 
     /// <summary>
-    /// Calculates celestial events (sunrise, sunset, moonrise, moonset) across a 24-hour window
-    /// centered at referenceTime (±12 hours), comparing topography-compensated horizon times
-    /// with standard flat sea-level horizon times, and calculating time countdowns for future events.
+    /// Calculates the next upcoming occurrence of each celestial event (sunrise, sunset, moonrise, moonset)
+    /// after referenceTime, comparing topography-compensated horizon times with standard flat sea-level horizon times,
+    /// and calculating countdowns for each upcoming event.
     /// </summary>
     public static CelestialWindowReport CalculateWindowCelestialData(
         double lat,
@@ -439,8 +439,9 @@ public static class CelestialService
         DateTime referenceTime,
         List<HorizonProfilePoint>? terrainProfile)
     {
-        DateTime windowStart = referenceTime.AddHours(-12);
-        DateTime windowEnd = referenceTime.AddHours(12);
+        // Search window: from referenceTime forward 36 hours in 2-minute steps
+        DateTime searchStart = referenceTime.AddMinutes(-10);
+        DateTime searchEnd = referenceTime.AddHours(36);
 
         var report = new CelestialWindowReport
         {
@@ -448,11 +449,11 @@ public static class CelestialService
             Longitude = lon,
             ElevationM = elevM,
             ReferenceTime = referenceTime,
-            WindowStart = windowStart,
-            WindowEnd = windowEnd,
+            WindowStart = referenceTime,
+            WindowEnd = searchEnd,
             CoordinatesDisplay = $"{Math.Abs(lat):F4}° {(lat >= 0 ? "N" : "S")}, {Math.Abs(lon):F4}° {(lon >= 0 ? "E" : "W")}",
             ElevationDisplay = $"{Math.Round(elevM * 3.28084):N0} ft ({Math.Round(elevM):N0} m)",
-            WindowDisplay = $"{windowStart:ddd h:mm tt} – {windowEnd:ddd h:mm tt} (±12h)",
+            WindowDisplay = $"Upcoming from {referenceTime:ddd, MMM d, h:mm tt}",
             HasTopography = terrainProfile != null && terrainProfile.Count > 0
         };
 
@@ -464,9 +465,6 @@ public static class CelestialService
         report.MoonPhaseName = currMoonPhaseName;
         report.MoonIllumination = Math.Round(currMoonPhase, 3);
 
-        // Search 28 hours (-14h to +14h) in 2-minute steps to reliably detect crossings
-        DateTime searchStart = referenceTime.AddHours(-14);
-        DateTime searchEnd = referenceTime.AddHours(14);
         const int stepMinutes = 2;
         int numSteps = (int)((searchEnd - searchStart).TotalMinutes / stepMinutes);
 
@@ -551,11 +549,11 @@ public static class CelestialService
             prevStepLocal = stepLocal;
         }
 
-        // Build the 4 events
-        report.Sunrise = BuildWindowEvent("Sunrise", "🌅", sunTopRises, sunAstRises, referenceTime, windowStart, windowEnd, isRise: true);
-        report.Sunset = BuildWindowEvent("Sunset", "🌇", sunTopSets, sunAstSets, referenceTime, windowStart, windowEnd, isRise: false);
-        report.Moonrise = BuildWindowEvent("Moonrise", "🌙", moonTopRises, moonAstRises, referenceTime, windowStart, windowEnd, isRise: true);
-        report.Moonset = BuildWindowEvent("Moonset", "🌘", moonTopSets, moonAstSets, referenceTime, windowStart, windowEnd, isRise: false);
+        // Build the next 4 events
+        report.Sunrise = BuildWindowEvent("Sunrise", "🌅", sunTopRises, sunAstRises, referenceTime, isRise: true);
+        report.Sunset = BuildWindowEvent("Sunset", "🌇", sunTopSets, sunAstSets, referenceTime, isRise: false);
+        report.Moonrise = BuildWindowEvent("Moonrise", "🌙", moonTopRises, moonAstRises, referenceTime, isRise: true);
+        report.Moonset = BuildWindowEvent("Moonset", "🌘", moonTopSets, moonAstSets, referenceTime, isRise: false);
 
         return report;
     }
@@ -566,8 +564,6 @@ public static class CelestialService
         List<CelestialEvent> topoEvents,
         List<CelestialEvent> astroEvents,
         DateTime referenceTime,
-        DateTime windowStart,
-        DateTime windowEnd,
         bool isRise)
     {
         var ev = new WindowCelestialEvent
@@ -576,16 +572,24 @@ public static class CelestialService
             Icon = icon
         };
 
-        CelestialEvent? bestTopo = SelectBestEvent(topoEvents, referenceTime, windowStart, windowEnd);
-        CelestialEvent? bestAstro = SelectBestEvent(astroEvents, referenceTime, windowStart, windowEnd);
+        // Select the next upcoming crossing strictly after referenceTime
+        CelestialEvent? bestTopo = null;
+        CelestialEvent? bestAstro = null;
 
-        if (bestTopo != null && astroEvents.Count > 0)
+        CelestialEvent? nextTopo = SelectNextEvent(topoEvents, referenceTime);
+        if (nextTopo != null)
         {
-            bestAstro = FindClosest(astroEvents, bestTopo.LocalTime);
+            bestTopo = nextTopo;
+            bestAstro = FindClosest(astroEvents, nextTopo.LocalTime);
         }
-        else if (bestAstro != null && topoEvents.Count > 0)
+        else
         {
-            bestTopo = FindClosest(topoEvents, bestAstro.LocalTime);
+            CelestialEvent? nextAstro = SelectNextEvent(astroEvents, referenceTime);
+            if (nextAstro != null)
+            {
+                bestAstro = nextAstro;
+                bestTopo = FindClosest(topoEvents, nextAstro.LocalTime);
+            }
         }
 
         ev.TopoEvent = bestTopo;
@@ -597,15 +601,15 @@ public static class CelestialService
         if (effectiveTime == null)
         {
             ev.HasEvent = false;
-            ev.TopoTimeDisplay = "None in window";
+            ev.TopoTimeDisplay = "None found";
             ev.AstroTimeDisplay = "--:--";
-            ev.TimeUntilDisplay = "No event in ±12h";
+            ev.TimeUntilDisplay = "No upcoming event";
             return ev;
         }
 
         ev.HasEvent = true;
-        ev.IsInWindow = effectiveTime.Value >= windowStart && effectiveTime.Value <= windowEnd;
-        ev.IsFuture = effectiveTime.Value > referenceTime;
+        ev.IsInWindow = true;
+        ev.IsFuture = effectiveTime.Value >= referenceTime;
         ev.TimeDifference = ev.IsFuture ? (effectiveTime.Value - referenceTime) : (referenceTime - effectiveTime.Value);
 
         string durationStr = FormatDuration(ev.TimeDifference);
@@ -613,14 +617,14 @@ public static class CelestialService
 
         if (bestTopo != null)
         {
-            string dayPrefix = bestTopo.LocalTime.Date < referenceTime.Date ? "Yesterday " : (bestTopo.LocalTime.Date > referenceTime.Date ? "Tomorrow " : "");
+            string dayPrefix = GetDayPrefix(bestTopo.LocalTime, referenceTime);
             ev.TopoTimeDisplay = $"{dayPrefix}{bestTopo.TimeText}";
             ev.TopoAzimuthDisplay = bestTopo.AzimuthText;
             ev.TopoElevationDisplay = $"Ridge: {bestTopo.Altitude:F1}°";
         }
         else
         {
-            string dayPrefix = bestAstro != null && bestAstro.LocalTime.Date < referenceTime.Date ? "Yesterday " : (bestAstro != null && bestAstro.LocalTime.Date > referenceTime.Date ? "Tomorrow " : "");
+            string dayPrefix = bestAstro != null ? GetDayPrefix(bestAstro.LocalTime, referenceTime) : "";
             ev.TopoTimeDisplay = bestAstro != null ? $"{dayPrefix}{bestAstro.TimeText}" : "--:--";
             ev.TopoAzimuthDisplay = bestAstro?.AzimuthText ?? "--";
             ev.TopoElevationDisplay = "Flat: 0.0°";
@@ -628,7 +632,7 @@ public static class CelestialService
 
         if (bestAstro != null)
         {
-            string astroDayPrefix = bestAstro.LocalTime.Date < referenceTime.Date ? "Yesterday " : (bestAstro.LocalTime.Date > referenceTime.Date ? "Tomorrow " : "");
+            string astroDayPrefix = GetDayPrefix(bestAstro.LocalTime, referenceTime);
             ev.AstroTimeDisplay = $"{astroDayPrefix}{bestAstro.TimeText} ({bestAstro.AzimuthText})";
             ev.AstroAzimuthDisplay = bestAstro.AzimuthText;
         }
@@ -661,28 +665,40 @@ public static class CelestialService
         return ev;
     }
 
-    private static CelestialEvent? SelectBestEvent(List<CelestialEvent> events, DateTime refTime, DateTime winStart, DateTime winEnd)
+    private static string GetDayPrefix(DateTime eventLocalTime, DateTime referenceTime)
+    {
+        if (eventLocalTime.Date == referenceTime.Date)
+        {
+            return "Today ";
+        }
+        if (eventLocalTime.Date == referenceTime.Date.AddDays(1))
+        {
+            return "Tomorrow ";
+        }
+        if (eventLocalTime.Date == referenceTime.Date.AddDays(-1))
+        {
+            return "Yesterday ";
+        }
+        return $"{eventLocalTime:ddd} ";
+    }
+
+    private static CelestialEvent? SelectNextEvent(List<CelestialEvent> events, DateTime refTime)
     {
         if (events == null || events.Count == 0) return null;
 
-        var inWindow = events.FindAll(e => e.LocalTime >= winStart && e.LocalTime <= winEnd);
-        if (inWindow.Count > 0)
+        CelestialEvent? best = null;
+        for (int i = 0; i < events.Count; i++)
         {
-            CelestialEvent best = inWindow[0];
-            double bestDiff = Math.Abs((best.LocalTime - refTime).TotalMinutes);
-            for (int i = 1; i < inWindow.Count; i++)
+            var e = events[i];
+            if (e.LocalTime > refTime)
             {
-                double diff = Math.Abs((inWindow[i].LocalTime - refTime).TotalMinutes);
-                if (diff < bestDiff)
+                if (best == null || e.LocalTime < best.LocalTime)
                 {
-                    best = inWindow[i];
-                    bestDiff = diff;
+                    best = e;
                 }
             }
-            return best;
         }
-
-        return FindClosest(events, refTime);
+        return best;
     }
 
     private static CelestialEvent? FindClosest(List<CelestialEvent> events, DateTime targetTime)

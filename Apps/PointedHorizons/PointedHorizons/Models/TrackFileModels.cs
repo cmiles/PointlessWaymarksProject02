@@ -63,6 +63,16 @@ public class TrackFileInfo
     /// </summary>
     public List<double[]> ElevationProfile { get; set; } = new();
 
+    /// <summary>
+    /// Waypoints extracted from this GPX file.
+    /// </summary>
+    public List<WaypointInfo> Waypoints { get; set; } = new();
+
+    /// <summary>
+    /// Routes extracted from this GPX file.
+    /// </summary>
+    public List<RouteInfo> Routes { get; set; } = new();
+
     public TimeSpan Duration => (EndTimeUtc.HasValue && StartTimeUtc.HasValue)
         ? (EndTimeUtc.Value - StartTimeUtc.Value)
         : TimeSpan.Zero;
@@ -173,7 +183,39 @@ public class TrackFileInfo
     public string FormattedDate => StartTimeUtc?.ToLocalTime().ToString("MMM d, yyyy") 
         ?? LastModifiedUtc.ToLocalTime().ToString("MMM d, yyyy");
 
-    public bool HasValidBounds => MaxLat > MinLat && MaxLon > MinLon && Math.Abs(MaxLat - MinLat) > 0.00001;
+    public bool HasValidBounds =>
+        MaxLat >= MinLat && MaxLon >= MinLon &&
+        MinLat >= -90 && MaxLat <= 90 &&
+        MinLon >= -180 && MaxLon <= 180 &&
+        (Math.Abs(MinLat) + Math.Abs(MaxLat) + Math.Abs(MinLon) + Math.Abs(MaxLon) > 0.00001);
+}
+
+/// <summary>
+/// Metadata for an individual waypoint extracted from a GPX file.
+/// </summary>
+public class WaypointInfo
+{
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Comment { get; set; } = string.Empty;
+    public string Symbol { get; set; } = string.Empty;
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+    public double? ElevationM { get; set; }
+    public DateTime? TimeUtc { get; set; }
+}
+
+/// <summary>
+/// Metadata and coordinates for a route extracted from a GPX file.
+/// </summary>
+public class RouteInfo
+{
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public double TotalDistanceKm { get; set; }
+    public List<double[]> Coordinates { get; set; } = new();
 }
 
 /// <summary>
@@ -181,7 +223,7 @@ public class TrackFileInfo
 /// </summary>
 public class TrackIndexCache
 {
-    public int CacheVersion { get; set; } = 1;
+    public int CacheVersion { get; set; } = 2;
     public string GpxDirectory { get; set; } = string.Empty;
     public DateTime LastScanTimeUtc { get; set; }
     public List<TrackFileInfo> Entries { get; set; } = new();

@@ -47,8 +47,9 @@ public partial class CelestialInfoControl : UserControl
         _activeLon = null;
         _lastReport = null;
 
-        // Reset to initial choice view
+        // Reset to initial choice view - eliminate top mode buttons in first pop up
         InitialChoicePanel.Visibility = Visibility.Visible;
+        PanelModeSelector.Visibility = Visibility.Collapsed;
         LoadingPanel.Visibility = Visibility.Collapsed;
         ResultsPanel.Visibility = Visibility.Collapsed;
         BtnRefresh.Visibility = Visibility.Collapsed;
@@ -168,6 +169,7 @@ public partial class CelestialInfoControl : UserControl
     {
         _isCalculating = true;
         InitialChoicePanel.Visibility = Visibility.Collapsed;
+        PanelModeSelector.Visibility = Visibility.Collapsed;
         LoadingPanel.Visibility = Visibility.Visible;
         ResultsPanel.Visibility = Visibility.Collapsed;
         BtnRefresh.Visibility = Visibility.Collapsed;
@@ -217,6 +219,7 @@ public partial class CelestialInfoControl : UserControl
     {
         LoadingPanel.Visibility = Visibility.Collapsed;
         ResultsPanel.Visibility = Visibility.Visible;
+        PanelModeSelector.Visibility = Visibility.Visible;
         BtnRefresh.Visibility = Visibility.Visible;
 
         // Summary details
@@ -315,7 +318,7 @@ public partial class CelestialInfoControl : UserControl
 
         if (ev == null || !ev.HasEvent)
         {
-            topoTimeText.Text = "None in ±12h";
+            topoTimeText.Text = "None found";
             topoAzText.Text = "--";
             topoTagText.Visibility = Visibility.Collapsed;
             standardText.Text = "Standard: None";

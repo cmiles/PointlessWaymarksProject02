@@ -832,6 +832,75 @@ public static class OfflineDataService
     }
 
     /// <summary>
+    /// Checks for a local .peaks.json companion file matching tileKey in candidate DEM directories.
+    /// </summary>
+    public static string? FindLocalPeaksFile(string tileKey)
+    {
+        if (!IsPmTilesSupported) return null;
+        if (string.IsNullOrWhiteSpace(tileKey)) return null;
+
+        try
+        {
+            string clean = Path.GetFileNameWithoutExtension(tileKey).Trim();
+            string[] candidateNames =
+            [
+                $"{clean}.peaks.json",
+                $"{clean.ToLowerInvariant()}.peaks.json",
+                $"{clean.ToUpperInvariant()}.peaks.json"
+            ];
+
+            foreach (var dir in GetDemCandidateDirectories())
+            {
+                try
+                {
+                    foreach (var name in candidateNames)
+                    {
+                        string path = Path.Combine(dir, name);
+                        if (File.Exists(path)) return path;
+                    }
+                }
+                catch { }
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[OfflineDataService] FindLocalPeaksFile error: {ex.Message}");
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Caches downloaded .peaks.json companion content to the local DEM folder.
+    /// </summary>
+    public static async Task SaveDownloadedPeaksAsync(string tileKey, string jsonContent)
+    {
+        if (!IsPmTilesSupported) return;
+        if (string.IsNullOrWhiteSpace(tileKey) || string.IsNullOrWhiteSpace(jsonContent)) return;
+
+        try
+        {
+            string dir = DemDirectory;
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
+            string clean = Path.GetFileNameWithoutExtension(tileKey).Trim().ToUpperInvariant();
+            string savePath = Path.Combine(dir, $"{clean}.peaks.json");
+            if (!File.Exists(savePath))
+            {
+                await File.WriteAllTextAsync(savePath, jsonContent);
+                Debug.WriteLine($"[OfflineDataService] Cached downloaded peaks JSON to: {savePath}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[OfflineDataService] Failed to cache downloaded peaks JSON: {ex.Message}");
+        }
+    }
+
+    /// <summary>
     /// Gets the count of DEM files present across candidate local DEM directories.
     /// </summary>
     public static int GetLocalDemFileCount()

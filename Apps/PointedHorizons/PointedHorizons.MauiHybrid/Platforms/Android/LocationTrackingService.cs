@@ -90,7 +90,8 @@ public class LocationTrackingService : Service, ILocationListener
             location.Longitude,
             location.HasAltitude ? location.Altitude : null,
             location.HasAccuracy ? location.Accuracy : null,
-            DateTime.UtcNow
+            DateTime.UtcNow,
+            location.HasBearing ? (double)location.Bearing : null
         );
 
         BackgroundLocationBridge.NativePositionReceived?.Invoke(pos);

@@ -68,6 +68,24 @@ public partial class LeafletMapControl : UserControl
             if (TxtDirectionLabel != null) TxtDirectionLabel.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
         }
 
+        if (HamburgerPanel != null)
+        {
+            if (isSmallScreen)
+            {
+                HamburgerPanel.HorizontalAlignment = HorizontalAlignment.Stretch;
+                HamburgerPanel.Width = double.NaN;
+                HamburgerPanel.Margin = new Thickness(10, 50, 10, 10);
+                HamburgerPanel.MaxHeight = Math.Max(260, e.NewSize.Height - 65);
+            }
+            else
+            {
+                HamburgerPanel.HorizontalAlignment = HorizontalAlignment.Left;
+                HamburgerPanel.Width = 285;
+                HamburgerPanel.Margin = new Thickness(12, 50, 0, 0);
+                HamburgerPanel.MaxHeight = 520;
+            }
+        }
+
         ResizeMap();
     }
 
@@ -533,6 +551,7 @@ public partial class LeafletMapControl : UserControl
     }
 
     private string _currentBaseLayer = "osm";
+    private bool _isPadUsVisible;
 
     public void SetBaseLayer(string layerKey)
     {
@@ -641,6 +660,25 @@ public partial class LeafletMapControl : UserControl
     private void BtnLayerTopo_Click(object sender, RoutedEventArgs e) => SetBaseLayer("topo");
     private void BtnLayerStreets_Click(object sender, RoutedEventArgs e) => SetBaseLayer("streets");
     private void BtnLayerSatellite_Click(object sender, RoutedEventArgs e) => SetBaseLayer("satellite");
+    private void BtnLayerQuads_Click(object sender, RoutedEventArgs e) => SetBaseLayer("quads");
+    private void BtnLayerOpenTopo_Click(object sender, RoutedEventArgs e) => SetBaseLayer("opentopo");
+    private void BtnLayerHybrid_Click(object sender, RoutedEventArgs e) => SetBaseLayer("hybrid");
+
+    private void BtnTogglePadUs_Click(object sender, RoutedEventArgs e)
+    {
+        _isPadUsVisible = !_isPadUsVisible;
+        if (!_isMapInitialized) return;
+        try
+        {
+            Interop.ExecuteJavaScriptVoid("if (window.pointedMap && window.pointedMap.setPadUsVisible) { window.pointedMap.setPadUsVisible($0); }", _isPadUsVisible);
+        }
+        catch (System.Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[LeafletMapControl] SetPadUsVisible error: {ex.Message}");
+        }
+
+        UpdateLayerButtons();
+    }
 
     private void BtnLayerPmTiles_Click(object sender, RoutedEventArgs e)
     {
@@ -691,6 +729,20 @@ public partial class LeafletMapControl : UserControl
         StyleLayerBtn(BtnLayerStreets, _currentBaseLayer == "streets" || _currentBaseLayer == "osm");
         StyleLayerBtn(BtnLayerSatellite, _currentBaseLayer == "satellite");
         StyleLayerBtn(BtnLayerPmTiles, _currentBaseLayer == "pmtiles");
+        StyleLayerBtn(BtnLayerQuads, _currentBaseLayer == "quads");
+        StyleLayerBtn(BtnLayerOpenTopo, _currentBaseLayer == "opentopo");
+        StyleLayerBtn(BtnLayerHybrid, _currentBaseLayer == "hybrid");
+
+        if (BtnTogglePadUs != null)
+        {
+            BtnTogglePadUs.Content = _isPadUsVisible
+                ? "🌲 Public Lands (PAD-US): ON"
+                : "🌲 Public Lands (PAD-US): OFF";
+            BtnTogglePadUs.Background = _isPadUsVisible ? tm.ButtonActiveBackground : tm.ButtonInactiveBackground;
+            BtnTogglePadUs.BorderBrush = _isPadUsVisible ? tm.ButtonActiveBorder : tm.ButtonInactiveBorder;
+            BtnTogglePadUs.Foreground = _isPadUsVisible ? tm.ButtonActiveForeground : tm.ButtonInactiveForeground;
+            BtnTogglePadUs.FontWeight = _isPadUsVisible ? FontWeights.Bold : FontWeights.SemiBold;
+        }
 
         if (BtnConfigurePmTiles != null)
         {

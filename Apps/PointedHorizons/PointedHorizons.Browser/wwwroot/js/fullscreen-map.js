@@ -19,6 +19,7 @@
 
     let onPointerMovedCb = null;
     let onTrackClickedCb = null;
+    let onEditWaypointCb = null;
 
     // Elevation Profile Card & Interactive Scrubbing State
     let isMetricUnits = false;
@@ -76,18 +77,22 @@
     function createLiveLocationMarkerElement() {
         const el = document.createElement('div');
         el.className = 'ph-live-location-marker';
-        el.style.width = '24px';
-        el.style.height = '24px';
+        el.style.width = '32px';
+        el.style.height = '32px';
         el.style.pointerEvents = 'none';
         el.innerHTML = `
-            <div style="position: relative; width: 24px; height: 24px;">
-                <div style="position: absolute; top: 0; left: 0; width: 24px; height: 24px; border-radius: 50%; background: rgba(14, 165, 233, 0.4); animation: ph-pulse 2s infinite ease-out;"></div>
-                <div style="position: absolute; top: 4px; left: 4px; width: 16px; height: 16px; border-radius: 50%; background: #0284C7; border: 2.5px solid #FFFFFF; box-shadow: 0 1px 4px rgba(0,0,0,0.4);"></div>
+            <div style="position: relative; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                <div style="position: absolute; top: 0; left: 0; width: 32px; height: 32px; border-radius: 50%; background: rgba(14, 165, 233, 0.35); animation: ph-pulse 2s infinite ease-out;"></div>
+                <div class="ph-live-triangle" style="position: relative; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; transform-origin: 50% 50%;">
+                    <svg viewBox="0 0 24 24" width="24" height="24" style="display: block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
+                        <path d="M12 2 L21 21 L12 17 L3 21 Z" fill="#0284C7" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round"/>
+                    </svg>
+                </div>
             </div>
             <style>
                 @keyframes ph-pulse {
                     0% { transform: scale(0.6); opacity: 1; }
-                    100% { transform: scale(2.2); opacity: 0; }
+                    100% { transform: scale(2.0); opacity: 0; }
                 }
             </style>
         `;
@@ -133,7 +138,7 @@
         return [coords];
     }
 
-    window.fullScreenMap.init = function (container, options, onPointerMoved, onTrackClicked) {
+    window.fullScreenMap.init = function (container, options, onPointerMoved, onTrackClicked, onEditWaypoint) {
         if (typeof container === 'string') {
             container = document.getElementById(container);
         }
@@ -147,6 +152,7 @@
         const initialZoom = options.zoom != null ? options.zoom : 12;
         onPointerMovedCb = onPointerMoved;
         if (onTrackClicked) onTrackClickedCb = onTrackClicked;
+        if (onEditWaypoint) onEditWaypointCb = onEditWaypoint;
         if (options.isMetric != null) isMetricUnits = options.isMetric === true;
         if (options.isDark != null) isDarkMode = options.isDark === true;
 
@@ -191,6 +197,44 @@
                     attribution: "Tiles © Esri",
                     maxzoom: 18
                 },
+                "quads-source": {
+                    type: "raster",
+                    tiles: [
+                        "https://services.arcgisonline.com/ArcGIS/rest/services/USA_Topo_Maps/MapServer/tile/{z}/{y}/{x}"
+                    ],
+                    tileSize: 256,
+                    attribution: "USGS / Esri",
+                    maxzoom: 15
+                },
+                "opentopo-source": {
+                    type: "raster",
+                    tiles: [
+                        "https://a.tile.opentopomap.org/{z}/{x}/{y}.png",
+                        "https://b.tile.opentopomap.org/{z}/{x}/{y}.png",
+                        "https://c.tile.opentopomap.org/{z}/{x}/{y}.png"
+                    ],
+                    tileSize: 256,
+                    attribution: "© OpenTopoMap (CC-BY-SA)",
+                    maxzoom: 17
+                },
+                "hybrid-reference-source": {
+                    type: "raster",
+                    tiles: [
+                        "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+                    ],
+                    tileSize: 256,
+                    attribution: "Esri Labels",
+                    maxzoom: 18
+                },
+                "padus-source": {
+                    type: "raster",
+                    tiles: [
+                        "https://gis.blm.gov/arcgis/rest/services/lands/BLM_Natl_SMA_Cached_without_PriUnk/MapServer/tile/{z}/{y}/{x}"
+                    ],
+                    tileSize: 256,
+                    attribution: "BLM / USFS / NPS / State Lands",
+                    maxzoom: 18
+                },
                 "gps-track-source": {
                     type: "geojson",
                     data: {
@@ -212,6 +256,13 @@
                     }
                 },
                 "imported-tracks-source": {
+                    type: "geojson",
+                    data: {
+                        type: "FeatureCollection",
+                        features: []
+                    }
+                },
+                "imported-waypoints-source": {
                     type: "geojson",
                     data: {
                         type: "FeatureCollection",
@@ -252,9 +303,38 @@
                     paint: { "raster-opacity": 1.0 }
                 },
                 {
+                    id: "quads-layer",
+                    type: "raster",
+                    source: "quads-source",
+                    layout: { visibility: "none" },
+                    paint: { "raster-opacity": 1.0 }
+                },
+                {
+                    id: "opentopo-layer",
+                    type: "raster",
+                    source: "opentopo-source",
+                    layout: { visibility: "none" },
+                    paint: { "raster-opacity": 1.0 }
+                },
+                {
+                    id: "hybrid-reference-layer",
+                    type: "raster",
+                    source: "hybrid-reference-source",
+                    layout: { visibility: "none" },
+                    paint: { "raster-opacity": 1.0 }
+                },
+                {
+                    id: "padus-layer",
+                    type: "raster",
+                    source: "padus-source",
+                    layout: { visibility: "none" },
+                    paint: { "raster-opacity": 0.35 }
+                },
+                {
                     id: "imported-tracks-casing",
                     type: "line",
                     source: "imported-tracks-source",
+                    filter: ["!=", ["get", "isRoute"], true],
                     paint: {
                         "line-color": "#000000",
                         "line-width": 4.5,
@@ -269,10 +349,42 @@
                     id: "imported-tracks-line",
                     type: "line",
                     source: "imported-tracks-source",
+                    filter: ["!=", ["get", "isRoute"], true],
                     paint: {
                         "line-color": ["coalesce", ["get", "color"], "#3B82F6"],
                         "line-width": 3.0,
                         "line-opacity": 0.95
+                    },
+                    layout: {
+                        "line-cap": "round",
+                        "line-join": "round"
+                    }
+                },
+                {
+                    id: "imported-routes-casing",
+                    type: "line",
+                    source: "imported-tracks-source",
+                    filter: ["==", ["get", "isRoute"], true],
+                    paint: {
+                        "line-color": "#000000",
+                        "line-width": 5.0,
+                        "line-opacity": 0.5
+                    },
+                    layout: {
+                        "line-cap": "round",
+                        "line-join": "round"
+                    }
+                },
+                {
+                    id: "imported-routes-line",
+                    type: "line",
+                    source: "imported-tracks-source",
+                    filter: ["==", ["get", "isRoute"], true],
+                    paint: {
+                        "line-color": ["coalesce", ["get", "color"], "#F59E0B"],
+                        "line-width": 3.2,
+                        "line-opacity": 0.95,
+                        "line-dasharray": [2.5, 1.5]
                     },
                     layout: {
                         "line-cap": "round",
@@ -291,6 +403,54 @@
                     layout: {
                         "line-cap": "round",
                         "line-join": "round"
+                    }
+                },
+                {
+                    id: "imported-waypoints-casing",
+                    type: "circle",
+                    source: "imported-waypoints-source",
+                    paint: {
+                        "circle-radius": 7,
+                        "circle-color": "#FFFFFF",
+                        "circle-opacity": 0.95
+                    }
+                },
+                {
+                    id: "imported-waypoints-circle",
+                    type: "circle",
+                    source: "imported-waypoints-source",
+                    paint: {
+                        "circle-radius": 5,
+                        "circle-color": ["coalesce", ["get", "color"], "#EF4444"],
+                        "circle-stroke-width": 1.5,
+                        "circle-stroke-color": "#FFFFFF"
+                    }
+                },
+                {
+                    id: "imported-waypoints-label",
+                    type: "symbol",
+                    source: "imported-waypoints-source",
+                    layout: {
+                        "text-field": ["get", "name"],
+                        "text-size": 11,
+                        "text-offset": [0, 1.2],
+                        "text-anchor": "top",
+                        "text-optional": true
+                    },
+                    paint: {
+                        "text-color": "#1E293B",
+                        "text-halo-color": "#FFFFFF",
+                        "text-halo-width": 1.5
+                    }
+                },
+                {
+                    id: "imported-waypoints-hit",
+                    type: "circle",
+                    source: "imported-waypoints-source",
+                    paint: {
+                        "circle-radius": 18,
+                        "circle-color": "#000000",
+                        "circle-opacity": 0.001
                     }
                 },
                 {
@@ -431,11 +591,12 @@
         const lEl = createLiveLocationMarkerElement();
         liveMarker = new window.maplibregl.Marker({
             element: lEl,
-            anchor: 'center'
+            anchor: 'center',
+            rotationAlignment: 'map'
         });
 
-        // Track layers cursor & click detection
-        const trackLayers = ['imported-tracks-hit', 'imported-tracks-line', 'gps-track-hit', 'gps-track-layer'];
+        // Track & Route layers cursor detection
+        const trackLayers = ['imported-tracks-hit', 'imported-tracks-line', 'imported-routes-line', 'gps-track-hit', 'gps-track-layer'];
         trackLayers.forEach(layerId => {
             map.on('mouseenter', layerId, () => {
                 if (!isRouteDrawingActive) map.getCanvas().style.cursor = 'pointer';
@@ -445,10 +606,21 @@
             });
         });
 
-        // Map Click: Handle track selection, route drawing, or move pointer if tracking is not active
+        // Waypoint layers cursor detection
+        const waypointLayers = ['imported-waypoints-hit', 'imported-waypoints-circle', 'imported-waypoints-label'];
+        waypointLayers.forEach(layerId => {
+            map.on('mouseenter', layerId, () => {
+                if (!isRouteDrawingActive) map.getCanvas().style.cursor = 'pointer';
+            });
+            map.on('mouseleave', layerId, () => {
+                if (!isRouteDrawingActive) map.getCanvas().style.cursor = '';
+            });
+        });
+
+        // Map Click: Handle waypoint click, track selection, route drawing, or move pointer
         map.on('click', function (e) {
             // Don't process if user clicked on a control, marker, or profile card
-            if (e.originalEvent && e.originalEvent.target && e.originalEvent.target.closest('.maplibregl-control-container, .ph-pointer-marker, .ph-route-marker, #ph-elevation-profile-card')) {
+            if (e.originalEvent && e.originalEvent.target && e.originalEvent.target.closest('.maplibregl-control-container, .ph-pointer-marker, .ph-route-marker, #ph-elevation-profile-card, .maplibregl-popup')) {
                 return;
             }
 
@@ -457,10 +629,21 @@
                 return;
             }
 
-            // Check if user clicked on a track feature (with 8px bounding buffer for easy touch/mouse targeting)
+            // Check if user clicked on a waypoint feature (with 10px buffer for responsive targeting)
+            const wptBbox = [[e.point.x - 10, e.point.y - 10], [e.point.x + 10, e.point.y + 10]];
+            const waypointFeatures = map.queryRenderedFeatures(wptBbox, {
+                layers: ['imported-waypoints-hit', 'imported-waypoints-circle', 'imported-waypoints-label']
+            });
+
+            if (waypointFeatures && waypointFeatures.length > 0) {
+                showWaypointPopup(waypointFeatures[0]);
+                return;
+            }
+
+            // Check if user clicked on a track or route feature (with 8px bounding buffer)
             const bbox = [[e.point.x - 8, e.point.y - 8], [e.point.x + 8, e.point.y + 8]];
             const trackFeatures = map.queryRenderedFeatures(bbox, {
-                layers: ['imported-tracks-hit', 'imported-tracks-line', 'gps-track-hit', 'gps-track-layer']
+                layers: ['imported-tracks-hit', 'imported-tracks-line', 'imported-routes-line', 'gps-track-hit', 'gps-track-layer']
             });
 
             if (trackFeatures && trackFeatures.length > 0) {
@@ -469,8 +652,9 @@
                     window.fullScreenMap.showElevationProfile('active_gps_track');
                     return;
                 } else if (feat.properties && feat.properties.id) {
-                    window.fullScreenMap.showElevationProfile(feat.properties.id);
-                    if (onTrackClickedCb) onTrackClickedCb(feat.properties.id);
+                    const trackId = feat.properties.trackId || feat.properties.id;
+                    window.fullScreenMap.showElevationProfile(trackId);
+                    if (onTrackClickedCb) onTrackClickedCb(trackId);
                     return;
                 }
             }
@@ -511,6 +695,9 @@
             if (currentSelectedBaseLayer) {
                 window.fullScreenMap.setBaseLayer(currentSelectedBaseLayer);
             }
+            if (map.getLayer('padus-layer')) {
+                map.setLayoutProperty('padus-layer', 'visibility', isPadUsVisible ? 'visible' : 'none');
+            }
             refreshImportedTracksInView();
             window.fullScreenMap.resize();
         });
@@ -550,12 +737,22 @@
         }
     };
 
-    window.fullScreenMap.updateLivePosition = function (lat, lon, accuracyM, autoCenter) {
+    window.fullScreenMap.updateLivePosition = function (lat, lon, accuracyM, autoCenter, heading) {
         if (!map) return;
         isLiveTracking = true;
 
         if (liveMarker) {
             liveMarker.setLngLat([lon, lat]);
+            if (heading != null && !isNaN(heading)) {
+                if (typeof liveMarker.setRotation === 'function') {
+                    liveMarker.setRotation(heading);
+                } else {
+                    const tri = liveMarker.getElement().querySelector('.ph-live-triangle');
+                    if (tri) {
+                        tri.style.transform = `rotate(${heading}deg)`;
+                    }
+                }
+            }
             if (!liveMarker._map) {
                 liveMarker.addTo(map);
             }
@@ -663,6 +860,7 @@
     let activePmTileLayerIds = [];
     let activePmTileSourceIds = [];
     let currentSelectedBaseLayer = 'topo';
+    let isPadUsVisible = false;
 
     function clearPmTilesLayers() {
         if (!map) return;
@@ -751,8 +949,14 @@
             }
         }
 
-        // Anchor layer beneath which PMTiles are rendered (so UI overlays like live accuracy, drawn route, and imported tracks stay on top)
-        const anchorLayer = map.getLayer('imported-tracks-casing') ? 'imported-tracks-casing' : (map.getLayer('route-draft-casing') ? 'route-draft-casing' : (map.getLayer('live-accuracy-fill') ? 'live-accuracy-fill' : undefined));
+        // Anchor layer beneath which PMTiles are rendered (so UI overlays like live accuracy, drawn route, imported tracks, and PAD-US public lands overlay stay on top)
+        const anchorLayer = map.getLayer('padus-layer')
+            ? 'padus-layer'
+            : (map.getLayer('imported-tracks-casing')
+                ? 'imported-tracks-casing'
+                : (map.getLayer('route-draft-casing')
+                    ? 'route-draft-casing'
+                    : (map.getLayer('live-accuracy-fill') ? 'live-accuracy-fill' : undefined)));
 
         // Track PMTile files consumed by style sources
         const consumedFileNames = new Set();
@@ -777,12 +981,17 @@
                 } catch (e) { }
             }
 
+            // Track matched PMTiles files and discovered vector layers for each source ID
+            const sourceMatchedLayer = {};
+            const sourceVectorLayers = {};
+
             // Process and add sources defined in styleObj
             const sources = styleObj.sources || {};
             for (const [sId, srcDef] of Object.entries(sources)) {
                 try {
                     const sCopy = JSON.parse(JSON.stringify(srcDef));
                     let resolvedUrl = null;
+                    let matchedLayer = null;
 
                     // 1. Direct match with an enabled PMTiles layer
                     for (const l of enabledLayers) {
@@ -791,18 +1000,50 @@
                         if (sCopy.url && typeof sCopy.url === 'string') {
                             if (sCopy.url.toLowerCase().includes(lName) || sCopy.url.toLowerCase().includes(lStem)) {
                                 resolvedUrl = `pmtiles://${l.url}`;
+                                matchedLayer = l;
                                 consumedFileNames.add(l.fileName);
                                 break;
                             }
                         }
                         if (sId.toLowerCase() === lStem || sId.toLowerCase().includes(lStem) || lStem.includes(sId.toLowerCase())) {
                             resolvedUrl = `pmtiles://${l.url}`;
+                            matchedLayer = l;
                             consumedFileNames.add(l.fileName);
                             break;
                         }
                     }
 
-                    // 2. Type fallback if not matched by name
+                    // 2. Semantic role matching (universal style resolution across states)
+                    if (!resolvedUrl) {
+                        const sIdLower = sId.toLowerCase();
+                        const sUrlLower = (sCopy.url || '').toLowerCase();
+                        const isDemRole = sCopy.type === 'raster-dem' || sIdLower.includes('terrain') || sIdLower.includes('dem') || sIdLower.includes('rgb') || sUrlLower.includes('terrain') || sUrlLower.includes('dem') || sUrlLower.includes('rgb');
+                        const isHillshadeRole = sCopy.type === 'raster' || sIdLower.includes('hillshade') || sIdLower.includes('shade') || sUrlLower.includes('hillshade') || sUrlLower.includes('shade');
+                        const isContourRole = (sCopy.type === 'vector' && (sIdLower.includes('contour') || sIdLower.includes('elevation') || sUrlLower.includes('contour') || sUrlLower.includes('elevation')));
+                        const isBaseRole = (sCopy.type === 'vector' && !isContourRole);
+
+                        if (isDemRole) {
+                            matchedLayer = enabledLayers.find(l => !consumedFileNames.has(l.fileName) && (l.fileName.toLowerCase().includes('terrain') || l.fileName.toLowerCase().includes('dem') || l.fileName.toLowerCase().includes('rgb'))) ||
+                                           enabledLayers.find(l => l.fileName.toLowerCase().includes('terrain') || l.fileName.toLowerCase().includes('dem') || l.fileName.toLowerCase().includes('rgb'));
+                        } else if (isHillshadeRole) {
+                            matchedLayer = enabledLayers.find(l => !consumedFileNames.has(l.fileName) && (l.fileName.toLowerCase().includes('hillshade') || l.fileName.toLowerCase().includes('shade'))) ||
+                                           enabledLayers.find(l => l.fileName.toLowerCase().includes('hillshade') || l.fileName.toLowerCase().includes('shade'));
+                        } else if (isContourRole) {
+                            matchedLayer = enabledLayers.find(l => !consumedFileNames.has(l.fileName) && l.fileName.toLowerCase().includes('contour')) ||
+                                           enabledLayers.find(l => l.fileName.toLowerCase().includes('contour'));
+                        } else if (isBaseRole) {
+                            matchedLayer = enabledLayers.find(l => !consumedFileNames.has(l.fileName) && (l.fileName.toLowerCase().includes('base') || l.fileName.toLowerCase().includes('osm') || l.fileName.toLowerCase().includes('map')) && !l.fileName.toLowerCase().includes('contour') && !l.fileName.toLowerCase().includes('hillshade')) ||
+                                           enabledLayers.find(l => !consumedFileNames.has(l.fileName) && !l.fileName.toLowerCase().includes('contour') && !l.fileName.toLowerCase().includes('hillshade') && !l.fileName.toLowerCase().includes('raster') && !l.fileName.toLowerCase().includes('terrain') && !l.fileName.toLowerCase().includes('dem')) ||
+                                           enabledLayers.find(l => !l.fileName.toLowerCase().includes('contour') && !l.fileName.toLowerCase().includes('hillshade') && !l.fileName.toLowerCase().includes('raster'));
+                        }
+
+                        if (matchedLayer) {
+                            resolvedUrl = `pmtiles://${matchedLayer.url}`;
+                            consumedFileNames.add(matchedLayer.fileName);
+                        }
+                    }
+
+                    // 3. Fallback by raw type if still unresolved
                     if (!resolvedUrl) {
                         if (sCopy.type === 'vector') {
                             const vec = enabledLayers.find(l => !consumedFileNames.has(l.fileName) && !l.fileName.toLowerCase().includes('hillshade') && !l.fileName.toLowerCase().includes('raster')) ||
@@ -810,6 +1051,7 @@
                                 enabledLayers[0];
                             if (vec) {
                                 resolvedUrl = `pmtiles://${vec.url}`;
+                                matchedLayer = vec;
                                 consumedFileNames.add(vec.fileName);
                             }
                         } else if (sCopy.type === 'raster') {
@@ -818,6 +1060,7 @@
                                 enabledLayers[0];
                             if (ras) {
                                 resolvedUrl = `pmtiles://${ras.url}`;
+                                matchedLayer = ras;
                                 consumedFileNames.add(ras.fileName);
                             }
                         } else if (sCopy.type === 'raster-dem') {
@@ -825,9 +1068,29 @@
                                 enabledLayers.find(l => l.fileName.toLowerCase().includes('terrain') || l.fileName.toLowerCase().includes('dem') || l.fileName.toLowerCase().includes('rgb'));
                             if (dem) {
                                 resolvedUrl = `pmtiles://${dem.url}`;
+                                matchedLayer = dem;
                                 consumedFileNames.add(dem.fileName);
                             }
                         }
+                    }
+
+                    if (matchedLayer) {
+                        sourceMatchedLayer[sId] = matchedLayer;
+                    }
+
+                    // For vector sources, inspect metadata to discover vector layers (e.g. 'contours' vs 'az_contours' vs 'ut_contours')
+                    if (sCopy.type === 'vector' && matchedLayer && window.pmtiles) {
+                        try {
+                            const p = new window.pmtiles.PMTiles(matchedLayer.url);
+                            const meta = await p.getMetadata();
+                            let vl = meta && (meta.vector_layers || (meta.tilestats && meta.tilestats.layers));
+                            if (typeof vl === 'string') {
+                                try { vl = JSON.parse(vl); } catch (e) { }
+                            }
+                            if (Array.isArray(vl) && vl.length > 0) {
+                                sourceVectorLayers[sId] = vl.map(v => (typeof v === 'string') ? v : (v.id || v.layer || v.name)).filter(Boolean);
+                            }
+                        } catch (metaErr) { }
                     }
 
                     if (resolvedUrl) {
@@ -872,6 +1135,22 @@
 
                     if (lCopy.source && !map.getSource(lCopy.source)) {
                         continue;
+                    }
+
+                    // Automatically reconcile vector source-layer if needed (e.g. "az_contours" vs "contours" vs "ut_contours")
+                    if (lCopy['source-layer'] && lCopy.source && sourceVectorLayers[lCopy.source]) {
+                        const availableVectorLayers = sourceVectorLayers[lCopy.source];
+                        if (availableVectorLayers.length > 0 && !availableVectorLayers.includes(lCopy['source-layer'])) {
+                            if (availableVectorLayers.length === 1) {
+                                lCopy['source-layer'] = availableVectorLayers[0];
+                            } else {
+                                const matchingVl = availableVectorLayers.find(v => v.toLowerCase() === lCopy['source-layer'].toLowerCase()) ||
+                                                   availableVectorLayers.find(v => v.toLowerCase().includes('contour') && lCopy['source-layer'].toLowerCase().includes('contour'));
+                                if (matchingVl) {
+                                    lCopy['source-layer'] = matchingVl;
+                                }
+                            }
+                        }
                     }
 
                     // Remove unsupported paint properties that cause MapLibre validator errors
@@ -1052,6 +1331,41 @@
                 console.warn(`[FullScreenMap] Skipping PMTiles layer "${l.fileName}":`, err.message || err);
             }
         }
+
+        ensurePadUsLayerPosition();
+        if (map.getLayer('padus-layer')) {
+            map.setLayoutProperty('padus-layer', 'visibility', isPadUsVisible ? 'visible' : 'none');
+            map.setPaintProperty('padus-layer', 'raster-opacity', 0.35);
+        }
+    };
+
+    function ensurePadUsLayerPosition() {
+        if (!map || !map.getLayer('padus-layer')) return;
+        const trackAnchor = map.getLayer('imported-tracks-casing')
+            ? 'imported-tracks-casing'
+            : (map.getLayer('route-draft-casing')
+                ? 'route-draft-casing'
+                : (map.getLayer('live-accuracy-fill') ? 'live-accuracy-fill' : undefined));
+        try {
+            if (trackAnchor && map.getLayer(trackAnchor)) {
+                map.moveLayer('padus-layer', trackAnchor);
+            } else {
+                map.moveLayer('padus-layer');
+            }
+        } catch (e) {
+            console.warn("[FullScreenMap] Error positioning padus-layer:", e);
+        }
+    }
+
+    window.fullScreenMap.setPadUsVisible = function (visible) {
+        isPadUsVisible = !!visible;
+        if (map && map.getLayer('padus-layer')) {
+            map.setLayoutProperty('padus-layer', 'visibility', isPadUsVisible ? 'visible' : 'none');
+            map.setPaintProperty('padus-layer', 'raster-opacity', 0.35);
+            if (isPadUsVisible) {
+                ensurePadUsLayerPosition();
+            }
+        }
     };
 
     window.fullScreenMap.setBaseLayer = async function (layerName) {
@@ -1064,8 +1378,15 @@
         }
         currentSelectedBaseLayer = layerName;
 
-        const layers = ['topo-layer', 'osm-layer', 'satellite-layer'];
-        layers.forEach(id => {
+        const baseRasterLayers = [
+            'topo-layer',
+            'osm-layer',
+            'satellite-layer',
+            'quads-layer',
+            'opentopo-layer',
+            'hybrid-reference-layer'
+        ];
+        baseRasterLayers.forEach(id => {
             if (map.getLayer(id)) {
                 map.setLayoutProperty(id, 'visibility', 'none');
             }
@@ -1086,6 +1407,10 @@
                     map.setLayoutProperty(id, 'visibility', 'visible');
                 }
             });
+            ensurePadUsLayerPosition();
+            if (map.getLayer('padus-layer')) {
+                map.setLayoutProperty('padus-layer', 'visibility', isPadUsVisible ? 'visible' : 'none');
+            }
             return;
         }
 
@@ -1096,12 +1421,19 @@
             }
         });
 
-        let targetId = 'topo-layer';
-        if (layerName === 'streets' || layerName === 'osm') targetId = 'osm-layer';
-        else if (layerName === 'satellite') targetId = 'satellite-layer';
-
-        if (map.getLayer(targetId)) {
-            map.setLayoutProperty(targetId, 'visibility', 'visible');
+        if (layerName === 'streets' || layerName === 'osm') {
+            if (map.getLayer('osm-layer')) map.setLayoutProperty('osm-layer', 'visibility', 'visible');
+        } else if (layerName === 'satellite') {
+            if (map.getLayer('satellite-layer')) map.setLayoutProperty('satellite-layer', 'visibility', 'visible');
+        } else if (layerName === 'quads') {
+            if (map.getLayer('quads-layer')) map.setLayoutProperty('quads-layer', 'visibility', 'visible');
+        } else if (layerName === 'opentopo') {
+            if (map.getLayer('opentopo-layer')) map.setLayoutProperty('opentopo-layer', 'visibility', 'visible');
+        } else if (layerName === 'hybrid') {
+            if (map.getLayer('satellite-layer')) map.setLayoutProperty('satellite-layer', 'visibility', 'visible');
+            if (map.getLayer('hybrid-reference-layer')) map.setLayoutProperty('hybrid-reference-layer', 'visibility', 'visible');
+        } else {
+            if (map.getLayer('topo-layer')) map.setLayoutProperty('topo-layer', 'visibility', 'visible');
         }
     };
 
@@ -1231,9 +1563,102 @@
         }
     };
 
+    function escapeHtml(text) {
+        if (!text) return "";
+        return String(text)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    let currentWaypointPopup = null;
+
+    function showWaypointPopup(feature) {
+        if (!map || !feature) return;
+
+        if (currentWaypointPopup) {
+            try { currentWaypointPopup.remove(); } catch (e) { }
+            currentWaypointPopup = null;
+        }
+
+        const props = feature.properties || {};
+        const coords = feature.geometry && feature.geometry.coordinates;
+        if (!coords || coords.length < 2) return;
+
+        const lon = coords[0];
+        const lat = coords[1];
+        const name = props.name || "Waypoint";
+        const desc = props.desc || "";
+        const ele = (props.ele !== undefined && props.ele !== null && props.ele !== "" && !isNaN(props.ele))
+            ? Number(props.ele)
+            : null;
+        const time = props.time || "";
+
+        let html = '<div class="ph-waypoint-popup-content">';
+        html += '<div class="ph-wpt-header">';
+        html += '<span class="ph-wpt-icon">📌</span>';
+        html += '<span class="ph-wpt-title">' + escapeHtml(name) + '</span>';
+        html += '</div>';
+
+        if (desc) {
+            html += '<div class="ph-wpt-desc">' + escapeHtml(desc) + '</div>';
+        }
+
+        html += '<div class="ph-wpt-meta">';
+        html += '<div class="ph-wpt-coord">' + lat.toFixed(5) + '°, ' + lon.toFixed(5) + '°</div>';
+
+        if (ele !== null) {
+            const eleM = Math.round(ele);
+            const eleFt = Math.round(ele * 3.28084);
+            html += '<div class="ph-wpt-ele">⛰️ ' + eleM + ' m (' + eleFt + ' ft)</div>';
+        }
+
+        if (time) {
+            html += '<div class="ph-wpt-time">🕒 ' + escapeHtml(time) + '</div>';
+        }
+
+        html += '</div>';
+
+        const trackIdStr = String(props.trackId || '');
+        const wptIdStr = String(props.id || '');
+        html += '<div class="ph-wpt-actions">';
+        html += '<button type="button" class="ph-wpt-edit-btn" onclick="window.fullScreenMap.onEditWaypointClicked(\'' + escapeHtml(trackIdStr) + '\', \'' + escapeHtml(wptIdStr) + '\')">✏️ Edit Waypoint</button>';
+        html += '</div>';
+
+        html += '</div>';
+
+        currentWaypointPopup = new window.maplibregl.Popup({
+            closeButton: true,
+            closeOnClick: true,
+            offset: 12,
+            className: 'ph-waypoint-custom-popup ' + (isDarkMode ? 'ph-dark' : 'ph-light'),
+            maxWidth: '320px'
+        })
+        .setLngLat([lon, lat])
+        .setHTML(html)
+        .addTo(map);
+    }
+
+    window.fullScreenMap.setEditWaypointCallback = function (cb) {
+        onEditWaypointCb = cb;
+    };
+
+    window.fullScreenMap.onEditWaypointClicked = function (trackId, waypointId) {
+        if (currentWaypointPopup) {
+            try { currentWaypointPopup.remove(); } catch (e) { }
+            currentWaypointPopup = null;
+        }
+        if (onEditWaypointCb) {
+            onEditWaypointCb(trackId, waypointId);
+        }
+    };
+
     function refreshImportedTracksInView() {
         if (!map || !isLoaded) return;
         const source = map.getSource('imported-tracks-source');
+        const wptSource = map.getSource('imported-waypoints-source');
         if (!source) return;
 
         if (!allImportedTracks || allImportedTracks.length === 0) {
@@ -1241,6 +1666,12 @@
                 type: "FeatureCollection",
                 features: []
             });
+            if (wptSource) {
+                wptSource.setData({
+                    type: "FeatureCollection",
+                    features: []
+                });
+            }
             return;
         }
 
@@ -1266,21 +1697,27 @@
         const maxViewLat = Math.max(south, north) + padLat;
 
         const visibleFeatures = [];
+        const visibleWaypoints = [];
+
         for (let i = 0; i < allImportedTracks.length; i++) {
             const t = allImportedTracks[i];
             if (!t || t.isVisible === false) continue;
-            if (!t.coordinates || t.coordinates.length < 2) continue;
 
             // Fast bounding box intersection test against buffered viewport
             const overlaps = (t.maxLon >= minViewLon && t.minLon <= maxViewLon &&
                               t.maxLat >= minViewLat && t.minLat <= maxViewLat);
-            if (overlaps) {
+            if (!overlaps) continue;
+
+            // 1. Regular Track Line
+            if (t.coordinates && t.coordinates.length >= 2) {
                 visibleFeatures.push({
                     type: "Feature",
                     properties: {
                         id: t.id,
+                        trackId: t.id,
                         name: t.name || t.fileName || "Track",
-                        color: t.color || "#3B82F6"
+                        color: t.color || "#3B82F6",
+                        isRoute: false
                     },
                     geometry: {
                         type: "LineString",
@@ -1288,12 +1725,71 @@
                     }
                 });
             }
+
+            // 2. Routes (<rte>)
+            if (t.routes && t.routes.length > 0) {
+                for (let r = 0; r < t.routes.length; r++) {
+                    const rte = t.routes[r];
+                    if (rte && rte.coordinates && rte.coordinates.length >= 2) {
+                        visibleFeatures.push({
+                            type: "Feature",
+                            properties: {
+                                id: rte.id || (t.id + '_rte_' + r),
+                                trackId: t.id,
+                                name: rte.name || "Route",
+                                desc: rte.desc || "",
+                                color: t.color || "#F59E0B",
+                                isRoute: true
+                            },
+                            geometry: {
+                                type: "LineString",
+                                coordinates: rte.coordinates
+                            }
+                        });
+                    }
+                }
+            }
+
+            // 3. Waypoints (<wpt>)
+            if (t.waypoints && t.waypoints.length > 0) {
+                for (let w = 0; w < t.waypoints.length; w++) {
+                    const wpt = t.waypoints[w];
+                    if (!wpt || typeof wpt.lat !== 'number' || typeof wpt.lon !== 'number') continue;
+                    if (wpt.lon >= minViewLon && wpt.lon <= maxViewLon &&
+                        wpt.lat >= minViewLat && wpt.lat <= maxViewLat) {
+                        visibleWaypoints.push({
+                            type: "Feature",
+                            properties: {
+                                id: wpt.id || (t.id + '_wpt_' + w),
+                                trackId: t.id,
+                                name: wpt.name || "Waypoint",
+                                desc: wpt.desc || "",
+                                sym: wpt.sym || "",
+                                ele: (wpt.ele !== undefined && wpt.ele !== null) ? wpt.ele : null,
+                                time: wpt.time || "",
+                                color: t.color || "#EF4444"
+                            },
+                            geometry: {
+                                type: "Point",
+                                coordinates: [wpt.lon, wpt.lat]
+                            }
+                        });
+                    }
+                }
+            }
         }
 
         source.setData({
             type: "FeatureCollection",
             features: visibleFeatures
         });
+
+        if (wptSource) {
+            wptSource.setData({
+                type: "FeatureCollection",
+                features: visibleWaypoints
+            });
+        }
     }
 
     window.fullScreenMap.setAvailableTracks = function (tracksData) {
@@ -1602,6 +2098,121 @@
                     0% { transform: scale(1); }
                     50% { transform: scale(1.35); }
                     100% { transform: scale(1); }
+                }
+                .ph-waypoint-custom-popup .maplibregl-popup-content {
+                    padding: 10px 14px;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                }
+                .ph-waypoint-custom-popup.ph-dark .maplibregl-popup-content {
+                    background: #1e293b;
+                    color: #f8fafc;
+                    border: 1px solid rgba(255,255,255,0.15);
+                }
+                .ph-waypoint-custom-popup.ph-dark .maplibregl-popup-tip {
+                    border-top-color: #1e293b;
+                }
+                .ph-waypoint-custom-popup.ph-light .maplibregl-popup-content {
+                    background: #ffffff;
+                    color: #0f172a;
+                    border: 1px solid rgba(0,0,0,0.12);
+                }
+                .ph-waypoint-custom-popup.ph-light .maplibregl-popup-tip {
+                    border-top-color: #ffffff;
+                }
+                .ph-waypoint-custom-popup .maplibregl-popup-close-button {
+                    color: #94a3b8;
+                    font-size: 18px;
+                    padding: 4px 8px;
+                    right: 4px;
+                    top: 4px;
+                    border: none;
+                    background: transparent;
+                    cursor: pointer;
+                }
+                .ph-waypoint-custom-popup.ph-dark .maplibregl-popup-close-button:hover {
+                    color: #ffffff;
+                }
+                .ph-waypoint-custom-popup.ph-light .maplibregl-popup-close-button:hover {
+                    color: #0f172a;
+                }
+                .ph-wpt-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-size: 14px;
+                    font-weight: 700;
+                    margin-bottom: 6px;
+                    padding-right: 18px;
+                    word-break: break-word;
+                }
+                .ph-wpt-desc {
+                    font-size: 12px;
+                    line-height: 1.45;
+                    margin-bottom: 8px;
+                    word-break: break-word;
+                    white-space: pre-wrap;
+                }
+                .ph-waypoint-custom-popup.ph-dark .ph-wpt-desc {
+                    color: #cbd5e1;
+                }
+                .ph-waypoint-custom-popup.ph-light .ph-wpt-desc {
+                    color: #475569;
+                }
+                .ph-wpt-meta {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 3px;
+                    font-size: 11px;
+                    border-top: 1px solid;
+                    padding-top: 6px;
+                    margin-top: 6px;
+                }
+                .ph-waypoint-custom-popup.ph-dark .ph-wpt-meta {
+                    border-top-color: rgba(255,255,255,0.12);
+                    color: #94a3b8;
+                }
+                .ph-waypoint-custom-popup.ph-light .ph-wpt-meta {
+                    border-top-color: rgba(0,0,0,0.1);
+                    color: #64748b;
+                }
+                .ph-wpt-actions {
+                    display: flex;
+                    justify-content: flex-end;
+                    margin-top: 8px;
+                    padding-top: 6px;
+                    border-top: 1px solid rgba(128,128,128,0.2);
+                }
+                .ph-wpt-edit-btn {
+                    background: #0284c7;
+                    color: #ffffff;
+                    border: none;
+                    border-radius: 6px;
+                    padding: 5px 12px;
+                    font-size: 11.5px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                    transition: background 0.15s ease;
+                }
+                .ph-wpt-edit-btn:hover {
+                    background: #0369a1;
+                }
+
+                /* Navigation controls (Zoom In/Out, Bearing Compass) double-sized */
+                .maplibregl-ctrl-group {
+                    border-radius: 8px !important;
+                }
+                .maplibregl-ctrl-group button {
+                    width: 58px !important;
+                    height: 58px !important;
+                }
+                .maplibregl-ctrl button .maplibregl-ctrl-icon {
+                    transform: scale(1.8) !important;
+                    transform-origin: center center !important;
                 }
             `;
             document.head.appendChild(style);

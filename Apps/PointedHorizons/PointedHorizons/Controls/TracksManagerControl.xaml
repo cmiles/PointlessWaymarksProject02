@@ -26,7 +26,7 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Text="📁" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                        <TextBlock x:Name="TxtHeaderTitle" Text="Track Files (GPX, TCX, FIT)" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="TxtHeaderTitle" Text="Gpx Files (GPX, TCX, FIT)" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
                     </StackPanel>
                     <Button x:Name="BtnRescan" Grid.Column="1" Content="🔄 Rescan Folder" Click="BtnRescan_Click"
                             Style="{StaticResource PillButtonStyle}" Padding="10,5" FontSize="11" FontWeight="SemiBold"
@@ -34,7 +34,7 @@
                 </Grid>
 
                 <!-- Folder row -->
-                <TextBlock x:Name="TxtFolderLabel" Text="Tracks Folder (.gpx, .tcx, .fit):" FontSize="10.5" FontWeight="SemiBold" Margin="0,0,0,3" />
+                <TextBlock x:Name="TxtFolderLabel" Text="Gpx Folder (.gpx, .tcx, .fit):" FontSize="10.5" FontWeight="SemiBold" Margin="0,0,0,3" />
                 <Grid Margin="0,0,0,4">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />

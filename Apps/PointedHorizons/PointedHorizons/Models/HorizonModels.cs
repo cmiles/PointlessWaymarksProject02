@@ -1,6 +1,40 @@
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace PointedHorizons.Models;
+
+/// <summary>
+/// A named mountain peak or highpoint loaded from an .hgt companion .peaks.json file.
+/// </summary>
+public class DemPeakRecord
+{
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
+
+    [JsonPropertyName("lat")]
+    public double Lat { get; set; }
+
+    [JsonPropertyName("lon")]
+    public double Lon { get; set; }
+
+    [JsonPropertyName("ele")]
+    public double Ele { get; set; }
+}
+
+/// <summary>
+/// Root structure of a 1°x1° .peaks.json companion file.
+/// </summary>
+public class DemTilePeaks
+{
+    [JsonPropertyName("tile")]
+    public string Tile { get; set; } = string.Empty;
+
+    [JsonPropertyName("peakCount")]
+    public int PeakCount { get; set; }
+
+    [JsonPropertyName("peaks")]
+    public List<DemPeakRecord> Peaks { get; set; } = [];
+}
 
 public class HorizonProfilePoint
 {

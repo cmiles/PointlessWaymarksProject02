@@ -144,7 +144,7 @@ public static class TrackIndexService
                 if (!forceFullRescan)
                 {
                     var cache = LoadCacheFromDisk();
-                    if (cache != null && cache.Entries != null)
+                    if (cache != null && cache.CacheVersion >= 2 && cache.Entries != null)
                     {
                         foreach (var entry in cache.Entries)
                         {
@@ -171,7 +171,7 @@ public static class TrackIndexService
                             cachedItem.FileSizeBytes == fi.Length &&
                             cachedItem.LastModifiedUtc == fi.LastWriteTimeUtc &&
                             cachedItem.FileHash == quickHash &&
-                            cachedItem.SimplifiedCoordinates.Count > 0)
+                            (cachedItem.SimplifiedCoordinates.Count > 0 || cachedItem.Waypoints.Count > 0 || cachedItem.Routes.Count > 0))
                         {
                             updatedTracks.Add(cachedItem);
                         }
@@ -273,6 +273,31 @@ public static class TrackIndexService
     }
 
     /// <summary>
+    /// Updates an in-memory waypoint and saves cache to disk, firing TracksChanged.
+    /// </summary>
+    public static void UpdateWaypoint(string trackId, string waypointId, string newName, string newDesc, double newLat, double newLon, double? newEle)
+    {
+        lock (_syncLock)
+        {
+            var track = _tracks.FirstOrDefault(t => t.Id == trackId) ?? _tracks.FirstOrDefault(t => t.Waypoints.Any(w => w.Id == waypointId));
+            if (track != null)
+            {
+                var wpt = track.Waypoints.FirstOrDefault(w => w.Id == waypointId);
+                if (wpt != null)
+                {
+                    wpt.Name = newName;
+                    wpt.Description = newDesc;
+                    wpt.Latitude = newLat;
+                    wpt.Longitude = newLon;
+                    if (newEle.HasValue) wpt.ElevationM = newEle.Value;
+                }
+            }
+        }
+        SaveCacheToDisk(_tracks, OfflineDataService.GpxDirectory);
+        TracksChanged?.Invoke(null, EventArgs.Empty);
+    }
+
+    /// <summary>
     /// Generates lightweight payload of visible tracks for MapLibre viewport rendering.
     /// </summary>
     public static object GetMapTracksPayload()
@@ -301,7 +326,26 @@ public static class TrackIndexService
                     minElevation = t.MinElevationM,
                     maxElevation = t.MaxElevationM,
                     coordinates = t.SimplifiedCoordinates,
-                    profile = t.ElevationProfile
+                    profile = t.ElevationProfile,
+                    waypoints = t.Waypoints.Select(w => new
+                    {
+                        id = w.Id,
+                        name = w.Name,
+                        desc = !string.IsNullOrWhiteSpace(w.Description) ? w.Description : w.Comment,
+                        sym = w.Symbol,
+                        lat = w.Latitude,
+                        lon = w.Longitude,
+                        ele = w.ElevationM,
+                        time = w.TimeUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
+                    }).ToList(),
+                    routes = t.Routes.Select(r => new
+                    {
+                        id = r.Id,
+                        name = r.Name,
+                        desc = r.Description,
+                        distance = r.TotalDistanceKm,
+                        coordinates = r.Coordinates
+                    }).ToList()
                 };
             }).ToList();
         }
@@ -344,7 +388,7 @@ public static class TrackIndexService
 
             var cache = new TrackIndexCache
             {
-                CacheVersion = 1,
+                CacheVersion = 2,
                 GpxDirectory = gpxDir,
                 LastScanTimeUtc = DateTime.UtcNow,
                 Entries = tracks

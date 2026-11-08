@@ -73,7 +73,8 @@ public static class HorizonRayTracer
         double azimuthCenter,
         double fieldOfView,
         double maxDistanceKm = 70.0,
-        int rayCount = 1800)
+        int rayCount = 1800,
+        IReadOnlyList<DemPeakRecord>? candidatePeaks = null)
     {
         var sw = Stopwatch.StartNew();
 
@@ -218,8 +219,9 @@ public static class HorizonRayTracer
             }
         }
 
-        // Peak and High Point Detection
-        var peaks = DetectPeaks(profilePoints, observerLat, observerLon);
+        // Peak and High Point Detection using DEM companion .peaks.json files
+        var activeCandidatePeaks = candidatePeaks ?? DemService.GetLoadedPeaksForTiles(usedTiles);
+        var peaks = DetectPeaks(profilePoints, observerLat, observerLon, eyeElevationM, maxDistanceKm, activeCandidatePeaks);
 
         sw.Stop();
 
@@ -264,14 +266,20 @@ public static class HorizonRayTracer
     }
 
     /// <summary>
-    /// Identifies prominent summits and high points along the skyline profile.
+    /// Identifies prominent summits and high points along the skyline profile using DEM companion .peaks.json files.
     /// </summary>
-    private static List<HorizonPeak> DetectPeaks(List<HorizonProfilePoint> points, double observerLat, double observerLon)
+    private static List<HorizonPeak> DetectPeaks(
+        List<HorizonProfilePoint> points,
+        double observerLat,
+        double observerLon,
+        double eyeElevationM,
+        double maxDistanceKm,
+        IReadOnlyList<DemPeakRecord>? candidatePeaks)
     {
         var rawPeaks = new List<HorizonPeak>();
         if (points.Count < 5) return rawPeaks;
 
-        // Window size for local maximum detection across 360° circle (approx 2.5 degrees)
+        // 1. Detect local maxima along the ray-traced skyline profile
         int window = Math.Max(4, points.Count / 70);
 
         for (int i = 0; i < points.Count; i++)
@@ -304,14 +312,15 @@ public static class HorizonRayTracer
             // Must have noticeable visual prominence above neighboring saddles
             if (prominenceAngle < 0.08) continue;
 
-            // Attempt to match with known summits
-            string peakName = FindMatchingKnownPeak(p.Lat, p.Lon, p.ElevationM)
-                              ?? $"Summit {Math.Round(p.ElevationM):N0}m";
+            // Attempt to match with companion .peaks.json summits or fallback known summits
+            var match = FindMatchingPeak(p.Lat, p.Lon, p.ElevationM, candidatePeaks);
+            string peakName = match?.Name ?? $"Summit {Math.Round(p.ElevationM):N0}m";
+            double peakElev = match?.ElevationM ?? p.ElevationM;
 
             rawPeaks.Add(new HorizonPeak
             {
                 Name = peakName,
-                ElevationM = Math.Round(p.ElevationM, 0),
+                ElevationM = Math.Round(peakElev, 0),
                 DistanceKm = Math.Round(p.DistanceKm, 1),
                 Azimuth = Math.Round(p.Azimuth, 1),
                 AltitudeAngle = Math.Round(p.AltitudeAngle, 2),
@@ -321,45 +330,163 @@ public static class HorizonRayTracer
             });
         }
 
-        // Deduplicate peaks that are too close together in azimuth (< 2.0 degrees)
+        // 2. Add prominent named summits from candidatePeaks that lie on or form the visible skyline
+        if (candidatePeaks != null && candidatePeaks.Count > 0)
+        {
+            double cosObsLat = Math.Cos(observerLat * Math.PI / 180.0);
+
+            for (int c = 0; c < candidatePeaks.Count; c++)
+            {
+                var cand = candidatePeaks[c];
+                if (string.IsNullOrWhiteSpace(cand.Name)) continue;
+
+                double dLat = (cand.Lat - observerLat) * 111.32;
+                double dLon = (cand.Lon - observerLon) * 111.32 * cosObsLat;
+                double distKm = Math.Sqrt(dLat * dLat + dLon * dLon);
+
+                if (distKm < 0.6 || distKm > maxDistanceKm) continue;
+
+                double az = CalculateBearing(observerLat, observerLon, cand.Lat, cand.Lon);
+                double skylineAlt = InterpolateSkylineAltitude(points, az);
+
+                // Calculate visual altitude angle with Earth curvature and atmospheric refraction
+                double dM = distKm * 1000.0;
+                double curDrop = (dM * dM) / (2.0 * EffectiveEarthRadiusM);
+                double candAltAngle = Math.Atan2(cand.Ele - eyeElevationM - curDrop, dM) * (180.0 / Math.PI);
+
+                // If summit forms or sits right at the visible skyline (within line-of-sight tolerance)
+                if (candAltAngle >= skylineAlt - 0.25)
+                {
+                    rawPeaks.Add(new HorizonPeak
+                    {
+                        Name = cand.Name,
+                        ElevationM = Math.Round(cand.Ele, 0),
+                        DistanceKm = Math.Round(distKm, 1),
+                        Azimuth = Math.Round(az, 1),
+                        AltitudeAngle = Math.Round(Math.Max(candAltAngle, skylineAlt), 2),
+                        ProminenceM = 0,
+                        Lat = cand.Lat,
+                        Lon = cand.Lon
+                    });
+                }
+            }
+        }
+
+        // 3. Deduplicate peaks that are close in azimuth (< 1.8 degrees).
+        // Prioritize named summits over generic "Summit ..." placeholders, then by visual altitude.
         var filteredPeaks = new List<HorizonPeak>();
-        foreach (var peak in rawPeaks.OrderByDescending(p => p.AltitudeAngle).ThenByDescending(p => p.ElevationM))
+        foreach (var peak in rawPeaks
+            .OrderByDescending(p => IsNamedSummit(p.Name))
+            .ThenByDescending(p => p.AltitudeAngle)
+            .ThenByDescending(p => p.ElevationM))
         {
             bool collides = filteredPeaks.Any(existing =>
-                AngularDistance(existing.Azimuth, peak.Azimuth) < 2.0);
+                AngularDistance(existing.Azimuth, peak.Azimuth) < 1.8);
 
             if (!collides)
             {
                 filteredPeaks.Add(peak);
             }
 
-            if (filteredPeaks.Count >= 24) break; // Capture top prominent peaks around the full 360° circle
+            if (filteredPeaks.Count >= 48) break; // Capture top prominent peaks around the full 360° circle
         }
 
         return filteredPeaks.OrderBy(p => p.Azimuth).ToList();
     }
 
-    private static double AngularDistance(double a, double b)
-    {
-        double diff = Math.Abs(a - b) % 360.0;
-        return diff > 180.0 ? 360.0 - diff : diff;
-    }
+    private static bool IsNamedSummit(string? name) =>
+        !string.IsNullOrWhiteSpace(name) && !name.StartsWith("Summit ", StringComparison.OrdinalIgnoreCase);
 
-    private static string? FindMatchingKnownPeak(double lat, double lon, double elevM)
+    private static (string Name, double ElevationM)? FindMatchingPeak(
+        double lat,
+        double lon,
+        double elevM,
+        IReadOnlyList<DemPeakRecord>? candidatePeaks)
     {
+        (string Name, double ElevationM)? bestMatch = null;
+        double bestScore = double.MaxValue;
+
+        if (candidatePeaks != null && candidatePeaks.Count > 0)
+        {
+            for (int i = 0; i < candidatePeaks.Count; i++)
+            {
+                var p = candidatePeaks[i];
+                if (string.IsNullOrWhiteSpace(p.Name)) continue;
+
+                double dLat = (lat - p.Lat) * 111.32;
+                double dLon = (lon - p.Lon) * 111.32 * Math.Cos(lat * Math.PI / 180.0);
+                double distKm = Math.Sqrt(dLat * dLat + dLon * dLon);
+
+                if (distKm > 3.0) continue;
+
+                double elevDiff = (p.Ele > 0 && elevM > 0) ? Math.Abs(elevM - p.Ele) : 0.0;
+                if (elevDiff > 250) continue;
+
+                double score = distKm + (elevDiff / 100.0);
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    bestMatch = (p.Name, p.Ele > 0 ? p.Ele : elevM);
+                }
+            }
+
+            if (bestMatch.HasValue) return bestMatch;
+        }
+
+        // Fallback to built-in KnownPeaks dictionary if not matched in companion peaks
         foreach (var (name, kLat, kLon, kElev) in KnownPeaks)
         {
             double dLat = (lat - kLat) * 111.32;
             double dLon = (lon - kLon) * 111.32 * Math.Cos(lat * Math.PI / 180.0);
             double distKm = Math.Sqrt(dLat * dLat + dLon * dLon);
 
-            // Within 2.5 km and within 150m elevation
-            if (distKm < 2.5 && Math.Abs(elevM - kElev) < 180)
+            if (distKm < 3.0 && Math.Abs(elevM - kElev) < 250)
             {
-                return name;
+                double score = distKm + Math.Abs(elevM - kElev) / 100.0;
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    bestMatch = (name, kElev);
+                }
             }
         }
-        return null;
+
+        return bestMatch;
+    }
+
+    private static double CalculateBearing(double lat1, double lon1, double lat2, double lon2)
+    {
+        double lat1Rad = lat1 * Math.PI / 180.0;
+        double lat2Rad = lat2 * Math.PI / 180.0;
+        double dLonRad = (lon2 - lon1) * Math.PI / 180.0;
+
+        double y = Math.Sin(dLonRad) * Math.Cos(lat2Rad);
+        double x = Math.Cos(lat1Rad) * Math.Sin(lat2Rad) -
+                   Math.Sin(lat1Rad) * Math.Cos(lat2Rad) * Math.Cos(dLonRad);
+
+        double brg = Math.Atan2(y, x) * (180.0 / Math.PI);
+        return NormalizeAngle(brg);
+    }
+
+    private static double InterpolateSkylineAltitude(List<HorizonProfilePoint> points, double az)
+    {
+        if (points.Count == 0) return -90.0;
+
+        double step = 360.0 / points.Count;
+        int idx = (int)Math.Floor(NormalizeAngle(az) / step);
+        if (idx < 0) idx = 0;
+        if (idx >= points.Count) idx = points.Count - 1;
+
+        int nextIdx = (idx + 1) % points.Count;
+        double fraction = (NormalizeAngle(az) - (idx * step)) / step;
+
+        return points[idx].AltitudeAngle + fraction * (points[nextIdx].AltitudeAngle - points[idx].AltitudeAngle);
+    }
+
+    private static double AngularDistance(double a, double b)
+    {
+        double diff = Math.Abs(a - b) % 360.0;
+        return diff > 180.0 ? 360.0 - diff : diff;
     }
 
     private static double NormalizeAngle(double angle)

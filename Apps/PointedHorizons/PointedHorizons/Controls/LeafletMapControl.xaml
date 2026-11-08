@@ -68,7 +68,7 @@
 
                     <!-- Base Map Layer Switcher -->
                     <TextBlock x:Name="TxtSectionLayer" Text="BASE MAP LAYER" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
-                    <StackPanel Orientation="Horizontal" Margin="0,2,0,6">
+                    <StackPanel Orientation="Horizontal" Margin="0,2,0,4">
                         <Button x:Name="BtnLayerTopo" Content="Topo" Click="BtnLayerTopo_Click"
                                 Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,3,0" FontSize="10" FontWeight="SemiBold" />
                         <Button x:Name="BtnLayerStreets" Content="Streets" Click="BtnLayerStreets_Click"
@@ -78,6 +78,23 @@
                         <Button x:Name="BtnLayerPmTiles" Content="PMTiles" Click="BtnLayerPmTiles_Click"
                                 Style="{StaticResource PillButtonStyle}" Padding="9,4" FontSize="10" FontWeight="Bold" />
                     </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <Button x:Name="BtnLayerQuads" Content="Quads" Click="BtnLayerQuads_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,3,0" FontSize="10" FontWeight="SemiBold"
+                                ToolTipService.ToolTip="Classic Scanned USGS Topo Quads (USA Topo Maps)" />
+                        <Button x:Name="BtnLayerOpenTopo" Content="OpenTopo" Click="BtnLayerOpenTopo_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,3,0" FontSize="10" FontWeight="SemiBold"
+                                ToolTipService.ToolTip="OpenTopoMap: Global topographic map with contours, hillshade, and trails" />
+                        <Button x:Name="BtnLayerHybrid" Content="Hybrid" Click="BtnLayerHybrid_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="9,4" Margin="0,0,3,0" FontSize="10" FontWeight="SemiBold"
+                                ToolTipService.ToolTip="Satellite Imagery with Road, Boundary &amp; Place Name Labels" />
+                    </StackPanel>
+
+                    <!-- Public Lands (PAD-US) Transparent Overlay Toggle -->
+                    <Button x:Name="BtnTogglePadUs" Content="🌲 Public Lands (PAD-US): OFF" Click="BtnTogglePadUs_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,5" Margin="0,0,0,6" FontSize="10" FontWeight="SemiBold"
+                            ToolTipService.ToolTip="Toggle semi-transparent Federal and State Public Lands overlay (BLM, USFS, NPS, State)" />
 
                     <Button x:Name="BtnConfigurePmTiles" Content="⚙️ Configure PMTiles..." Click="BtnConfigurePmTiles_Click"
                             Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
@@ -88,10 +105,10 @@
 
                     <!-- View & Camera -->
                     <TextBlock x:Name="TxtSectionViews" Text="VIEW &amp; POSITION" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
-                    <Button x:Name="BtnMenuCelestialInfo" Content="☀️ Sun &amp; Moon Times (±12h)..." Click="BtnMenuCelestialInfo_Click"
+                    <Button x:Name="BtnMenuCelestialInfo" Content="☀️ Sun &amp; Moon Horizon Times..." Click="BtnMenuCelestialInfo_Click"
                             Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
                             Padding="8,5" Margin="0,2,0,4" FontSize="10" FontWeight="SemiBold"
-                            ToolTipService.ToolTip="View sun and moon rise/set times with topography compensation for the past and next 12 hours" />
+                            ToolTipService.ToolTip="View upcoming sun and moon rise/set times with topography compensation" />
                     <Button x:Name="BtnMenuMyLocation" Content="📍 Move to My GPS Location" Click="BtnMyLocation_Click"
                             Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
                             Padding="8,5" Margin="0,2,0,4" FontSize="10" FontWeight="SemiBold" />

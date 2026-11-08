@@ -179,6 +179,26 @@ public partial class HorizonViewControl : UserControl
         {
             QuickToolbarBorder.Visibility = Visibility.Visible;
         }
+        if (HorizonMenuPanel != null)
+        {
+            if (isCompact)
+            {
+                HorizonMenuPanel.HorizontalAlignment = HorizontalAlignment.Stretch;
+                HorizonMenuPanel.Width = double.NaN;
+                HorizonMenuPanel.Margin = new Thickness(10, 48, 10, 10);
+                if (ActualHeight > 0)
+                {
+                    HorizonMenuPanel.MaxHeight = Math.Max(260, ActualHeight - 60);
+                }
+            }
+            else
+            {
+                HorizonMenuPanel.HorizontalAlignment = HorizontalAlignment.Right;
+                HorizonMenuPanel.Width = 295;
+                HorizonMenuPanel.Margin = new Thickness(0, 48, 12, 0);
+                HorizonMenuPanel.MaxHeight = 520;
+            }
+        }
     }
 
     private void Vm_ViewParametersChanged(double? azimuth, double? fov)

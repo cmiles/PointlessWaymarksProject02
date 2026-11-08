@@ -833,15 +833,68 @@ public class MainViewModel : INotifyPropertyChanged
     public string UpdateCurrentVersion
     {
         get => _updateCurrentVersion;
-        set => SetProperty(ref _updateCurrentVersion, value);
+        set
+        {
+            if (SetProperty(ref _updateCurrentVersion, value))
+            {
+                OnPropertyChanged(nameof(ShowNewVersionComparison));
+                OnPropertyChanged(nameof(VersionComparisonVisibility));
+                OnPropertyChanged(nameof(CurrentVersionColumnSpan));
+            }
+        }
     }
 
     private string _updateNewVersion = string.Empty;
     public string UpdateNewVersion
     {
         get => _updateNewVersion;
-        set => SetProperty(ref _updateNewVersion, value);
+        set
+        {
+            if (SetProperty(ref _updateNewVersion, value))
+            {
+                OnPropertyChanged(nameof(ShowNewVersionComparison));
+                OnPropertyChanged(nameof(VersionComparisonVisibility));
+                OnPropertyChanged(nameof(CurrentVersionColumnSpan));
+            }
+        }
     }
+
+    public bool ShowNewVersionComparison
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(UpdateNewVersion)) return false;
+            if (string.Equals(UpdateNewVersion, "Unavailable", StringComparison.OrdinalIgnoreCase)) return false;
+            if (string.Equals(UpdateNewVersion, "...", StringComparison.OrdinalIgnoreCase)) return false;
+            if (string.Equals(UpdateNewVersion, "Latest", StringComparison.OrdinalIgnoreCase)) return false;
+            if (string.IsNullOrWhiteSpace(UpdateCurrentVersion)) return false;
+
+            string cur = UpdateCurrentVersion.Trim();
+            string nw = UpdateNewVersion.Trim();
+
+            // Direct string comparison
+            if (string.Equals(cur, nw, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            // Check parsed dates if both are date-based version strings
+            if (DateTime.TryParse(cur, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var dtCur) &&
+                DateTime.TryParse(nw, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var dtNw) &&
+                dtCur == dtNw)
+            {
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    public System.Windows.Visibility VersionComparisonVisibility =>
+        ShowNewVersionComparison ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+
+    public int CurrentVersionColumnSpan =>
+        ShowNewVersionComparison ? 1 : 3;
 
     private string _updateInstallerFileName = string.Empty;
     public string UpdateInstallerFileName

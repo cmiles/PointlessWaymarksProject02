@@ -160,62 +160,203 @@ public partial class MainPage : Page
         bool modeChanged = isSmall != _isSmallScreen;
         _isSmallScreen = isSmall;
 
-        // Responsive branding title
-        if (TxtAppTitle != null)
+        if (isSmall)
         {
-            if (width < 500)
+            // Top App Bar: Double size on small screen mobile
+            if (TopHeaderBorder != null)
             {
-                TxtAppTitle.Visibility = Visibility.Collapsed;
+                TopHeaderBorder.Padding = new Thickness(10, 10, 10, 10);
             }
-            else if (width < 700)
+            if (ImgAppIcon != null)
             {
-                TxtAppTitle.Visibility = Visibility.Visible;
-                TxtAppTitle.Text = "Horizons";
+                ImgAppIcon.Width = 32;
+                ImgAppIcon.Height = 32;
+                ImgAppIcon.Margin = new Thickness(0, 0, 8, 0);
             }
-            else
+            if (TxtAppTitle != null)
+            {
+                if (width < 450)
+                {
+                    TxtAppTitle.Visibility = Visibility.Collapsed;
+                }
+                else if (width < 700)
+                {
+                    TxtAppTitle.Visibility = Visibility.Visible;
+                    TxtAppTitle.Text = "Horizons";
+                    TxtAppTitle.FontSize = 18;
+                }
+                else
+                {
+                    TxtAppTitle.Visibility = Visibility.Visible;
+                    TxtAppTitle.Text = "Pointed Horizons";
+                    TxtAppTitle.FontSize = 18;
+                }
+            }
+
+            if (TabsBorder != null)
+            {
+                TabsBorder.Visibility = Visibility.Collapsed;
+            }
+            if (CompactNavBorder != null)
+            {
+                CompactNavBorder.Visibility = Visibility.Visible;
+            }
+
+            // Page choice button: Twice as big on small screen mobile
+            if (BtnCompactNav != null)
+            {
+                BtnCompactNav.MinHeight = 48;
+                BtnCompactNav.Padding = new Thickness(16, 10, 16, 10);
+                BtnCompactNav.FontSize = 14.5;
+                BtnCompactNav.FontWeight = FontWeights.Bold;
+            }
+
+            // Options button: Twice as big touch target on small screen mobile
+            if (BtnOptions != null)
+            {
+                BtnOptions.Content = "⚙️";
+                BtnOptions.MinHeight = 48;
+                BtnOptions.MinWidth = 48;
+                BtnOptions.Padding = new Thickness(12, 8, 12, 8);
+                BtnOptions.FontSize = 20;
+            }
+
+            // Page Navigation dropdown panel & buttons: Twice as big
+            if (BtnNavPageMap != null) { BtnNavPageMap.MinHeight = 48; BtnNavPageMap.Padding = new Thickness(14, 12, 14, 12); BtnNavPageMap.FontSize = 14.5; }
+            if (BtnNavPageAimMap != null) { BtnNavPageAimMap.MinHeight = 48; BtnNavPageAimMap.Padding = new Thickness(14, 12, 14, 12); BtnNavPageAimMap.FontSize = 14.5; }
+            if (BtnNavPageHorizon != null) { BtnNavPageHorizon.MinHeight = 48; BtnNavPageHorizon.Padding = new Thickness(14, 12, 14, 12); BtnNavPageHorizon.FontSize = 14.5; }
+            if (BtnNavPageTracks != null) { BtnNavPageTracks.MinHeight = 48; BtnNavPageTracks.Padding = new Thickness(14, 12, 14, 12); BtnNavPageTracks.FontSize = 14.5; }
+            if (BtnCloseCompactNav != null) { BtnCloseCompactNav.MinHeight = 36; BtnCloseCompactNav.MinWidth = 36; BtnCloseCompactNav.FontSize = 14; }
+
+            // Content button in Horizon view: Twice as big
+            if (BtnRefresh != null)
+            {
+                BtnRefresh.MinHeight = 44;
+                BtnRefresh.Padding = new Thickness(14, 8, 14, 8);
+                BtnRefresh.FontSize = 13;
+            }
+
+            // Application options buttons: Twice as big
+            if (BtnUnitFeet != null) { BtnUnitFeet.MinHeight = 44; BtnUnitFeet.Padding = new Thickness(12, 10, 12, 10); BtnUnitFeet.FontSize = 12.5; }
+            if (BtnUnitMeters != null) { BtnUnitMeters.MinHeight = 44; BtnUnitMeters.Padding = new Thickness(12, 10, 12, 10); BtnUnitMeters.FontSize = 12.5; }
+            if (BtnOpenPmTilesConfig != null) { BtnOpenPmTilesConfig.MinHeight = 48; BtnOpenPmTilesConfig.Padding = new Thickness(10, 12, 10, 12); BtnOpenPmTilesConfig.FontSize = 12.5; }
+            if (BtnToggleAppTheme != null) { BtnToggleAppTheme.MinHeight = 48; BtnToggleAppTheme.Padding = new Thickness(10, 12, 10, 12); BtnToggleAppTheme.FontSize = 12.5; }
+            if (BtnSaveGeoNamesUsername != null) { BtnSaveGeoNamesUsername.MinHeight = 44; BtnSaveGeoNamesUsername.Padding = new Thickness(12, 8, 12, 8); BtnSaveGeoNamesUsername.FontSize = 12.5; }
+            if (BtnCheckUpdates != null) { BtnCheckUpdates.MinHeight = 48; BtnCheckUpdates.Padding = new Thickness(10, 12, 10, 12); BtnCheckUpdates.FontSize = 12.5; }
+            if (BtnCloseOptions != null) { BtnCloseOptions.MinHeight = 36; BtnCloseOptions.MinWidth = 36; BtnCloseOptions.FontSize = 14; }
+
+            if (OptionsPanel != null)
+            {
+                OptionsPanel.HorizontalAlignment = HorizontalAlignment.Stretch;
+                OptionsPanel.Width = double.NaN;
+                OptionsPanel.Margin = new Thickness(10, 68, 10, 10);
+                if (height > 0)
+                {
+                    OptionsPanel.MaxHeight = Math.Max(260, height - 80);
+                }
+            }
+
+            if (CompactNavPanel != null)
+            {
+                CompactNavPanel.HorizontalAlignment = HorizontalAlignment.Stretch;
+                CompactNavPanel.Width = double.NaN;
+                CompactNavPanel.Margin = new Thickness(10, 68, 10, 10);
+            }
+        }
+        else
+        {
+            if (TopHeaderBorder != null)
+            {
+                TopHeaderBorder.Padding = new Thickness(12, 8, 12, 8);
+            }
+            if (ImgAppIcon != null)
+            {
+                ImgAppIcon.Width = 22;
+                ImgAppIcon.Height = 22;
+                ImgAppIcon.Margin = new Thickness(0, 0, 8, 0);
+            }
+            if (TxtAppTitle != null)
             {
                 TxtAppTitle.Visibility = Visibility.Visible;
                 TxtAppTitle.Text = "Pointed Horizons";
+                TxtAppTitle.FontSize = 15;
+            }
+
+            if (TabsBorder != null)
+            {
+                TabsBorder.Visibility = Visibility.Visible;
+            }
+            if (CompactNavBorder != null)
+            {
+                CompactNavBorder.Visibility = Visibility.Collapsed;
+            }
+            if (BtnCompactNav != null)
+            {
+                BtnCompactNav.MinHeight = 0;
+                BtnCompactNav.Padding = new Thickness(10, 4, 10, 4);
+                BtnCompactNav.FontSize = 11;
+            }
+            if (BtnOptions != null)
+            {
+                BtnOptions.Content = "⚙️ Options";
+                BtnOptions.MinHeight = 0;
+                BtnOptions.MinWidth = 0;
+                BtnOptions.Padding = new Thickness(10, 5, 10, 5);
+                BtnOptions.FontSize = 11;
+            }
+            CloseCompactNav();
+
+            // Tab button labels and availability (when header tabs are visible on large screens)
+            if (BtnTabMap != null)
+            {
+                BtnTabMap.Content = "🗺️ Full Screen Map";
+            }
+            if (BtnTabAimMap != null)
+            {
+                BtnTabAimMap.Visibility = Visibility.Collapsed;
+            }
+            if (BtnTabHorizon != null)
+            {
+                BtnTabHorizon.Content = "🌄 Horizon View";
+            }
+            if (BtnTabTracks != null)
+            {
+                BtnTabTracks.Content = "📁 Gpx Files";
+            }
+
+            if (BtnRefresh != null)
+            {
+                BtnRefresh.MinHeight = 0;
+                BtnRefresh.Padding = new Thickness(10, 4, 10, 4);
+                BtnRefresh.FontSize = 11;
+            }
+
+            if (BtnUnitFeet != null) { BtnUnitFeet.MinHeight = 0; BtnUnitFeet.Padding = new Thickness(12, 5, 12, 5); BtnUnitFeet.FontSize = 11; }
+            if (BtnUnitMeters != null) { BtnUnitMeters.MinHeight = 0; BtnUnitMeters.Padding = new Thickness(12, 5, 12, 5); BtnUnitMeters.FontSize = 11; }
+            if (BtnOpenPmTilesConfig != null) { BtnOpenPmTilesConfig.MinHeight = 0; BtnOpenPmTilesConfig.Padding = new Thickness(8, 5, 8, 5); BtnOpenPmTilesConfig.FontSize = 11; }
+            if (BtnToggleAppTheme != null) { BtnToggleAppTheme.MinHeight = 0; BtnToggleAppTheme.Padding = new Thickness(8, 5, 8, 5); BtnToggleAppTheme.FontSize = 11; }
+            if (BtnSaveGeoNamesUsername != null) { BtnSaveGeoNamesUsername.MinHeight = 0; BtnSaveGeoNamesUsername.Padding = new Thickness(10, 4, 10, 4); BtnSaveGeoNamesUsername.FontSize = 10; }
+            if (BtnCheckUpdates != null) { BtnCheckUpdates.MinHeight = 0; BtnCheckUpdates.Padding = new Thickness(8, 5, 8, 5); BtnCheckUpdates.FontSize = 11; }
+            if (BtnCloseOptions != null) { BtnCloseOptions.MinHeight = 0; BtnCloseOptions.MinWidth = 0; BtnCloseOptions.FontSize = 11; }
+
+            if (OptionsPanel != null)
+            {
+                OptionsPanel.HorizontalAlignment = HorizontalAlignment.Right;
+                OptionsPanel.Width = 310;
+                OptionsPanel.Margin = new Thickness(0, 52, 14, 0);
+                OptionsPanel.MaxHeight = 600;
+            }
+
+            if (CompactNavPanel != null)
+            {
+                CompactNavPanel.HorizontalAlignment = HorizontalAlignment.Center;
+                CompactNavPanel.Width = 230;
+                CompactNavPanel.Margin = new Thickness(0, 52, 0, 0);
             }
         }
 
-        // Responsive header elements: On small screens, collapse top bar tabs to compact nav selector
-        if (TabsBorder != null)
-        {
-            TabsBorder.Visibility = isSmall ? Visibility.Collapsed : Visibility.Visible;
-        }
-        if (CompactNavBorder != null)
-        {
-            CompactNavBorder.Visibility = isSmall ? Visibility.Visible : Visibility.Collapsed;
-        }
-        if (BtnOptions != null)
-        {
-            BtnOptions.Content = isSmall ? "⚙️" : "⚙️ Options";
-        }
-        if (!isSmall)
-        {
-            CloseCompactNav();
-        }
-
-        // Tab button labels and availability (when header tabs are visible on large screens)
-        if (BtnTabMap != null)
-        {
-            BtnTabMap.Content = "🗺️ Full Screen Map";
-        }
-        if (BtnTabAimMap != null)
-        {
-            BtnTabAimMap.Visibility = Visibility.Collapsed;
-        }
-        if (BtnTabHorizon != null)
-        {
-            BtnTabHorizon.Content = "🌄 Horizon View";
-        }
-        if (BtnTabTracks != null)
-        {
-            BtnTabTracks.Content = "📁 Tracks Library";
-        }
-
         HorizonViewer?.SetCompactMode(isSmall);
+        FullScreenMapControlView?.UpdateResponsiveLayout(width, height);
 
         if (modeChanged)
         {
@@ -362,7 +503,7 @@ public partial class MainPage : Page
                 "FullScreenMap" => "🗺️ Full Screen Map ▾",
                 "HorizonMap" => "🧭 Aim Map ▾",
                 "Horizon" => "🌄 Horizon View ▾",
-                "Tracks" => "📁 Tracks ▾",
+                "Tracks" => "📁 Gpx Files ▾",
                 _ => "🗺️ Map ▾"
             };
         }

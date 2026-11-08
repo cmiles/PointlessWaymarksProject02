@@ -54,22 +54,26 @@
                                 </Grid.ColumnDefinitions>
 
                                 <!-- Current Version -->
-                                <Border x:Name="CurrentVersionBox" Grid.Column="0" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8">
+                                <Border x:Name="CurrentVersionBox" Grid.Column="0"
+                                        Grid.ColumnSpan="{Binding CurrentVersionColumnSpan, FallbackValue=1}"
+                                        Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource SubtleCardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8">
                                     <StackPanel HorizontalAlignment="Center">
-                                        <TextBlock x:Name="CurrentVersionLabelText" Text="CURRENT VERSION" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                                        <TextBlock x:Name="CurrentVersionValueText" Text="{Binding UpdateCurrentVersion, FallbackValue='Unknown'}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+                                        <TextBlock x:Name="CurrentVersionLabelText" Text="CURRENT VERSION" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                                        <TextBlock x:Name="CurrentVersionValueText" Text="{Binding UpdateCurrentVersion, FallbackValue='Unknown'}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
 
                                 <!-- Arrow Indicator -->
                                 <TextBlock x:Name="VersionArrowText" Grid.Column="1" Text="➔" FontSize="14" FontWeight="Bold" Foreground="{StaticResource SkyAccentBrush}" 
-                                           VerticalAlignment="Center" HorizontalAlignment="Center" Margin="10,0"/>
+                                           VerticalAlignment="Center" HorizontalAlignment="Center" Margin="10,0"
+                                           Visibility="{Binding VersionComparisonVisibility, FallbackValue='Visible'}"/>
 
                                 <!-- New Version -->
-                                <Border x:Name="NewVersionBox" Grid.Column="2" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource EmeraldAccentBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8">
+                                <Border x:Name="NewVersionBox" Grid.Column="2" Background="{StaticResource SubtleCardBackgroundBrush}" BorderBrush="{StaticResource EmeraldAccentBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8"
+                                        Visibility="{Binding VersionComparisonVisibility, FallbackValue='Visible'}">
                                     <StackPanel HorizontalAlignment="Center">
-                                        <TextBlock x:Name="NewVersionLabelText" Text="NEW VERSION" FontSize="9" FontWeight="Bold" Foreground="{StaticResource EmeraldAccentBrush}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                                        <TextBlock x:Name="NewVersionValueText" Text="{Binding UpdateNewVersion, FallbackValue='Latest'}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource EmeraldAccentBrush}" HorizontalAlignment="Center"/>
+                                        <TextBlock x:Name="NewVersionLabelText" Text="NEW VERSION" FontSize="9" FontWeight="Bold" Foreground="{StaticResource EmeraldAccentBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                                        <TextBlock x:Name="NewVersionValueText" Text="{Binding UpdateNewVersion, FallbackValue='Latest'}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource EmeraldAccentBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
                             </Grid>

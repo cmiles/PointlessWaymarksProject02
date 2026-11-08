@@ -5,7 +5,7 @@ using OpenSilver;
 
 namespace PointedHorizons.Services;
 
-public record GeoPosition(double Latitude, double Longitude, double? AltitudeM, double? AccuracyM, DateTime Timestamp);
+public record GeoPosition(double Latitude, double Longitude, double? AltitudeM, double? AccuracyM, DateTime Timestamp, double? Heading = null);
 
 /// <summary>
 /// Bridge hook for platform-specific background location services (e.g. Android Foreground Service).
@@ -78,11 +78,12 @@ public static class GeolocationService
     {
         var tcs = new TaskCompletionSource<GeoPosition?>();
 
-        Action<double, double, object?, object?> onCoords = (lat, lon, altObj, accObj) =>
+        Action<double, double, object?, object?, object?> onCoords = (lat, lon, altObj, accObj, headObj) =>
         {
             double? alt = altObj is double dAlt ? dAlt : (double.TryParse(altObj?.ToString(), out var pa) ? pa : null);
             double? acc = accObj is double dAcc ? dAcc : (double.TryParse(accObj?.ToString(), out var pac) ? pac : null);
-            tcs.TrySetResult(new GeoPosition(lat, lon, alt, acc, DateTime.UtcNow));
+            double? heading = headObj is double dHead ? dHead : (double.TryParse(headObj?.ToString(), out var ph) ? ph : null);
+            tcs.TrySetResult(new GeoPosition(lat, lon, alt, acc, DateTime.UtcNow, heading));
         };
 
         Action<string> onError = (err) =>
@@ -115,7 +116,8 @@ public static class GeolocationService
                                     pos.coords.latitude,
                                     pos.coords.longitude,
                                     pos.coords.altitude != null ? pos.coords.altitude : null,
-                                    pos.coords.accuracy != null ? pos.coords.accuracy : null
+                                    pos.coords.accuracy != null ? pos.coords.accuracy : null,
+                                    (pos.coords.heading != null && !isNaN(pos.coords.heading)) ? pos.coords.heading : null
                                 );
                             }
                         },
@@ -152,11 +154,12 @@ public static class GeolocationService
     {
         _isTracking = true;
 
-        Action<double, double, object?, object?> onCoords = (lat, lon, altObj, accObj) =>
+        Action<double, double, object?, object?, object?> onCoords = (lat, lon, altObj, accObj, headObj) =>
         {
             double? alt = altObj is double dAlt ? dAlt : (double.TryParse(altObj?.ToString(), out var pa) ? pa : null);
             double? acc = accObj is double dAcc ? dAcc : (double.TryParse(accObj?.ToString(), out var pac) ? pac : null);
-            onUpdate(new GeoPosition(lat, lon, alt, acc, DateTime.UtcNow));
+            double? heading = headObj is double dHead ? dHead : (double.TryParse(headObj?.ToString(), out var ph) ? ph : null);
+            onUpdate(new GeoPosition(lat, lon, alt, acc, DateTime.UtcNow, heading));
         };
 
         Action<string> onErr = (msg) =>
@@ -209,7 +212,8 @@ public static class GeolocationService
                                     pos.coords.latitude,
                                     pos.coords.longitude,
                                     pos.coords.altitude != null ? pos.coords.altitude : null,
-                                    pos.coords.accuracy != null ? pos.coords.accuracy : null
+                                    pos.coords.accuracy != null ? pos.coords.accuracy : null,
+                                    (pos.coords.heading != null && !isNaN(pos.coords.heading)) ? pos.coords.heading : null
                                 );
                             }
                         },

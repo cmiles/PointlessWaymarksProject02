@@ -4,23 +4,32 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
+using PointedHorizons.Models;
 
 namespace PointedHorizons.Services;
 
 /// <summary>
 /// Service that coordinates loading, caching, and querying Viewfinderpanoramas HGT DEM tiles
-/// both from a local directory (for Photino desktop) and from the remote DEM server.
+/// and companion .peaks.json summit gazetteer files both from a local directory (for Photino desktop)
+/// and from the remote DEM server.
 /// </summary>
 public static class DemService
 {
     /// <summary>
-    /// Base URL for downloading DEM tiles. Default: https://software.pointlesswaymarks.com/dem
+    /// Base URL for downloading DEM tiles and companion .peaks.json files. Default: https://software.pointlesswaymarks.com/dem
     /// </summary>
     public static string DemBaseUrl { get; set; } = "https://software.pointlesswaymarks.com/dem";
 
     private static readonly ConcurrentDictionary<string, HgtTile> _tileCache = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly ConcurrentDictionary<string, List<DemPeakRecord>> _peaksCache = new(StringComparer.OrdinalIgnoreCase);
     private static readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(30) };
+
+    private static readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
 
     /// <summary>
     /// Resolves the local DEM directory path (configured or default).
@@ -54,11 +63,12 @@ public static class DemService
     public static bool IsTileLoaded(string tileKey) => _tileCache.ContainsKey(tileKey);
 
     /// <summary>
-    /// Clears the in-memory tile cache.
+    /// Clears the in-memory tile and peaks caches.
     /// </summary>
     public static void ClearMemoryCache()
     {
         _tileCache.Clear();
+        _peaksCache.Clear();
     }
 
     /// <summary>
@@ -225,9 +235,189 @@ public static class DemService
             {
                 loaded.Add(key);
             }
+
+            // Load companion .peaks.json if available (local first, cached if online, missing = 0 peaks)
+            await GetOrLoadPeaksAsync(key, progress);
         }
 
         return loaded;
+    }
+
+    /// <summary>
+    /// Checks if companion peaks are already loaded in memory for a given tileKey.
+    /// </summary>
+    public static bool IsPeaksLoaded(string tileKey) =>
+        !string.IsNullOrWhiteSpace(tileKey) && _peaksCache.ContainsKey(tileKey.Trim().ToUpperInvariant());
+
+    /// <summary>
+    /// Synchronously retrieves companion DEM peaks if cached in memory or present locally on disk.
+    /// Does not block on network requests. Treats missing files as 0 peaks.
+    /// </summary>
+    public static List<DemPeakRecord> GetOrLoadPeaks(string tileKey)
+    {
+        if (string.IsNullOrWhiteSpace(tileKey)) return [];
+        tileKey = tileKey.Trim().ToUpperInvariant();
+
+        if (_peaksCache.TryGetValue(tileKey, out var cached))
+        {
+            return cached;
+        }
+
+        string? localFilePath = OfflineDataService.FindLocalPeaksFile(tileKey);
+        if (!string.IsNullOrEmpty(localFilePath) && File.Exists(localFilePath))
+        {
+            try
+            {
+                string json = File.ReadAllText(localFilePath);
+                var peaks = ParsePeaksJson(json, tileKey);
+                _peaksCache[tileKey] = peaks;
+                return peaks;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DemService] Error reading local peaks file '{localFilePath}': {ex.Message}");
+            }
+        }
+
+        return [];
+    }
+
+    /// <summary>
+    /// Retrieves companion DEM peaks for a tile key (e.g. "N32W111"), checking in-memory cache first,
+    /// then local .peaks.json file beside the .hgt DEM, and finally attempting to download from DemBaseUrl.
+    /// Caches downloaded JSON locally. Treats missing files or 404s as 0 peaks (not an error).
+    /// </summary>
+    public static async Task<List<DemPeakRecord>> GetOrLoadPeaksAsync(string tileKey, IProgress<string>? progress = null)
+    {
+        if (string.IsNullOrWhiteSpace(tileKey)) return [];
+        tileKey = tileKey.Trim().ToUpperInvariant();
+
+        // 1. In-memory cache
+        if (_peaksCache.TryGetValue(tileKey, out var cached))
+        {
+            return cached;
+        }
+
+        // 2. Check local companion file (.peaks.json beside .hgt)
+        string? localFilePath = OfflineDataService.FindLocalPeaksFile(tileKey);
+        if (!string.IsNullOrEmpty(localFilePath) && File.Exists(localFilePath))
+        {
+            try
+            {
+                string json = await File.ReadAllTextAsync(localFilePath);
+                var peaks = ParsePeaksJson(json, tileKey);
+                _peaksCache[tileKey] = peaks;
+                return peaks;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DemService] Error loading local peaks file {localFilePath}: {ex.Message}");
+            }
+        }
+
+        // 3. Online fetch from remote server if possible
+        try
+        {
+            string baseUrl = DemBaseUrl.TrimEnd('/');
+            string url = $"{baseUrl}/{tileKey}.peaks.json";
+
+            using var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+            if (response.IsSuccessStatusCode)
+            {
+                string json = await response.Content.ReadAsStringAsync();
+                var peaks = ParsePeaksJson(json, tileKey);
+                _peaksCache[tileKey] = peaks;
+
+                // Automatically cache downloaded peaks JSON to local folder
+                _ = OfflineDataService.SaveDownloadedPeaksAsync(tileKey, json);
+
+                return peaks;
+            }
+        }
+        catch
+        {
+            // Remote download failed, offline, or server not reachable
+        }
+
+        // 4. Missing file or network failure is treated as 0 peaks, NOT an error
+        var emptyList = new List<DemPeakRecord>();
+        _peaksCache[tileKey] = emptyList;
+        return emptyList;
+    }
+
+    /// <summary>
+    /// Retrieves all loaded companion peaks across a set of tile keys (loading locally if not in memory).
+    /// </summary>
+    public static List<DemPeakRecord> GetLoadedPeaksForTiles(IEnumerable<string> tileKeys)
+    {
+        var result = new List<DemPeakRecord>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var key in tileKeys)
+        {
+            if (string.IsNullOrWhiteSpace(key)) continue;
+            var peaks = GetOrLoadPeaks(key);
+            foreach (var p in peaks)
+            {
+                if (!string.IsNullOrWhiteSpace(p.Name))
+                {
+                    // Deduplicate identical peak name & coordinates across tile boundaries
+                    string dedupKey = $"{p.Name}_{Math.Round(p.Lat, 3)}_{Math.Round(p.Lon, 3)}";
+                    if (seen.Add(dedupKey))
+                    {
+                        result.Add(p);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Retrieves all peaks loaded in the in-memory cache across all tiles.
+    /// </summary>
+    public static List<DemPeakRecord> GetAllLoadedPeaks()
+    {
+        var all = new List<DemPeakRecord>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var list in _peaksCache.Values)
+        {
+            foreach (var p in list)
+            {
+                if (!string.IsNullOrWhiteSpace(p.Name))
+                {
+                    string dedupKey = $"{p.Name}_{Math.Round(p.Lat, 3)}_{Math.Round(p.Lon, 3)}";
+                    if (seen.Add(dedupKey))
+                    {
+                        all.Add(p);
+                    }
+                }
+            }
+        }
+
+        return all;
+    }
+
+    private static List<DemPeakRecord> ParsePeaksJson(string json, string tileKey)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return [];
+
+        try
+        {
+            var doc = JsonSerializer.Deserialize<DemTilePeaks>(json, _jsonOptions);
+            if (doc?.Peaks != null && doc.Peaks.Count > 0)
+            {
+                return doc.Peaks.Where(p => !string.IsNullOrWhiteSpace(p.Name)).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[DemService] Error parsing peaks JSON for {tileKey}: {ex.Message}");
+        }
+
+        return [];
     }
 
     /// <summary>

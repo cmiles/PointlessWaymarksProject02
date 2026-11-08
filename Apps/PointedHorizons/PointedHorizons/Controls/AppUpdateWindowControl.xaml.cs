@@ -48,6 +48,7 @@ namespace PointedHorizons.Controls
                 _subscribedVm = vm;
                 _subscribedVm.PropertyChanged += OnViewModelPropertyChanged;
                 UpdateProgressBar(vm.UpdateDownloadPercent);
+                UpdateVersionDisplay(vm);
             }
         }
 
@@ -69,6 +70,26 @@ namespace PointedHorizons.Controls
                     Dispatcher.BeginInvoke(() => UpdateProgressBar(vm.UpdateDownloadPercent));
                 }
             }
+            else if (e.PropertyName == nameof(MainViewModel.UpdateCurrentVersion) ||
+                     e.PropertyName == nameof(MainViewModel.UpdateNewVersion) ||
+                     e.PropertyName == nameof(MainViewModel.ShowNewVersionComparison))
+            {
+                if (DataContext is MainViewModel vm)
+                {
+                    Dispatcher.BeginInvoke(() => UpdateVersionDisplay(vm));
+                }
+            }
+        }
+
+        public void UpdateVersionDisplay(MainViewModel vm)
+        {
+            bool showComparison = vm.ShowNewVersionComparison;
+            if (VersionArrowText != null)
+                VersionArrowText.Visibility = showComparison ? Visibility.Visible : Visibility.Collapsed;
+            if (NewVersionBox != null)
+                NewVersionBox.Visibility = showComparison ? Visibility.Visible : Visibility.Collapsed;
+            if (CurrentVersionBox != null)
+                Grid.SetColumnSpan(CurrentVersionBox, showComparison ? 1 : 3);
         }
 
         public void UpdateProgressBar(double percent)

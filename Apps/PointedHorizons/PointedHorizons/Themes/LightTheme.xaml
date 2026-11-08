@@ -33,12 +33,18 @@
     <SolidColorBrush x:Key="ButtonBackgroundBrush" Color="#F1F5F9" />
     <SolidColorBrush x:Key="ButtonForegroundBrush" Color="#0F172A" />
     <SolidColorBrush x:Key="ButtonBorderBrush" Color="#CBD5E1" />
+    <SolidColorBrush x:Key="ButtonInactiveBackgroundBrush" Color="#F1F5F9" />
+    <SolidColorBrush x:Key="ButtonInactiveForegroundBrush" Color="#0F172A" />
+    <SolidColorBrush x:Key="ButtonInactiveBorderBrush" Color="#CBD5E1" />
     <SolidColorBrush x:Key="ButtonActiveBackgroundBrush" Color="#0284C7" />
     <SolidColorBrush x:Key="ButtonActiveForegroundBrush" Color="#FFFFFF" />
     <SolidColorBrush x:Key="ButtonActiveBorderBrush" Color="#0284C7" />
 
     <!-- Reusable Clean Pill Button Style with TemplateBinding -->
     <Style x:Key="PillButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource ButtonBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ButtonBorderBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource ButtonForegroundBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="8,4"/>
         <Setter Property="Cursor" Value="Hand"/>

@@ -31,7 +31,7 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Text="☀️" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
-                        <TextBlock x:Name="TxtDialogTitle" Text="Sun &amp; Moon Horizon Times (±12h)" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" />
+                        <TextBlock x:Name="TxtDialogTitle" Text="Sun &amp; Moon Horizon Times" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" />
                     </StackPanel>
                     <Button x:Name="BtnCloseDialog" Grid.Column="1" Content="✕" Click="BtnClose_Click"
                             Style="{StaticResource PillButtonStyle}" Padding="8,3" FontSize="11" FontWeight="Bold"
@@ -41,7 +41,7 @@
                 <Border x:Name="Divider1" Grid.Row="1" Height="1" Margin="0,0,0,8" />
 
                 <!-- 2. Location Source Selector (Segmented Bar) -->
-                <Grid Grid.Row="2" x:Name="PanelModeSelector" Margin="0,0,0,10">
+                <Grid Grid.Row="2" x:Name="PanelModeSelector" Margin="0,0,0,10" Visibility="Collapsed">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
@@ -67,7 +67,7 @@
                         <!-- Choice View (When first launched, prior to running calculation) -->
                         <StackPanel x:Name="InitialChoicePanel" Orientation="Vertical" Margin="0,6,0,6">
                             <TextBlock x:Name="TxtChoicePrompt"
-                                       Text="Choose a location source to calculate topography-compensated rise/set times for the past 12 hours and next 12 hours:"
+                                       Text="Choose a location source to calculate upcoming topography-compensated sun and moon rise/set times:"
                                        FontSize="11" Margin="2,0,2,12" TextWrapping="Wrap" />
 
                             <Border x:Name="BtnBigGpsCard" BorderThickness="1" CornerRadius="10" Padding="12,10" Margin="0,0,0,10"
@@ -126,10 +126,10 @@
                                         </StackPanel>
                                     </Grid>
 
-                                    <!-- 24-Hour Window -->
+                                    <!-- Upcoming Window -->
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
                                         <TextBlock Text="🕒 " FontSize="10" VerticalAlignment="Center" />
-                                        <TextBlock x:Name="TxtSummaryWindow" Text="8:30 PM yesterday → 8:30 PM today (±12h)" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <TextBlock x:Name="TxtSummaryWindow" Text="Upcoming from today 8:30 PM" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" />
                                     </StackPanel>
 
                                     <!-- Moon Phase Snapshot -->
@@ -141,7 +141,7 @@
                             </Border>
 
                             <!-- Section Header -->
-                            <TextBlock x:Name="TxtSectionEvents" Text="HORIZON CELESTIAL EVENTS (±12 HOURS)" FontSize="9.5" FontWeight="Bold" Margin="2,0,0,6" />
+                            <TextBlock x:Name="TxtSectionEvents" Text="NEXT HORIZON CELESTIAL EVENTS" FontSize="9.5" FontWeight="Bold" Margin="2,0,0,6" />
 
                             <!-- Horizon Events Container (Dynamically ordered from farthest past to most in the future) -->
                             <StackPanel x:Name="EventsCardsContainer" Orientation="Vertical">

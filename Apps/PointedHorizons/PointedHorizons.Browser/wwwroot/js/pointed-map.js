@@ -351,8 +351,10 @@
             }
         }
 
-        // Anchor layer beneath which PMTiles are rendered (so UI overlays stay on top)
-        const anchorLayer = map.getLayer('fov-fill-layer') ? 'fov-fill-layer' : undefined;
+        // Anchor layer beneath which PMTiles are rendered (so UI overlays and PAD-US public lands overlay stay on top)
+        const anchorLayer = map.getLayer('padus-layer')
+            ? 'padus-layer'
+            : (map.getLayer('fov-fill-layer') ? 'fov-fill-layer' : undefined);
 
         // Track PMTile files consumed by style sources
         const consumedFileNames = new Set();
@@ -652,6 +654,39 @@
                 console.warn(`[PointedMap] Skipping PMTiles layer "${l.fileName}":`, err.message || err);
             }
         }
+
+        ensurePadUsLayerPosition();
+        if (map.getLayer('padus-layer')) {
+            map.setLayoutProperty('padus-layer', 'visibility', isPadUsVisible ? 'visible' : 'none');
+            map.setPaintProperty('padus-layer', 'raster-opacity', 0.35);
+        }
+    };
+
+    let isPadUsVisible = false;
+
+    function ensurePadUsLayerPosition() {
+        if (!map || !map.getLayer('padus-layer')) return;
+        const anchor = map.getLayer('fov-fill-layer') ? 'fov-fill-layer' : undefined;
+        try {
+            if (anchor && map.getLayer(anchor)) {
+                map.moveLayer('padus-layer', anchor);
+            } else {
+                map.moveLayer('padus-layer');
+            }
+        } catch (e) {
+            console.warn("[PointedMap] Error positioning padus-layer:", e);
+        }
+    }
+
+    window.pointedMap.setPadUsVisible = function (visible) {
+        isPadUsVisible = !!visible;
+        if (map && map.getLayer('padus-layer')) {
+            map.setLayoutProperty('padus-layer', 'visibility', isPadUsVisible ? 'visible' : 'none');
+            map.setPaintProperty('padus-layer', 'raster-opacity', 0.35);
+            if (isPadUsVisible) {
+                ensurePadUsLayerPosition();
+            }
+        }
     };
 
     async function setBaseLayer(layerKey) {
@@ -664,16 +699,20 @@
             layerKey = 'osm';
         }
         selectedBaseLayer = layerKey;
-        const layers = {
-            'osm': 'osm-layer',
-            'topo': 'topo-layer',
-            'satellite': 'satellite-layer'
-        };
-        for (const [key, id] of Object.entries(layers)) {
+
+        const baseRasterLayers = [
+            'osm-layer',
+            'topo-layer',
+            'satellite-layer',
+            'quads-layer',
+            'opentopo-layer',
+            'hybrid-reference-layer'
+        ];
+        baseRasterLayers.forEach(id => {
             if (map.getLayer(id)) {
-                map.setLayoutProperty(id, 'visibility', key === layerKey ? 'visible' : 'none');
+                map.setLayoutProperty(id, 'visibility', 'none');
             }
-        }
+        });
 
         if (layerKey === 'pmtiles') {
             if (activePmTileLayerIds.length === 0 && pendingPmTilesConfig) {
@@ -688,6 +727,10 @@
                     map.setLayoutProperty(id, 'visibility', 'visible');
                 }
             });
+            ensurePadUsLayerPosition();
+            if (map.getLayer('padus-layer')) {
+                map.setLayoutProperty('padus-layer', 'visibility', isPadUsVisible ? 'visible' : 'none');
+            }
             return;
         }
 
@@ -697,6 +740,21 @@
                 map.setLayoutProperty(id, 'visibility', 'none');
             }
         });
+
+        if (layerKey === 'osm') {
+            if (map.getLayer('osm-layer')) map.setLayoutProperty('osm-layer', 'visibility', 'visible');
+        } else if (layerKey === 'topo') {
+            if (map.getLayer('topo-layer')) map.setLayoutProperty('topo-layer', 'visibility', 'visible');
+        } else if (layerKey === 'satellite') {
+            if (map.getLayer('satellite-layer')) map.setLayoutProperty('satellite-layer', 'visibility', 'visible');
+        } else if (layerKey === 'quads') {
+            if (map.getLayer('quads-layer')) map.setLayoutProperty('quads-layer', 'visibility', 'visible');
+        } else if (layerKey === 'opentopo') {
+            if (map.getLayer('opentopo-layer')) map.setLayoutProperty('opentopo-layer', 'visibility', 'visible');
+        } else if (layerKey === 'hybrid') {
+            if (map.getLayer('satellite-layer')) map.setLayoutProperty('satellite-layer', 'visibility', 'visible');
+            if (map.getLayer('hybrid-reference-layer')) map.setLayoutProperty('hybrid-reference-layer', 'visibility', 'visible');
+        }
     }
 
     window.pointedMap.setBaseLayer = setBaseLayer;
@@ -902,6 +960,44 @@
                     attribution: "Tiles © Esri",
                     maxzoom: 18
                 },
+                "quads-source": {
+                    type: "raster",
+                    tiles: [
+                        "https://services.arcgisonline.com/ArcGIS/rest/services/USA_Topo_Maps/MapServer/tile/{z}/{y}/{x}"
+                    ],
+                    tileSize: 256,
+                    attribution: "USGS / Esri",
+                    maxzoom: 15
+                },
+                "opentopo-source": {
+                    type: "raster",
+                    tiles: [
+                        "https://a.tile.opentopomap.org/{z}/{x}/{y}.png",
+                        "https://b.tile.opentopomap.org/{z}/{x}/{y}.png",
+                        "https://c.tile.opentopomap.org/{z}/{x}/{y}.png"
+                    ],
+                    tileSize: 256,
+                    attribution: "© OpenTopoMap (CC-BY-SA)",
+                    maxzoom: 17
+                },
+                "hybrid-reference-source": {
+                    type: "raster",
+                    tiles: [
+                        "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+                    ],
+                    tileSize: 256,
+                    attribution: "Esri Labels",
+                    maxzoom: 18
+                },
+                "padus-source": {
+                    type: "raster",
+                    tiles: [
+                        "https://gis.blm.gov/arcgis/rest/services/lands/BLM_Natl_SMA_Cached_without_PriUnk/MapServer/tile/{z}/{y}/{x}"
+                    ],
+                    tileSize: 256,
+                    attribution: "BLM / USFS / NPS / State Lands",
+                    maxzoom: 18
+                },
                 "fov-source": {
                     type: "geojson",
                     data: {
@@ -961,6 +1057,31 @@
                     type: "raster",
                     source: "satellite-source",
                     layout: { visibility: "none" }
+                },
+                {
+                    id: "quads-layer",
+                    type: "raster",
+                    source: "quads-source",
+                    layout: { visibility: "none" }
+                },
+                {
+                    id: "opentopo-layer",
+                    type: "raster",
+                    source: "opentopo-source",
+                    layout: { visibility: "none" }
+                },
+                {
+                    id: "hybrid-reference-layer",
+                    type: "raster",
+                    source: "hybrid-reference-source",
+                    layout: { visibility: "none" }
+                },
+                {
+                    id: "padus-layer",
+                    type: "raster",
+                    source: "padus-source",
+                    layout: { visibility: "none" },
+                    paint: { "raster-opacity": 0.35 }
                 },
                 {
                     id: "fov-fill-layer",
@@ -1148,6 +1269,9 @@
             }
             if (selectedBaseLayer) {
                 window.pointedMap.setBaseLayer(selectedBaseLayer);
+            }
+            if (map.getLayer('padus-layer')) {
+                map.setLayoutProperty('padus-layer', 'visibility', isPadUsVisible ? 'visible' : 'none');
             }
 
             if (pendingFarthestUpdate) {
