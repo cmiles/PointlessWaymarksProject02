@@ -114,7 +114,27 @@ public partial class HorizonViewControl : UserControl
         if (HorizonMenuDivider1 != null) HorizonMenuDivider1.Background = tm.MapOverlayBorder;
         if (HorizonMenuDivider2 != null) HorizonMenuDivider2.Background = tm.MapOverlayBorder;
         if (HorizonMenuDivider3 != null) HorizonMenuDivider3.Background = tm.MapOverlayBorder;
+        if (HorizonMenuDividerLoc != null) HorizonMenuDividerLoc.Background = tm.MapOverlayBorder;
         if (HorizonSunMoonCardDivider != null) HorizonSunMoonCardDivider.Background = tm.MapOverlayBorder;
+
+        if (TxtHorizonMenuTitle != null) TxtHorizonMenuTitle.Foreground = tm.TextPrimary;
+        if (TxtHorizonSectionLocation != null) TxtHorizonSectionLocation.Foreground = tm.TextSecondary;
+        if (TxtHorizonSectionFov != null) TxtHorizonSectionFov.Foreground = tm.TextSecondary;
+        if (TxtHorizonSectionSunMoon != null) TxtHorizonSectionSunMoon.Foreground = tm.TextSecondary;
+
+        if (BtnHorizonCurrentLocation != null)
+        {
+            BtnHorizonCurrentLocation.Background = tm.ButtonInactiveBackground;
+            BtnHorizonCurrentLocation.BorderBrush = tm.ButtonInactiveBorder;
+            BtnHorizonCurrentLocation.Foreground = tm.TextPrimary;
+        }
+
+        if (BtnHorizonLocationFromMainMap != null)
+        {
+            BtnHorizonLocationFromMainMap.Background = tm.ButtonInactiveBackground;
+            BtnHorizonLocationFromMainMap.BorderBrush = tm.ButtonInactiveBorder;
+            BtnHorizonLocationFromMainMap.Foreground = tm.TextPrimary;
+        }
 
         if (FocalLengthBoxBorder != null)
         {
@@ -194,7 +214,7 @@ public partial class HorizonViewControl : UserControl
             else
             {
                 HorizonMenuPanel.HorizontalAlignment = HorizontalAlignment.Right;
-                HorizonMenuPanel.Width = 295;
+                HorizonMenuPanel.Width = 440;
                 HorizonMenuPanel.Margin = new Thickness(0, 48, 12, 0);
                 HorizonMenuPanel.MaxHeight = 520;
             }
@@ -534,6 +554,34 @@ public partial class HorizonViewControl : UserControl
         if (ViewModel != null)
         {
             ViewModel.IsDarkTheme = !ViewModel.IsDarkTheme;
+        }
+    }
+
+    private async void BtnHorizonCurrentLocation_Click(object sender, RoutedEventArgs e)
+    {
+        BtnCloseHorizonMenu_Click(sender, e);
+        if (ViewModel == null) return;
+        ViewModel.StatusMessage = "Acquiring current GPS location...";
+        var pos = await GeolocationService.GetCurrentPositionAsync(timeoutSeconds: 8);
+        if (pos != null)
+        {
+            ViewModel.SetLocation(pos.Latitude, pos.Longitude, "Current Location", panMap: true);
+            ViewModel.StatusMessage = $"Aim Map & Horizon moved to GPS: {pos.Latitude:F4}°, {pos.Longitude:F4}° (±{pos.AccuracyM:F0}m)";
+        }
+        else
+        {
+            ViewModel.StatusMessage = "GPS location unavailable or permission denied.";
+        }
+    }
+
+    private void BtnHorizonLocationFromMainMap_Click(object sender, RoutedEventArgs e)
+    {
+        BtnCloseHorizonMenu_Click(sender, e);
+        if (FullScreenMapControl.Current != null && ViewModel != null)
+        {
+            var loc = FullScreenMapControl.Current.GetCurrentTargetLocation();
+            ViewModel.SetLocation(loc.Latitude, loc.Longitude, $"Main Map ({loc.Source})", panMap: true);
+            ViewModel.StatusMessage = $"Aim Map & Horizon updated from Main Map ({loc.Source}): {loc.Latitude:F4}°, {loc.Longitude:F4}°";
         }
     }
 }

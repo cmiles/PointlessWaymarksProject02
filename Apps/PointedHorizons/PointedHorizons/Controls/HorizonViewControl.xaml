@@ -76,7 +76,7 @@
 
         <!-- Floating Horizon Settings Menu Dropdown Panel -->
         <Border x:Name="HorizonMenuPanel" HorizontalAlignment="Right" VerticalAlignment="Top"
-                Margin="0,48,12,0" Width="295" MaxHeight="520" Visibility="Collapsed"
+                Margin="0,48,12,0" Width="440" MaxHeight="520" Visibility="Collapsed"
                 BorderThickness="1" CornerRadius="12" Padding="14,12">
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel Orientation="Vertical">
@@ -92,6 +92,18 @@
                     </Grid>
 
                     <Border x:Name="HorizonMenuDivider1" Height="1" Margin="0,0,0,10" />
+
+                    <!-- Observer & Aim Location -->
+                    <TextBlock x:Name="TxtHorizonSectionLocation" Text="OBSERVER &amp; AIM LOCATION" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
+                    <Button x:Name="BtnHorizonCurrentLocation" Content="📍 Current Location" Click="BtnHorizonCurrentLocation_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,5" Margin="0,2,0,4" FontSize="10.5" FontWeight="SemiBold"
+                            ToolTipService.ToolTip="Acquire current GPS position and set the Aim Map &amp; Horizon viewpoint" />
+                    <Button x:Name="BtnHorizonLocationFromMainMap" Content="🎯 Location from Main Map" Click="BtnHorizonLocationFromMainMap_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
+                            Padding="8,5" Margin="0,2,0,6" FontSize="10.5" FontWeight="SemiBold"
+                            ToolTipService.ToolTip="Set the Aim Map &amp; Horizon viewpoint from the Main Map (GPS fix, marker, or center)" />
+                    <Border x:Name="HorizonMenuDividerLoc" Height="1" Margin="0,2,0,8" />
 
                     <!-- Field of View / Focal Length Presets -->
                     <TextBlock x:Name="TxtHorizonSectionFov" Text="FIELD OF VIEW / FOCAL LENGTH" FontSize="10" FontWeight="Bold" Margin="0,0,0,6" />

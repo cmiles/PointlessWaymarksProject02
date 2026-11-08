@@ -121,18 +121,9 @@ public partial class MainPage : Page
         if (FullScreenMapControlView != null)
         {
             FullScreenMapControlView.SearchLocationRequested += (s, ev) => ShowGeoNamesSearchModal();
-            FullScreenMapControlView.CelestialInfoRequested += (s, ev) => ShowCelestialInfoModal(ev.Latitude, ev.Longitude);
         }
 
-        if (LeafletMap != null)
-        {
-            LeafletMap.CelestialInfoRequested += (s, ev) => ShowCelestialInfoModal(ev.Latitude, ev.Longitude);
-        }
-
-        if (CelestialInfoModal != null)
-        {
-            CelestialInfoModal.CloseRequested += (s, ev) => HideCelestialInfoModal();
-        }
+        CelestialPageView?.PrepareAsPage();
 
         GeoNamesService.ConfigurationChanged += (s, ev) =>
         {
@@ -311,6 +302,10 @@ public partial class MainPage : Page
             {
                 BtnTabMap.Content = "🗺️ Full Screen Map";
             }
+            if (BtnTabCelestial != null)
+            {
+                BtnTabCelestial.Content = "☀️ Sun & Moon";
+            }
             if (BtnTabAimMap != null)
             {
                 BtnTabAimMap.Visibility = Visibility.Collapsed;
@@ -356,6 +351,7 @@ public partial class MainPage : Page
         }
 
         HorizonViewer?.SetCompactMode(isSmall);
+        CelestialPageView?.SetCompactMode(isSmall);
         FullScreenMapControlView?.UpdateResponsiveLayout(width, height);
 
         if (modeChanged)
@@ -387,14 +383,23 @@ public partial class MainPage : Page
         if (_currentTab == "FullScreenMap")
         {
             if (ViewFullScreenMapTab != null) ViewFullScreenMapTab.Visibility = Visibility.Visible;
+            if (ViewCelestialTab != null) ViewCelestialTab.Visibility = Visibility.Collapsed;
             if (ViewHorizonTab != null) ViewHorizonTab.Visibility = Visibility.Collapsed;
             if (ViewTracksTab != null) ViewTracksTab.Visibility = Visibility.Collapsed;
 
             FullScreenMapControlView?.ResizeMap();
         }
+        else if (_currentTab == "Celestial")
+        {
+            if (ViewFullScreenMapTab != null) ViewFullScreenMapTab.Visibility = Visibility.Collapsed;
+            if (ViewCelestialTab != null) ViewCelestialTab.Visibility = Visibility.Visible;
+            if (ViewHorizonTab != null) ViewHorizonTab.Visibility = Visibility.Collapsed;
+            if (ViewTracksTab != null) ViewTracksTab.Visibility = Visibility.Collapsed;
+        }
         else if (_currentTab == "Tracks")
         {
             if (ViewFullScreenMapTab != null) ViewFullScreenMapTab.Visibility = Visibility.Collapsed;
+            if (ViewCelestialTab != null) ViewCelestialTab.Visibility = Visibility.Collapsed;
             if (ViewHorizonTab != null) ViewHorizonTab.Visibility = Visibility.Collapsed;
             if (ViewTracksTab != null) ViewTracksTab.Visibility = Visibility.Visible;
 
@@ -403,6 +408,7 @@ public partial class MainPage : Page
         else
         {
             if (ViewFullScreenMapTab != null) ViewFullScreenMapTab.Visibility = Visibility.Collapsed;
+            if (ViewCelestialTab != null) ViewCelestialTab.Visibility = Visibility.Collapsed;
             if (ViewHorizonTab != null) ViewHorizonTab.Visibility = Visibility.Visible;
             if (ViewTracksTab != null) ViewTracksTab.Visibility = Visibility.Collapsed;
 
@@ -501,6 +507,7 @@ public partial class MainPage : Page
             BtnCompactNav.Content = _currentTab switch
             {
                 "FullScreenMap" => "🗺️ Full Screen Map ▾",
+                "Celestial" => "☀️ Sun & Moon ▾",
                 "HorizonMap" => "🧭 Aim Map ▾",
                 "Horizon" => "🌄 Horizon View ▾",
                 "Tracks" => "📁 Gpx Files ▾",
@@ -513,6 +520,7 @@ public partial class MainPage : Page
     }
 
     private void BtnTabMap_Click(object sender, RoutedEventArgs e) => SwitchTab("FullScreenMap");
+    private void BtnTabCelestial_Click(object sender, RoutedEventArgs e) => SwitchTab("Celestial");
     private void BtnTabAimMap_Click(object sender, RoutedEventArgs e) => SwitchTab("HorizonMap");
     private void BtnTabHorizon_Click(object sender, RoutedEventArgs e) => SwitchTab("Horizon");
     private void BtnTabTracks_Click(object sender, RoutedEventArgs e) => SwitchTab("Tracks");
@@ -546,6 +554,12 @@ public partial class MainPage : Page
     private void BtnNavPageMap_Click(object sender, RoutedEventArgs e)
     {
         SwitchTab("FullScreenMap");
+        CloseCompactNav();
+    }
+
+    private void BtnNavPageCelestial_Click(object sender, RoutedEventArgs e)
+    {
+        SwitchTab("Celestial");
         CloseCompactNav();
     }
 
@@ -670,28 +684,9 @@ public partial class MainPage : Page
         HideGeoNamesSearchModal();
     }
 
-    public void ShowCelestialInfoModal(double lat, double lon)
+    public void ShowCelestialInfo()
     {
-        if (OptionsPanel != null) OptionsPanel.Visibility = Visibility.Collapsed;
-        if (OptionsBackdrop != null) OptionsBackdrop.Visibility = Visibility.Collapsed;
-
-        if (CelestialInfoBackdrop != null) CelestialInfoBackdrop.Visibility = Visibility.Visible;
-        if (CelestialInfoModal != null)
-        {
-            CelestialInfoModal.Visibility = Visibility.Visible;
-            CelestialInfoModal.Open(lat, lon);
-        }
-    }
-
-    public void HideCelestialInfoModal()
-    {
-        if (CelestialInfoBackdrop != null) CelestialInfoBackdrop.Visibility = Visibility.Collapsed;
-        if (CelestialInfoModal != null) CelestialInfoModal.Visibility = Visibility.Collapsed;
-    }
-
-    private void BtnCloseCelestialInfo_Click(object sender, RoutedEventArgs e)
-    {
-        HideCelestialInfoModal();
+        SwitchTab("Celestial");
     }
 
     private void UpdateGeoNamesConfigDisplay()
@@ -875,7 +870,7 @@ public partial class MainPage : Page
         }
 
         GeoNamesSearchModal?.UpdateTheme(isDark);
-        CelestialInfoModal?.UpdateTheme(isDark);
+        CelestialPageView?.UpdateTheme(isDark);
 
         // 5. Update Tab Buttons & Compact Nav Buttons
         UpdateTabButtonsTheme(isDark);
@@ -897,6 +892,7 @@ public partial class MainPage : Page
         }
 
         StyleTabBtn(BtnTabMap, _currentTab == "FullScreenMap");
+        StyleTabBtn(BtnTabCelestial, _currentTab == "Celestial");
         StyleTabBtn(BtnTabAimMap, _currentTab == "HorizonMap");
         StyleTabBtn(BtnTabHorizon, _currentTab == "Horizon");
         StyleTabBtn(BtnTabTracks, _currentTab == "Tracks");
@@ -916,6 +912,7 @@ public partial class MainPage : Page
         }
 
         StyleNavBtn(BtnNavPageMap, _currentTab == "FullScreenMap");
+        StyleNavBtn(BtnNavPageCelestial, _currentTab == "Celestial");
         StyleNavBtn(BtnNavPageAimMap, _currentTab == "HorizonMap");
         StyleNavBtn(BtnNavPageHorizon, _currentTab == "Horizon");
         StyleNavBtn(BtnNavPageTracks, _currentTab == "Tracks");

@@ -59,6 +59,7 @@ public class HorizonPeak
     public double ProminenceM { get; set; }
     public double Lat { get; set; }
     public double Lon { get; set; }
+    public bool IsSkyline { get; set; } = true;
 }
 
 public class HorizonRidgeLayer

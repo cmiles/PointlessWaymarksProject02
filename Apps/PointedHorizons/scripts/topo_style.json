@@ -209,7 +209,7 @@
       "type": "fill",
       "source": "base",
       "source-layer": "landuse",
-      "minzoom": 13,
+      "minzoom": 11,
       "filter": [
         "==",
         [
@@ -242,19 +242,53 @@
       }
     },
     {
-      "id": "water-lines",
+      "id": "water-lines-intermittent",
       "type": "line",
       "source": "base",
       "source-layer": "water",
       "filter": [
-        "==",
+        "all",
         [
-          "geometry-type"
+          "==",
+          [
+            "geometry-type"
+          ],
+          "LineString"
         ],
-        "LineString"
+        [
+          "any",
+          [
+            "==",
+            [
+              "get",
+              "intermittent"
+            ],
+            "yes"
+          ],
+          [
+            "==",
+            [
+              "get",
+              "intermittent"
+            ],
+            1
+          ],
+          [
+            "==",
+            [
+              "get",
+              "intermittent"
+            ],
+            true
+          ]
+        ]
       ],
       "paint": {
-        "line-color": "#7eaed6",
+        "line-color": "#81b9e8",
+        "line-dasharray": [
+          3,
+          2.5
+        ],
         "line-width": [
           "interpolate",
           [
@@ -264,9 +298,65 @@
             "zoom"
           ],
           8,
-          0.8,
+          0.7,
           14,
-          2.0
+          1.8
+        ]
+      }
+    },
+    {
+      "id": "water-lines-perennial",
+      "type": "line",
+      "source": "base",
+      "source-layer": "water",
+      "filter": [
+        "all",
+        [
+          "==",
+          [
+            "geometry-type"
+          ],
+          "LineString"
+        ],
+        [
+          "!=",
+          [
+            "get",
+            "intermittent"
+          ],
+          "yes"
+        ],
+        [
+          "!=",
+          [
+            "get",
+            "intermittent"
+          ],
+          1
+        ],
+        [
+          "!=",
+          [
+            "get",
+            "intermittent"
+          ],
+          true
+        ]
+      ],
+      "paint": {
+        "line-color": "#5297d1",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          8,
+          0.9,
+          14,
+          2.2
         ]
       }
     },
@@ -275,7 +365,7 @@
       "type": "line",
       "source": "contours",
       "source-layer": "contours",
-      "minzoom": 11,
+      "minzoom": 10.5,
       "filter": [
         "!=",
         [
@@ -306,7 +396,7 @@
       "type": "line",
       "source": "contours",
       "source-layer": "contours",
-      "minzoom": 10,
+      "minzoom": 9,
       "filter": [
         "==",
         [
@@ -337,7 +427,7 @@
       "type": "line",
       "source": "base",
       "source-layer": "roads",
-      "minzoom": 12,
+      "minzoom": 9.5,
       "filter": [
         "in",
         [
@@ -354,7 +444,19 @@
       ],
       "paint": {
         "line-color": "#d0cbc2",
-        "line-width": 2.5
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          9.5,
+          1.2,
+          14,
+          2.5
+        ]
       }
     },
     {
@@ -362,7 +464,7 @@
       "type": "line",
       "source": "base",
       "source-layer": "roads",
-      "minzoom": 12,
+      "minzoom": 9.5,
       "filter": [
         "in",
         [
@@ -379,7 +481,19 @@
       ],
       "paint": {
         "line-color": "#ffffff",
-        "line-width": 1.5
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          9.5,
+          0.8,
+          14,
+          1.6
+        ]
       }
     },
     {
@@ -461,7 +575,7 @@
       "type": "line",
       "source": "base",
       "source-layer": "roads",
-      "minzoom": 10,
+      "minzoom": 8.5,
       "filter": [
         "==",
         [
@@ -471,11 +585,89 @@
         "track"
       ],
       "paint": {
-        "line-color": "#8d6e63",
-        "line-width": 1.4,
+        "line-color": "#795548",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          8.5,
+          0.8,
+          11,
+          1.4,
+          14,
+          2.2
+        ],
         "line-dasharray": [
-          4,
-          2
+          6,
+          3
+        ]
+      }
+    },
+    {
+      "id": "trails-and-paths-unofficial",
+      "type": "line",
+      "source": "base",
+      "source-layer": "roads",
+      "minzoom": 10,
+      "filter": [
+        "all",
+        [
+          "!=",
+          [
+            "get",
+            "kind_detail"
+          ],
+          "track"
+        ],
+        [
+          "any",
+          [
+            "==",
+            [
+              "get",
+              "informal"
+            ],
+            "yes"
+          ],
+          [
+            "in",
+            [
+              "get",
+              "trail_visibility"
+            ],
+            [
+              "literal",
+              [
+                "bad",
+                "horrible",
+                "no"
+              ]
+            ]
+          ]
+        ]
+      ],
+      "paint": {
+        "line-color": "#a8a29e",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          0.7,
+          14,
+          1.3
+        ],
+        "line-dasharray": [
+          1.5,
+          2.5
         ]
       }
     },
@@ -484,16 +676,97 @@
       "type": "line",
       "source": "base",
       "source-layer": "roads",
-      "minzoom": 10,
+      "minzoom": 8.5,
       "filter": [
-        "any",
+        "all",
         [
-          "==",
+          "!=",
           [
             "get",
-            "kind"
+            "kind_detail"
           ],
-          "path"
+          "track"
+        ],
+        [
+          "!=",
+          [
+            "get",
+            "informal"
+          ],
+          "yes"
+        ],
+        [
+          "any",
+          [
+            "in",
+            [
+              "get",
+              "kind_detail"
+            ],
+            [
+              "literal",
+              [
+                "path",
+                "footway",
+                "trail",
+                "bridleway",
+                "cycleway",
+                "steps"
+              ]
+            ]
+          ],
+          [
+            "==",
+            [
+              "get",
+              "kind"
+            ],
+            "path"
+          ]
+        ]
+      ],
+      "paint": {
+        "line-color": "#c62828",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          8.5,
+          0.9,
+          11,
+          1.5,
+          14,
+          2.4
+        ],
+        "line-dasharray": [
+          3,
+          2
+        ]
+      }
+    },
+    {
+      "id": "trail-labels",
+      "type": "symbol",
+      "source": "base",
+      "source-layer": "roads",
+      "minzoom": 11,
+      "filter": [
+        "all",
+        [
+          "has",
+          "name"
+        ],
+        [
+          "!=",
+          [
+            "get",
+            "kind_detail"
+          ],
+          "track"
         ],
         [
           "in",
@@ -508,15 +781,21 @@
               "footway",
               "trail",
               "bridleway",
-              "cycleway",
-              "steps"
+              "cycleway"
             ]
           ]
         ]
       ],
-      "paint": {
-        "line-color": "#c62828",
-        "line-width": [
+      "layout": {
+        "symbol-placement": "line",
+        "text-field": [
+          "get",
+          "name"
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": [
           "interpolate",
           [
             "linear"
@@ -524,15 +803,18 @@
           [
             "zoom"
           ],
-          10,
-          1.4,
+          11,
+          9,
           14,
-          2.4
+          11
         ],
-        "line-dasharray": [
-          3,
-          2
-        ]
+        "text-letter-spacing": 0.05,
+        "symbol-spacing": 300
+      },
+      "paint": {
+        "text-color": "#b71c1c",
+        "text-halo-color": "rgba(255, 255, 255, 0.95)",
+        "text-halo-width": 1.5
       }
     },
     {
@@ -554,7 +836,7 @@
       "type": "symbol",
       "source": "contours",
       "source-layer": "contours",
-      "minzoom": 12,
+      "minzoom": 11,
       "filter": [
         "==",
         [
@@ -611,7 +893,7 @@
       "type": "symbol",
       "source": "base",
       "source-layer": "pois",
-      "minzoom": 11,
+      "minzoom": 8,
       "filter": [
         "==",
         [
@@ -660,7 +942,21 @@
             ]
           ]
         ],
-        "text-size": 11,
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          8,
+          9,
+          11,
+          11,
+          14,
+          13
+        ],
         "text-font": [
           "Noto Sans Bold"
         ],
@@ -668,7 +964,8 @@
         "text-offset": [
           0,
           -0.5
-        ]
+        ],
+        "text-optional": true
       },
       "paint": {
         "text-color": "#4e342e",
@@ -677,31 +974,1100 @@
       }
     },
     {
-      "id": "parking-pois",
+      "id": "parking-badge-circle",
+      "type": "circle",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 9.5,
+      "filter": [
+        "any",
+        [
+          "==",
+          [
+            "get",
+            "kind"
+          ],
+          "parking"
+        ],
+        [
+          "==",
+          [
+            "get",
+            "kind_detail"
+          ],
+          "parking"
+        ]
+      ],
+      "paint": {
+        "circle-radius": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          9.5,
+          5.5,
+          12,
+          8.5
+        ],
+        "circle-color": "#1976d2",
+        "circle-stroke-width": 1.5,
+        "circle-stroke-color": "#ffffff"
+      }
+    },
+    {
+      "id": "parking-badge-text",
       "type": "symbol",
       "source": "base",
       "source-layer": "pois",
-      "minzoom": 13,
+      "minzoom": 9.5,
       "filter": [
-        "==",
+        "any",
         [
-          "get",
-          "kind"
+          "==",
+          [
+            "get",
+            "kind"
+          ],
+          "parking"
         ],
-        "parking"
+        [
+          "==",
+          [
+            "get",
+            "kind_detail"
+          ],
+          "parking"
+        ]
       ],
       "layout": {
         "text-field": "P",
         "text-font": [
           "Noto Sans Bold"
         ],
-        "text-size": 11,
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          9.5,
+          7.0,
+          12,
+          10.0
+        ],
         "text-allow-overlap": false
       },
       "paint": {
-        "text-color": "#1565c0",
-        "text-halo-color": "#ffffff",
-        "text-halo-width": 2.0
+        "text-color": "#ffffff"
+      }
+    },
+    {
+      "id": "trailhead-badge-circle",
+      "type": "circle",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 8.5,
+      "filter": [
+        "any",
+        [
+          "==",
+          [
+            "get",
+            "kind"
+          ],
+          "trailhead"
+        ],
+        [
+          "==",
+          [
+            "get",
+            "kind_detail"
+          ],
+          "trailhead"
+        ],
+        [
+          "all",
+          [
+            "==",
+            [
+              "get",
+              "kind"
+            ],
+            "information"
+          ],
+          [
+            "in",
+            [
+              "get",
+              "kind_detail"
+            ],
+            [
+              "literal",
+              [
+                "trailhead",
+                "guidepost"
+              ]
+            ]
+          ]
+        ]
+      ],
+      "paint": {
+        "circle-radius": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          8.5,
+          6.0,
+          12,
+          9.5
+        ],
+        "circle-color": "#2e7d32",
+        "circle-stroke-width": 1.5,
+        "circle-stroke-color": "#ffffff"
+      }
+    },
+    {
+      "id": "trailhead-badge-text",
+      "type": "symbol",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 8.5,
+      "filter": [
+        "any",
+        [
+          "==",
+          [
+            "get",
+            "kind"
+          ],
+          "trailhead"
+        ],
+        [
+          "==",
+          [
+            "get",
+            "kind_detail"
+          ],
+          "trailhead"
+        ],
+        [
+          "all",
+          [
+            "==",
+            [
+              "get",
+              "kind"
+            ],
+            "information"
+          ],
+          [
+            "in",
+            [
+              "get",
+              "kind_detail"
+            ],
+            [
+              "literal",
+              [
+                "trailhead",
+                "guidepost"
+              ]
+            ]
+          ]
+        ]
+      ],
+      "layout": {
+        "text-field": "TH",
+        "text-font": [
+          "Noto Sans Bold"
+        ],
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          8.5,
+          7.0,
+          12,
+          9.5
+        ],
+        "text-allow-overlap": false
+      },
+      "paint": {
+        "text-color": "#ffffff"
+      }
+    },
+    {
+      "id": "trailhead-labels",
+      "type": "symbol",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 10.5,
+      "filter": [
+        "all",
+        [
+          "has",
+          "name"
+        ],
+        [
+          "any",
+          [
+            "==",
+            [
+              "get",
+              "kind"
+            ],
+            "trailhead"
+          ],
+          [
+            "==",
+            [
+              "get",
+              "kind_detail"
+            ],
+            "trailhead"
+          ],
+          [
+            "all",
+            [
+              "==",
+              [
+                "get",
+                "kind"
+              ],
+                "information"
+            ],
+            [
+              "in",
+              [
+                "get",
+                "kind_detail"
+              ],
+              [
+                "literal",
+                [
+                  "trailhead",
+                  "guidepost"
+                ]
+              ]
+            ]
+          ]
+        ]
+      ],
+      "layout": {
+        "text-field": [
+          "get",
+          "name"
+        ],
+        "text-font": [
+          "Noto Sans Bold"
+        ],
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10.5,
+          9.0,
+          13,
+          11.0
+        ],
+        "text-anchor": "top",
+        "text-offset": [
+          0,
+          1.0
+        ],
+        "text-max-width": 10
+      },
+      "paint": {
+        "text-color": "#1b5e20",
+        "text-halo-color": "rgba(255, 255, 255, 0.95)",
+        "text-halo-width": 1.5
+      }
+    },
+    {
+      "id": "viewpoint-badge-circle",
+      "type": "circle",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 9.5,
+      "filter": [
+        "any",
+        ["==", ["get", "kind"], "viewpoint"],
+        ["==", ["get", "kind_detail"], "viewpoint"]
+      ],
+      "paint": {
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          9.5,
+          5.5,
+          12,
+          8.5
+        ],
+        "circle-color": "#0284c7",
+        "circle-stroke-width": 1.5,
+        "circle-stroke-color": "#ffffff"
+      }
+    },
+    {
+      "id": "viewpoint-badge-text",
+      "type": "symbol",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 9.5,
+      "filter": [
+        "any",
+        ["==", ["get", "kind"], "viewpoint"],
+        ["==", ["get", "kind_detail"], "viewpoint"]
+      ],
+      "layout": {
+        "text-field": "V",
+        "text-font": ["Noto Sans Bold"],
+        "text-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          9.5,
+          7.0,
+          12,
+          10.0
+        ],
+        "text-allow-overlap": false
+      },
+      "paint": {
+        "text-color": "#ffffff"
+      }
+    },
+    {
+      "id": "viewpoint-labels",
+      "type": "symbol",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 11,
+      "filter": [
+        "all",
+        ["has", "name"],
+        [
+          "any",
+          ["==", ["get", "kind"], "viewpoint"],
+          ["==", ["get", "kind_detail"], "viewpoint"]
+        ]
+      ],
+      "layout": {
+        "text-field": ["get", "name"],
+        "text-font": ["Noto Sans Bold"],
+        "text-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          11,
+          8.5,
+          13,
+          10.0
+        ],
+        "text-anchor": "top",
+        "text-offset": [0, 1.0],
+        "text-max-width": 10
+      },
+      "paint": {
+        "text-color": "#0369a1",
+        "text-halo-color": "rgba(255, 255, 255, 0.95)",
+        "text-halo-width": 1.5
+      }
+    },
+    {
+      "id": "waterfall-badge-circle",
+      "type": "circle",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 9.5,
+      "filter": [
+        "any",
+        ["==", ["get", "kind"], "waterfall"],
+        ["==", ["get", "kind_detail"], "waterfall"]
+      ],
+      "paint": {
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          9.5,
+          5.0,
+          12,
+          7.5
+        ],
+        "circle-color": "#06b6d4",
+        "circle-stroke-width": 1.5,
+        "circle-stroke-color": "#ffffff"
+      }
+    },
+    {
+      "id": "waterfall-badge-text",
+      "type": "symbol",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 9.5,
+      "filter": [
+        "any",
+        ["==", ["get", "kind"], "waterfall"],
+        ["==", ["get", "kind_detail"], "waterfall"]
+      ],
+      "layout": {
+        "text-field": "WF",
+        "text-font": ["Noto Sans Bold"],
+        "text-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          9.5,
+          6.5,
+          12,
+          8.5
+        ],
+        "text-allow-overlap": false
+      },
+      "paint": {
+        "text-color": "#ffffff"
+      }
+    },
+    {
+      "id": "waterfall-labels",
+      "type": "symbol",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 11,
+      "filter": [
+        "all",
+        ["has", "name"],
+        [
+          "any",
+          ["==", ["get", "kind"], "waterfall"],
+          ["==", ["get", "kind_detail"], "waterfall"]
+        ]
+      ],
+      "layout": {
+        "text-field": ["get", "name"],
+        "text-font": ["Noto Sans Bold"],
+        "text-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          11,
+          8.5,
+          13,
+          10.0
+        ],
+        "text-anchor": "top",
+        "text-offset": [0, 0.9],
+        "text-max-width": 10
+      },
+      "paint": {
+        "text-color": "#0891b2",
+        "text-halo-color": "rgba(255, 255, 255, 0.95)",
+        "text-halo-width": 1.5
+      }
+    },
+    {
+      "id": "lookout-tower-badge-circle",
+      "type": "circle",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 9.5,
+      "filter": [
+        "any",
+        [
+          "all",
+          ["in", ["get", "kind"], ["literal", ["tower", "observation_tower"]]],
+          ["in", ["get", "kind_detail"], ["literal", ["observation", "lookout", "fire_lookout", "tower"]]]
+        ],
+        ["==", ["get", "kind_detail"], "lookout"],
+        ["==", ["get", "kind_detail"], "fire_lookout"]
+      ],
+      "paint": {
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          9.5,
+          5.5,
+          12,
+          8.0
+        ],
+        "circle-color": "#d97706",
+        "circle-stroke-width": 1.5,
+        "circle-stroke-color": "#ffffff"
+      }
+    },
+    {
+      "id": "lookout-tower-badge-text",
+      "type": "symbol",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 9.5,
+      "filter": [
+        "any",
+        [
+          "all",
+          ["in", ["get", "kind"], ["literal", ["tower", "observation_tower"]]],
+          ["in", ["get", "kind_detail"], ["literal", ["observation", "lookout", "fire_lookout", "tower"]]]
+        ],
+        ["==", ["get", "kind_detail"], "lookout"],
+        ["==", ["get", "kind_detail"], "fire_lookout"]
+      ],
+      "layout": {
+        "text-field": "T",
+        "text-font": ["Noto Sans Bold"],
+        "text-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          9.5,
+          7.0,
+          12,
+          9.5
+        ],
+        "text-allow-overlap": false
+      },
+      "paint": {
+        "text-color": "#ffffff"
+      }
+    },
+    {
+      "id": "lookout-tower-labels",
+      "type": "symbol",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 11,
+      "filter": [
+        "all",
+        ["has", "name"],
+        [
+          "any",
+          [
+            "all",
+            ["in", ["get", "kind"], ["literal", ["tower", "observation_tower"]]],
+            ["in", ["get", "kind_detail"], ["literal", ["observation", "lookout", "fire_lookout", "tower"]]]
+          ],
+          ["==", ["get", "kind_detail"], "lookout"],
+          ["==", ["get", "kind_detail"], "fire_lookout"]
+        ]
+      ],
+      "layout": {
+        "text-field": ["get", "name"],
+        "text-font": ["Noto Sans Bold"],
+        "text-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          11,
+          8.5,
+          13,
+          10.0
+        ],
+        "text-anchor": "top",
+        "text-offset": [0, 0.9],
+        "text-max-width": 10
+      },
+      "paint": {
+        "text-color": "#92400e",
+        "text-halo-color": "rgba(255, 255, 255, 0.95)",
+        "text-halo-width": 1.5
+      }
+    },
+    {
+      "id": "water-source-badge-circle",
+      "type": "circle",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 10.5,
+      "filter": [
+        "any",
+        ["in", ["get", "kind"], ["literal", ["spring", "drinking_water", "water_point"]]],
+        ["in", ["get", "kind_detail"], ["literal", ["spring", "drinking_water", "water_point"]]]
+      ],
+      "paint": {
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          10.5,
+          5.0,
+          13,
+          7.5
+        ],
+        "circle-color": "#1d4ed8",
+        "circle-stroke-width": 1.5,
+        "circle-stroke-color": "#ffffff"
+      }
+    },
+    {
+      "id": "water-source-badge-text",
+      "type": "symbol",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 10.5,
+      "filter": [
+        "any",
+        ["in", ["get", "kind"], ["literal", ["spring", "drinking_water", "water_point"]]],
+        ["in", ["get", "kind_detail"], ["literal", ["spring", "drinking_water", "water_point"]]]
+      ],
+      "layout": {
+        "text-field": "W",
+        "text-font": ["Noto Sans Bold"],
+        "text-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          10.5,
+          6.5,
+          13,
+          8.5
+        ],
+        "text-allow-overlap": false
+      },
+      "paint": {
+        "text-color": "#ffffff"
+      }
+    },
+    {
+      "id": "water-source-labels",
+      "type": "symbol",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 11.5,
+      "filter": [
+        "all",
+        ["has", "name"],
+        [
+          "any",
+          ["in", ["get", "kind"], ["literal", ["spring", "drinking_water", "water_point"]]],
+          ["in", ["get", "kind_detail"], ["literal", ["spring", "drinking_water", "water_point"]]]
+        ]
+      ],
+      "layout": {
+        "text-field": ["get", "name"],
+        "text-font": ["Noto Sans Regular"],
+        "text-size": 9.5,
+        "text-anchor": "top",
+        "text-offset": [0, 0.8],
+        "text-max-width": 10
+      },
+      "paint": {
+        "text-color": "#1e40af",
+        "text-halo-color": "rgba(255, 255, 255, 0.95)",
+        "text-halo-width": 1.5
+      }
+    },
+    {
+      "id": "campground-badge-circle",
+      "type": "circle",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 9.5,
+      "filter": [
+        "any",
+        ["in", ["get", "kind"], ["literal", ["camp_site", "caravan_site"]]],
+        ["in", ["get", "kind_detail"], ["literal", ["camp_site", "caravan_site"]]]
+      ],
+      "paint": {
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          9.5,
+          5.5,
+          12,
+          8.5
+        ],
+        "circle-color": "#15803d",
+        "circle-stroke-width": 1.5,
+        "circle-stroke-color": "#ffffff"
+      }
+    },
+    {
+      "id": "campground-badge-text",
+      "type": "symbol",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 9.5,
+      "filter": [
+        "any",
+        ["in", ["get", "kind"], ["literal", ["camp_site", "caravan_site"]]],
+        ["in", ["get", "kind_detail"], ["literal", ["camp_site", "caravan_site"]]]
+      ],
+      "layout": {
+        "text-field": "C",
+        "text-font": ["Noto Sans Bold"],
+        "text-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          9.5,
+          7.0,
+          12,
+          10.0
+        ],
+        "text-allow-overlap": false
+      },
+      "paint": {
+        "text-color": "#ffffff"
+      }
+    },
+    {
+      "id": "campground-labels",
+      "type": "symbol",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 11,
+      "filter": [
+        "all",
+        ["has", "name"],
+        [
+          "any",
+          ["in", ["get", "kind"], ["literal", ["camp_site", "caravan_site"]]],
+          ["in", ["get", "kind_detail"], ["literal", ["camp_site", "caravan_site"]]]
+        ]
+      ],
+      "layout": {
+        "text-field": ["get", "name"],
+        "text-font": ["Noto Sans Bold"],
+        "text-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          11,
+          8.5,
+          13,
+          10.0
+        ],
+        "text-anchor": "top",
+        "text-offset": [0, 1.0],
+        "text-max-width": 11
+      },
+      "paint": {
+        "text-color": "#166534",
+        "text-halo-color": "rgba(255, 255, 255, 0.95)",
+        "text-halo-width": 1.5
+      }
+    },
+    {
+      "id": "shelter-badge-circle",
+      "type": "circle",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 9.5,
+      "filter": [
+        "any",
+        ["in", ["get", "kind"], ["literal", ["shelter", "wilderness_hut", "alpine_hut"]]],
+        ["in", ["get", "kind_detail"], ["literal", ["shelter", "wilderness_hut", "alpine_hut"]]]
+      ],
+      "paint": {
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          9.5,
+          5.5,
+          12,
+          8.0
+        ],
+        "circle-color": "#854d0e",
+        "circle-stroke-width": 1.5,
+        "circle-stroke-color": "#ffffff"
+      }
+    },
+    {
+      "id": "shelter-badge-text",
+      "type": "symbol",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 9.5,
+      "filter": [
+        "any",
+        ["in", ["get", "kind"], ["literal", ["shelter", "wilderness_hut", "alpine_hut"]]],
+        ["in", ["get", "kind_detail"], ["literal", ["shelter", "wilderness_hut", "alpine_hut"]]]
+      ],
+      "layout": {
+        "text-field": "S",
+        "text-font": ["Noto Sans Bold"],
+        "text-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          9.5,
+          7.0,
+          12,
+          9.5
+        ],
+        "text-allow-overlap": false
+      },
+      "paint": {
+        "text-color": "#ffffff"
+      }
+    },
+    {
+      "id": "shelter-labels",
+      "type": "symbol",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 11,
+      "filter": [
+        "all",
+        ["has", "name"],
+        [
+          "any",
+          ["in", ["get", "kind"], ["literal", ["shelter", "wilderness_hut", "alpine_hut"]]],
+          ["in", ["get", "kind_detail"], ["literal", ["shelter", "wilderness_hut", "alpine_hut"]]]
+        ]
+      ],
+      "layout": {
+        "text-field": ["get", "name"],
+        "text-font": ["Noto Sans Bold"],
+        "text-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          11,
+          8.5,
+          13,
+          10.0
+        ],
+        "text-anchor": "top",
+        "text-offset": [0, 0.9],
+        "text-max-width": 10
+      },
+      "paint": {
+        "text-color": "#713f12",
+        "text-halo-color": "rgba(255, 255, 255, 0.95)",
+        "text-halo-width": 1.5
+      }
+    },
+    {
+      "id": "mountain-pass-badge-circle",
+      "type": "circle",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 9,
+      "filter": [
+        "any",
+        ["in", ["get", "kind"], ["literal", ["saddle", "pass", "mountain_pass"]]],
+        ["in", ["get", "kind_detail"], ["literal", ["saddle", "pass", "mountain_pass"]]]
+      ],
+      "paint": {
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          9,
+          5.5,
+          12,
+          8.0
+        ],
+        "circle-color": "#78350f",
+        "circle-stroke-width": 1.5,
+        "circle-stroke-color": "#ffffff"
+      }
+    },
+    {
+      "id": "mountain-pass-badge-text",
+      "type": "symbol",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 9,
+      "filter": [
+        "any",
+        ["in", ["get", "kind"], ["literal", ["saddle", "pass", "mountain_pass"]]],
+        ["in", ["get", "kind_detail"], ["literal", ["saddle", "pass", "mountain_pass"]]]
+      ],
+      "layout": {
+        "text-field": ")(",
+        "text-font": ["Noto Sans Bold"],
+        "text-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          9,
+          7.0,
+          12,
+          9.5
+        ],
+        "text-allow-overlap": false
+      },
+      "paint": {
+        "text-color": "#ffffff"
+      }
+    },
+    {
+      "id": "mountain-pass-labels",
+      "type": "symbol",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 10,
+      "filter": [
+        "all",
+        ["has", "name"],
+        [
+          "any",
+          ["in", ["get", "kind"], ["literal", ["saddle", "pass", "mountain_pass"]]],
+          ["in", ["get", "kind_detail"], ["literal", ["saddle", "pass", "mountain_pass"]]]
+        ]
+      ],
+      "layout": {
+        "text-field": ["get", "name"],
+        "text-font": ["Noto Sans Bold"],
+        "text-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          10,
+          8.5,
+          13,
+          10.0
+        ],
+        "text-anchor": "top",
+        "text-offset": [0, 0.8],
+        "text-max-width": 10
+      },
+      "paint": {
+        "text-color": "#78350f",
+        "text-halo-color": "rgba(255, 255, 255, 0.95)",
+        "text-halo-width": 1.5
+      }
+    },
+    {
+      "id": "trail-ford-badge-circle",
+      "type": "circle",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 11.5,
+      "filter": [
+        "any",
+        ["==", ["get", "kind"], "ford"],
+        ["==", ["get", "kind_detail"], "ford"],
+        ["==", ["get", "ford"], "yes"]
+      ],
+      "paint": {
+        "circle-radius": 7,
+        "circle-color": "#0284c7",
+        "circle-stroke-width": 1.2,
+        "circle-stroke-color": "#ffffff"
+      }
+    },
+    {
+      "id": "trail-ford-badge-text",
+      "type": "symbol",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 11.5,
+      "filter": [
+        "any",
+        ["==", ["get", "kind"], "ford"],
+        ["==", ["get", "kind_detail"], "ford"],
+        ["==", ["get", "ford"], "yes"]
+      ],
+      "layout": {
+        "text-field": "F",
+        "text-font": ["Noto Sans Bold"],
+        "text-size": 8.5,
+        "text-allow-overlap": false
+      },
+      "paint": {
+        "text-color": "#ffffff"
+      }
+    },
+    {
+      "id": "trail-gate-badge-circle",
+      "type": "circle",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 13,
+      "filter": [
+        "any",
+        ["in", ["get", "kind"], ["literal", ["gate", "lift_gate", "cattle_grid"]]],
+        ["in", ["get", "kind_detail"], ["literal", ["gate", "lift_gate", "cattle_grid"]]]
+      ],
+      "paint": {
+        "circle-radius": 6,
+        "circle-color": "#334155",
+        "circle-stroke-width": 1.2,
+        "circle-stroke-color": "#ffffff"
+      }
+    },
+    {
+      "id": "trail-gate-badge-text",
+      "type": "symbol",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 13,
+      "filter": [
+        "any",
+        ["in", ["get", "kind"], ["literal", ["gate", "lift_gate", "cattle_grid"]]],
+        ["in", ["get", "kind_detail"], ["literal", ["gate", "lift_gate", "cattle_grid"]]]
+      ],
+      "layout": {
+        "text-field": "G",
+        "text-font": ["Noto Sans Bold"],
+        "text-size": 7.5,
+        "text-allow-overlap": false
+      },
+      "paint": {
+        "text-color": "#ffffff"
+      }
+    },
+    {
+      "id": "toilets-badge-circle",
+      "type": "circle",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 12.5,
+      "filter": [
+        "any",
+        ["==", ["get", "kind"], "toilets"],
+        ["==", ["get", "kind_detail"], "toilets"]
+      ],
+      "paint": {
+        "circle-radius": 7,
+        "circle-color": "#475569",
+        "circle-stroke-width": 1.2,
+        "circle-stroke-color": "#ffffff"
+      }
+    },
+    {
+      "id": "toilets-badge-text",
+      "type": "symbol",
+      "source": "base",
+      "source-layer": "pois",
+      "minzoom": 12.5,
+      "filter": [
+        "any",
+        ["==", ["get", "kind"], "toilets"],
+        ["==", ["get", "kind_detail"], "toilets"]
+      ],
+      "layout": {
+        "text-field": "WC",
+        "text-font": ["Noto Sans Bold"],
+        "text-size": 7.5,
+        "text-allow-overlap": false
+      },
+      "paint": {
+        "text-color": "#ffffff"
       }
     },
     {
@@ -709,7 +2075,7 @@
       "type": "symbol",
       "source": "base",
       "source-layer": "pois",
-      "minzoom": 9,
+      "minzoom": 7.5,
       "filter": [
         "in",
         [
@@ -752,6 +2118,8 @@
           [
             "zoom"
           ],
+          7.5,
+          9.5,
           9,
           10.5,
           13,
@@ -775,7 +2143,7 @@
       "type": "symbol",
       "source": "base",
       "source-layer": "landuse",
-      "minzoom": 10,
+      "minzoom": 8.5,
       "filter": [
         "all",
         [
@@ -825,8 +2193,10 @@
           [
             "zoom"
           ],
+          8.5,
+          10.0,
           10,
-          11,
+          11.0,
           14,
           14.5
         ],

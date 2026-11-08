@@ -35,7 +35,6 @@ public partial class FullScreenMapControl : UserControl
     public event EventHandler? ConfigurePmTilesRequested;
     public event EventHandler? OpenTracksPageRequested;
     public event EventHandler? SearchLocationRequested;
-    public event EventHandler<CelestialLocationEventArgs>? CelestialInfoRequested;
 
     private double _lastPointerLat = 32.2226;
     private double _lastPointerLon = -110.9747;
@@ -72,10 +71,13 @@ public partial class FullScreenMapControl : UserControl
         }
     }
 
+    public static FullScreenMapControl? Current { get; private set; }
+
     private MainViewModel? ViewModel => DataContext as MainViewModel;
 
     public FullScreenMapControl()
     {
+        Current = this;
         InitializeComponent();
         Loaded += FullScreenMapControl_Loaded;
         SizeChanged += FullScreenMapControl_SizeChanged;
@@ -125,6 +127,8 @@ public partial class FullScreenMapControl : UserControl
     {
         OfflineDataService.EnsureSettingsLoaded();
 
+        _currentBaseLayer = LoadLastUsedBaseLayer();
+
         if (!OfflineDataService.IsPmTilesSupported)
         {
             if (BtnLayerPmTiles != null) BtnLayerPmTiles.Visibility = Visibility.Collapsed;
@@ -134,6 +138,7 @@ public partial class FullScreenMapControl : UserControl
 
         UpdateTheme(ThemeManager.Current.IsDark);
         InitializeMap();
+        SetBaseLayer(_currentBaseLayer);
         _ = CheckCrashRecoveryAndRefreshTracksAsync();
         UpdateResponsiveLayout(ActualWidth, ActualHeight);
     }
@@ -274,7 +279,7 @@ public partial class FullScreenMapControl : UserControl
             if (HamburgerPanel != null)
             {
                 HamburgerPanel.HorizontalAlignment = HorizontalAlignment.Left;
-                HamburgerPanel.Width = 315;
+                HamburgerPanel.Width = 472;
                 HamburgerPanel.Margin = new Thickness(14, 56, 0, 14);
                 HamburgerPanel.MaxHeight = Math.Max(400, height - 70);
             }
@@ -878,7 +883,7 @@ public partial class FullScreenMapControl : UserControl
         {
             BtnMenuCurrentLocation.Background = tm.ButtonInactiveBackground;
             BtnMenuCurrentLocation.BorderBrush = tm.ButtonInactiveBorder;
-            BtnMenuCurrentLocation.Foreground = tm.Accent;
+            BtnMenuCurrentLocation.Foreground = tm.TextPrimary;
         }
 
         if (BtnToggle3d != null)
@@ -893,13 +898,6 @@ public partial class FullScreenMapControl : UserControl
             BtnMenuToggle3d.Background = _is3dActive ? tm.ButtonActiveBackground : tm.ButtonInactiveBackground;
             BtnMenuToggle3d.BorderBrush = _is3dActive ? tm.ButtonActiveBorder : tm.ButtonInactiveBorder;
             BtnMenuToggle3d.Foreground = _is3dActive ? tm.ButtonActiveForeground : tm.TextPrimary;
-        }
-
-        if (BtnMenuCelestialInfo != null)
-        {
-            BtnMenuCelestialInfo.Background = tm.ButtonInactiveBackground;
-            BtnMenuCelestialInfo.BorderBrush = tm.ButtonInactiveBorder;
-            BtnMenuCelestialInfo.Foreground = tm.TextPrimary;
         }
 
         if (BtnMenuSetAimLocation != null)
@@ -920,7 +918,7 @@ public partial class FullScreenMapControl : UserControl
         {
             BtnMenuResetView.Background = tm.ButtonInactiveBackground;
             BtnMenuResetView.BorderBrush = tm.ButtonInactiveBorder;
-            BtnMenuResetView.Foreground = tm.Accent;
+            BtnMenuResetView.Foreground = tm.TextPrimary;
         }
 
         if (BtnDrawRoute != null)
@@ -1347,55 +1345,10 @@ public partial class FullScreenMapControl : UserControl
 
     private bool _is3dActive;
 
-    private void BtnMenuCelestialInfo_Click(object sender, RoutedEventArgs e)
-    {
-        HamburgerPanel.Visibility = Visibility.Collapsed;
-
-        double targetLat;
-        double targetLon;
-
-        if (_isGpsActive && _lastGpsPos != null)
-        {
-            targetLat = _lastGpsPos.Latitude;
-            targetLon = _lastGpsPos.Longitude;
-        }
-        else if (_hasPointerPlaced)
-        {
-            targetLat = _lastPointerLat;
-            targetLon = _lastPointerLon;
-        }
-        else
-        {
-            double? centerLat = null;
-            double? centerLon = null;
-            try
-            {
-                object? jsonObj = OpenSilver.Interop.ExecuteJavaScript("window.fullScreenMap ? window.fullScreenMap.getMapCenterJson() : null");
-                if (jsonObj != null && !string.IsNullOrWhiteSpace(jsonObj.ToString()))
-                {
-                    using var doc = System.Text.Json.JsonDocument.Parse(jsonObj.ToString()!);
-                    centerLat = doc.RootElement.GetProperty("lat").GetDouble();
-                    centerLon = doc.RootElement.GetProperty("lng").GetDouble();
-                }
-            }
-            catch { }
-
-            if (centerLat.HasValue && centerLon.HasValue)
-            {
-                targetLat = centerLat.Value;
-                targetLon = centerLon.Value;
-            }
-            else
-            {
-                targetLat = _lastPointerLat;
-                targetLon = _lastPointerLon;
-            }
-        }
-
-        CelestialInfoRequested?.Invoke(this, new CelestialLocationEventArgs(targetLat, targetLon));
-    }
-
-    private void BtnMenuSetAimLocation_Click(object sender, RoutedEventArgs e)
+    /// <summary>
+    /// Gets the current active location on the Main Map (GPS fix if tracking, placed marker, or map center).
+    /// </summary>
+    public (double Latitude, double Longitude, string Source) GetCurrentTargetLocation()
     {
         double targetLat;
         double targetLon;
@@ -1445,6 +1398,13 @@ public partial class FullScreenMapControl : UserControl
                 source = "map location";
             }
         }
+
+        return (targetLat, targetLon, source);
+    }
+
+    private void BtnMenuSetAimLocation_Click(object sender, RoutedEventArgs e)
+    {
+        var (targetLat, targetLon, source) = GetCurrentTargetLocation();
 
         // Update Aim Map viewpoint & Horizon view observer location
         if (ViewModel != null)
@@ -2452,6 +2412,33 @@ public partial class FullScreenMapControl : UserControl
         }
     }
 
+    public const string LastLayerStorageKey = "pointedhorizons_last_map_layer";
+
+    public static string LoadLastUsedBaseLayer()
+    {
+        try
+        {
+            object? val = Interop.ExecuteJavaScript("localStorage.getItem($0)", LastLayerStorageKey);
+            if (val is string str && !string.IsNullOrWhiteSpace(str))
+            {
+                str = str.Trim().ToLowerInvariant();
+                if (str == "pmtiles" && !OfflineDataService.IsPmTilesSupported) return "topo";
+                return str;
+            }
+        }
+        catch { }
+        return "topo";
+    }
+
+    public static void SaveLastUsedBaseLayer(string layerName)
+    {
+        try
+        {
+            Interop.ExecuteJavaScriptVoid("localStorage.setItem($0, $1)", LastLayerStorageKey, layerName);
+        }
+        catch { }
+    }
+
     public void SetBaseLayer(string layerName)
     {
         if (!OfflineDataService.IsPmTilesSupported && layerName == "pmtiles")
@@ -2460,6 +2447,7 @@ public partial class FullScreenMapControl : UserControl
         }
 
         _currentBaseLayer = layerName;
+        SaveLastUsedBaseLayer(layerName);
         try
         {
             Interop.ExecuteJavaScriptVoid(@"
@@ -2515,7 +2503,7 @@ public partial class FullScreenMapControl : UserControl
         {
             BtnConfigurePmTiles.Background = tm.ButtonInactiveBackground;
             BtnConfigurePmTiles.BorderBrush = tm.ButtonInactiveBorder;
-            BtnConfigurePmTiles.Foreground = tm.Accent;
+            BtnConfigurePmTiles.Foreground = tm.TextPrimary;
         }
     }
 

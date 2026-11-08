@@ -860,6 +860,10 @@
     let activePmTileLayerIds = [];
     let activePmTileSourceIds = [];
     let currentSelectedBaseLayer = 'topo';
+    try {
+        const _saved = localStorage.getItem('pointedhorizons_last_map_layer');
+        if (_saved) currentSelectedBaseLayer = _saved;
+    } catch (e) { }
     let isPadUsVisible = false;
 
     function clearPmTilesLayers() {
@@ -1371,12 +1375,14 @@
     window.fullScreenMap.setBaseLayer = async function (layerName) {
         if (!map || !isLoaded) {
             currentSelectedBaseLayer = layerName;
+            try { localStorage.setItem('pointedhorizons_last_map_layer', layerName); } catch (e) { }
             return;
         }
         if (layerName === 'pmtiles' && window.fullScreenMap && window.fullScreenMap.isPmTilesSupported === false) {
             layerName = 'topo';
         }
         currentSelectedBaseLayer = layerName;
+        try { localStorage.setItem('pointedhorizons_last_map_layer', layerName); } catch (e) { }
 
         const baseRasterLayers = [
             'topo-layer',
@@ -2202,17 +2208,32 @@
                     background: #0369a1;
                 }
 
-                /* Navigation controls (Zoom In/Out, Bearing Compass) double-sized */
-                .maplibregl-ctrl-group {
-                    border-radius: 8px !important;
+                /* Navigation controls (Zoom In/Out, Bearing Compass): standard 29px on larger screens, 58px on smaller screens */
+                @media (min-width: 768px) {
+                    .maplibregl-ctrl-group {
+                        border-radius: 6px !important;
+                    }
+                    .maplibregl-ctrl-group button {
+                        width: 29px !important;
+                        height: 29px !important;
+                    }
+                    .maplibregl-ctrl button .maplibregl-ctrl-icon {
+                        transform: scale(1.0) !important;
+                        transform-origin: center center !important;
+                    }
                 }
-                .maplibregl-ctrl-group button {
-                    width: 58px !important;
-                    height: 58px !important;
-                }
-                .maplibregl-ctrl button .maplibregl-ctrl-icon {
-                    transform: scale(1.8) !important;
-                    transform-origin: center center !important;
+                @media (max-width: 767px) {
+                    .maplibregl-ctrl-group {
+                        border-radius: 8px !important;
+                    }
+                    .maplibregl-ctrl-group button {
+                        width: 58px !important;
+                        height: 58px !important;
+                    }
+                    .maplibregl-ctrl button .maplibregl-ctrl-icon {
+                        transform: scale(1.8) !important;
+                        transform-origin: center center !important;
+                    }
                 }
             `;
             document.head.appendChild(style);

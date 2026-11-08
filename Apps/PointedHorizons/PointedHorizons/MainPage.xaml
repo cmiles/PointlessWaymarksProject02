@@ -39,7 +39,12 @@
                                 Style="{StaticResource PillButtonStyle}" Padding="10,4" Margin="1"
                                 FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="Interactive full-screen map with GPS tracking, recording and tools" />
 
-                        <!-- 2. Aim Map Tab (Before Horizon page on small screens; collapsed on large screen) -->
+                        <!-- 2. Sun & Moon Times Tab (Dedicated page after Main Map) -->
+                        <Button x:Name="BtnTabCelestial" Content="☀️ Sun &amp; Moon" Click="BtnTabCelestial_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="10,4" Margin="1"
+                                FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="Topography-compensated sun and moon rise/set times" />
+
+                        <!-- 3. Aim Map Tab (Before Horizon page on small screens; collapsed on large screen) -->
                         <Button x:Name="BtnTabAimMap" Content="🧭 Aim Map" Click="BtnTabAimMap_Click"
                                 Style="{StaticResource PillButtonStyle}" Padding="10,4" Margin="1"
                                 FontSize="11" FontWeight="SemiBold" Visibility="Collapsed"
@@ -81,7 +86,12 @@
                 <controls:FullScreenMapControl x:Name="FullScreenMapControlView" />
             </Grid>
 
-            <!-- TAB 2: Horizon View (Supports both Split View on large screens and dedicated Single View on small screens) -->
+            <!-- TAB 2: Sun & Moon Times Page (Dedicated page after Main Map) -->
+            <Grid x:Name="ViewCelestialTab" Visibility="Collapsed">
+                <controls:CelestialInfoControl x:Name="CelestialPageView" />
+            </Grid>
+
+            <!-- TAB 3: Horizon View (Supports both Split View on large screens and dedicated Single View on small screens) -->
             <Grid x:Name="ViewHorizonTab" Visibility="Collapsed">
                 <Grid.RowDefinitions>
                     <!-- Top Half: Horizon Ray-Traced View (PeakFinder style) -->
@@ -146,6 +156,9 @@
                 <Border x:Name="CompactNavDivider" Height="1" Margin="0,2,0,8" />
 
                 <Button x:Name="BtnNavPageMap" Content="🗺️ Full Screen Map" Click="BtnNavPageMap_Click"
+                        Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                        Padding="10,7" Margin="0,2" FontSize="11" FontWeight="SemiBold" />
+                <Button x:Name="BtnNavPageCelestial" Content="☀️ Sun &amp; Moon" Click="BtnNavPageCelestial_Click"
                         Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                         Padding="10,7" Margin="0,2" FontSize="11" FontWeight="SemiBold" />
                 <Button x:Name="BtnNavPageAimMap" Content="🧭 Aim Map" Click="BtnNavPageAimMap_Click"
@@ -257,15 +270,6 @@
                 MouseLeftButtonDown="BtnCloseGeoNamesSearch_Click" />
 
         <controls:GeoNamesSearchControl x:Name="GeoNamesSearchModal" Grid.Row="0" Grid.RowSpan="2"
-                                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                                       Visibility="Collapsed" />
-
-        <!-- Celestial Sun & Moon Horizon Times Pop-up Modal Dialog Overlay -->
-        <Border x:Name="CelestialInfoBackdrop" Grid.Row="0" Grid.RowSpan="2" Background="#66000000"
-                HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Visibility="Collapsed"
-                MouseLeftButtonDown="BtnCloseCelestialInfo_Click" />
-
-        <controls:CelestialInfoControl x:Name="CelestialInfoModal" Grid.Row="0" Grid.RowSpan="2"
                                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                                        Visibility="Collapsed" />
 

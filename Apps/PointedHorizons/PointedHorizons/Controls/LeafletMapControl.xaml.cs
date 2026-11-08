@@ -17,7 +17,6 @@ public partial class LeafletMapControl : UserControl
     private bool _isUpdatingFromInternal;
 
     public event EventHandler? ConfigurePmTilesRequested;
-    public event EventHandler<CelestialLocationEventArgs>? CelestialInfoRequested;
 
     private MainViewModel? ViewModel => DataContext as MainViewModel;
 
@@ -52,10 +51,10 @@ public partial class LeafletMapControl : UserControl
     private void LeafletMapControl_SizeChanged(object sender, SizeChangedEventArgs e)
     {
         // Hide direction bar (with directions and slider) on small screens
-        bool isSmallScreen = e.NewSize.Width < 768 || (e.NewSize.Height > 0 && e.NewSize.Height < 600);
+        bool isSmallScreen = e.NewSize.Width < 768;
         if (DirectionToolbarBorder != null)
         {
-            DirectionToolbarBorder.Visibility = isSmallScreen ? Visibility.Collapsed : Visibility.Visible;
+            DirectionToolbarBorder.Visibility = isSmallScreen || (e.NewSize.Height > 0 && e.NewSize.Height < 280) ? Visibility.Collapsed : Visibility.Visible;
         }
 
         if (!isSmallScreen)
@@ -75,14 +74,14 @@ public partial class LeafletMapControl : UserControl
                 HamburgerPanel.HorizontalAlignment = HorizontalAlignment.Stretch;
                 HamburgerPanel.Width = double.NaN;
                 HamburgerPanel.Margin = new Thickness(10, 50, 10, 10);
-                HamburgerPanel.MaxHeight = Math.Max(260, e.NewSize.Height - 65);
+                HamburgerPanel.MaxHeight = Math.Max(240, e.NewSize.Height - 65);
             }
             else
             {
                 HamburgerPanel.HorizontalAlignment = HorizontalAlignment.Left;
-                HamburgerPanel.Width = 285;
-                HamburgerPanel.Margin = new Thickness(12, 50, 0, 0);
-                HamburgerPanel.MaxHeight = 520;
+                HamburgerPanel.Width = 320;
+                HamburgerPanel.Margin = new Thickness(12, 50, 0, 12);
+                HamburgerPanel.MaxHeight = Math.Max(260, e.NewSize.Height - 65);
             }
         }
 
@@ -192,11 +191,11 @@ public partial class LeafletMapControl : UserControl
             BtnMenuAimReset.Foreground = tm.Accent;
         }
 
-        if (BtnMenuCelestialInfo != null)
+        if (BtnMenuPositionFromMainMap != null)
         {
-            BtnMenuCelestialInfo.Background = tm.ButtonInactiveBackground;
-            BtnMenuCelestialInfo.BorderBrush = tm.ButtonInactiveBorder;
-            BtnMenuCelestialInfo.Foreground = tm.TextPrimary;
+            BtnMenuPositionFromMainMap.Background = tm.ButtonInactiveBackground;
+            BtnMenuPositionFromMainMap.BorderBrush = tm.ButtonInactiveBorder;
+            BtnMenuPositionFromMainMap.Foreground = tm.TextPrimary;
         }
 
         if (BtnHamburger != null)
@@ -348,16 +347,19 @@ public partial class LeafletMapControl : UserControl
 
     private bool _isAim3dActive;
 
-    private void BtnMenuCelestialInfo_Click(object sender, RoutedEventArgs e)
+    private void BtnPositionFromMainMap_Click(object sender, RoutedEventArgs e)
     {
         if (HamburgerPanel != null)
         {
             HamburgerPanel.Visibility = Visibility.Collapsed;
         }
 
-        double lat = ViewModel?.Latitude ?? 32.2226;
-        double lon = ViewModel?.Longitude ?? -110.9747;
-        CelestialInfoRequested?.Invoke(this, new CelestialLocationEventArgs(lat, lon));
+        if (FullScreenMapControl.Current != null && ViewModel != null)
+        {
+            var loc = FullScreenMapControl.Current.GetCurrentTargetLocation();
+            ViewModel.SetLocation(loc.Latitude, loc.Longitude, $"Main Map ({loc.Source})", panMap: true);
+            ViewModel.StatusMessage = $"Aim Map updated from Main Map ({loc.Source}): {loc.Latitude:F4}°, {loc.Longitude:F4}°";
+        }
     }
 
     private void BtnAim3d_Click(object sender, RoutedEventArgs e)

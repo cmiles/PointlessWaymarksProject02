@@ -54,7 +54,7 @@
             tooltip.style.position = 'fixed';
             tooltip.style.display = 'none';
             tooltip.style.pointerEvents = 'none';
-            tooltip.style.zIndex = '999999';
+            tooltip.style.zIndex = '5';
             tooltip.style.padding = '8px 12px';
             tooltip.style.borderRadius = '8px';
             tooltip.style.fontSize = '12px';
@@ -559,16 +559,15 @@
                 }
 
                 // 5. Draw Prominent Peaks visible within current FOV
+                const visiblePeakBadges = [];
                 if (peaks360.length > 0) {
-                    const labelLevels = [42, 64, 86];
-                    let visiblePeakIdx = 0;
-
+                    const rawVisible = [];
                     peaks360.forEach((peak) => {
                         const peakAz = peak.azimuth ?? peak.Azimuth ?? 0;
                         const px = azToX(peakAz);
 
                         // Only render if peak is within the current visible FOV
-                        if (px === null || px < -30 || px > width + 30) return;
+                        if (px === null || px < -40 || px > width + 40) return;
 
                         const peakAlt = peak.altitudeAngle ?? peak.AltitudeAngle ?? 0;
                         const peakName = peak.name ?? peak.Name ?? 'Summit';
@@ -576,32 +575,9 @@
                         const peakElevFt = peak.elevationFt ?? peak.ElevationFt ?? (peakElevM * 3.28084);
                         const peakDistKm = peak.distanceKm ?? peak.DistanceKm ?? 0;
                         const peakDistMi = peak.distanceMi ?? peak.DistanceMi ?? (peakDistKm * 0.621371);
-
+                        const isSkyline = peak.isSkyline ?? peak.IsSkyline ?? true;
                         const py = altToY(peakAlt);
-                        const labelY = labelLevels[visiblePeakIdx % labelLevels.length];
-                        visiblePeakIdx++;
 
-                        ctx.save();
-                        // Vertical dashed drop-line from label to summit marker
-                        ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(24, 24, 27, 0.4)';
-                        ctx.lineWidth = 1;
-                        ctx.setLineDash([2, 3]);
-                        ctx.beginPath();
-                        ctx.moveTo(px, labelY + 12);
-                        ctx.lineTo(px, py);
-                        ctx.stroke();
-                        ctx.setLineDash([]);
-
-                        // Summit marker dot
-                        ctx.fillStyle = isDark ? '#38BDF8' : '#0284C7';
-                        ctx.strokeStyle = isDark ? '#FFFFFF' : '#18181B';
-                        ctx.lineWidth = 1.5;
-                        ctx.beginPath();
-                        ctx.arc(px, py, 3.5, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.stroke();
-
-                        // Peak name label text
                         const elevStr = isMetric
                             ? `${Math.round(peakElevM)} m`
                             : `${Math.round(peakElevFt)} ft`;
@@ -609,25 +585,169 @@
                             ? `${peakDistKm.toFixed(1)} km`
                             : `${peakDistMi.toFixed(1)} mi`;
 
+                        // Remove 'midground' label from display text (clean elev · dist format)
+                        const subStr = `${elevStr} · ${distStr}`;
+
+                        // Measure both title and subtitle widths
+                        ctx.font = 'bold 11px Inter, -apple-system, sans-serif';
+                        const nameW = ctx.measureText(peakName).width;
+                        ctx.font = '9px Inter, -apple-system, sans-serif';
+                        const subW = ctx.measureText(subStr).width;
+                        const maxTextW = Math.max(nameW, subW);
+
+                        // Give text generous margin from border, ensuring border fully contains text
+                        const badgeW = Math.max(maxTextW + 20, 68);
+                        const badgeH = 29;
+
+                        rawVisible.push({
+                            peak,
+                            peakAz,
+                            px,
+                            py,
+                            peakName,
+                            subStr,
+                            isSkyline,
+                            badgeW,
+                            badgeH
+                        });
+                    });
+
+                    // Sort peaks deterministically by screen X (left to right)
+                    rawVisible.sort((a, b) => a.px - b.px);
+
+                    // Vertical tier levels (top of badge Y coordinate)
+                    // Each tier is separated by 35px (giving 6px clear vertical gap between 29px badges)
+                    const maxAllowedY = Math.max(65, height - 35);
+                    const candidateTiers = [28, 63, 98, 133, 168].filter(y => y + 29 <= maxAllowedY);
+                    if (candidateTiers.length === 0) candidateTiers.push(28);
+
+                    const padX = 7;
+
+                    // Place each peak badge avoiding overlaps
+                    rawVisible.forEach((p) => {
+                        const idealX = Math.max(8, Math.min(width - p.badgeW - 8, p.px - p.badgeW / 2));
+                        const minX = Math.max(8, p.px - p.badgeW + 12);
+                        const maxX = Math.min(width - p.badgeW - 8, p.px - 12);
+
+                        let bestTier = candidateTiers[0];
+                        let bestX = idealX;
+                        let bestScore = Infinity;
+
+                        for (let t = 0; t < candidateTiers.length; t++) {
+                            const ty = candidateTiers[t];
+                            const badgesOnTier = visiblePeakBadges.filter(b => b.badgeY === ty);
+
+                            const collidesWith = (x) => badgesOnTier.some(b =>
+                                !(x + p.badgeW + padX <= b.badgeX || b.badgeX + b.badgeW + padX <= x));
+
+                            let tierX = idealX;
+                            let hasCollision = collidesWith(tierX);
+
+                            // If ideal center collides on this tier, try shifting slightly left or right
+                            if (hasCollision && minX <= maxX) {
+                                const colliding = badgesOnTier.filter(b =>
+                                    !(idealX + p.badgeW + padX <= b.badgeX || b.badgeX + b.badgeW + padX <= idealX));
+                                if (colliding.length > 0) {
+                                    const rightmostObstacle = Math.max(...colliding.map(b => b.badgeX + b.badgeW));
+                                    const candidateRight = rightmostObstacle + padX;
+                                    if (candidateRight <= maxX && !collidesWith(candidateRight)) {
+                                        tierX = candidateRight;
+                                        hasCollision = false;
+                                    } else {
+                                        const leftmostObstacle = Math.min(...colliding.map(b => b.badgeX));
+                                        const candidateLeft = leftmostObstacle - p.badgeW - padX;
+                                        if (candidateLeft >= minX && !collidesWith(candidateLeft)) {
+                                            tierX = candidateLeft;
+                                            hasCollision = false;
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Score candidate tier
+                            let score = 0;
+                            const shift = Math.abs(tierX - idealX);
+                            const isAboveSummit = (ty + p.badgeH <= p.py - 4);
+
+                            if (!hasCollision) {
+                                // Clean collision-free fit
+                                score = (t * 20) + (shift * 0.5);
+                                if (!isAboveSummit) {
+                                    score += 300 + Math.abs(ty - p.py);
+                                }
+                            } else {
+                                // Overlap penalty
+                                score = 2000 + (t * 50);
+                            }
+
+                            if (score < bestScore) {
+                                bestScore = score;
+                                bestTier = ty;
+                                bestX = tierX;
+                            }
+                        }
+
+                        visiblePeakBadges.push({
+                            ...p,
+                            badgeX: bestX,
+                            badgeY: bestTier,
+                            textCenterX: bestX + p.badgeW / 2
+                        });
+                    });
+
+                    // Pass 1: Draw connector drop-lines and summit marker dots
+                    visiblePeakBadges.forEach((b) => {
+                        ctx.save();
+
+                        // Vertical dashed drop-line from label badge to summit marker
+                        ctx.strokeStyle = b.isSkyline
+                            ? (isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(24, 24, 27, 0.4)')
+                            : (isDark ? 'rgba(52, 211, 153, 0.55)' : 'rgba(5, 150, 105, 0.45)');
+                        ctx.lineWidth = 1;
+                        ctx.setLineDash([2, 3]);
+                        ctx.beginPath();
+                        const lineStartY = b.badgeY + b.badgeH <= b.py ? (b.badgeY + b.badgeH) : b.badgeY;
+                        ctx.moveTo(b.px, lineStartY);
+                        ctx.lineTo(b.px, b.py);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+
+                        // Summit marker dot: Skyline = bright blue/cyan; Midground = emerald green
+                        ctx.fillStyle = b.isSkyline
+                            ? (isDark ? '#38BDF8' : '#0284C7')
+                            : (isDark ? '#34D399' : '#059669');
+                        ctx.strokeStyle = isDark ? '#FFFFFF' : '#18181B';
+                        ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.arc(b.px, b.py, b.isSkyline ? 3.5 : 3.0, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+
+                        ctx.restore();
+                    });
+
+                    // Pass 2: Draw all pill badge containers and text on top
+                    visiblePeakBadges.forEach((b) => {
+                        ctx.save();
+
+                        // Pill background for peak label (accent border for midground summits)
+                        ctx.fillStyle = isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+                        ctx.strokeStyle = b.isSkyline
+                            ? (isDark ? 'rgba(255, 255, 255, 0.18)' : 'rgba(0, 0, 0, 0.14)')
+                            : (isDark ? 'rgba(52, 211, 153, 0.55)' : 'rgba(5, 150, 105, 0.45)');
+                        ctx.lineWidth = 1;
+                        drawRoundRect(ctx, b.badgeX, b.badgeY, b.badgeW, b.badgeH, 6);
+
+                        // Text: Peak Name (Title)
                         ctx.font = 'bold 11px Inter, -apple-system, sans-serif';
                         ctx.textAlign = 'center';
-                        const nameMetrics = ctx.measureText(peakName);
-                        const badgeW = Math.max(nameMetrics.width + 14, 64);
-
-                        // Pill background for peak label
-                        ctx.fillStyle = isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)';
-                        ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.12)';
-                        ctx.lineWidth = 1;
-                        drawRoundRect(ctx, px - badgeW / 2, labelY - 14, badgeW, 26, 6);
-
-                        // Text: Peak Name
                         ctx.fillStyle = textPrimary;
-                        ctx.fillText(peakName, px, labelY - 2);
+                        ctx.fillText(b.peakName, b.textCenterX, b.badgeY + 13);
 
-                        // Text: Elevation / Distance subtitle
+                        // Text: Elevation / Distance (Subtitle)
                         ctx.font = '9px Inter, -apple-system, sans-serif';
                         ctx.fillStyle = textMuted;
-                        ctx.fillText(`${elevStr} · ${distStr}`, px, labelY + 9);
+                        ctx.fillText(b.subStr, b.textCenterX, b.badgeY + 24);
 
                         ctx.restore();
                     });
@@ -801,48 +921,148 @@
 
                 // 6. Interactive Hover Cursor & Info Tooltip
                 if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
-                    const cursorAz = normalizeAngle(startAz + (mouseX / width) * fov);
-                    const cursorAlt = getSampleAtAz(profile360, cursorAz);
-                    const hx = mouseX;
-                    const hy = altToY(cursorAlt);
+                    // Check if mouse is hovering near any visible peak marker dot (within 18px) or over its label badge
+                    let hoveredPeak = null;
+                    let minPeakDist = 18;
 
-                    ctx.save();
-                    ctx.strokeStyle = isDark ? '#38BDF8' : '#0284C7';
-                    ctx.lineWidth = 1.5;
-                    ctx.beginPath();
-                    ctx.arc(hx, hy, 4.5, 0, Math.PI * 2);
-                    ctx.stroke();
-                    ctx.restore();
+                    for (let i = 0; i < visiblePeakBadges.length; i++) {
+                        const b = visiblePeakBadges[i];
+                        const d = Math.hypot(mouseX - b.px, mouseY - b.py);
+                        const inBadge = (mouseX >= b.badgeX && mouseX <= b.badgeX + b.badgeW &&
+                                         mouseY >= b.badgeY && mouseY <= b.badgeY + b.badgeH);
+                        if (inBadge) {
+                            hoveredPeak = { peak: b.peak, px: b.px, py: b.py, badge: b };
+                            minPeakDist = 0;
+                            break;
+                        } else if (d < minPeakDist) {
+                            minPeakDist = d;
+                            hoveredPeak = { peak: b.peak, px: b.px, py: b.py, badge: b };
+                        }
+                    }
 
-                    // Position tooltip
-                    tooltip.style.display = 'block';
-                    tooltip.style.backgroundColor = isDark ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.98)';
-                    tooltip.style.color = isDark ? '#F8FAFC' : '#18181B';
-                    tooltip.style.border = isDark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 0, 0, 0.12)';
-                    tooltip.style.left = `${Math.min(window.innerWidth - 220, rect.left + hx + 12)}px`;
-                    tooltip.style.top = `${Math.max(10, rect.top + Math.min(hy, height - 80))}px`;
+                    if (!hoveredPeak) {
+                        for (let i = 0; i < peaks360.length; i++) {
+                            const p = peaks360[i];
+                            const pAz = p.azimuth ?? p.Azimuth ?? 0;
+                            const px = azToX(pAz);
+                            if (px === null || px < -20 || px > width + 20) continue;
+                            const pAlt = p.altitudeAngle ?? p.AltitudeAngle ?? 0;
+                            const py = altToY(pAlt);
+                            const d = Math.hypot(mouseX - px, mouseY - py);
+                            if (d < minPeakDist) {
+                                minPeakDist = d;
+                                hoveredPeak = { peak: p, px, py };
+                            }
+                        }
+                    }
 
-                    const hpElevM = getElevationAtAz(profile360, cursorAz);
-                    const hpDistKm = getDistanceAtAz(profile360, cursorAz);
+                    if (hoveredPeak) {
+                        const hp = hoveredPeak.peak;
+                        const hpx = hoveredPeak.px;
+                        const hpy = hoveredPeak.py;
+                        const hpIsSky = hp.isSkyline ?? hp.IsSkyline ?? true;
+                        const hpName = hp.name ?? hp.Name ?? 'Summit';
+                        const hpElevM = hp.elevationM ?? hp.ElevationM ?? 0;
+                        const hpElevFt = hp.elevationFt ?? hp.ElevationFt ?? (hpElevM * 3.28084);
+                        const hpDistKm = hp.distanceKm ?? hp.DistanceKm ?? 0;
+                        const hpDistMi = hp.distanceMi ?? hp.DistanceMi ?? (hpDistKm * 0.621371);
+                        const hpAz = hp.azimuth ?? hp.Azimuth ?? 0;
+                        const hpAlt = hp.altitudeAngle ?? hp.AltitudeAngle ?? 0;
 
-                    const elevText = isMetric
-                        ? `${Math.round(hpElevM).toLocaleString()} m`
-                        : `${Math.round(hpElevM * 3.28084).toLocaleString()} ft`;
-                    const distText = isMetric
-                        ? `${hpDistKm.toFixed(1)} km`
-                        : `${(hpDistKm * 0.621371).toFixed(1)} mi`;
+                        const accentColor = hpIsSky
+                            ? (isDark ? '#38BDF8' : '#0284C7')
+                            : (isDark ? '#34D399' : '#059669');
 
-                    tooltip.innerHTML = `
-                        <div style="font-weight:700; color:${isDark ? '#38BDF8' : '#0284C7'}; margin-bottom:2px;">
-                            ${Math.round(cursorAz)}° ${getCardinal(cursorAz)}
-                        </div>
-                        <div style="font-size:11px; opacity:0.9;">
-                            Elev: <b>${elevText}</b> &nbsp;|&nbsp; Dist: <b>${distText}</b>
-                        </div>
-                        <div style="font-size:11px; opacity:0.75; margin-top:2px;">
-                            Altitude Angle: <b>${cursorAlt >= 0 ? '+' : ''}${cursorAlt.toFixed(1)}°</b>
-                        </div>
-                    `;
+                        // Draw glowing target ring around summit marker
+                        ctx.save();
+                        ctx.strokeStyle = accentColor;
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.arc(hpx, hpy, 7, 0, Math.PI * 2);
+                        ctx.stroke();
+
+                        // Highlight badge border if hovering over or near badge
+                        if (hoveredPeak.badge) {
+                            const hb = hoveredPeak.badge;
+                            ctx.strokeStyle = accentColor;
+                            ctx.lineWidth = 1.8;
+                            drawRoundRect(ctx, hb.badgeX, hb.badgeY, hb.badgeW, hb.badgeH, 6);
+                        }
+                        ctx.restore();
+
+                        tooltip.style.display = 'block';
+                        tooltip.style.backgroundColor = isDark ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.98)';
+                        tooltip.style.color = isDark ? '#F8FAFC' : '#18181B';
+                        tooltip.style.border = `1px solid ${accentColor}`;
+                        tooltip.style.left = `${Math.min(window.innerWidth - 240, rect.left + hpx + 12)}px`;
+                        tooltip.style.top = `${Math.max(10, rect.top + Math.min(hpy, height - 90))}px`;
+
+                        const elevText = isMetric
+                            ? `${Math.round(hpElevM).toLocaleString()} m`
+                            : `${Math.round(hpElevFt).toLocaleString()} ft`;
+                        const distText = isMetric
+                            ? `${hpDistKm.toFixed(1)} km`
+                            : `${hpDistMi.toFixed(1)} mi`;
+                        const kindText = hpIsSky ? 'Skyline Summit' : 'Visible Summit';
+
+                        tooltip.innerHTML = `
+                            <div style="font-weight:700; color:${accentColor}; margin-bottom:2px; font-size:12px;">
+                                ${hpName}
+                            </div>
+                            <div style="font-size:10px; opacity:0.8; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">
+                                ${kindText} · ${Math.round(hpAz)}° ${getCardinal(hpAz)}
+                            </div>
+                            <div style="font-size:11px; opacity:0.9;">
+                                Elev: <b>${elevText}</b> &nbsp;|&nbsp; Dist: <b>${distText}</b>
+                            </div>
+                            <div style="font-size:11px; opacity:0.75; margin-top:2px;">
+                                Altitude Angle: <b>${hpAlt >= 0 ? '+' : ''}${hpAlt.toFixed(1)}°</b>
+                            </div>
+                        `;
+                    } else {
+                        const cursorAz = normalizeAngle(startAz + (mouseX / width) * fov);
+                        const cursorAlt = getSampleAtAz(profile360, cursorAz);
+                        const hx = mouseX;
+                        const hy = altToY(cursorAlt);
+
+                        ctx.save();
+                        ctx.strokeStyle = isDark ? '#38BDF8' : '#0284C7';
+                        ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.arc(hx, hy, 4.5, 0, Math.PI * 2);
+                        ctx.stroke();
+                        ctx.restore();
+
+                        // Position tooltip
+                        tooltip.style.display = 'block';
+                        tooltip.style.backgroundColor = isDark ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.98)';
+                        tooltip.style.color = isDark ? '#F8FAFC' : '#18181B';
+                        tooltip.style.border = isDark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 0, 0, 0.12)';
+                        tooltip.style.left = `${Math.min(window.innerWidth - 220, rect.left + hx + 12)}px`;
+                        tooltip.style.top = `${Math.max(10, rect.top + Math.min(hy, height - 80))}px`;
+
+                        const hpElevM = getElevationAtAz(profile360, cursorAz);
+                        const hpDistKm = getDistanceAtAz(profile360, cursorAz);
+
+                        const elevText = isMetric
+                            ? `${Math.round(hpElevM).toLocaleString()} m`
+                            : `${Math.round(hpElevM * 3.28084).toLocaleString()} ft`;
+                        const distText = isMetric
+                            ? `${hpDistKm.toFixed(1)} km`
+                            : `${(hpDistKm * 0.621371).toFixed(1)} mi`;
+
+                        tooltip.innerHTML = `
+                            <div style="font-weight:700; color:${isDark ? '#38BDF8' : '#0284C7'}; margin-bottom:2px;">
+                                ${Math.round(cursorAz)}° ${getCardinal(cursorAz)}
+                            </div>
+                            <div style="font-size:11px; opacity:0.9;">
+                                Elev: <b>${elevText}</b> &nbsp;|&nbsp; Dist: <b>${distText}</b>
+                            </div>
+                            <div style="font-size:11px; opacity:0.75; margin-top:2px;">
+                                Altitude Angle: <b>${cursorAlt >= 0 ? '+' : ''}${cursorAlt.toFixed(1)}°</b>
+                            </div>
+                        `;
+                    }
                 } else {
                     tooltip.style.display = 'none';
                 }
@@ -891,6 +1111,19 @@
                 const rect = canvas.getBoundingClientRect();
                 if (e.clientX >= rect.left && e.clientX <= rect.right &&
                     e.clientY >= rect.top && e.clientY <= rect.bottom) {
+
+                    // If the cursor is over any menu or control in front of the canvas, suppress tooltip and hover indicator
+                    const el = document.elementFromPoint(e.clientX, e.clientY);
+                    if (el && el !== canvas) {
+                        if (mouseX !== -1) {
+                            mouseX = -1;
+                            mouseY = -1;
+                            if (tooltip) tooltip.style.display = 'none';
+                            render();
+                        }
+                        return;
+                    }
+
                     mouseX = e.clientX - rect.left;
                     mouseY = e.clientY - rect.top;
                     render();
@@ -898,6 +1131,7 @@
                     if (mouseX !== -1) {
                         mouseX = -1;
                         mouseY = -1;
+                        if (tooltip) tooltip.style.display = 'none';
                         render();
                     }
                 }
@@ -918,6 +1152,7 @@
             if (!isDragging) {
                 mouseX = -1;
                 mouseY = -1;
+                if (tooltip) tooltip.style.display = 'none';
                 render();
             }
         }

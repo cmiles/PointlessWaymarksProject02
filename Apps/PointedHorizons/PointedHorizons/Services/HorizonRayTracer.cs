@@ -326,11 +326,12 @@ public static class HorizonRayTracer
                 AltitudeAngle = Math.Round(p.AltitudeAngle, 2),
                 ProminenceM = Math.Round(prominenceAngle * (p.DistanceKm * 1000.0 * Math.PI / 180.0), 0),
                 Lat = p.Lat,
-                Lon = p.Lon
+                Lon = p.Lon,
+                IsSkyline = true
             });
         }
 
-        // 2. Add prominent named summits from candidatePeaks that lie on or form the visible skyline
+        // 2. Add companion peaks: both skyline summits and unobstructed midground/foreground summits
         if (candidatePeaks != null && candidatePeaks.Count > 0)
         {
             double cosObsLat = Math.Cos(observerLat * Math.PI / 180.0);
@@ -354,7 +355,7 @@ public static class HorizonRayTracer
                 double curDrop = (dM * dM) / (2.0 * EffectiveEarthRadiusM);
                 double candAltAngle = Math.Atan2(cand.Ele - eyeElevationM - curDrop, dM) * (180.0 / Math.PI);
 
-                // If summit forms or sits right at the visible skyline (within line-of-sight tolerance)
+                // A. Skyline Summit: sits right at or slightly above the skyline silhouette
                 if (candAltAngle >= skylineAlt - 0.25)
                 {
                     rawPeaks.Add(new HorizonPeak
@@ -366,32 +367,148 @@ public static class HorizonRayTracer
                         AltitudeAngle = Math.Round(Math.Max(candAltAngle, skylineAlt), 2),
                         ProminenceM = 0,
                         Lat = cand.Lat,
-                        Lon = cand.Lon
+                        Lon = cand.Lon,
+                        IsSkyline = true
+                    });
+                }
+                // B. Midground / Foreground Summit: sits below the skyline profile.
+                // Perform a fast targeted line-of-sight test to verify no closer terrain obstructs it.
+                else if (IsPeakLineOfSightClear(observerLat, observerLon, eyeElevationM, cand.Lat, cand.Lon, cand.Ele, candAltAngle, dM))
+                {
+                    rawPeaks.Add(new HorizonPeak
+                    {
+                        Name = cand.Name,
+                        ElevationM = Math.Round(cand.Ele, 0),
+                        DistanceKm = Math.Round(distKm, 1),
+                        Azimuth = Math.Round(az, 1),
+                        AltitudeAngle = Math.Round(candAltAngle, 2),
+                        ProminenceM = 0,
+                        Lat = cand.Lat,
+                        Lon = cand.Lon,
+                        IsSkyline = false
                     });
                 }
             }
         }
 
-        // 3. Deduplicate peaks that are close in azimuth (< 1.8 degrees).
-        // Prioritize named summits over generic "Summit ..." placeholders, then by visual altitude.
+        // 3. Deduplicate peaks with balanced allocation:
+        // Prioritize named summits and ensure visible midground summits are retained
+        // alongside prominent skyline peaks (up to 48 skyline + up to 24 midground, overall cap 72).
         var filteredPeaks = new List<HorizonPeak>();
+
+        bool Collides(HorizonPeak peak) =>
+            filteredPeaks.Any(existing =>
+                AngularDistance(existing.Azimuth, peak.Azimuth) < 1.6 &&
+                (Math.Abs(existing.AltitudeAngle - peak.AltitudeAngle) < 0.7 ||
+                 Math.Abs(existing.DistanceKm - peak.DistanceKm) < 3.5));
+
+        const int maxTotal = 72;
+        int skylineCount = 0;
+        int midgroundCount = 0;
+
+        // Pass 1: Named Skyline Summits (initial target up to 48)
         foreach (var peak in rawPeaks
-            .OrderByDescending(p => IsNamedSummit(p.Name))
-            .ThenByDescending(p => p.AltitudeAngle)
+            .Where(p => p.IsSkyline && IsNamedSummit(p.Name))
+            .OrderByDescending(p => p.AltitudeAngle)
             .ThenByDescending(p => p.ElevationM))
         {
-            bool collides = filteredPeaks.Any(existing =>
-                AngularDistance(existing.Azimuth, peak.Azimuth) < 1.8);
-
-            if (!collides)
+            if (skylineCount >= 48) break;
+            if (!Collides(peak))
             {
                 filteredPeaks.Add(peak);
+                skylineCount++;
             }
+        }
 
-            if (filteredPeaks.Count >= 48) break; // Capture top prominent peaks around the full 360° circle
+        // Pass 2: Named Visible Midground Summits (up to 24)
+        foreach (var peak in rawPeaks
+            .Where(p => !p.IsSkyline && IsNamedSummit(p.Name))
+            .OrderByDescending(p => p.AltitudeAngle)
+            .ThenByDescending(p => p.ElevationM))
+        {
+            if (midgroundCount >= 24 || filteredPeaks.Count >= maxTotal) break;
+            if (!Collides(peak))
+            {
+                filteredPeaks.Add(peak);
+                midgroundCount++;
+            }
+        }
+
+        // Pass 3: Fill any remaining capacity with remaining named skyline peaks
+        if (filteredPeaks.Count < maxTotal)
+        {
+            foreach (var peak in rawPeaks
+                .Where(p => p.IsSkyline && IsNamedSummit(p.Name))
+                .OrderByDescending(p => p.AltitudeAngle)
+                .ThenByDescending(p => p.ElevationM))
+            {
+                if (filteredPeaks.Count >= maxTotal) break;
+                if (!filteredPeaks.Contains(peak) && !Collides(peak))
+                {
+                    filteredPeaks.Add(peak);
+                }
+            }
+        }
+
+        // Pass 4: Profile Local Maxima (unnamed generic summits for areas with few/no named peaks)
+        if (filteredPeaks.Count < 36)
+        {
+            foreach (var peak in rawPeaks
+                .Where(p => p.IsSkyline && !IsNamedSummit(p.Name))
+                .OrderByDescending(p => p.ProminenceM)
+                .ThenByDescending(p => p.AltitudeAngle))
+            {
+                if (filteredPeaks.Count >= 48) break;
+                if (!Collides(peak))
+                {
+                    filteredPeaks.Add(peak);
+                }
+            }
         }
 
         return filteredPeaks.OrderBy(p => p.Azimuth).ToList();
+    }
+
+    /// <summary>
+    /// Performs a fast targeted line-of-sight test from observer to candidate summit,
+    /// verifying that no intermediate terrain obstructs the view.
+    /// </summary>
+    private static bool IsPeakLineOfSightClear(
+        double observerLat,
+        double observerLon,
+        double eyeElevationM,
+        double peakLat,
+        double peakLon,
+        double peakElevM,
+        double targetAltAngle,
+        double targetDistM)
+    {
+        // Step along line from observer to peak at ~140m intervals
+        int steps = (int)Math.Max(5, targetDistM / 140.0);
+        double dLat = (peakLat - observerLat);
+        double dLon = (peakLon - observerLon);
+
+        for (int s = 1; s < steps - 1; s++) // Stop before reaching the peak summit itself
+        {
+            double frac = (double)s / steps;
+            double curDistM = frac * targetDistM;
+            double curLat = observerLat + frac * dLat;
+            double curLon = observerLon + frac * dLon;
+
+            double? elev = DemService.GetElevation(curLat, curLon);
+            if (elev.HasValue)
+            {
+                double drop = (curDistM * curDistM) / (2.0 * EffectiveEarthRadiusM);
+                double terrainAlt = Math.Atan2(elev.Value - eyeElevationM - drop, curDistM) * (180.0 / Math.PI);
+
+                if (terrainAlt > targetAltAngle + 0.05)
+                {
+                    return false; // Obstructed by closer terrain
+                }
+            }
+        }
+
+        return true; // Direct line of sight is clear
     }
 
     private static bool IsNamedSummit(string? name) =>

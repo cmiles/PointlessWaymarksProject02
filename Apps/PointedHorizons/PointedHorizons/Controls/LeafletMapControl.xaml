@@ -19,9 +19,80 @@
                     ToolTipService.ToolTip="Open Map Choices Menu" />
         </StackPanel>
 
-        <!-- Floating Hamburger Dropdown Menu Panel -->
+        <!-- Floating Azimuth & Direction Toolbar Overlay (Top Center) -->
+        <Border x:Name="DirectionToolbarBorder" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="10,12,10,0"
+                BorderThickness="1" CornerRadius="10" Padding="12,8">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <!-- Compass Cardinal Quick Buttons -->
+                <TextBlock x:Name="TxtDirectionLabel" Text="Direction:" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <Button x:Name="BtnCardN" Content="N" Click="BtnCardN_Click"
+                        Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
+                        FontSize="11" FontWeight="Bold" />
+                <Button x:Name="BtnCardNE" Content="NE" Click="BtnCardNE_Click"
+                        Style="{StaticResource PillButtonStyle}" Padding="6,3" Margin="2"
+                        FontSize="11" FontWeight="SemiBold" />
+                <Button x:Name="BtnCardE" Content="E" Click="BtnCardE_Click"
+                        Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
+                        FontSize="11" FontWeight="Bold" />
+                <Button x:Name="BtnCardSE" Content="SE" Click="BtnCardSE_Click"
+                        Style="{StaticResource PillButtonStyle}" Padding="6,3" Margin="2"
+                        FontSize="11" FontWeight="SemiBold" />
+                <Button x:Name="BtnCardS" Content="S" Click="BtnCardS_Click"
+                        Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
+                        FontSize="11" FontWeight="Bold" />
+                <Button x:Name="BtnCardSW" Content="SW" Click="BtnCardSW_Click"
+                        Style="{StaticResource PillButtonStyle}" Padding="6,3" Margin="2"
+                        FontSize="11" FontWeight="SemiBold" />
+                <Button x:Name="BtnCardW" Content="W" Click="BtnCardW_Click"
+                        Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
+                        FontSize="11" FontWeight="Bold" />
+                <Button x:Name="BtnCardNW" Content="NW" Click="BtnCardNW_Click"
+                        Style="{StaticResource PillButtonStyle}" Padding="6,3" Margin="2"
+                        FontSize="11" FontWeight="SemiBold" />
+
+                <Border x:Name="ToolbarDivider" Width="1" Margin="8,2" Height="18" VerticalAlignment="Center"/>
+
+                <!-- Azimuth Slider -->
+                <TextBlock x:Name="TxtAngleLabel" Text="Angle:" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <Slider x:Name="SliderAzimuth" Minimum="0" Maximum="360" Value="{Binding Azimuth, Mode=TwoWay}"
+                        Width="130" VerticalAlignment="Center" Margin="0,0,6,0" ValueChanged="SliderAzimuth_ValueChanged"/>
+                <TextBlock x:Name="TxtAzimuthValue" Text="{Binding AzimuthDisplay}" FontSize="12" FontWeight="Bold"
+                           VerticalAlignment="Center" Width="70"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Floating Location Info & My Location Badge (Lower Left) -->
+        <Border x:Name="LocationBadgeBorder" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="12,0,0,12"
+                BorderThickness="1" CornerRadius="8" Padding="10,8">
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="📍 " FontSize="12" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="TxtCoordinatesValue" Text="{Binding CoordinatesDisplay}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="18,2,0,4">
+                    <TextBlock x:Name="TxtElevationLabel" Text="Elevation: " FontSize="10"/>
+                    <TextBlock x:Name="TxtElevationValue" Text="{Binding ObserverElevationDisplay}" FontSize="10" FontWeight="SemiBold"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                    <Button x:Name="BtnMyLocation" Content="📍 My Location" Click="BtnMyLocation_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="8,4" Margin="0,0,6,0"
+                            FontSize="10" FontWeight="Bold" HorizontalAlignment="Left"
+                            ToolTipService.ToolTip="Acquire current GPS position and move observer there" />
+                    <Button x:Name="BtnAim3d" Content="🏔️ 3D" Click="BtnAim3d_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="8,4" Margin="0,0,6,0"
+                            FontSize="10" FontWeight="Bold" HorizontalAlignment="Left"
+                            ToolTipService.ToolTip="Toggle 3D terrain perspective view along azimuth" />
+                    <Button x:Name="BtnAimReset" Content="↺ Reset" Click="BtnAimReset_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="8,4"
+                            FontSize="10" FontWeight="Bold" HorizontalAlignment="Left"
+                            ToolTipService.ToolTip="Reset camera to flat top-down 2D view and recover if stuck" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Floating Hamburger Dropdown Menu Panel (Rendered after LocationBadgeBorder so it appears on top) -->
         <Border x:Name="HamburgerPanel" HorizontalAlignment="Left" VerticalAlignment="Top"
-                Margin="12,50,0,0" Width="285" MaxHeight="520" Visibility="Collapsed"
+                Margin="12,50,0,12" Width="320" MaxHeight="520" Visibility="Collapsed"
                 BorderThickness="1" CornerRadius="12" Padding="14,12">
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel Orientation="Vertical">
@@ -105,10 +176,10 @@
 
                     <!-- View & Camera -->
                     <TextBlock x:Name="TxtSectionViews" Text="VIEW &amp; POSITION" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
-                    <Button x:Name="BtnMenuCelestialInfo" Content="☀️ Sun &amp; Moon Horizon Times..." Click="BtnMenuCelestialInfo_Click"
+                    <Button x:Name="BtnMenuPositionFromMainMap" Content="🎯 Position from Main Map" Click="BtnPositionFromMainMap_Click"
                             Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
-                            Padding="8,5" Margin="0,2,0,4" FontSize="10" FontWeight="SemiBold"
-                            ToolTipService.ToolTip="View upcoming sun and moon rise/set times with topography compensation" />
+                            Padding="8,5" Margin="0,2,0,4" FontSize="10" FontWeight="Bold"
+                            ToolTipService.ToolTip="Set the Aim Map viewpoint and Horizon location to the Main Map location (GPS fix, marker, or center)" />
                     <Button x:Name="BtnMenuMyLocation" Content="📍 Move to My GPS Location" Click="BtnMyLocation_Click"
                             Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
                             Padding="8,5" Margin="0,2,0,4" FontSize="10" FontWeight="SemiBold" />
@@ -121,77 +192,6 @@
                             ToolTipService.ToolTip="Reset camera to flat top-down 2D view and recover if stuck" />
                 </StackPanel>
             </ScrollViewer>
-        </Border>
-
-        <!-- Floating Azimuth & Direction Toolbar Overlay (Top Center) -->
-        <Border x:Name="DirectionToolbarBorder" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="10,12,10,0"
-                BorderThickness="1" CornerRadius="10" Padding="12,8">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <!-- Compass Cardinal Quick Buttons -->
-                <TextBlock x:Name="TxtDirectionLabel" Text="Direction:" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                <Button x:Name="BtnCardN" Content="N" Click="BtnCardN_Click"
-                        Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
-                        FontSize="11" FontWeight="Bold" />
-                <Button x:Name="BtnCardNE" Content="NE" Click="BtnCardNE_Click"
-                        Style="{StaticResource PillButtonStyle}" Padding="6,3" Margin="2"
-                        FontSize="11" FontWeight="SemiBold" />
-                <Button x:Name="BtnCardE" Content="E" Click="BtnCardE_Click"
-                        Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
-                        FontSize="11" FontWeight="Bold" />
-                <Button x:Name="BtnCardSE" Content="SE" Click="BtnCardSE_Click"
-                        Style="{StaticResource PillButtonStyle}" Padding="6,3" Margin="2"
-                        FontSize="11" FontWeight="SemiBold" />
-                <Button x:Name="BtnCardS" Content="S" Click="BtnCardS_Click"
-                        Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
-                        FontSize="11" FontWeight="Bold" />
-                <Button x:Name="BtnCardSW" Content="SW" Click="BtnCardSW_Click"
-                        Style="{StaticResource PillButtonStyle}" Padding="6,3" Margin="2"
-                        FontSize="11" FontWeight="SemiBold" />
-                <Button x:Name="BtnCardW" Content="W" Click="BtnCardW_Click"
-                        Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
-                        FontSize="11" FontWeight="Bold" />
-                <Button x:Name="BtnCardNW" Content="NW" Click="BtnCardNW_Click"
-                        Style="{StaticResource PillButtonStyle}" Padding="6,3" Margin="2"
-                        FontSize="11" FontWeight="SemiBold" />
-
-                <Border x:Name="ToolbarDivider" Width="1" Margin="8,2" Height="18" VerticalAlignment="Center"/>
-
-                <!-- Azimuth Slider -->
-                <TextBlock x:Name="TxtAngleLabel" Text="Angle:" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                <Slider x:Name="SliderAzimuth" Minimum="0" Maximum="360" Value="{Binding Azimuth, Mode=TwoWay}"
-                        Width="130" VerticalAlignment="Center" Margin="0,0,6,0" ValueChanged="SliderAzimuth_ValueChanged"/>
-                <TextBlock x:Name="TxtAzimuthValue" Text="{Binding AzimuthDisplay}" FontSize="12" FontWeight="Bold"
-                           VerticalAlignment="Center" Width="70"/>
-            </StackPanel>
-        </Border>
-
-        <!-- Floating Location Info & My Location Badge (Lower Left) -->
-        <Border x:Name="LocationBadgeBorder" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="12,0,0,12"
-                BorderThickness="1" CornerRadius="8" Padding="10,8">
-            <StackPanel Orientation="Vertical">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="📍 " FontSize="12" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="TxtCoordinatesValue" Text="{Binding CoordinatesDisplay}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="18,2,0,4">
-                    <TextBlock x:Name="TxtElevationLabel" Text="Elevation: " FontSize="10"/>
-                    <TextBlock x:Name="TxtElevationValue" Text="{Binding ObserverElevationDisplay}" FontSize="10" FontWeight="SemiBold"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
-                    <Button x:Name="BtnMyLocation" Content="📍 My Location" Click="BtnMyLocation_Click"
-                            Style="{StaticResource PillButtonStyle}" Padding="8,4" Margin="0,0,6,0"
-                            FontSize="10" FontWeight="Bold" HorizontalAlignment="Left"
-                            ToolTipService.ToolTip="Acquire current GPS position and move observer there" />
-                    <Button x:Name="BtnAim3d" Content="🏔️ 3D" Click="BtnAim3d_Click"
-                            Style="{StaticResource PillButtonStyle}" Padding="8,4" Margin="0,0,6,0"
-                            FontSize="10" FontWeight="Bold" HorizontalAlignment="Left"
-                            ToolTipService.ToolTip="Toggle 3D terrain perspective view along azimuth" />
-                    <Button x:Name="BtnAimReset" Content="↺ Reset" Click="BtnAimReset_Click"
-                            Style="{StaticResource PillButtonStyle}" Padding="8,4"
-                            FontSize="10" FontWeight="Bold" HorizontalAlignment="Left"
-                            ToolTipService.ToolTip="Reset camera to flat top-down 2D view and recover if stuck" />
-                </StackPanel>
-            </StackPanel>
         </Border>
     </Grid>
 </UserControl>

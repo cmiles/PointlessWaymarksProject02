@@ -1162,6 +1162,39 @@
         });
 
         // Navigation control (zoom buttons, compass, bottom right)
+        if (!document.getElementById('ph-map-nav-ctrl-styles')) {
+            const navStyle = document.createElement('style');
+            navStyle.id = 'ph-map-nav-ctrl-styles';
+            navStyle.textContent = `
+                @media (min-width: 768px) {
+                    .maplibregl-ctrl-group {
+                        border-radius: 6px !important;
+                    }
+                    .maplibregl-ctrl-group button {
+                        width: 29px !important;
+                        height: 29px !important;
+                    }
+                    .maplibregl-ctrl button .maplibregl-ctrl-icon {
+                        transform: scale(1.0) !important;
+                        transform-origin: center center !important;
+                    }
+                }
+                @media (max-width: 767px) {
+                    .maplibregl-ctrl-group {
+                        border-radius: 8px !important;
+                    }
+                    .maplibregl-ctrl-group button {
+                        width: 58px !important;
+                        height: 58px !important;
+                    }
+                    .maplibregl-ctrl button .maplibregl-ctrl-icon {
+                        transform: scale(1.8) !important;
+                        transform-origin: center center !important;
+                    }
+                }
+            `;
+            document.head.appendChild(navStyle);
+        }
         map.addControl(new window.maplibregl.NavigationControl({ showCompass: true, visualizePitch: true }), 'bottom-right');
 
         // Observer Pin Icon - Centered on Coordinate
