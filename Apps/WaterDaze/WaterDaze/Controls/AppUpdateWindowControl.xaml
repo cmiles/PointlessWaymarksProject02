@@ -80,10 +80,18 @@
                     <Border x:Name="InfoCardBorder" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,0,12"
                             Visibility="{Binding UpdateInstallerInfoVisibility, FallbackValue='Visible'}">
                         <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                <TextBlock x:Name="InfoPackageLabelText" Text="Installer Package: " FontSize="11" Foreground="{StaticResource TextMutedBrush}"/>
-                                <TextBlock x:Name="InfoPackageValueText" Text="{Binding UpdateInstallerFileName, FallbackValue='PointlessWaymarks-WaterDazeWin-Setup.exe'}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource HyperlinkBrush}"/>
-                            </StackPanel>
+                            <Grid x:Name="PackageInfoGrid" Margin="0,0,0,4">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition x:Name="ColPackageLabel" Width="Auto" />
+                                    <ColumnDefinition x:Name="ColPackageValue" Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Name="InfoPackageLabelText" Grid.Row="0" Grid.Column="0" Text="Installer Package: " FontSize="11" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Top" Margin="0,0,4,0"/>
+                                <TextBlock x:Name="InfoPackageValueText" Grid.Row="0" Grid.Column="1" Text="{Binding UpdateInstallerFileName, FallbackValue='PointlessWaymarks-WaterDazeWin-Setup.exe'}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource HyperlinkBrush}" TextWrapping="Wrap"/>
+                            </Grid>
                             <TextBlock x:Name="InfoExplanationText" Text="When you click 'Update Now', the application will automatically download the installer, verify its checksum, launch the setup wizard, and close this app so files can update cleanly."
                                        FontSize="10" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap"/>
                         </StackPanel>

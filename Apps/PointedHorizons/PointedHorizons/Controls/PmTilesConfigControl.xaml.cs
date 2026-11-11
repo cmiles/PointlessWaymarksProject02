@@ -16,10 +16,13 @@ public partial class PmTilesConfigControl : UserControl
 
     private List<PmTileLayerConfig> _workingLayers = new();
 
+    private bool _isCompact;
+
     public PmTilesConfigControl()
     {
         InitializeComponent();
         Loaded += PmTilesConfigControl_Loaded;
+        SizeChanged += PmTilesConfigControl_SizeChanged;
 
         ThemeManager.Current.ThemeChanged += (s, e) =>
         {
@@ -30,6 +33,133 @@ public partial class PmTilesConfigControl : UserControl
         {
             Dispatcher.BeginInvoke(() => RefreshView());
         };
+
+        if (CardBorder != null)
+        {
+            CardBorder.MouseWheel += (s, e) =>
+            {
+                if (DialogScrollViewer != null)
+                {
+                    DialogScrollViewer.ScrollToVerticalOffset(DialogScrollViewer.VerticalOffset - (e.Delta / 2.0));
+                    e.Handled = true;
+                }
+            };
+        }
+        if (DialogScrollViewer != null)
+        {
+            DialogScrollViewer.MouseWheel += (s, e) =>
+            {
+                DialogScrollViewer.ScrollToVerticalOffset(DialogScrollViewer.VerticalOffset - (e.Delta / 2.0));
+                e.Handled = true;
+            };
+        }
+    }
+
+    private void PmTilesConfigControl_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (e.NewSize.Width > 0 && e.NewSize.Height > 0)
+        {
+            SetCompactMode(e.NewSize.Width < 600 || e.NewSize.Height < 600);
+        }
+    }
+
+    public void SetCompactMode(bool isCompact)
+    {
+        bool changed = _isCompact != isCompact;
+        _isCompact = isCompact;
+
+        if (CardBorder != null)
+        {
+            if (isCompact)
+            {
+                CardBorder.MaxWidth = double.PositiveInfinity;
+                CardBorder.HorizontalAlignment = HorizontalAlignment.Stretch;
+                CardBorder.Margin = new Thickness(4, 6, 4, 6);
+                CardBorder.Padding = new Thickness(12, 10, 12, 10);
+            }
+            else
+            {
+                CardBorder.MaxWidth = 520;
+                CardBorder.HorizontalAlignment = HorizontalAlignment.Center;
+                CardBorder.Margin = new Thickness(8, 10, 8, 10);
+                CardBorder.Padding = new Thickness(14, 12, 14, 12);
+            }
+        }
+
+        if (BtnCloseDialog != null)
+        {
+            BtnCloseDialog.MinHeight = isCompact ? 44 : 0;
+            BtnCloseDialog.MinWidth = isCompact ? 44 : 0;
+            BtnCloseDialog.FontSize = isCompact ? 14 : 11;
+            BtnCloseDialog.Padding = isCompact ? new Thickness(10, 6, 10, 6) : new Thickness(7, 3, 7, 3);
+        }
+
+        if (BtnGrantStoragePermission != null)
+        {
+            BtnGrantStoragePermission.MinHeight = isCompact ? 44 : 0;
+            BtnGrantStoragePermission.Padding = isCompact ? new Thickness(14, 10, 14, 10) : new Thickness(10, 5, 10, 5);
+            BtnGrantStoragePermission.FontSize = isCompact ? 12 : 10;
+        }
+
+        Button?[] resetBtns = [BtnResetPmTiles, BtnResetDem, BtnResetGpx];
+        foreach (var b in resetBtns)
+        {
+            if (b != null)
+            {
+                b.MinHeight = isCompact ? 42 : 0;
+                b.MinWidth = isCompact ? 72 : 0;
+                b.Padding = isCompact ? new Thickness(12, 8, 12, 8) : new Thickness(6, 4, 6, 4);
+                b.FontSize = isCompact ? 12 : 10;
+            }
+        }
+
+        TextBox?[] textboxes = [TxtPmTilesDir, TxtDemDir, TxtGpxDir];
+        foreach (var tb in textboxes)
+        {
+            if (tb != null)
+            {
+                tb.MinHeight = isCompact ? 42 : 0;
+                tb.Padding = isCompact ? new Thickness(8, 8, 8, 8) : new Thickness(6, 4, 6, 4);
+                tb.FontSize = isCompact ? 12 : 11;
+            }
+        }
+
+        if (BtnRefreshFiles != null)
+        {
+            BtnRefreshFiles.MinHeight = isCompact ? 42 : 0;
+            BtnRefreshFiles.Padding = isCompact ? new Thickness(14, 8, 14, 8) : new Thickness(7, 3, 7, 3);
+            BtnRefreshFiles.FontSize = isCompact ? 12 : 10;
+        }
+
+        if (CmbStyleFile != null)
+        {
+            CmbStyleFile.Height = isCompact ? 42 : 28;
+            CmbStyleFile.FontSize = isCompact ? 12.5 : 11;
+        }
+
+        if (BtnCancel != null)
+        {
+            BtnCancel.MinHeight = isCompact ? 48 : 0;
+            BtnCancel.Padding = isCompact ? new Thickness(16, 10, 16, 10) : new Thickness(10, 5, 10, 5);
+            BtnCancel.FontSize = isCompact ? 13 : 11;
+        }
+        if (BtnSaveOnly != null)
+        {
+            BtnSaveOnly.MinHeight = isCompact ? 48 : 0;
+            BtnSaveOnly.Padding = isCompact ? new Thickness(16, 10, 16, 10) : new Thickness(10, 5, 10, 5);
+            BtnSaveOnly.FontSize = isCompact ? 13 : 11;
+        }
+        if (BtnApplyAndUse != null)
+        {
+            BtnApplyAndUse.MinHeight = isCompact ? 48 : 0;
+            BtnApplyAndUse.Padding = isCompact ? new Thickness(20, 10, 20, 10) : new Thickness(12, 5, 12, 5);
+            BtnApplyAndUse.FontSize = isCompact ? 13 : 11;
+        }
+
+        if (changed)
+        {
+            RebuildLayersList();
+        }
     }
 
     private void PmTilesConfigControl_Loaded(object sender, RoutedEventArgs e)
@@ -162,8 +292,8 @@ public partial class PmTilesConfigControl : UserControl
                     BorderBrush = tm.MapOverlayBorder,
                     Background = tm.MapOverlayBackground,
                     CornerRadius = new CornerRadius(6),
-                    Padding = new Thickness(8, 6, 8, 6),
-                    Margin = new Thickness(0, 2, 0, 4)
+                    Padding = _isCompact ? new Thickness(10, 8, 10, 8) : new Thickness(8, 6, 8, 6),
+                    Margin = _isCompact ? new Thickness(0, 4, 0, 6) : new Thickness(0, 2, 0, 4)
                 };
 
                 var grid = new Grid();
@@ -177,7 +307,9 @@ public partial class PmTilesConfigControl : UserControl
                 {
                     IsChecked = layer.IsEnabled,
                     VerticalAlignment = VerticalAlignment.Center,
-                    Margin = new Thickness(0, 0, 8, 0)
+                    MinHeight = _isCompact ? 36 : 0,
+                    MinWidth = _isCompact ? 36 : 0,
+                    Margin = _isCompact ? new Thickness(2, 0, 10, 0) : new Thickness(0, 0, 8, 0)
                 };
                 chk.Checked += (s, e) => layer.IsEnabled = true;
                 chk.Unchecked += (s, e) => layer.IsEnabled = false;
@@ -189,7 +321,7 @@ public partial class PmTilesConfigControl : UserControl
                 var txtName = new TextBlock
                 {
                     Text = layer.FileName,
-                    FontSize = 11,
+                    FontSize = _isCompact ? 13 : 11,
                     FontWeight = FontWeights.SemiBold,
                     Foreground = tm.TextPrimary,
                     TextTrimming = TextTrimming.CharacterEllipsis,
@@ -200,7 +332,7 @@ public partial class PmTilesConfigControl : UserControl
                     Text = fileInfo != null
                         ? (fileInfo.IsValidArchive ? $"Size: {fileInfo.FormattedSize}" : $"⚠️ {fileInfo.ArchiveFormatError} ({fileInfo.FormattedSize})")
                         : "Local PMTiles file",
-                    FontSize = 10,
+                    FontSize = _isCompact ? 11 : 10,
                     Foreground = (fileInfo != null && !fileInfo.IsValidArchive)
                         ? new SolidColorBrush(Color.FromArgb(255, 239, 68, 68))
                         : tm.TextSecondary,
@@ -217,9 +349,11 @@ public partial class PmTilesConfigControl : UserControl
                 {
                     Content = $"{(int)(layer.Opacity * 100)}%",
                     Style = pillStyle,
-                    Padding = new Thickness(6, 2, 6, 2),
-                    Margin = new Thickness(4, 0, 6, 0),
-                    FontSize = 10,
+                    Padding = _isCompact ? new Thickness(10, 6, 10, 6) : new Thickness(6, 2, 6, 2),
+                    MinHeight = _isCompact ? 42 : 0,
+                    MinWidth = _isCompact ? 56 : 0,
+                    Margin = _isCompact ? new Thickness(4, 0, 8, 0) : new Thickness(4, 0, 6, 0),
+                    FontSize = _isCompact ? 12 : 10,
                     FontWeight = FontWeights.SemiBold
                 };
                 ToolTipService.SetToolTip(btnOpacity, "Click to cycle layer opacity (100% / 75% / 50% / 25%)");
@@ -241,9 +375,11 @@ public partial class PmTilesConfigControl : UserControl
                 {
                     Content = "▲",
                     Style = pillStyle,
-                    Padding = new Thickness(5, 2, 5, 2),
-                    Margin = new Thickness(1, 0, 2, 0),
-                    FontSize = 9,
+                    Padding = _isCompact ? new Thickness(10, 6, 10, 6) : new Thickness(5, 2, 5, 2),
+                    MinHeight = _isCompact ? 42 : 0,
+                    MinWidth = _isCompact ? 42 : 0,
+                    Margin = _isCompact ? new Thickness(2, 0, 4, 0) : new Thickness(1, 0, 2, 0),
+                    FontSize = _isCompact ? 14 : 9,
                     IsEnabled = index > 0
                 };
                 btnUp.Click += (s, e) => MoveLayer(index, -1);
@@ -252,9 +388,11 @@ public partial class PmTilesConfigControl : UserControl
                 {
                     Content = "▼",
                     Style = pillStyle,
-                    Padding = new Thickness(5, 2, 5, 2),
-                    Margin = new Thickness(1, 0, 0, 0),
-                    FontSize = 9,
+                    Padding = _isCompact ? new Thickness(10, 6, 10, 6) : new Thickness(5, 2, 5, 2),
+                    MinHeight = _isCompact ? 42 : 0,
+                    MinWidth = _isCompact ? 42 : 0,
+                    Margin = _isCompact ? new Thickness(4, 0, 0, 0) : new Thickness(1, 0, 0, 0),
+                    FontSize = _isCompact ? 14 : 9,
                     IsEnabled = index < _workingLayers.Count - 1
                 };
                 btnDown.Click += (s, e) => MoveLayer(index, 1);

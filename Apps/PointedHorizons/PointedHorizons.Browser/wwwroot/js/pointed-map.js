@@ -290,6 +290,9 @@
         if (map && typeof map.getTerrain === 'function' && map.getTerrain()) {
             try { map.setTerrain(null); } catch (e) { }
         }
+        if (map && typeof map.setSky === 'function') {
+            try { map.setSky(null); } catch (e) { }
+        }
         activeTerrainSourceId = null;
     }
 
@@ -464,6 +467,17 @@
                 }
             }
 
+            // Apply sky from style root if specified
+            if (styleObj.sky && typeof map.setSky === 'function') {
+                try {
+                    map.setSky(styleObj.sky);
+                } catch (skyErr) {
+                    console.warn("[PointedMap] Error applying root sky property:", skyErr);
+                }
+            }
+
+            const validMapLibreLayerTypes = ['fill', 'line', 'symbol', 'circle', 'heatmap', 'fill-extrusion', 'raster', 'hillshade', 'background'];
+
             // Add style layers
             for (const lDef of styleObj.layers) {
                 if (!lDef || !lDef.id) continue;
@@ -472,8 +486,29 @@
                     lCopy.layout = lCopy.layout || {};
                     lCopy.layout.visibility = (selectedBaseLayer === 'pmtiles') ? 'visible' : 'none';
 
-                    if (lCopy.source && !map.getSource(lCopy.source)) {
+                    // If layer is type 'sky', apply it via map.setSky instead of attempting map.addLayer
+                    if (lCopy.type === 'sky') {
+                        if (typeof map.setSky === 'function') {
+                            try {
+                                map.setSky(lCopy.paint || {});
+                            } catch (skyErr) {
+                                console.warn("[PointedMap] Error applying sky layer paint via setSky:", skyErr);
+                            }
+                        }
                         continue;
+                    }
+
+                    // Skip any layer types unsupported by MapLibre (e.g. Mapbox custom types like 'model', 'slot', etc.)
+                    if (!validMapLibreLayerTypes.includes(lCopy.type)) {
+                        console.warn("[PointedMap] Skipping unsupported layer type:", lCopy.id, lCopy.type);
+                        continue;
+                    }
+
+                    // All MapLibre layers except 'background' require an existing source
+                    if (lCopy.type !== 'background') {
+                        if (!lCopy.source || !map.getSource(lCopy.source)) {
+                            continue;
+                        }
                     }
 
                     // Remove unsupported paint properties that cause MapLibre validator errors

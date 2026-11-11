@@ -30,12 +30,55 @@ public partial class HorizonViewControl : UserControl
         };
 
         LeafletScrollIsolationHelper.ProtectControl(this, CanvasContainer);
+
+        if (HorizonMenuPanel != null)
+        {
+            HorizonMenuPanel.MouseWheel += (s, e) =>
+            {
+                if (HorizonMenuScrollViewer != null)
+                {
+                    HorizonMenuScrollViewer.ScrollToVerticalOffset(HorizonMenuScrollViewer.VerticalOffset - (e.Delta / 2.0));
+                    e.Handled = true;
+                }
+            };
+        }
+        if (HorizonMenuScrollViewer != null)
+        {
+            HorizonMenuScrollViewer.MouseWheel += (s, e) =>
+            {
+                HorizonMenuScrollViewer.ScrollToVerticalOffset(HorizonMenuScrollViewer.VerticalOffset - (e.Delta / 2.0));
+                e.Handled = true;
+            };
+        }
+    }
+
+    private void AttachWheelIsolation(FrameworkElement? element)
+    {
+        if (element == null) return;
+        try
+        {
+            object div = Interop.GetDiv(element);
+            if (div != null)
+            {
+                Interop.ExecuteJavaScriptVoid(@"
+                    (function(d) {
+                        if (!d || d._wheelIsolated) return;
+                        d._wheelIsolated = true;
+                        d.addEventListener('wheel', function(e) {
+                            e.stopPropagation();
+                        }, { passive: false });
+                    })($0);
+                ", div);
+            }
+        }
+        catch { }
     }
 
     private void HorizonViewControl_Loaded(object sender, RoutedEventArgs e)
     {
         UpdateTheme(ThemeManager.Current.IsDark);
         InitializeCanvas();
+        AttachWheelIsolation(HorizonMenuPanel);
     }
 
     private void HorizonViewControl_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -97,6 +140,13 @@ public partial class HorizonViewControl : UserControl
             BtnHorizonMenu.Background = tm.ButtonInactiveBackground;
             BtnHorizonMenu.BorderBrush = tm.ButtonInactiveBorder;
             BtnHorizonMenu.Foreground = tm.TextPrimary;
+        }
+
+        if (BtnResetPitch != null)
+        {
+            BtnResetPitch.Background = tm.ButtonInactiveBackground;
+            BtnResetPitch.BorderBrush = tm.ButtonInactiveBorder;
+            BtnResetPitch.Foreground = tm.TextPrimary;
         }
 
         if (HorizonMenuPanel != null)
@@ -203,21 +253,44 @@ public partial class HorizonViewControl : UserControl
         {
             if (isCompact)
             {
+                // Mobile: vertically fill the screen like the main map hamburger menu
                 HorizonMenuPanel.HorizontalAlignment = HorizontalAlignment.Stretch;
+                HorizonMenuPanel.VerticalAlignment = VerticalAlignment.Stretch;
                 HorizonMenuPanel.Width = double.NaN;
-                HorizonMenuPanel.Margin = new Thickness(10, 48, 10, 10);
-                if (ActualHeight > 0)
-                {
-                    HorizonMenuPanel.MaxHeight = Math.Max(260, ActualHeight - 60);
-                }
+                HorizonMenuPanel.Height = double.NaN;
+                HorizonMenuPanel.Margin = new Thickness(10, 10, 10, 10);
+                HorizonMenuPanel.MaxHeight = double.PositiveInfinity;
             }
             else
             {
+                // Desktop: lower right floating panel above the toolbar
                 HorizonMenuPanel.HorizontalAlignment = HorizontalAlignment.Right;
+                HorizonMenuPanel.VerticalAlignment = VerticalAlignment.Bottom;
                 HorizonMenuPanel.Width = 440;
-                HorizonMenuPanel.Margin = new Thickness(0, 48, 12, 0);
-                HorizonMenuPanel.MaxHeight = 520;
+                HorizonMenuPanel.Height = double.NaN;
+                HorizonMenuPanel.Margin = new Thickness(0, 0, 12, 54);
+                HorizonMenuPanel.MaxHeight = Math.Max(400, ActualHeight - 70);
             }
+        }
+        if (HorizonMenuScrollViewer != null)
+        {
+            HorizonMenuScrollViewer.MaxHeight = isCompact ? Math.Max(200, ActualHeight - 80) : Math.Max(350, ActualHeight - 130);
+        }
+    }
+
+    private void BtnResetPitch_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Interop.ExecuteJavaScriptVoid(@"
+                if (window.setHorizonParams) {
+                    window.setHorizonParams(null, null, 0);
+                }
+            ");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[HorizonView] Reset pitch error: {ex.Message}");
         }
     }
 

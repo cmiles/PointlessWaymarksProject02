@@ -24,3 +24,4 @@
 nuget.exe
 BuildTools/PointlessWaymarks.PublishReadmeHelper.exe
 pointless-waymarks-tools.fossil
+*PublishVersion--*.txt

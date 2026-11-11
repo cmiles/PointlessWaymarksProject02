@@ -21,18 +21,17 @@
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <!-- App Branding -->
                 <StackPanel x:Name="AppBrandingPanel" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,0">
-                    <Image x:Name="ImgAppIcon" Source="IconImage.png" Width="22" Height="22" VerticalAlignment="Center" Margin="0,0,8,0" />
                     <TextBlock x:Name="TxtAppTitle" Text="Pointed Horizons" FontSize="15" FontWeight="Bold" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- Main View Tabs (Full Screen Map is FIRST; On small screens: Aim Map is BEFORE Horizon) -->
-                <Border x:Name="TabsBorder" Grid.Column="1" BorderThickness="1" CornerRadius="16" Padding="3" VerticalAlignment="Center">
+                <Border x:Name="TabsBorder" Grid.Column="1" HorizontalAlignment="Left" BorderThickness="1" CornerRadius="16" Padding="3" VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal">
                         <!-- 1. Full Screen Map Tab (First tab) -->
                         <Button x:Name="BtnTabMap" Content="🗺️ Full Screen Map" Click="BtnTabMap_Click"
@@ -50,31 +49,43 @@
                                 FontSize="11" FontWeight="SemiBold" Visibility="Collapsed"
                                 ToolTipService.ToolTip="Observer location, direction cone, and horizon targeting map" />
 
-                        <!-- 3. Horizon Tab (On large screen: Split view; On small screen: Horizon Panorama only, after Aim Map) -->
+                        <!-- 4. Horizon Tab (On large screen: Split view; On small screen: Horizon Panorama only, after Aim Map) -->
                         <Button x:Name="BtnTabHorizon" Content="🌄 Horizon View" Click="BtnTabHorizon_Click"
                                 Style="{StaticResource PillButtonStyle}" Padding="10,4" Margin="1"
                                 FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="Ray-traced skyline horizon panorama" />
 
-                        <!-- 4. Gpx Files Tab -->
+                        <!-- 5. Gpx Files Tab -->
                         <Button x:Name="BtnTabTracks" Content="📁 Gpx Files" Click="BtnTabTracks_Click"
                                 Style="{StaticResource PillButtonStyle}" Padding="10,4" Margin="1"
                                 FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="Import, view, and manage GPX, TCX, and FIT files" />
+
+                        <!-- 6. Options Tab (Dedicated full-sized page) -->
+                        <Button x:Name="BtnTabOptions" Content="⚙️ Options" Click="BtnTabOptions_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="10,4" Margin="1"
+                                FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="Application settings, units, offline maps, theme, and updates" />
+
+                        <!-- 7. About Tab -->
+                        <Button x:Name="BtnTabAbout" Content="ℹ️ About" Click="BtnTabAbout_Click"
+                                Style="{StaticResource PillButtonStyle}" Padding="10,4" Margin="1"
+                                FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="About Pointed Horizons, packages, and author info" />
                     </StackPanel>
                 </Border>
 
                 <!-- Compact Page Navigation Selector (Small Screens) -->
-                <Border x:Name="CompactNavBorder" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed">
+                <Border x:Name="CompactNavBorder" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="6,0,8,0" Visibility="Collapsed">
                     <Button x:Name="BtnCompactNav" Content="🗺️ Full Screen Map ▾" Click="BtnCompactNav_Click"
-                            Style="{StaticResource PillButtonStyle}" Padding="10,4" Margin="2"
-                            FontSize="11" FontWeight="Bold" ToolTipService.ToolTip="Switch between Map, Aim, Horizon, and Gpx Files" />
+                            Style="{StaticResource PillButtonStyle}" Padding="12,8" Margin="0"
+                            FontSize="13.5" FontWeight="Bold" ToolTipService.ToolTip="Switch between Map, Celestial, Aim, Horizon, Gpx Files, and Options" />
                 </Border>
 
-                <!-- Right Side: Options Button (Present on ALL pages) -->
+                <!-- Right Side: GPS On/Off and Record Track Icon Buttons (Present on ALL pages) -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button x:Name="BtnOptions" Content="⚙️ Options" Click="BtnOptions_Click"
-                            Style="{StaticResource PillButtonStyle}" Padding="10,5" Margin="2"
-                            FontSize="11" FontWeight="Bold"
-                            ToolTipService.ToolTip="Application settings, units, offline maps, theme, and updates" />
+                    <Button x:Name="BtnTitleToggleGps" Content="🛰️" Click="BtnTitleToggleGps_Click"
+                            Style="{StaticResource PillButtonStyle}" Margin="0,0,8,0" Padding="12,4" MinWidth="44"
+                            FontSize="13" ToolTipService.ToolTip="Toggle GPS hardware receiver: Long press to turn on/off GPS" />
+                    <Button x:Name="BtnTitleRecordTrack" Content="⏺️" Click="BtnTitleRecordTrack_Click"
+                            Style="{StaticResource PillButtonStyle}" Margin="0" Padding="12,4" MinWidth="44"
+                            FontSize="13" ToolTipService.ToolTip="Record Track: Long press to start recording GPS track" />
                 </StackPanel>
             </Grid>
         </Border>
@@ -87,7 +98,7 @@
             </Grid>
 
             <!-- TAB 2: Sun & Moon Times Page (Dedicated page after Main Map) -->
-            <Grid x:Name="ViewCelestialTab" Visibility="Collapsed">
+            <Grid x:Name="ViewCelestialTab" Visibility="Collapsed" Background="Transparent">
                 <controls:CelestialInfoControl x:Name="CelestialPageView" />
             </Grid>
 
@@ -128,9 +139,115 @@
                 <controls:LeafletMapControl Grid.Row="2" x:Name="LeafletMap" />
             </Grid>
 
-            <!-- TAB 3: Tracks & GPX Files Manager -->
+            <!-- TAB 4: Tracks & GPX Files Manager -->
             <Grid x:Name="ViewTracksTab" Visibility="Collapsed">
                 <controls:TracksManagerControl x:Name="TracksControlView" />
+            </Grid>
+
+            <!-- TAB 5: Application Options Full-Sized Page -->
+            <Grid x:Name="ViewOptionsTab" Visibility="Collapsed" Background="Transparent">
+                <ScrollViewer x:Name="OptionsScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="Transparent">
+                    <StackPanel x:Name="OptionsPageContainer" Orientation="Vertical" HorizontalAlignment="Center" MaxWidth="680" Margin="16,20" Background="Transparent">
+                        <!-- Header Card -->
+                        <Border x:Name="OptionsHeaderCard" BorderThickness="1" CornerRadius="12" Padding="18,14" Margin="0,0,0,16">
+                            <StackPanel Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="⚙️" FontSize="22" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="TxtOptionsPageTitle" Text="Application Options" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock x:Name="TxtOptionsPageSubtitle" Text="Configure measurement units, offline mapping, appearance, search services, and updates."
+                                           FontSize="11" Opacity="0.8" Margin="0,6,0,0" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Card 1: Units -->
+                        <Border x:Name="CardOptionsUnits" BorderThickness="1" CornerRadius="12" Padding="18,14" Margin="0,0,0,14">
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock x:Name="TxtSectionUnits" Text="📏 ELEVATION &amp; DISTANCE UNITS" FontSize="11" FontWeight="Bold" Margin="0,0,0,4" />
+                                <TextBlock x:Name="TxtUnitsHelp" Text="Choose whether elevation and distances are shown in imperial (feet/miles) or metric (meters/km)."
+                                           FontSize="10.5" Opacity="0.8" Margin="0,0,0,10" TextWrapping="Wrap" />
+                                <StackPanel Orientation="Horizontal">
+                                    <Button x:Name="BtnUnitFeet" Content="Feet (ft / mi)" Click="BtnUnitFeet_Click"
+                                            Style="{StaticResource PillButtonStyle}" Padding="16,8" Margin="0,0,8,0"
+                                            FontSize="12" FontWeight="Bold" />
+                                    <Button x:Name="BtnUnitMeters" Content="Meters (m / km)" Click="BtnUnitMeters_Click"
+                                            Style="{StaticResource PillButtonStyle}" Padding="16,8"
+                                            FontSize="12" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Card 2: Offline Maps & Local DEMs -->
+                        <Border x:Name="CardOptionsOffline" BorderThickness="1" CornerRadius="12" Padding="18,14" Margin="0,0,0,14">
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock x:Name="TxtSectionOffline" Text="🗺️ OFFLINE MAPS &amp; LOCAL DEMS" FontSize="11" FontWeight="Bold" Margin="0,0,0,4" />
+                                <TextBlock x:Name="TxtOfflineHelp" Text="Manage vector PMTiles map packages, configure layer ordering and visibility, and set local DEM elevation directories."
+                                           FontSize="10.5" Opacity="0.8" Margin="0,0,0,10" TextWrapping="Wrap" />
+                                <Button x:Name="BtnOpenPmTilesConfig" Content="🗺️ Configure PMTiles &amp; DEMs..." Click="BtnOpenPmTilesConfig_Click"
+                                        Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Left"
+                                        Padding="16,8" FontSize="12" FontWeight="SemiBold"
+                                        ToolTipService.ToolTip="Configure offline PMTiles files, layer ordering, and local DEM directories" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Card 3: Appearance & Theme -->
+                        <Border x:Name="CardOptionsTheme" BorderThickness="1" CornerRadius="12" Padding="18,14" Margin="0,0,0,14">
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock x:Name="TxtSectionTheme" Text="🌓 APPEARANCE &amp; THEME" FontSize="11" FontWeight="Bold" Margin="0,0,0,4" />
+                                <TextBlock x:Name="TxtThemeHelp" Text="Switch between dark mode and light mode across all views and maps."
+                                           FontSize="10.5" Opacity="0.8" Margin="0,0,0,10" TextWrapping="Wrap" />
+                                <Button x:Name="BtnToggleAppTheme" Content="🌓 Toggle Dark / Light Theme" Click="BtnToggleAppTheme_Click"
+                                        Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Left"
+                                        Padding="16,8" FontSize="12" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Card 4: GeoNames Search API -->
+                        <Border x:Name="CardOptionsGeoNames" BorderThickness="1" CornerRadius="12" Padding="18,14" Margin="0,0,0,14">
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock x:Name="TxtSectionGeoNames" Text="🔍 GEONAMES SEARCH API" FontSize="11" FontWeight="Bold" Margin="0,0,0,4" />
+                                <TextBlock x:Name="TxtGeoNamesHelp" Text="Enter your free GeoNames.org username to enable worldwide location, landmark, and peak search across maps and horizon ray-tracing."
+                                           FontSize="10.5" Opacity="0.8" Margin="0,0,0,10" TextWrapping="Wrap" />
+                                <Grid x:Name="GridGeoNamesInput" Margin="0,0,0,6" MaxWidth="500" HorizontalAlignment="Stretch">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition x:Name="RowGeoNamesInput" Height="Auto" />
+                                        <RowDefinition x:Name="RowGeoNamesBtn" Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition x:Name="ColGeoNamesInput" Width="*" />
+                                        <ColumnDefinition x:Name="ColGeoNamesBtn" Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="TxtGeoNamesUsernameInput" Grid.Row="0" Grid.Column="0" FontSize="12" Padding="8,6" VerticalAlignment="Center" />
+                                    <Button x:Name="BtnSaveGeoNamesUsername" Grid.Row="0" Grid.Column="1" Content="Save Username" Click="BtnSaveGeoNamesUsername_Click"
+                                            Style="{StaticResource PillButtonStyle}" Margin="8,0,0,0" Padding="14,6" FontSize="11.5" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                </Grid>
+                                <TextBlock x:Name="TxtGeoNamesConfigStatus" Text="" FontSize="10.5" Margin="0,4,0,0" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Card 5: Updates -->
+                        <Border x:Name="CardOptionsUpdates" BorderThickness="1" CornerRadius="12" Padding="18,14" Margin="0,0,0,24">
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock x:Name="TxtSectionUpdates" Text="🚀 APPLICATION UPDATES" FontSize="11" FontWeight="Bold" Margin="0,0,0,4" />
+                                <TextBlock x:Name="TxtUpdatesHelp" Text="Check for new software releases and automatically install package updates."
+                                           FontSize="10.5" Opacity="0.8" Margin="0,0,0,10" TextWrapping="Wrap" />
+                                <Button x:Name="BtnCheckUpdates" Content="🚀 Check for Updates..." Click="BtnUpdates_Click"
+                                        Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Left"
+                                        Padding="16,8" FontSize="12" FontWeight="SemiBold"
+                                        ToolTipService.ToolTip="Check online catalog for software updates" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- TAB 6: About Page (Dedicated full-sized page) -->
+            <Grid x:Name="ViewAboutTab" Visibility="Collapsed" Background="Transparent">
+                <ScrollViewer x:Name="AboutScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="Transparent">
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Center" MaxWidth="720" Margin="16,20" Background="Transparent">
+                        <controls:AboutControl x:Name="AboutPageView" />
+                    </StackPanel>
+                </ScrollViewer>
             </Grid>
         </Grid>
 
@@ -170,89 +287,13 @@
                 <Button x:Name="BtnNavPageTracks" Content="📁 Gpx Files" Click="BtnNavPageTracks_Click"
                         Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                         Padding="10,7" Margin="0,2" FontSize="11" FontWeight="SemiBold" />
+                <Button x:Name="BtnNavPageOptions" Content="⚙️ Options" Click="BtnNavPageOptions_Click"
+                        Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                        Padding="10,7" Margin="0,2" FontSize="11" FontWeight="SemiBold" />
+                <Button x:Name="BtnNavPageAbout" Content="ℹ️ About" Click="BtnNavPageAbout_Click"
+                        Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                        Padding="10,7" Margin="0,2" FontSize="11" FontWeight="SemiBold" />
             </StackPanel>
-        </Border>
-
-        <!-- Options & Presets Hamburger Dropdown / Modal Overlay (Present on ALL pages) -->
-        <Border x:Name="OptionsBackdrop" Grid.Row="0" Grid.RowSpan="2" Background="#40000000"
-                HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Visibility="Collapsed"
-                MouseLeftButtonDown="BtnCloseOptions_Click" />
-
-        <Border x:Name="OptionsPanel" Grid.Row="0" Grid.RowSpan="2" HorizontalAlignment="Right" VerticalAlignment="Top"
-                Margin="0,52,14,0" Width="310" MaxHeight="600" Visibility="Collapsed"
-                BorderThickness="1" CornerRadius="12" Padding="14,12">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <StackPanel Orientation="Vertical">
-                    <!-- Header -->
-                    <Grid Margin="0,0,0,10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock x:Name="TxtOptionsTitle" Text="⚙️ Application Options" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" />
-                        <Button x:Name="BtnCloseOptions" Grid.Column="1" Content="✕" Click="BtnCloseOptions_Click"
-                                Style="{StaticResource PillButtonStyle}" Padding="6,2" FontSize="11" />
-                    </Grid>
-
-                    <Border x:Name="OptionsDivider0" Height="1" Margin="0,0,0,10" />
-
-
-
-                    <!-- 1. Elevation & Distance Units (Feet by default) -->
-                    <TextBlock x:Name="TxtSectionUnits" Text="ELEVATION &amp; DISTANCE UNITS" FontSize="10" FontWeight="Bold" Margin="0,0,0,6" />
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <Button x:Name="BtnUnitFeet" Content="Feet (ft / mi)" Click="BtnUnitFeet_Click"
-                                Style="{StaticResource PillButtonStyle}" Padding="12,5" Margin="0,0,6,0"
-                                FontSize="11" FontWeight="Bold" />
-                        <Button x:Name="BtnUnitMeters" Content="Meters (m / km)" Click="BtnUnitMeters_Click"
-                                Style="{StaticResource PillButtonStyle}" Padding="12,5"
-                                FontSize="11" FontWeight="SemiBold" />
-                    </StackPanel>
-
-                    <Border x:Name="OptionsDivider1" Height="1" Margin="0,0,0,10" />
-
-                    <!-- 2. Offline PMTiles & DEM Storage -->
-                    <TextBlock x:Name="TxtSectionOffline" Text="OFFLINE MAPS &amp; LOCAL DEMS" FontSize="10" FontWeight="Bold" Margin="0,0,0,6" />
-                    <Button x:Name="BtnOpenPmTilesConfig" Content="🗺️ Configure PMTiles &amp; DEMs..." Click="BtnOpenPmTilesConfig_Click"
-                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
-                            Padding="8,5" Margin="0,0,0,10" FontSize="11" FontWeight="SemiBold"
-                            ToolTipService.ToolTip="Configure offline PMTiles files, layer ordering, and local DEM directories" />
-
-                    <Border x:Name="OptionsDivider2" Height="1" Margin="0,0,0,10" />
-
-                    <!-- 3. Appearance & Theme -->
-                    <TextBlock x:Name="TxtSectionTheme" Text="APPEARANCE" FontSize="10" FontWeight="Bold" Margin="0,0,0,6" />
-                    <Button x:Name="BtnToggleAppTheme" Content="🌓 Toggle Dark / Light Theme" Click="BtnToggleAppTheme_Click"
-                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
-                            Padding="8,5" FontSize="11" FontWeight="SemiBold" />
-
-                    <Border x:Name="OptionsDivider3" Height="1" Margin="0,10,0,10" />
-
-                    <!-- 4. GeoNames API Configuration -->
-                    <TextBlock x:Name="TxtSectionGeoNames" Text="GEONAMES SEARCH API" FontSize="10" FontWeight="Bold" Margin="0,0,0,6" />
-                    <TextBlock x:Name="TxtGeoNamesHelp" Text="Enter your free geonames.org username to enable location &amp; peak search:"
-                               FontSize="10" Margin="0,0,0,4" TextWrapping="Wrap" />
-                    <Grid Margin="0,0,0,4">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBox x:Name="TxtGeoNamesUsernameInput" Grid.Column="0" FontSize="11" Padding="6,4" VerticalAlignment="Center" />
-                        <Button x:Name="BtnSaveGeoNamesUsername" Grid.Column="1" Content="Save" Click="BtnSaveGeoNamesUsername_Click"
-                                Style="{StaticResource PillButtonStyle}" Margin="4,0,0,0" Padding="10,4" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" />
-                    </Grid>
-                    <TextBlock x:Name="TxtGeoNamesConfigStatus" Text="" FontSize="9.5" Margin="0,0,0,10" TextWrapping="Wrap" />
-
-                    <Border x:Name="OptionsDivider4" Height="1" Margin="0,0,0,10" />
-
-                    <!-- 5. Updates -->
-                    <TextBlock x:Name="TxtSectionUpdates" Text="UPDATES" FontSize="10" FontWeight="Bold" Margin="0,0,0,6" />
-                    <Button x:Name="BtnCheckUpdates" Content="🚀 Check for Updates..." Click="BtnUpdates_Click"
-                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
-                            Padding="8,5" FontSize="11" FontWeight="SemiBold"
-                            ToolTipService.ToolTip="Check online catalog for software updates" />
-                </StackPanel>
-            </ScrollViewer>
         </Border>
 
         <!-- PMTiles Configuration Pop-up Modal Dialog Overlay -->
@@ -281,5 +322,19 @@
             <!-- Centered Update Modal Control -->
             <controls:AppUpdateWindowControl HorizontalAlignment="Center" VerticalAlignment="Center" Margin="16" />
         </Grid>
+
+        <!-- On-Screen Notification Toast Overlay (Record Track long-press prompt & status confirmations) -->
+        <Border x:Name="TrackActionToast" Canvas.ZIndex="999" Grid.Row="0" Grid.RowSpan="2"
+                HorizontalAlignment="Center" VerticalAlignment="Top"
+                Margin="0,58,0,0"
+                Background="#EE1E293B" BorderBrush="#FF475569" BorderThickness="1"
+                CornerRadius="20" Padding="14,8"
+                Visibility="Collapsed" IsHitTestVisible="False">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock x:Name="TxtTrackActionToastIcon" Text="ℹ️" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center" />
+                <TextBlock x:Name="TxtTrackActionToast" Text="Long press to start recording"
+                           FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFFFF" VerticalAlignment="Center" TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
     </Grid>
 </Page>

@@ -26,26 +26,34 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Text="📁" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                        <TextBlock x:Name="TxtHeaderTitle" Text="Gpx Files (GPX, TCX, FIT)" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="TxtHeaderTitle" Text="Gpx Files (GPX, TCX, FIT)" FontSize="13.5" FontWeight="Bold" VerticalAlignment="Center" TextWrapping="Wrap"/>
                     </StackPanel>
-                    <Button x:Name="BtnRescan" Grid.Column="1" Content="🔄 Rescan Folder" Click="BtnRescan_Click"
-                            Style="{StaticResource PillButtonStyle}" Padding="10,5" FontSize="11" FontWeight="SemiBold"
+                    <Button x:Name="BtnRescan" Grid.Column="1" Content="🔄 Rescan" Click="BtnRescan_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="8,5" FontSize="10.5" FontWeight="SemiBold"
                             ToolTipService.ToolTip="Rescan folder for new or modified track files" />
                 </Grid>
 
                 <!-- Folder row -->
                 <TextBlock x:Name="TxtFolderLabel" Text="Gpx Folder (.gpx, .tcx, .fit):" FontSize="10.5" FontWeight="SemiBold" Margin="0,0,0,3" />
-                <Grid Margin="0,0,0,4">
+                <Grid x:Name="FolderInputGrid" Margin="0,0,0,4">
+                    <Grid.RowDefinitions>
+                        <RowDefinition x:Name="RowFolderInput" Height="Auto" />
+                        <RowDefinition x:Name="RowFolderButtons" Height="Auto" />
+                    </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition x:Name="ColFolderInput" Width="*" />
+                        <ColumnDefinition x:Name="ColFolderChoose" Width="Auto" />
+                        <ColumnDefinition x:Name="ColFolderApply" Width="Auto" />
+                        <ColumnDefinition x:Name="ColFolderDefault" Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBox x:Name="TxtGpxFolder" Grid.Column="0" FontSize="11" Padding="6,4" VerticalAlignment="Center" />
-                    <Button x:Name="BtnApplyFolder" Grid.Column="1" Content="Apply" Click="BtnApplyFolder_Click"
+                    <TextBox x:Name="TxtGpxFolder" Grid.Row="0" Grid.Column="0" FontSize="11" Padding="6,4" VerticalAlignment="Center" />
+                    <Button x:Name="BtnBrowseFolder" Grid.Row="0" Grid.Column="1" Content="📁 Choose..." Click="BtnBrowseFolder_Click"
                             Style="{StaticResource PillButtonStyle}" Margin="6,0,0,0" Padding="8,4" FontSize="10.5" FontWeight="SemiBold"
+                            ToolTipService.ToolTip="Browse and select GPX folder from folder chooser" />
+                    <Button x:Name="BtnApplyFolder" Grid.Row="0" Grid.Column="2" Content="Apply" Click="BtnApplyFolder_Click"
+                            Style="{StaticResource PillButtonStyle}" Margin="4,0,0,0" Padding="8,4" FontSize="10.5" FontWeight="SemiBold"
                             ToolTipService.ToolTip="Apply and save this folder" />
-                    <Button x:Name="BtnResetFolder" Grid.Column="2" Content="Default" Click="BtnResetFolder_Click"
+                    <Button x:Name="BtnResetFolder" Grid.Row="0" Grid.Column="3" Content="Default" Click="BtnResetFolder_Click"
                             Style="{StaticResource PillButtonStyle}" Margin="4,0,0,0" Padding="8,4" FontSize="10.5" FontWeight="SemiBold"
                             ToolTipService.ToolTip="Reset to default PointedHorizons folder" />
                 </Grid>
@@ -57,37 +65,50 @@
 
         <!-- TOOLBAR: Stats, Filters, and Bulk Toggle -->
         <Border x:Name="ToolbarCard" Grid.Row="1" BorderThickness="1" CornerRadius="10" Padding="12,8" Margin="0,0,0,10">
-            <Grid>
+            <Grid x:Name="ToolbarGrid">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition x:Name="RowToolbarMobileStats" Height="Auto" />
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition x:Name="ColToolbarLeft" Width="*" />
+                    <ColumnDefinition x:Name="ColToolbarRight" Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Search / Filter Box & Stats -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <!-- Search / Filter Box & Desktop Stats -->
+                <Grid Grid.Row="0" Grid.Column="0" VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition x:Name="ColStatsInSearch" Width="Auto" />
+                    </Grid.ColumnDefinitions>
                     <TextBlock Text="🔍" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center" />
-                    <TextBox x:Name="TxtSearchFilter" Width="200" Padding="6,3" FontSize="11"
+                    <TextBox x:Name="TxtSearchFilter" Grid.Column="1" Padding="6,3" FontSize="11"
                              TextChanged="TxtSearchFilter_TextChanged" ToolTipService.ToolTip="Filter by track or file name" />
-                    <TextBlock x:Name="TxtStatsSummary" Text="Loading tracks..." FontSize="11" FontWeight="SemiBold"
-                               Margin="12,0,0,0" VerticalAlignment="Center" />
-                </StackPanel>
+                    <TextBlock x:Name="TxtStatsSummary" Grid.Column="2" Text="Loading tracks..." FontSize="10.5" FontWeight="SemiBold"
+                               Margin="12,0,0,0" VerticalAlignment="Center" TextWrapping="Wrap" />
+                </Grid>
 
                 <!-- Show All / Hide All Buttons -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <StackPanel x:Name="PanelBulkButtons" Grid.Row="0" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0,0,0">
                     <Button x:Name="BtnShowAll" Content="☑️ Show All" Click="BtnShowAll_Click"
-                            Style="{StaticResource PillButtonStyle}" Padding="8,4" Margin="0,0,6,0" FontSize="10.5" FontWeight="SemiBold"
+                            Style="{StaticResource PillButtonStyle}" Padding="8,4" Margin="0,0,4,0" FontSize="10.5" FontWeight="SemiBold"
                             ToolTipService.ToolTip="Show all tracks on the map" />
                     <Button x:Name="BtnHideAll" Content="⬜ Hide All" Click="BtnHideAll_Click"
                             Style="{StaticResource PillButtonStyle}" Padding="8,4" FontSize="10.5" FontWeight="SemiBold"
                             ToolTipService.ToolTip="Hide all tracks from the map" />
                 </StackPanel>
+
+                <!-- Mobile / Small Screen Stats Row -->
+                <TextBlock x:Name="TxtStatsSummaryMobile" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="Loading tracks..."
+                           FontSize="10" FontWeight="SemiBold" Margin="0,6,0,0" TextWrapping="Wrap" Visibility="Collapsed" />
             </Grid>
         </Border>
 
         <!-- MAIN LIST: ScrollViewer with Track Cards -->
         <Border x:Name="ListContainerBorder" Grid.Row="2" BorderThickness="1" CornerRadius="10" Padding="6">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <StackPanel x:Name="TracksListPanel" Orientation="Vertical">
+            <ScrollViewer x:Name="TracksScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="Transparent">
+                <StackPanel x:Name="TracksListPanel" Orientation="Vertical" Background="Transparent">
                     <TextBlock x:Name="TxtEmptyState" Text="No GPX, TCX, or FIT track files found in this folder."
                                FontSize="12" Margin="14,30" HorizontalAlignment="Center" TextAlignment="Center" />
                 </StackPanel>

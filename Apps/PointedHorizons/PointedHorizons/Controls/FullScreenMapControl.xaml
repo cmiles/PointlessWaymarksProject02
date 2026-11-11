@@ -12,7 +12,7 @@
 
         <!-- Top-Left Floating Controls: Coordinates Badge -->
         <Border x:Name="CoordsBadgeBorder" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="64,14,0,0"
-                BorderThickness="1" CornerRadius="8" Padding="12,6">
+                BorderThickness="1" CornerRadius="8" Padding="12,6" Opacity="0.88">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock x:Name="TxtPointerCoords" Text="📍 32.2226°, -110.9747°" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
                 <Border x:Name="BadgeDividerElev" Width="1" Margin="8,2" Height="14" VerticalAlignment="Center"/>
@@ -26,39 +26,39 @@
         <Button x:Name="BtnHamburger" Content="☰" Click="BtnHamburger_Click"
                 HorizontalAlignment="Left" VerticalAlignment="Top" Margin="14,14,0,0"
                 Style="{StaticResource PillButtonStyle}"
-                Padding="10,6"
+                Padding="10,6" Opacity="0.88"
                 FontSize="16" FontWeight="Bold"
                 ToolTipService.ToolTip="Open Map &amp; GPS Tools Menu" />
 
-        <!-- Top-Right Floating Controls: Route Builder, Current Location, Track Location, 3D & Reset Buttons -->
+        <!-- Top-Right Floating Controls: Current Location, Track Location, Route Builder, 3D & Reset Buttons -->
         <StackPanel x:Name="TopRightControlsPanel" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,14,0">
-            <Button x:Name="BtnDrawRoute" Content="✏️ Draw Route" Click="BtnDrawRoute_Click"
-                    Style="{StaticResource PillButtonStyle}"
-                    Padding="12,6" Margin="0,0,8,0"
-                    FontSize="11" FontWeight="SemiBold"
-                    ToolTipService.ToolTip="Draw a custom hiking route with automatic trail snapping" />
-
             <Button x:Name="BtnCurrentLocation" Content="📍 Current Location" Click="BtnCurrentLocation_Click"
                     Style="{StaticResource PillButtonStyle}"
-                    Padding="12,6" Margin="0,0,8,0"
+                    Padding="12,6" Margin="0,0,8,0" Opacity="0.88"
                     FontSize="11" FontWeight="SemiBold"
                     ToolTipService.ToolTip="Center on current GPS position and move pointer (if not tracking)" />
 
             <Button x:Name="BtnMapTrackLocation" Content="🎯" Click="BtnMapTrackLocation_Click"
                     Style="{StaticResource PillButtonStyle}"
-                    Padding="10,6" Margin="0,0,8,0"
+                    Padding="10,6" Margin="0,0,8,0" Opacity="0.88"
                     FontSize="14" FontWeight="Bold"
                     ToolTipService.ToolTip="Toggle Track Location: keep map centered on your moving GPS location" />
 
+            <Button x:Name="BtnDrawRoute" Content="✏️ Draw Route" Click="BtnDrawRoute_Click"
+                    Style="{StaticResource PillButtonStyle}"
+                    Padding="12,6" Margin="0,0,8,0" Opacity="0.88"
+                    FontSize="11" FontWeight="SemiBold"
+                    ToolTipService.ToolTip="Draw a custom hiking route with automatic trail snapping" />
+
             <Button x:Name="BtnToggle3d" Content="🏔️ 3D" Click="BtnToggle3d_Click"
                     Style="{StaticResource PillButtonStyle}"
-                    Padding="12,6" Margin="0,0,8,0"
+                    Padding="12,6" Margin="0,0,8,0" Opacity="0.88"
                     FontSize="11" FontWeight="SemiBold"
                     ToolTipService.ToolTip="Toggle 3D terrain perspective view (right-click / Ctrl-drag to orbit)" />
 
             <Button x:Name="BtnResetView" Content="↺ Reset" Click="BtnResetView_Click"
                     Style="{StaticResource PillButtonStyle}"
-                    Padding="10,6"
+                    Padding="10,6" Opacity="0.88"
                     FontSize="11" FontWeight="SemiBold"
                     ToolTipService.ToolTip="Reset camera to flat top-down 2D view and recover if stuck" />
         </StackPanel>
@@ -117,13 +117,27 @@
 
         <!-- Crash Recovery Notification Banner -->
         <Border x:Name="CrashRecoveryNotice" HorizontalAlignment="Center" VerticalAlignment="Top"
-                Margin="0,14,0,0" CornerRadius="8" BorderThickness="1" Padding="12,6" Visibility="Collapsed">
+                Margin="0,14,0,0" CornerRadius="8" BorderThickness="1" Padding="12,6" Visibility="Collapsed" Opacity="0.92">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock x:Name="TxtRecoveryMsg" Text="⚠️ Restored unfinished track from previous session" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
                 <Button x:Name="BtnViewRecoveredTrack" Content="View Tracks" Click="BtnOpenTracksList_Click"
                         Style="{StaticResource PillButtonStyle}" Margin="8,0,0,0" Padding="8,2" FontSize="10" FontWeight="SemiBold"/>
                 <Button x:Name="BtnDismissRecovery" Content="✕" Click="BtnDismissRecovery_Click"
                         Style="{StaticResource PillButtonStyle}" Margin="6,0,0,0" Padding="6,2" FontSize="10"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Live Track Recording Floating Bar (along the bottom of the map) -->
+        <Border x:Name="LiveRecordingBar" HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                Margin="0,0,0,16" CornerRadius="22" BorderThickness="1" Padding="14,8"
+                Visibility="Collapsed" Cursor="Hand" MouseLeftButtonDown="LiveRecordingBar_Click"
+                Opacity="0.90" ToolTipService.ToolTip="Recording Live Track - Click to view track details and elevation profile">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="🔴" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center" />
+                <TextBlock x:Name="TxtLiveRecordingTime" Text="00:00" FontSize="12.5" FontWeight="Bold" VerticalAlignment="Center" />
+                <Border x:Name="LiveRecDivider" Width="1" Margin="8,2" Height="14" VerticalAlignment="Center" />
+                <TextBlock x:Name="TxtLiveRecordingDist" Text="0.00 mi" FontSize="12.5" FontWeight="Bold" VerticalAlignment="Center" />
+                <TextBlock x:Name="TxtLiveRecInfoIcon" Text=" • ℹ️" FontSize="11" Margin="6,0,0,0" Opacity="0.85" VerticalAlignment="Center" />
             </StackPanel>
         </Border>
 
@@ -149,8 +163,8 @@
                 </Grid>
 
                 <!-- Second Row: Scrollable Menu Body -->
-                <ScrollViewer x:Name="HamburgerScrollViewer" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="480">
-                    <StackPanel Orientation="Vertical">
+                <ScrollViewer x:Name="HamburgerScrollViewer" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="480" Background="Transparent">
+                    <StackPanel Orientation="Vertical" Background="Transparent">
 
                     <!-- Base Map Layer Switcher (Top of Hamburger) -->
                     <TextBlock x:Name="TxtSectionLayer" Text="BASE MAP LAYER" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
@@ -353,8 +367,8 @@
                 <Border x:Name="TracksDivider" Grid.Row="1" Height="1" Margin="0,0,0,10" />
 
                 <!-- Tracks List ScrollViewer -->
-                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="420">
-                    <StackPanel x:Name="TracksListContainer" Orientation="Vertical">
+                <ScrollViewer x:Name="TracksOverlayScrollViewer" Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="420" Background="Transparent">
+                    <StackPanel x:Name="TracksListContainer" Orientation="Vertical" Background="Transparent">
                         <TextBlock x:Name="TxtNoTracks" Text="No recorded tracks yet. Start recording a track using the menu."
                                    FontSize="11" TextWrapping="Wrap" Margin="8,20" HorizontalAlignment="Center" />
                     </StackPanel>

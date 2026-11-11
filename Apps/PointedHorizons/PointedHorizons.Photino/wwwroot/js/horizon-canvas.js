@@ -211,39 +211,6 @@
         tiltContainer.appendChild(btnTiltDown);
         uiOverlay.appendChild(tiltContainer);
 
-        // 3. Reset Pitch Button (Bottom Right)
-        const btnTarget = document.createElement('button');
-        btnTarget.style.position = 'absolute';
-        btnTarget.style.bottom = '16px';
-        btnTarget.style.right = '20px';
-        btnTarget.style.width = '38px';
-        btnTarget.style.height = '38px';
-        btnTarget.style.borderRadius = '50%';
-        btnTarget.style.backgroundColor = isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.96)';
-        btnTarget.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.12)';
-        btnTarget.style.border = isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.08)';
-        btnTarget.style.display = 'flex';
-        btnTarget.style.alignItems = 'center';
-        btnTarget.style.justifyContent = 'center';
-        btnTarget.style.cursor = 'pointer';
-        btnTarget.style.pointerEvents = 'auto';
-        btnTarget.style.color = isDark ? '#E2E8F0' : '#334155';
-        btnTarget.innerHTML = `
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="22" y1="12" x2="18" y2="12"></line>
-                <line x1="6" y1="12" x2="2" y2="12"></line>
-                <line x1="12" y1="6" x2="12" y2="2"></line>
-                <line x1="12" y1="22" x2="12" y2="18"></line>
-            </svg>
-        `;
-        btnTarget.title = 'Reset Pitch to Level';
-        btnTarget.addEventListener('click', () => {
-            verticalTiltDeg = 0;
-            render();
-        });
-        uiOverlay.appendChild(btnTarget);
-
         function render() {
             try {
                 const rect = container.getBoundingClientRect();

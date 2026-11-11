@@ -156,6 +156,7 @@ public static class GeolocationService
 
         Action<double, double, object?, object?, object?> onCoords = (lat, lon, altObj, accObj, headObj) =>
         {
+            if (!_isTracking) return;
             double? alt = altObj is double dAlt ? dAlt : (double.TryParse(altObj?.ToString(), out var pa) ? pa : null);
             double? acc = accObj is double dAcc ? dAcc : (double.TryParse(accObj?.ToString(), out var pac) ? pac : null);
             double? heading = headObj is double dHead ? dHead : (double.TryParse(headObj?.ToString(), out var ph) ? ph : null);
@@ -164,6 +165,7 @@ public static class GeolocationService
 
         Action<string> onErr = (msg) =>
         {
+            if (!_isTracking) return;
             Debug.WriteLine($"[GeolocationService] Watch error: {msg}");
             onError?.Invoke(msg);
         };
@@ -171,6 +173,7 @@ public static class GeolocationService
         // Wire native background service callback
         BackgroundLocationBridge.NativePositionReceived = (pos) =>
         {
+            if (!_isTracking) return;
             onUpdate(pos);
         };
 

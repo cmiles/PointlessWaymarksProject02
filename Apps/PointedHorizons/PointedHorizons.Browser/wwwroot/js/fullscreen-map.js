@@ -13,13 +13,27 @@
     let currentPointerLat = 32.2226;
     let currentPointerLon = -110.9747;
     let isLiveTracking = false;
-    let recordedPoints = []; // Array of [lon, lat]
+    let isGpsActive = false;
+    let isRecordingActive = false;
+    let recordedPoints = []; // Array of [lon, lat, ele]
     let allImportedTracks = []; // Array of { id, name, color, isVisible, minLon, maxLon, minLat, maxLat, coordinates }
     let activeTerrainSourceId = null;
+
+    // Reset to North state & GPS auto-center coordination
+    let isResettingNorth = false;
+    let pendingAutoCenterCoords = null;
+    let resetNorthTimeoutId = null;
+    let activeResetNorthCompleteCb = null;
 
     let onPointerMovedCb = null;
     let onTrackClickedCb = null;
     let onEditWaypointCb = null;
+
+    let currentSelectedBaseLayer = 'topo';
+    try {
+        const _saved = localStorage.getItem('pointedhorizons_last_map_layer');
+        if (_saved) currentSelectedBaseLayer = _saved;
+    } catch (e) { }
 
     // Elevation Profile Card & Interactive Scrubbing State
     let isMetricUnits = false;
@@ -82,11 +96,19 @@
         el.style.pointerEvents = 'none';
         el.innerHTML = `
             <div style="position: relative; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
-                <div style="position: absolute; top: 0; left: 0; width: 32px; height: 32px; border-radius: 50%; background: rgba(14, 165, 233, 0.35); animation: ph-pulse 2s infinite ease-out;"></div>
-                <div class="ph-live-triangle" style="position: relative; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; transform-origin: 50% 50%;">
+                <!-- Live GPS Pulse Ring (Active only when GPS is ON) -->
+                <div class="ph-live-pulse" style="position: absolute; top: 0; left: 0; width: 32px; height: 32px; border-radius: 50%; background: rgba(14, 165, 233, 0.4); animation: ph-pulse 2s infinite ease-out; display: none;"></div>
+
+                <!-- Live GPS Bearing / Direction Triangle (Active only when GPS is ON) -->
+                <div class="ph-live-triangle" style="position: relative; width: 24px; height: 24px; display: none; align-items: center; justify-content: center; transform-origin: 50% 50%;">
                     <svg viewBox="0 0 24 24" width="24" height="24" style="display: block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
                         <path d="M12 2 L21 21 L12 17 L3 21 Z" fill="#0284C7" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round"/>
                     </svg>
+                </div>
+
+                <!-- Static Location Dot (Active only when GPS is OFF) -->
+                <div class="ph-static-dot" style="position: relative; width: 18px; height: 18px; border-radius: 50%; background: #0284C7; border: 2.5px solid #FFFFFF; box-shadow: 0 2px 5px rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center;">
+                    <div style="width: 6px; height: 6px; border-radius: 50%; background: #FFFFFF; opacity: 0.9;"></div>
                 </div>
             </div>
             <style>
@@ -97,6 +119,26 @@
             </style>
         `;
         return el;
+    }
+
+    function updateLocationMarkerMode() {
+        if (!liveMarker) return;
+        const el = liveMarker.getElement();
+        if (!el) return;
+
+        const pulseEl = el.querySelector('.ph-live-pulse');
+        const triEl = el.querySelector('.ph-live-triangle');
+        const staticEl = el.querySelector('.ph-static-dot');
+
+        if (isGpsActive) {
+            if (pulseEl) pulseEl.style.display = 'block';
+            if (triEl) triEl.style.display = 'flex';
+            if (staticEl) staticEl.style.display = 'none';
+        } else {
+            if (pulseEl) pulseEl.style.display = 'none';
+            if (triEl) triEl.style.display = 'none';
+            if (staticEl) staticEl.style.display = 'flex';
+        }
     }
 
     function createWaypointMarkerElement(index, isStart, isEnd) {
@@ -138,6 +180,157 @@
         return [coords];
     }
 
+    function cancelResetNorth() {
+        isResettingNorth = false;
+        pendingAutoCenterCoords = null;
+        if (resetNorthTimeoutId) {
+            clearTimeout(resetNorthTimeoutId);
+            resetNorthTimeoutId = null;
+        }
+        if (activeResetNorthCompleteCb && map) {
+            try {
+                map.off('moveend', activeResetNorthCompleteCb);
+                map.off('rotateend', activeResetNorthCompleteCb);
+            } catch (e) { }
+            activeResetNorthCompleteCb = null;
+        }
+    }
+
+    function performResetNorth(options, eventData, resetPitch) {
+        if (!map) return;
+
+        cancelResetNorth();
+
+        const currentBearing = map.getBearing();
+        const currentPitch = map.getPitch();
+
+        // Check if bearing is already at North (and pitch flat if requested)
+        const needsBearingReset = Math.abs(currentBearing) > 0.05;
+        const needsPitchReset = resetPitch && Math.abs(currentPitch) > 0.05;
+
+        if (!needsBearingReset && !needsPitchReset) {
+            try {
+                if (map.getBearing() !== 0) map.setBearing(0);
+                if (resetPitch && map.getPitch() !== 0) map.setPitch(0);
+            } catch (e) { }
+            isResettingNorth = false;
+            pendingAutoCenterCoords = null;
+            return map;
+        }
+
+        isResettingNorth = true;
+
+        const duration = (options && typeof options.duration === 'number') ? options.duration : 800;
+
+        let hasCompleted = false;
+        const onComplete = () => {
+            if (hasCompleted) return;
+            hasCompleted = true;
+
+            if (resetNorthTimeoutId) {
+                clearTimeout(resetNorthTimeoutId);
+                resetNorthTimeoutId = null;
+            }
+
+            try {
+                map.off('moveend', onComplete);
+                map.off('rotateend', onComplete);
+            } catch (e) { }
+            activeResetNorthCompleteCb = null;
+
+            // Ensure exact 0 alignment
+            try {
+                if (Math.abs(map.getBearing()) > 0.001) {
+                    map.setBearing(0);
+                }
+                if (resetPitch && Math.abs(map.getPitch()) > 0.001) {
+                    map.setPitch(0);
+                }
+            } catch (e) { }
+
+            isResettingNorth = false;
+
+            // If a GPS auto-center update arrived during rotation, ease to it now that we are upright facing North
+            if (pendingAutoCenterCoords && isLiveTracking && isGpsActive) {
+                const coords = pendingAutoCenterCoords;
+                pendingAutoCenterCoords = null;
+                try {
+                    map.easeTo({
+                        center: coords,
+                        duration: 500
+                    });
+                } catch (e) { }
+            } else {
+                pendingAutoCenterCoords = null;
+            }
+        };
+
+        activeResetNorthCompleteCb = onComplete;
+        map.once('rotateend', onComplete);
+        map.once('moveend', onComplete);
+
+        // Fallback safety timeout (duration + 300ms) to guarantee completion even if events are suppressed
+        resetNorthTimeoutId = setTimeout(onComplete, duration + 300);
+
+        const easeOpts = Object.assign({
+            bearing: 0,
+            duration: duration,
+            essential: true
+        }, options);
+
+        if (resetPitch) {
+            easeOpts.pitch = 0;
+        }
+
+        try {
+            map.easeTo(easeOpts, eventData);
+        } catch (e) {
+            onComplete();
+        }
+        return map;
+    }
+
+    function setupResetToNorthHandler() {
+        if (!map) return;
+
+        // Override map instance reset methods so any internal MapLibre or programmatic invocation uses our protected handler
+        map.resetNorth = function (options, eventData) {
+            performResetNorth(options, eventData, false);
+            return map;
+        };
+
+        map.resetNorthPitch = function (options, eventData) {
+            performResetNorth(options, eventData, true);
+            return map;
+        };
+
+        // Also intercept direct DOM clicks on the compass button at the capture phase
+        const attachCompassClickListener = () => {
+            const container = map.getContainer ? map.getContainer() : mapContainerElement;
+            if (container) {
+                const compassBtn = container.querySelector('.maplibregl-ctrl-compass');
+                if (compassBtn && !compassBtn._phResetNorthHooked) {
+                    compassBtn._phResetNorthHooked = true;
+                    compassBtn.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        performResetNorth({ duration: 800 }, { originalEvent: e }, true);
+                    }, { capture: true });
+                }
+            }
+        };
+
+        attachCompassClickListener();
+        map.on('load', attachCompassClickListener);
+
+        // If the user manually drags the map with mouse or touches screen, cancel the reset lock
+        map.on('dragstart', function (e) {
+            if (e && e.originalEvent && isResettingNorth) {
+                cancelResetNorth();
+            }
+        });
+    }
+
     window.fullScreenMap.init = function (container, options, onPointerMoved, onTrackClicked, onEditWaypoint) {
         if (typeof container === 'string') {
             container = document.getElementById(container);
@@ -147,9 +340,13 @@
         registerPmtiles();
 
         options = options || {};
+        if (options.baseLayer) {
+            currentSelectedBaseLayer = options.baseLayer;
+            try { localStorage.setItem('pointedhorizons_last_map_layer', currentSelectedBaseLayer); } catch (e) { }
+        }
         currentPointerLat = options.lat != null ? options.lat : 32.2226;
         currentPointerLon = options.lon != null ? options.lon : -110.9747;
-        const initialZoom = options.zoom != null ? options.zoom : 12;
+        const initialZoom = options.zoom != null ? options.zoom : 13;
         onPointerMovedCb = onPointerMoved;
         if (onTrackClicked) onTrackClickedCb = onTrackClicked;
         if (onEditWaypoint) onEditWaypointCb = onEditWaypoint;
@@ -164,6 +361,24 @@
         if (map) {
             try { map.remove(); } catch (e) { }
             map = null;
+        }
+
+        function isBaseLayerVisible(id) {
+            if (currentSelectedBaseLayer === 'streets' || currentSelectedBaseLayer === 'osm') {
+                return id === 'osm-layer';
+            } else if (currentSelectedBaseLayer === 'satellite') {
+                return id === 'satellite-layer';
+            } else if (currentSelectedBaseLayer === 'quads') {
+                return id === 'quads-layer';
+            } else if (currentSelectedBaseLayer === 'opentopo') {
+                return id === 'opentopo-layer';
+            } else if (currentSelectedBaseLayer === 'hybrid') {
+                return id === 'satellite-layer' || id === 'hybrid-reference-layer';
+            } else if (currentSelectedBaseLayer === 'pmtiles') {
+                return false;
+            } else {
+                return id === 'topo-layer';
+            }
         }
 
         const style = {
@@ -285,42 +500,42 @@
                     id: "topo-layer",
                     type: "raster",
                     source: "topo-source",
-                    layout: { visibility: "visible" },
+                    layout: { visibility: isBaseLayerVisible("topo-layer") ? "visible" : "none" },
                     paint: { "raster-opacity": 1.0 }
                 },
                 {
                     id: "osm-layer",
                     type: "raster",
                     source: "osm-source",
-                    layout: { visibility: "none" },
+                    layout: { visibility: isBaseLayerVisible("osm-layer") ? "visible" : "none" },
                     paint: { "raster-opacity": 1.0 }
                 },
                 {
                     id: "satellite-layer",
                     type: "raster",
                     source: "satellite-source",
-                    layout: { visibility: "none" },
+                    layout: { visibility: isBaseLayerVisible("satellite-layer") ? "visible" : "none" },
                     paint: { "raster-opacity": 1.0 }
                 },
                 {
                     id: "quads-layer",
                     type: "raster",
                     source: "quads-source",
-                    layout: { visibility: "none" },
+                    layout: { visibility: isBaseLayerVisible("quads-layer") ? "visible" : "none" },
                     paint: { "raster-opacity": 1.0 }
                 },
                 {
                     id: "opentopo-layer",
                     type: "raster",
                     source: "opentopo-source",
-                    layout: { visibility: "none" },
+                    layout: { visibility: isBaseLayerVisible("opentopo-layer") ? "visible" : "none" },
                     paint: { "raster-opacity": 1.0 }
                 },
                 {
                     id: "hybrid-reference-layer",
                     type: "raster",
                     source: "hybrid-reference-source",
-                    layout: { visibility: "none" },
+                    layout: { visibility: isBaseLayerVisible("hybrid-reference-layer") ? "visible" : "none" },
                     paint: { "raster-opacity": 1.0 }
                 },
                 {
@@ -568,6 +783,9 @@
             visualizePitch: true
         }), 'bottom-right');
 
+        // Setup Reset to North protection against GPS auto-center interruption
+        setupResetToNorthHandler();
+
         // Create Pointer Marker
         const pEl = createPointerMarkerElement();
         pointerMarker = new window.maplibregl.Marker({
@@ -705,6 +923,7 @@
 
     window.fullScreenMap.centerOn = function (lat, lon, zoom) {
         if (!map) return;
+        cancelResetNorth();
         const targetZoom = zoom || map.getZoom();
         map.flyTo({
             center: [lon, lat],
@@ -716,6 +935,14 @@
     window.fullScreenMap.centerOnCurrentLocation = function (lat, lon, movePointer) {
         if (!map) return;
         window.fullScreenMap.centerOn(lat, lon, 14);
+
+        if (liveMarker) {
+            liveMarker.setLngLat([lon, lat]);
+            updateLocationMarkerMode();
+            if (!liveMarker._map) {
+                liveMarker.addTo(map);
+            }
+        }
 
         if (movePointer) {
             currentPointerLat = lat;
@@ -737,8 +964,25 @@
         }
     };
 
+    window.fullScreenMap.setGpsActive = function (active) {
+        isGpsActive = !!active;
+        isLiveTracking = !!active;
+        updateLocationMarkerMode();
+
+        if (!isGpsActive && isLoaded && map && map.getSource('live-accuracy-source')) {
+            map.getSource('live-accuracy-source').setData({
+                type: "Feature",
+                geometry: {
+                    type: "Polygon",
+                    coordinates: [[]]
+                }
+            });
+        }
+    };
+
     window.fullScreenMap.updateLivePosition = function (lat, lon, accuracyM, autoCenter, heading) {
         if (!map) return;
+        if (!isGpsActive) return; // Discard any updates if GPS receiver is turned off
         isLiveTracking = true;
 
         if (liveMarker) {
@@ -753,6 +997,7 @@
                     }
                 }
             }
+            updateLocationMarkerMode();
             if (!liveMarker._map) {
                 liveMarker.addTo(map);
             }
@@ -771,18 +1016,24 @@
         }
 
         if (autoCenter) {
-            map.easeTo({
-                center: [lon, lat],
-                duration: 600
-            });
+            if (isResettingNorth) {
+                // Reset-to-north animation is active: defer camera centering until the map reaches True North
+                pendingAutoCenterCoords = [lon, lat];
+            } else {
+                map.easeTo({
+                    center: [lon, lat],
+                    duration: 600
+                });
+            }
         }
     };
 
     window.fullScreenMap.stopLiveTracking = function () {
+        cancelResetNorth();
+        isGpsActive = false;
         isLiveTracking = false;
-        if (liveMarker && liveMarker._map) {
-            liveMarker.remove();
-        }
+        updateLocationMarkerMode();
+
         if (isLoaded && map && map.getSource('live-accuracy-source')) {
             map.getSource('live-accuracy-source').setData({
                 type: "Feature",
@@ -794,8 +1045,12 @@
         }
     };
 
-    window.fullScreenMap.addTrackPoint = function (lat, lon) {
-        recordedPoints.push([lon, lat]);
+    window.fullScreenMap.resetNorth = function (resetPitch) {
+        performResetNorth({ duration: 800 }, null, resetPitch !== false);
+    };
+
+    window.fullScreenMap.addTrackPoint = function (lat, lon, ele) {
+        recordedPoints.push([lon, lat, ele || 0]);
         if (isLoaded && map && map.getSource('gps-track-source')) {
             map.getSource('gps-track-source').setData({
                 type: "Feature",
@@ -804,6 +1059,9 @@
                     coordinates: recordedPoints
                 }
             });
+        }
+        if (profileCardElement && profileCardElement.style.display !== 'none' && currentProfileTrack && currentProfileTrack.id === 'active_gps_track') {
+            window.fullScreenMap.showElevationProfile('active_gps_track');
         }
     };
 
@@ -817,6 +1075,21 @@
                     coordinates: []
                 }
             });
+        }
+        if (profileCardElement && profileCardElement.style.display !== 'none' && currentProfileTrack && currentProfileTrack.id === 'active_gps_track') {
+            window.fullScreenMap.hideElevationProfile();
+        }
+    };
+
+    window.fullScreenMap.setRecordingState = function (active) {
+        isRecordingActive = !!active;
+        if (!isRecordingActive) {
+            if (profileCardElement && profileCardElement.style.display !== 'none' && currentProfileTrack && currentProfileTrack.id === 'active_gps_track') {
+                window.fullScreenMap.hideElevationProfile();
+            }
+        }
+        if (profileCardElement) {
+            profileCardElement.style.bottom = isRecordingActive ? '64px' : '16px';
         }
     };
 
@@ -859,11 +1132,6 @@
     let configuredPmTiles = [];
     let activePmTileLayerIds = [];
     let activePmTileSourceIds = [];
-    let currentSelectedBaseLayer = 'topo';
-    try {
-        const _saved = localStorage.getItem('pointedhorizons_last_map_layer');
-        if (_saved) currentSelectedBaseLayer = _saved;
-    } catch (e) { }
     let isPadUsVisible = false;
 
     function clearPmTilesLayers() {
@@ -891,6 +1159,9 @@
 
         if (map && typeof map.getTerrain === 'function' && map.getTerrain()) {
             try { map.setTerrain(null); } catch (e) { }
+        }
+        if (map && typeof map.setSky === 'function') {
+            try { map.setSky(null); } catch (e) { }
         }
         activeTerrainSourceId = null;
     }
@@ -983,6 +1254,14 @@
                     map.style.sprite = styleObj.sprite;
                     if (map.style.stylesheet) map.style.stylesheet.sprite = styleObj.sprite;
                 } catch (e) { }
+            }
+
+            // If style defines a zoom level (e.g. zoom: 13 for trail visibility),
+            // respect it if current map zoom is below style zoom and map is not live-tracking
+            if (typeof styleObj.zoom === 'number') {
+                if (map && map.getZoom() < styleObj.zoom && !isLiveTracking) {
+                    map.setZoom(styleObj.zoom);
+                }
             }
 
             // Track matched PMTiles files and discovered vector layers for each source ID
@@ -1129,6 +1408,17 @@
                 }
             }
 
+            // Apply sky from style root if specified
+            if (styleObj.sky && typeof map.setSky === 'function') {
+                try {
+                    map.setSky(styleObj.sky);
+                } catch (skyErr) {
+                    console.warn("[FullScreenMap] Error applying root sky property:", skyErr);
+                }
+            }
+
+            const validMapLibreLayerTypes = ['fill', 'line', 'symbol', 'circle', 'heatmap', 'fill-extrusion', 'raster', 'hillshade', 'background'];
+
             // Add style layers
             for (const lDef of styleObj.layers) {
                 if (!lDef || !lDef.id) continue;
@@ -1137,8 +1427,29 @@
                     lCopy.layout = lCopy.layout || {};
                     lCopy.layout.visibility = (currentSelectedBaseLayer === 'pmtiles') ? 'visible' : 'none';
 
-                    if (lCopy.source && !map.getSource(lCopy.source)) {
+                    // If layer is type 'sky', apply it via map.setSky instead of attempting map.addLayer
+                    if (lCopy.type === 'sky') {
+                        if (typeof map.setSky === 'function') {
+                            try {
+                                map.setSky(lCopy.paint || {});
+                            } catch (skyErr) {
+                                console.warn("[FullScreenMap] Error applying sky layer paint via setSky:", skyErr);
+                            }
+                        }
                         continue;
+                    }
+
+                    // Skip any layer types unsupported by MapLibre (e.g. Mapbox custom types like 'model', 'slot', etc.)
+                    if (!validMapLibreLayerTypes.includes(lCopy.type)) {
+                        console.warn("[FullScreenMap] Skipping unsupported layer type:", lCopy.id, lCopy.type);
+                        continue;
+                    }
+
+                    // All MapLibre layers except 'background' require an existing source
+                    if (lCopy.type !== 'background') {
+                        if (!lCopy.source || !map.getSource(lCopy.source)) {
+                            continue;
+                        }
                     }
 
                     // Automatically reconcile vector source-layer if needed (e.g. "az_contours" vs "contours" vs "ut_contours")
@@ -1445,6 +1756,7 @@
 
     function recreateMap(lat, lon) {
         if (!mapContainerElement) return;
+        cancelResetNorth();
         try {
             if (map) {
                 try { map.remove(); } catch (e) { }
@@ -1462,7 +1774,7 @@
 
         window.fullScreenMap.init(
             mapContainerElement,
-            { lat: initLat, lon: initLon, zoom: 12 },
+            { lat: initLat, lon: initLon, zoom: 13 },
             onPointerMovedCb
         );
         if (pendingPmTilesConfig) {
@@ -1505,7 +1817,7 @@
             // 3. Force jump to safe top-down 2D
             map.jumpTo({
                 center: [targetLon, targetLat],
-                zoom: (typeof zoom === 'number' && !isNaN(zoom)) ? zoom : 12,
+                zoom: (typeof zoom === 'number' && !isNaN(zoom)) ? zoom : 13,
                 pitch: 0,
                 bearing: 0
             });
@@ -1539,6 +1851,7 @@
             recreateMap(currentPointerLat, currentPointerLon);
             return false;
         }
+        cancelResetNorth();
         let currentPitch = map.getPitch();
         let center = map.getCenter();
         const isDegenerate = isNaN(currentPitch) || !center || isNaN(center.lat) || isNaN(center.lng);
@@ -1816,6 +2129,7 @@
 
     window.fullScreenMap.zoomToTrack = function (minLon, minLat, maxLon, maxLat, trackId) {
         if (!map) return;
+        cancelResetNorth();
         if (typeof minLon !== 'number' || typeof minLat !== 'number' ||
             typeof maxLon !== 'number' || typeof maxLat !== 'number' ||
             isNaN(minLon) || isNaN(minLat) || isNaN(maxLon) || isNaN(maxLat)) {
@@ -2209,6 +2523,13 @@
                 }
 
                 /* Navigation controls (Zoom In/Out, Bearing Compass): standard 29px on larger screens, 58px on smaller screens */
+                .maplibregl-ctrl-group {
+                    opacity: 0.88 !important;
+                    transition: opacity 0.2s ease !important;
+                }
+                .maplibregl-ctrl-group:hover {
+                    opacity: 1.0 !important;
+                }
                 @media (min-width: 768px) {
                     .maplibregl-ctrl-group {
                         border-radius: 6px !important;
@@ -2256,11 +2577,12 @@
     function createElevationProfileUI() {
         if (profileCardElement || !mapContainerElement) return;
 
+        const bottomOffset = isRecordingActive ? '64px' : '16px';
         const card = document.createElement('div');
         card.id = 'ph-elevation-profile-card';
         card.style.cssText = `
             position: absolute;
-            bottom: 16px;
+            bottom: ${bottomOffset};
             left: 50%;
             transform: translateX(-50%);
             width: calc(100% - 32px);
@@ -2279,6 +2601,7 @@
             box-sizing: border-box;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             user-select: none;
+            transition: bottom 0.2s ease;
         `;
 
         card.innerHTML = `
@@ -2287,14 +2610,15 @@
                     <span id="ph-ep-color-dot" style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #3B82F6; flex-shrink: 0;"></span>
                     <span id="ph-ep-title" style="font-size: 13px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Track Profile</span>
                     <span id="ph-ep-badge" style="font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.12); color: #94A3B8;">GPX</span>
+                    <button id="ph-ep-refresh-btn" style="display: none; background: rgba(59, 130, 246, 0.20); border: 1px solid rgba(59, 130, 246, 0.40); color: #60A5FA; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 600; cursor: pointer; align-items: center; gap: 4px;" title="Refresh live GPS track stats and profile">🔄 Refresh</button>
                 </div>
                 <button id="ph-ep-close-btn" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #F8FAFC; border-radius: 6px; width: 24px; height: 24px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; padding: 0;" title="Close elevation profile">✕</button>
             </div>
-            <div style="display: flex; flex-wrap: wrap; gap: 12px; font-size: 11px; margin-bottom: 8px; color: #CBD5E1;">
-                <div><span style="color: #94A3B8;">Distance:</span> <b id="ph-ep-dist">0.0 km</b></div>
-                <div><span style="color: #94A3B8;">Climb:</span> <b id="ph-ep-climb" style="color: #10B981;">+0 m</b></div>
-                <div><span style="color: #94A3B8;">Descent:</span> <b id="ph-ep-descent" style="color: #F87171;">-0 m</b></div>
-                <div><span style="color: #94A3B8;">Elev:</span> <b id="ph-ep-range">--</b></div>
+            <div id="ph-ep-stats-row" style="display: flex; flex-wrap: wrap; gap: 12px; font-size: 11px; margin-bottom: 8px; color: #CBD5E1;">
+                <div><span class="ph-ep-label" style="color: #94A3B8;">Distance:</span> <b id="ph-ep-dist">0.0 km</b></div>
+                <div><span class="ph-ep-label" style="color: #94A3B8;">Climb:</span> <b id="ph-ep-climb" style="color: #10B981;">+0 m</b></div>
+                <div><span class="ph-ep-label" style="color: #94A3B8;">Descent:</span> <b id="ph-ep-descent" style="color: #F87171;">-0 m</b></div>
+                <div><span class="ph-ep-label" style="color: #94A3B8;">Elev:</span> <b id="ph-ep-range">--</b></div>
             </div>
             <div style="position: relative; width: 100%; height: 110px;">
                 <canvas id="ph-ep-canvas" style="width: 100%; height: 110px; display: block;"></canvas>
@@ -2313,12 +2637,23 @@
             });
         }
 
+        const refreshBtn = card.querySelector('#ph-ep-refresh-btn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (currentProfileTrack && currentProfileTrack.id === 'active_gps_track') {
+                    window.fullScreenMap.showElevationProfile('active_gps_track');
+                }
+            });
+        }
+
         // Prevent click events on profile card from propagating to map
         card.addEventListener('click', (e) => e.stopPropagation());
         card.addEventListener('dblclick', (e) => e.stopPropagation());
         card.addEventListener('mousedown', (e) => e.stopPropagation());
 
         setupProfileCanvasEvents();
+        window.fullScreenMap.setTheme(isDarkMode);
     }
 
     function setupProfileCanvasEvents() {
@@ -2446,8 +2781,8 @@
     }
 
     function buildActiveGpsTrackProfile() {
-        if (!recordedPoints || recordedPoints.length < 2) return null;
-        const profile = generateProfileFromCoordinates(recordedPoints);
+        const pts = recordedPoints || [];
+        const profile = pts.length >= 2 ? generateProfileFromCoordinates(pts) : [];
         let climb = 0, descent = 0, minE = Infinity, maxE = -Infinity;
         for (let i = 0; i < profile.length; i++) {
             const e = profile[i][1];
@@ -2461,16 +2796,17 @@
                 }
             }
         }
+        const totalDist = profile.length > 0 ? profile[profile.length - 1][0] : 0;
         return {
             id: 'active_gps_track',
-            name: 'Active GPS Track',
-            format: 'GPS',
+            name: 'Recording Live Track',
+            format: 'GPS (Live)',
             color: '#EF4444',
-            distance: profile[profile.length - 1][0],
+            distance: totalDist,
             climb: climb,
             descent: descent,
-            minElevation: minE === Infinity ? 0 : minE,
-            maxElevation: maxE === -Infinity ? 0 : maxE,
+            minElevation: (minE === Infinity) ? 0 : minE,
+            maxElevation: (maxE === -Infinity) ? 0 : maxE,
             profile: profile
         };
     }
@@ -2496,7 +2832,7 @@
         ctx.clearRect(0, 0, w, h);
 
         if (!currentProfilePoints || currentProfilePoints.length < 2) {
-            ctx.fillStyle = '#94A3B8';
+            ctx.fillStyle = isDarkMode ? '#94A3B8' : '#64748B';
             ctx.font = '11px sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText('No elevation points recorded for this track', w / 2, h / 2);
@@ -2540,7 +2876,7 @@
             const eleM = plotMinEle + plotEleRange * ratio;
             const eleLabel = isMetricUnits ? `${Math.round(eleM)}m` : `${Math.round(eleM * 3.28084)}ft`;
 
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.strokeStyle = isDarkMode ? 'rgba(255, 255, 255, 0.10)' : 'rgba(0, 0, 0, 0.09)';
             ctx.lineWidth = 1;
             ctx.setLineDash([3, 3]);
             ctx.beginPath();
@@ -2548,7 +2884,7 @@
             ctx.lineTo(w - padRight, y);
             ctx.stroke();
 
-            ctx.fillStyle = '#94A3B8';
+            ctx.fillStyle = isDarkMode ? '#94A3B8' : '#64748B';
             ctx.fillText(eleLabel, padLeft - 6, y + 3);
         }
         ctx.setLineDash([]);
@@ -2562,7 +2898,7 @@
             const dVal = totalDist * ratio;
             const dLabel = isMetricUnits ? `${dVal.toFixed(1)}k` : `${(dVal * 0.621371).toFixed(1)}m`;
 
-            ctx.fillStyle = '#94A3B8';
+            ctx.fillStyle = isDarkMode ? '#94A3B8' : '#64748B';
             ctx.fillText(dLabel, x, h - 4);
         }
 
@@ -2609,7 +2945,7 @@
         if (hoverIdx >= 0 && hoverIdx < plotPoints.length) {
             const hPt = plotPoints[hoverIdx];
 
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+            ctx.strokeStyle = isDarkMode ? 'rgba(255, 255, 255, 0.65)' : 'rgba(0, 0, 0, 0.55)';
             ctx.lineWidth = 1.2;
             ctx.setLineDash([3, 3]);
             ctx.beginPath();
@@ -2677,7 +3013,16 @@
 
         if (titleEl) titleEl.textContent = trackName;
         if (colorDot) colorDot.style.background = color;
-        if (badgeEl) badgeEl.textContent = track.format || "GPX";
+
+        const isLiveGps = track.id === 'active_gps_track';
+        const refreshBtn = profileCardElement.querySelector('#ph-ep-refresh-btn');
+        if (badgeEl) {
+            badgeEl.textContent = track.format || "GPX";
+            badgeEl.style.display = isLiveGps ? 'none' : 'inline-block';
+        }
+        if (refreshBtn) {
+            refreshBtn.style.display = isLiveGps ? 'inline-flex' : 'none';
+        }
 
         if (distEl) {
             distEl.textContent = isMetricUnits ? `${dist.toFixed(2)} km` : `${(dist * 0.621371).toFixed(2)} mi`;
@@ -2698,10 +3043,22 @@
             }
         }
 
+        profileCardElement.style.bottom = isRecordingActive ? '64px' : '16px';
         profileCardElement.style.display = 'flex';
+        window.fullScreenMap.setTheme(isDarkMode);
         setTimeout(() => {
             drawElevationProfileCanvas(-1);
         }, 30);
+    };
+
+    window.fullScreenMap.toggleElevationProfile = function (trackIdOrObj) {
+        createElevationProfileUI();
+        const targetId = typeof trackIdOrObj === 'string' ? trackIdOrObj : (trackIdOrObj && trackIdOrObj.id);
+        if (profileCardElement && profileCardElement.style.display !== 'none' && currentProfileTrack && currentProfileTrack.id === targetId) {
+            window.fullScreenMap.hideElevationProfile();
+        } else {
+            window.fullScreenMap.showElevationProfile(trackIdOrObj);
+        }
     };
 
     window.fullScreenMap.hideElevationProfile = function () {
@@ -2723,15 +3080,61 @@
     window.fullScreenMap.setTheme = function (isDark) {
         isDarkMode = isDark === true;
         if (profileCardElement) {
-            profileCardElement.style.background = isDarkMode ? 'rgba(18, 22, 31, 0.94)' : 'rgba(255, 255, 255, 0.96)';
+            profileCardElement.style.background = isDarkMode ? 'rgba(15, 23, 42, 0.94)' : 'rgba(255, 255, 255, 0.96)';
             profileCardElement.style.color = isDarkMode ? '#F8FAFC' : '#0F172A';
             profileCardElement.style.border = isDarkMode ? '1px solid rgba(255, 255, 255, 0.18)' : '1px solid rgba(0, 0, 0, 0.14)';
+            profileCardElement.style.boxShadow = isDarkMode ? '0 10px 30px rgba(0, 0, 0, 0.45)' : '0 10px 30px rgba(0, 0, 0, 0.15)';
+
+            const closeBtn = profileCardElement.querySelector('#ph-ep-close-btn');
+            if (closeBtn) {
+                closeBtn.style.background = isDarkMode ? 'rgba(255, 255, 255, 0.10)' : 'rgba(0, 0, 0, 0.06)';
+                closeBtn.style.border = isDarkMode ? '1px solid rgba(255, 255, 255, 0.20)' : '1px solid rgba(0, 0, 0, 0.14)';
+                closeBtn.style.color = isDarkMode ? '#F8FAFC' : '#0F172A';
+            }
+
+            const badge = profileCardElement.querySelector('#ph-ep-badge');
+            if (badge) {
+                badge.style.background = isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)';
+                badge.style.color = isDarkMode ? '#94A3B8' : '#475569';
+            }
+
+            const refreshBtn = profileCardElement.querySelector('#ph-ep-refresh-btn');
+            if (refreshBtn) {
+                refreshBtn.style.background = isDarkMode ? 'rgba(59, 130, 246, 0.20)' : 'rgba(59, 130, 246, 0.12)';
+                refreshBtn.style.border = isDarkMode ? '1px solid rgba(59, 130, 246, 0.40)' : '1px solid rgba(59, 130, 246, 0.35)';
+                refreshBtn.style.color = isDarkMode ? '#60A5FA' : '#2563EB';
+            }
+
+            const statsRow = profileCardElement.querySelector('#ph-ep-stats-row');
+            if (statsRow) {
+                statsRow.style.color = isDarkMode ? '#CBD5E1' : '#334155';
+            }
+
+            const labels = profileCardElement.querySelectorAll('.ph-ep-label');
+            labels.forEach(l => {
+                l.style.color = isDarkMode ? '#94A3B8' : '#64748B';
+            });
+
+            const distEl = profileCardElement.querySelector('#ph-ep-dist');
+            if (distEl) distEl.style.color = isDarkMode ? '#F8FAFC' : '#0F172A';
+
+            const climbEl = profileCardElement.querySelector('#ph-ep-climb');
+            if (climbEl) climbEl.style.color = isDarkMode ? '#34D399' : '#059669';
+
+            const descentEl = profileCardElement.querySelector('#ph-ep-descent');
+            if (descentEl) descentEl.style.color = isDarkMode ? '#F87171' : '#DC2626';
+
+            const rangeEl = profileCardElement.querySelector('#ph-ep-range');
+            if (rangeEl) rangeEl.style.color = isDarkMode ? '#F8FAFC' : '#0F172A';
+
             const tooltip = profileCardElement.querySelector('#ph-ep-tooltip');
             if (tooltip) {
-                tooltip.style.background = isDarkMode ? 'rgba(15, 23, 42, 0.92)' : 'rgba(255, 255, 255, 0.95)';
+                tooltip.style.background = isDarkMode ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.98)';
                 tooltip.style.color = isDarkMode ? '#F8FAFC' : '#0F172A';
                 tooltip.style.border = isDarkMode ? '1px solid rgba(255, 255, 255, 0.25)' : '1px solid rgba(0, 0, 0, 0.18)';
+                tooltip.style.boxShadow = isDarkMode ? '0 4px 12px rgba(0,0,0,0.4)' : '0 4px 12px rgba(0,0,0,0.15)';
             }
+
             if (profileCardElement.style.display !== 'none') {
                 drawElevationProfileCanvas(-1);
             }

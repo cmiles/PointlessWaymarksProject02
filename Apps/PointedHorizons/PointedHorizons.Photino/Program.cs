@@ -26,6 +26,27 @@ namespace PointedHorizons.Photino
                 .ConfigureOpenSilver<App>()
                 .Load("wwwroot/index.html");
 
+            FolderPickerService.CustomFolderPickerHandler = async (initialPath) =>
+            {
+                try
+                {
+                    string defaultDir = string.IsNullOrWhiteSpace(initialPath) || !Directory.Exists(initialPath)
+                        ? OfflineDataService.DefaultPhotinoGpxDir
+                        : initialPath;
+
+                    string[] folders = await window.ShowOpenFolderAsync("Select GPX / Tracks Folder", defaultDir, false);
+                    if (folders != null && folders.Length > 0 && !string.IsNullOrWhiteSpace(folders[0]))
+                    {
+                        return folders[0];
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Photino] ShowOpenFolder error: {ex.Message}");
+                }
+                return null;
+            };
+
             window.WaitForClose();
         }
     }

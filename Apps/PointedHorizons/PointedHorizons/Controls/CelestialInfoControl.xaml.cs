@@ -23,6 +23,7 @@ public partial class CelestialInfoControl : UserControl
     private double? _activeLon;
     private bool _isGpsSelected;
     private bool _isCalculating;
+    private bool _isCompact;
     private CelestialWindowReport? _lastReport;
 
     public CelestialInfoControl()
@@ -30,6 +31,51 @@ public partial class CelestialInfoControl : UserControl
         InitializeComponent();
         Loaded += CelestialInfoControl_Loaded;
         SizeChanged += CelestialInfoControl_SizeChanged;
+
+        void AttachWheelTo(FrameworkElement? element)
+        {
+            if (element == null) return;
+            element.MouseWheel += (s, e) =>
+            {
+                HandleExternalMouseWheel(e.Delta);
+                e.Handled = true;
+            };
+        }
+
+        AttachWheelTo(this);
+        AttachWheelTo(DialogRoot);
+        AttachWheelTo(CardBorder);
+        AttachWheelTo(CardInnerGrid);
+        AttachWheelTo(ContentScrollViewer);
+        AttachWheelTo(ContentMainStack);
+        AttachWheelTo(InitialChoicePanel);
+        AttachWheelTo(ResultsPanel);
+        AttachWheelTo(ColumnsContainerGrid);
+        AttachWheelTo(ColLeftStack);
+        AttachWheelTo(ColRightStack);
+        AttachWheelTo(EventsCardsContainer);
+        AttachWheelTo(SummaryCardBorder);
+        AttachWheelTo(BtnBigGpsCard);
+        AttachWheelTo(BtnBigMapCard);
+
+        Border?[] allCards = [
+            CardSunrise, CardSunset, CardMoonrise, CardMoonset,
+            CardDaylightNoon, CardMorningBlue, CardMorningGolden,
+            CardEveningGolden, CardEveningBlue, CardMilkyWay,
+            CardTwilight, CardSeason
+        ];
+        foreach (var c in allCards)
+        {
+            AttachWheelTo(c);
+        }
+    }
+
+    public void HandleExternalMouseWheel(double delta)
+    {
+        if (ContentScrollViewer != null)
+        {
+            ContentScrollViewer.ScrollToVerticalOffset(ContentScrollViewer.VerticalOffset - (delta / 2.0));
+        }
     }
 
     private void CelestialInfoControl_Loaded(object sender, RoutedEventArgs e)
@@ -66,10 +112,167 @@ public partial class CelestialInfoControl : UserControl
     /// </summary>
     public void SetCompactMode(bool isCompact)
     {
+        _isCompact = isCompact;
         if (ColumnsContainerGrid == null || ColLeftDef == null || ColRightDef == null || ColLeftStack == null || ColRightStack == null) return;
+
+        // Switch Twilight Trail Light title
+        if (TxtTrailLightTitle != null)
+        {
+            TxtTrailLightTitle.Text = isCompact ? "Trail Light: " : "Trail Light (No Headlamp): ";
+        }
+
+        // Switch Twilight Progression Blocks
+        if (GridMorningProgressionDesktop != null) GridMorningProgressionDesktop.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (PanelMorningProgressionMobile != null) PanelMorningProgressionMobile.Visibility = isCompact ? Visibility.Visible : Visibility.Collapsed;
+        if (GridEveningProgressionDesktop != null) GridEveningProgressionDesktop.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (PanelEveningProgressionMobile != null) PanelEveningProgressionMobile.Visibility = isCompact ? Visibility.Visible : Visibility.Collapsed;
+
+        // Switch Season Badge (desktop pill badge vs mobile inline countdown on 2nd line)
+        if (BadgeSeason != null) BadgeSeason.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (TxtSeasonBadgeInline != null) TxtSeasonBadgeInline.Visibility = isCompact ? Visibility.Visible : Visibility.Collapsed;
+
+        // Switch Desktop vs Mobile panels in timeline cards
+        if (GridSunriseDesktop != null) GridSunriseDesktop.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (PanelSunriseStandardDesktop != null) PanelSunriseStandardDesktop.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (PanelSunriseMobile != null) PanelSunriseMobile.Visibility = isCompact ? Visibility.Visible : Visibility.Collapsed;
+
+        if (GridSunsetDesktop != null) GridSunsetDesktop.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (PanelSunsetStandardDesktop != null) PanelSunsetStandardDesktop.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (PanelSunsetMobile != null) PanelSunsetMobile.Visibility = isCompact ? Visibility.Visible : Visibility.Collapsed;
+
+        if (GridMoonriseDesktop != null) GridMoonriseDesktop.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (PanelMoonriseStandardDesktop != null) PanelMoonriseStandardDesktop.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (PanelMoonriseMobile != null) PanelMoonriseMobile.Visibility = isCompact ? Visibility.Visible : Visibility.Collapsed;
+
+        if (GridMoonsetDesktop != null) GridMoonsetDesktop.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (PanelMoonsetStandardDesktop != null) PanelMoonsetStandardDesktop.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (PanelMoonsetMobile != null) PanelMoonsetMobile.Visibility = isCompact ? Visibility.Visible : Visibility.Collapsed;
+
+        if (GridDaylightDesktop != null) GridDaylightDesktop.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (DaylightCompareBox != null) DaylightCompareBox.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (PanelDaylightMobile != null) PanelDaylightMobile.Visibility = isCompact ? Visibility.Visible : Visibility.Collapsed;
+
+        if (GridMorningBlueDesktop != null) GridMorningBlueDesktop.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (TxtMorningBlueDesc != null) TxtMorningBlueDesc.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (PanelMorningBlueMobile != null) PanelMorningBlueMobile.Visibility = isCompact ? Visibility.Visible : Visibility.Collapsed;
+
+        if (GridMorningGoldenDesktop != null) GridMorningGoldenDesktop.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (TxtMorningGoldenDirect != null) TxtMorningGoldenDirect.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (PanelMorningGoldenMobile != null) PanelMorningGoldenMobile.Visibility = isCompact ? Visibility.Visible : Visibility.Collapsed;
+
+        if (GridEveningGoldenDesktop != null) GridEveningGoldenDesktop.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (TxtEveningGoldenDirect != null) TxtEveningGoldenDirect.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (PanelEveningGoldenMobile != null) PanelEveningGoldenMobile.Visibility = isCompact ? Visibility.Visible : Visibility.Collapsed;
+
+        if (GridEveningBlueDesktop != null) GridEveningBlueDesktop.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (TxtEveningBlueDesc != null) TxtEveningBlueDesc.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (PanelEveningBlueMobile != null) PanelEveningBlueMobile.Visibility = isCompact ? Visibility.Visible : Visibility.Collapsed;
+
+        if (TxtMilkyWayWindow != null) TxtMilkyWayWindow.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (TxtMilkyWayStatus != null) TxtMilkyWayStatus.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (MilkyWayDetailsBox != null) MilkyWayDetailsBox.Visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
+        if (PanelMilkyWayMobile != null) PanelMilkyWayMobile.Visibility = isCompact ? Visibility.Visible : Visibility.Collapsed;
+
+        // Card Line 1 Titles & Icons: largest text on mobile (FontSize 15.5 bold)
+        double titleSize = isCompact ? 15.5 : 11.0;
+        double iconSize = isCompact ? 15.5 : 13.0;
+        double badgeSize = isCompact ? 15.5 : 10.0;
+
+        TextBlock?[] titles = [
+            TxtSunriseTitle, TxtSunsetTitle, TxtMoonriseTitle, TxtMoonsetTitle,
+            TxtDaylightTitle, TxtMorningBlueTitle, TxtMorningGoldenTitle,
+            TxtEveningGoldenTitle, TxtEveningBlueTitle, TxtMilkyWayTitle
+        ];
+        foreach (var t in titles)
+        {
+            if (t != null)
+            {
+                t.FontSize = titleSize;
+                t.FontWeight = FontWeights.Bold;
+            }
+        }
+
+        TextBlock?[] icons = [
+            IcoSunrise, IcoSunset, IcoMoonrise, IcoMoonset,
+            IcoDaylight, IcoMorningBlue, IcoMorningGolden,
+            IcoEveningGolden, IcoEveningBlue, IcoMilkyWay
+        ];
+        foreach (var ico in icons)
+        {
+            if (ico != null) ico.FontSize = iconSize;
+        }
+
+        TextBlock?[] badges = [
+            TxtSunriseBadge, TxtSunsetBadge, TxtMoonriseBadge, TxtMoonsetBadge,
+            TxtSolarNoonBadge, TxtMorningBlueBadge, TxtMorningGoldenBadge,
+            TxtEveningGoldenBadge, TxtEveningBlueBadge, TxtMilkyWayBadge
+        ];
+        foreach (var b in badges)
+        {
+            if (b != null)
+            {
+                b.FontSize = badgeSize;
+                b.FontWeight = FontWeights.Bold;
+            }
+        }
 
         if (isCompact)
         {
+            // Position all 10 card badges on Row 1 (Line 2) on mobile
+            Border?[] allBadges = [
+                BadgeSunrise, BadgeSunset, BadgeMoonrise, BadgeMoonset,
+                BadgeSolarNoon, BadgeMorningBlue, BadgeMorningGolden,
+                BadgeEveningGolden, BadgeEveningBlue, BadgeMilkyWay
+            ];
+            foreach (var b in allBadges)
+            {
+                if (b != null)
+                {
+                    Grid.SetRow(b, 1);
+                    Grid.SetColumn(b, 0);
+                    Grid.SetColumnSpan(b, 2);
+                    b.HorizontalAlignment = HorizontalAlignment.Left;
+                    b.Margin = new Thickness(0, 2, 0, 4);
+                    b.Background = Brushes.Transparent;
+                    b.BorderBrush = Brushes.Transparent;
+                    b.BorderThickness = new Thickness(0);
+                    b.Padding = new Thickness(0);
+                }
+            }
+
+            // Top buttons: Segmented GPS / Map buttons take 50% width each with wrap, refresh button on 2nd row full width
+            if (ColModeRefresh != null) ColModeRefresh.Width = new GridLength(0);
+            if (BtnOptionGps != null)
+            {
+                Grid.SetRow(BtnOptionGps, 0);
+                Grid.SetColumn(BtnOptionGps, 0);
+                Grid.SetColumnSpan(BtnOptionGps, 1);
+                BtnOptionGps.Margin = new Thickness(0, 0, 3, 0);
+                BtnOptionGps.MinHeight = 44;
+            }
+            if (BtnOptionMap != null)
+            {
+                Grid.SetRow(BtnOptionMap, 0);
+                Grid.SetColumn(BtnOptionMap, 1);
+                Grid.SetColumnSpan(BtnOptionMap, 2);
+                BtnOptionMap.Margin = new Thickness(3, 0, 0, 0);
+                BtnOptionMap.MinHeight = 44;
+            }
+            if (BtnTopRefresh != null)
+            {
+                Grid.SetRow(BtnTopRefresh, 1);
+                Grid.SetColumn(BtnTopRefresh, 0);
+                Grid.SetColumnSpan(BtnTopRefresh, 3);
+                BtnTopRefresh.Margin = new Thickness(0, 6, 0, 0);
+                BtnTopRefresh.HorizontalAlignment = HorizontalAlignment.Stretch;
+                BtnTopRefresh.MinHeight = 42;
+            }
+            if (TxtTopRefresh != null) TxtTopRefresh.Text = "↺ Recalculate / Refresh";
+
+            // Daylight comparison & Trail light
+            if (PanelDaylightCompareRow != null) PanelDaylightCompareRow.Orientation = Orientation.Vertical;
+            if (PanelTrailLightHeader != null) PanelTrailLightHeader.Orientation = Orientation.Vertical;
+
             // Single stacked column on small screen / mobile
             ColLeftDef.Width = new GridLength(1, GridUnitType.Star);
             ColRightDef.Width = new GridLength(0);
@@ -88,6 +291,60 @@ public partial class CelestialInfoControl : UserControl
         }
         else
         {
+            // Position all 10 card badges on Row 0, Column 1 on desktop
+            Border?[] allBadges = [
+                BadgeSunrise, BadgeSunset, BadgeMoonrise, BadgeMoonset,
+                BadgeSolarNoon, BadgeMorningBlue, BadgeMorningGolden,
+                BadgeEveningGolden, BadgeEveningBlue, BadgeMilkyWay
+            ];
+            foreach (var b in allBadges)
+            {
+                if (b != null)
+                {
+                    Grid.SetRow(b, 0);
+                    Grid.SetColumn(b, 1);
+                    Grid.SetColumnSpan(b, 1);
+                    b.HorizontalAlignment = HorizontalAlignment.Right;
+                    b.Margin = new Thickness(0, 0, 0, 0);
+                    b.BorderThickness = new Thickness(1);
+                    b.Padding = new Thickness(8, 2, 8, 2);
+                    b.CornerRadius = new CornerRadius(8);
+                }
+            }
+
+            // Top buttons: Segmented GPS / Map / Refresh on single desktop row
+            if (ColModeRefresh != null) ColModeRefresh.Width = GridLength.Auto;
+            if (BtnOptionGps != null)
+            {
+                Grid.SetRow(BtnOptionGps, 0);
+                Grid.SetColumn(BtnOptionGps, 0);
+                Grid.SetColumnSpan(BtnOptionGps, 1);
+                BtnOptionGps.Margin = new Thickness(0, 0, 3, 0);
+                BtnOptionGps.MinHeight = 0;
+            }
+            if (BtnOptionMap != null)
+            {
+                Grid.SetRow(BtnOptionMap, 0);
+                Grid.SetColumn(BtnOptionMap, 1);
+                Grid.SetColumnSpan(BtnOptionMap, 1);
+                BtnOptionMap.Margin = new Thickness(3, 0, 3, 0);
+                BtnOptionMap.MinHeight = 0;
+            }
+            if (BtnTopRefresh != null)
+            {
+                Grid.SetRow(BtnTopRefresh, 0);
+                Grid.SetColumn(BtnTopRefresh, 2);
+                Grid.SetColumnSpan(BtnTopRefresh, 1);
+                BtnTopRefresh.Margin = new Thickness(3, 0, 0, 0);
+                BtnTopRefresh.HorizontalAlignment = HorizontalAlignment.Stretch;
+                BtnTopRefresh.MinHeight = 0;
+            }
+            if (TxtTopRefresh != null) TxtTopRefresh.Text = "↺ Refresh";
+
+            // Daylight comparison & Trail light
+            if (PanelDaylightCompareRow != null) PanelDaylightCompareRow.Orientation = Orientation.Horizontal;
+            if (PanelTrailLightHeader != null) PanelTrailLightHeader.Orientation = Orientation.Horizontal;
+
             // Two side-by-side columns on desktop
             ColLeftDef.Width = new GridLength(1, GridUnitType.Star);
             ColRightDef.Width = new GridLength(1, GridUnitType.Star);
@@ -103,6 +360,15 @@ public partial class CelestialInfoControl : UserControl
             if (PanelDesktopTwilightNotes != null) PanelDesktopTwilightNotes.Visibility = Visibility.Visible;
             if (TxtDesktopSeasonDesc != null) TxtDesktopSeasonDesc.Visibility = Visibility.Visible;
             if (TxtDesktopTrailLightNote != null) TxtDesktopTrailLightNote.Visibility = Visibility.Visible;
+        }
+
+        if (_lastReport != null)
+        {
+            DisplayResults(_lastReport);
+        }
+        else
+        {
+            UpdateTheme(ThemeManager.Current.IsDark);
         }
     }
 
@@ -142,12 +408,15 @@ public partial class CelestialInfoControl : UserControl
             BtnOptionGps.BorderBrush = tm.ButtonInactiveBorder;
             BtnOptionGps.Foreground = tm.TextPrimary;
         }
+        if (TxtOptionGps != null) TxtOptionGps.Foreground = tm.TextPrimary;
+
         if (BtnOptionMap != null)
         {
             BtnOptionMap.Background = tm.ButtonInactiveBackground;
             BtnOptionMap.BorderBrush = tm.ButtonInactiveBorder;
             BtnOptionMap.Foreground = tm.TextPrimary;
         }
+        if (TxtOptionMap != null) TxtOptionMap.Foreground = tm.TextPrimary;
     }
 
     private void SetActiveButton(bool isGps)
@@ -159,12 +428,15 @@ public partial class CelestialInfoControl : UserControl
             BtnOptionGps.BorderBrush = isGps ? tm.ButtonActiveBorder : tm.ButtonInactiveBorder;
             BtnOptionGps.Foreground = isGps ? tm.ButtonActiveForeground : tm.TextPrimary;
         }
+        if (TxtOptionGps != null) TxtOptionGps.Foreground = isGps ? tm.ButtonActiveForeground : tm.TextPrimary;
+
         if (BtnOptionMap != null)
         {
             BtnOptionMap.Background = !isGps ? tm.ButtonActiveBackground : tm.ButtonInactiveBackground;
             BtnOptionMap.BorderBrush = !isGps ? tm.ButtonActiveBorder : tm.ButtonInactiveBorder;
             BtnOptionMap.Foreground = !isGps ? tm.ButtonActiveForeground : tm.TextPrimary;
         }
+        if (TxtOptionMap != null) TxtOptionMap.Foreground = !isGps ? tm.ButtonActiveForeground : tm.TextPrimary;
     }
 
     private async void BtnOptionGps_Click(object sender, RoutedEventArgs e)
@@ -316,10 +588,14 @@ public partial class CelestialInfoControl : UserControl
             report.Sunrise,
             TxtSunriseTitle,
             TxtSunriseTopoTime,
+            TxtSunriseTopoTimeMobile,
             TxtSunriseTopoAz,
+            TxtSunriseTopoAzMobile,
             TxtSunriseTopoTag,
             TxtSunriseStandard,
+            TxtSunriseStandardMobile,
             TxtSunriseShift,
+            TxtSunriseShiftMobile,
             BadgeSunrise,
             TxtSunriseBadge);
 
@@ -328,10 +604,14 @@ public partial class CelestialInfoControl : UserControl
             report.Sunset,
             TxtSunsetTitle,
             TxtSunsetTopoTime,
+            TxtSunsetTopoTimeMobile,
             TxtSunsetTopoAz,
+            TxtSunsetTopoAzMobile,
             TxtSunsetTopoTag,
             TxtSunsetStandard,
+            TxtSunsetStandardMobile,
             TxtSunsetShift,
+            TxtSunsetShiftMobile,
             BadgeSunset,
             TxtSunsetBadge);
 
@@ -340,10 +620,14 @@ public partial class CelestialInfoControl : UserControl
             report.Moonrise,
             TxtMoonriseTitle,
             TxtMoonriseTopoTime,
+            TxtMoonriseTopoTimeMobile,
             TxtMoonriseTopoAz,
+            TxtMoonriseTopoAzMobile,
             TxtMoonriseTopoTag,
             TxtMoonriseStandard,
+            TxtMoonriseStandardMobile,
             TxtMoonriseShift,
+            TxtMoonriseShiftMobile,
             BadgeMoonrise,
             TxtMoonriseBadge);
 
@@ -352,10 +636,14 @@ public partial class CelestialInfoControl : UserControl
             report.Moonset,
             TxtMoonsetTitle,
             TxtMoonsetTopoTime,
+            TxtMoonsetTopoTimeMobile,
             TxtMoonsetTopoAz,
+            TxtMoonsetTopoAzMobile,
             TxtMoonsetTopoTag,
             TxtMoonsetStandard,
+            TxtMoonsetStandardMobile,
             TxtMoonsetShift,
+            TxtMoonsetShiftMobile,
             BadgeMoonset,
             TxtMoonsetBadge);
 
@@ -363,30 +651,53 @@ public partial class CelestialInfoControl : UserControl
         if (report.SolarNoon != null)
         {
             if (TxtSolarNoonTime != null) TxtSolarNoonTime.Text = report.SolarNoon.NoonTimeDisplay;
+            if (TxtSolarNoonTimeMobile != null) TxtSolarNoonTimeMobile.Text = report.SolarNoon.NoonTimeDisplay;
             if (TxtSolarNoonElevation != null) TxtSolarNoonElevation.Text = $"Max Elevation: {report.SolarNoon.MaxElevationDisplay}";
-            if (TxtSolarNoonBadge != null) TxtSolarNoonBadge.Text = report.SolarNoon.NoonCountdownDisplay;
-            if (TxtTopoDaylight != null) TxtTopoDaylight.Text = $"⛰️ {report.SolarNoon.TopoDaylightDisplay}";
-            if (TxtFlatDaylight != null) TxtFlatDaylight.Text = report.SolarNoon.FlatDaylightDisplay;
-            if (TxtTopoLost != null) TxtTopoLost.Text = report.SolarNoon.TopoLostDisplay;
-            if (TxtDaylightTrend != null) TxtDaylightTrend.Text = report.SolarNoon.DayChangeDisplay;
+            if (TxtSolarNoonElevationMobile != null) TxtSolarNoonElevationMobile.Text = $"Max Elevation: {report.SolarNoon.MaxElevationDisplay}";
+            string noonCountdown = report.SolarNoon.NoonCountdownDisplay ?? string.Empty;
+            if (noonCountdown.StartsWith("⏳ ")) noonCountdown = noonCountdown.Substring(2).TrimStart();
+            if (noonCountdown.StartsWith("in ", StringComparison.OrdinalIgnoreCase)) noonCountdown = "In " + noonCountdown.Substring(3);
+            if (TxtSolarNoonBadge != null) TxtSolarNoonBadge.Text = noonCountdown;
 
             if (BadgeSolarNoon != null && TxtSolarNoonBadge != null)
             {
                 var tm = ThemeManager.Current;
-                if (report.SolarNoon.IsNoonActive)
+                if (_isCompact)
                 {
-                    BadgeSolarNoon.Background = tm.Accent;
-                    TxtSolarNoonBadge.Foreground = Brushes.White;
-                }
-                else if (!report.SolarNoon.IsNoonPast)
-                {
-                    BadgeSolarNoon.Background = tm.ButtonActiveBackground;
-                    TxtSolarNoonBadge.Foreground = tm.ButtonActiveForeground;
+                    BadgeSolarNoon.Background = Brushes.Transparent;
+                    BadgeSolarNoon.BorderBrush = Brushes.Transparent;
+                    BadgeSolarNoon.BorderThickness = new Thickness(0);
+                    BadgeSolarNoon.Padding = new Thickness(0);
+                    BadgeSolarNoon.HorizontalAlignment = HorizontalAlignment.Left;
+                    Grid.SetRow(BadgeSolarNoon, 1);
+                    Grid.SetColumn(BadgeSolarNoon, 0);
+                    Grid.SetColumnSpan(BadgeSolarNoon, 2);
+                    TxtSolarNoonBadge.Foreground = tm.TextPrimary;
                 }
                 else
                 {
-                    BadgeSolarNoon.Background = tm.ButtonInactiveBackground;
-                    TxtSolarNoonBadge.Foreground = tm.TextMuted;
+                    Grid.SetRow(BadgeSolarNoon, 0);
+                    Grid.SetColumn(BadgeSolarNoon, 1);
+                    Grid.SetColumnSpan(BadgeSolarNoon, 1);
+                    BadgeSolarNoon.HorizontalAlignment = HorizontalAlignment.Right;
+                    BadgeSolarNoon.BorderThickness = new Thickness(1);
+                    BadgeSolarNoon.Padding = new Thickness(8, 2, 8, 2);
+                    BadgeSolarNoon.CornerRadius = new CornerRadius(8);
+                    if (report.SolarNoon.IsNoonActive)
+                    {
+                        BadgeSolarNoon.Background = tm.Accent;
+                        TxtSolarNoonBadge.Foreground = Brushes.White;
+                    }
+                    else if (!report.SolarNoon.IsNoonPast)
+                    {
+                        BadgeSolarNoon.Background = tm.ButtonActiveBackground;
+                        TxtSolarNoonBadge.Foreground = tm.ButtonActiveForeground;
+                    }
+                    else
+                    {
+                        BadgeSolarNoon.Background = tm.ButtonInactiveBackground;
+                        TxtSolarNoonBadge.Foreground = tm.TextMuted;
+                    }
                 }
             }
         }
@@ -394,39 +705,121 @@ public partial class CelestialInfoControl : UserControl
         // 6. Individual Photography Window Cards
         if (report.PhotographyHours != null)
         {
-            BindPhotoCard(report.PhotographyHours.MorningBlue, CardMorningBlue, TxtMorningBlueTime, TxtMorningBlueSub, null, TxtMorningBlueDesc, BadgeMorningBlue, TxtMorningBlueBadge);
-            BindPhotoCard(report.PhotographyHours.MorningGolden, CardMorningGolden, TxtMorningGoldenTime, TxtMorningGoldenSub, TxtMorningGoldenDirect, null, BadgeMorningGolden, TxtMorningGoldenBadge);
-            BindPhotoCard(report.PhotographyHours.EveningGolden, CardEveningGolden, TxtEveningGoldenTime, TxtEveningGoldenSub, TxtEveningGoldenDirect, null, BadgeEveningGolden, TxtEveningGoldenBadge);
-            BindPhotoCard(report.PhotographyHours.EveningBlue, CardEveningBlue, TxtEveningBlueTime, TxtEveningBlueSub, null, TxtEveningBlueDesc, BadgeEveningBlue, TxtEveningBlueBadge);
+            BindPhotoCard(report.PhotographyHours.MorningBlue, CardMorningBlue, TxtMorningBlueTime, TxtMorningBlueTimeMobile, TxtMorningBlueSub, TxtMorningBlueSubMobile, null, null, TxtMorningBlueDesc, BadgeMorningBlue, TxtMorningBlueBadge);
+            BindPhotoCard(report.PhotographyHours.MorningGolden, CardMorningGolden, TxtMorningGoldenTime, TxtMorningGoldenTimeMobile, TxtMorningGoldenSub, TxtMorningGoldenSubMobile, TxtMorningGoldenDirect, TxtMorningGoldenDirectMobile, null, BadgeMorningGolden, TxtMorningGoldenBadge);
+            BindPhotoCard(report.PhotographyHours.EveningGolden, CardEveningGolden, TxtEveningGoldenTime, TxtEveningGoldenTimeMobile, TxtEveningGoldenSub, TxtEveningGoldenSubMobile, TxtEveningGoldenDirect, TxtEveningGoldenDirectMobile, null, BadgeEveningGolden, TxtEveningGoldenBadge);
+            BindPhotoCard(report.PhotographyHours.EveningBlue, CardEveningBlue, TxtEveningBlueTime, TxtEveningBlueTimeMobile, TxtEveningBlueSub, TxtEveningBlueSubMobile, null, null, TxtEveningBlueDesc, BadgeEveningBlue, TxtEveningBlueBadge);
         }
 
         // 7. Milky Way & Galactic Center Card
         if (report.MilkyWay != null)
         {
             if (TxtMilkyWayStatus != null) TxtMilkyWayStatus.Text = report.MilkyWay.StatusText;
-            if (TxtMilkyWayBadge != null) TxtMilkyWayBadge.Text = report.MilkyWay.QualityBadge;
+            if (TxtMilkyWayStatusMobile != null) TxtMilkyWayStatusMobile.Text = report.MilkyWay.StatusText;
+
+            string mwCountdown = report.MilkyWay.CountdownDisplay ?? string.Empty;
+            if (mwCountdown.StartsWith("⏳ ")) mwCountdown = mwCountdown.Substring(2).TrimStart();
+            if (mwCountdown.StartsWith("in ", StringComparison.OrdinalIgnoreCase)) mwCountdown = "In " + mwCountdown.Substring(3);
+
+            string mwBadge = _isCompact
+                ? (string.IsNullOrEmpty(mwCountdown) ? report.MilkyWay.QualityBadge : mwCountdown)
+                : report.MilkyWay.QualityBadge;
+            if (mwBadge.StartsWith("⏳ ")) mwBadge = mwBadge.Substring(2).TrimStart();
+            if (mwBadge.StartsWith("in ", StringComparison.OrdinalIgnoreCase)) mwBadge = "In " + mwBadge.Substring(3);
+            if (TxtMilkyWayBadge != null) TxtMilkyWayBadge.Text = mwBadge;
+
             if (TxtMilkyWayWindow != null) TxtMilkyWayWindow.Text = report.MilkyWay.WindowDisplay;
-            if (TxtMilkyWayPeak != null) TxtMilkyWayPeak.Text = report.MilkyWay.PeakDisplay;
-            if (TxtMilkyWayClearance != null) TxtMilkyWayClearance.Text = report.MilkyWay.MountainClearanceDisplay;
-            if (TxtMilkyWayMoon != null) TxtMilkyWayMoon.Text = report.MilkyWay.MoonInterferenceDisplay;
+            if (TxtMilkyWayWindowMobile != null) TxtMilkyWayWindowMobile.Text = report.MilkyWay.WindowDisplay;
+
+            string peak = report.MilkyWay.PeakDisplay ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(peak) && !peak.StartsWith("🧭"))
+                peak = $"🧭 {peak}";
+            if (TxtMilkyWayPeak != null)
+            {
+                TxtMilkyWayPeak.Text = peak;
+                TxtMilkyWayPeak.Visibility = string.IsNullOrWhiteSpace(peak) ? Visibility.Collapsed : Visibility.Visible;
+            }
+            if (TxtMilkyWayPeakMobile != null)
+            {
+                TxtMilkyWayPeakMobile.Text = peak;
+                TxtMilkyWayPeakMobile.Visibility = string.IsNullOrWhiteSpace(peak) ? Visibility.Collapsed : Visibility.Visible;
+            }
+
+            string clr = report.MilkyWay.MountainClearanceDisplay ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(clr) && !clr.StartsWith("⛰️"))
+                clr = $"⛰️ {clr}";
+            if (TxtMilkyWayClearance != null)
+            {
+                TxtMilkyWayClearance.Text = clr;
+                TxtMilkyWayClearance.Visibility = string.IsNullOrWhiteSpace(clr) ? Visibility.Collapsed : Visibility.Visible;
+            }
+            if (TxtMilkyWayClearanceMobile != null)
+            {
+                TxtMilkyWayClearanceMobile.Text = clr;
+                TxtMilkyWayClearanceMobile.Visibility = string.IsNullOrWhiteSpace(clr) ? Visibility.Collapsed : Visibility.Visible;
+            }
+
+            string moon = report.MilkyWay.MoonInterferenceDisplay ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(moon) && !moon.StartsWith("🌙"))
+                moon = $"🌙 {moon}";
+            if (TxtMilkyWayMoon != null)
+            {
+                TxtMilkyWayMoon.Text = moon;
+                TxtMilkyWayMoon.Visibility = string.IsNullOrWhiteSpace(moon) ? Visibility.Collapsed : Visibility.Visible;
+            }
+            if (TxtMilkyWayMoonMobile != null)
+            {
+                TxtMilkyWayMoonMobile.Text = moon;
+                TxtMilkyWayMoonMobile.Visibility = string.IsNullOrWhiteSpace(moon) ? Visibility.Collapsed : Visibility.Visible;
+            }
+
+            if (MilkyWayDetailsBox != null)
+            {
+                bool hasDetails = (TxtMilkyWayPeak != null && TxtMilkyWayPeak.Visibility == Visibility.Visible) ||
+                                  (TxtMilkyWayClearance != null && TxtMilkyWayClearance.Visibility == Visibility.Visible) ||
+                                  (TxtMilkyWayMoon != null && TxtMilkyWayMoon.Visibility == Visibility.Visible);
+                MilkyWayDetailsBox.Visibility = (_isCompact || !hasDetails) ? Visibility.Collapsed : Visibility.Visible;
+            }
 
             if (BadgeMilkyWay != null && TxtMilkyWayBadge != null)
             {
                 var tm = ThemeManager.Current;
-                if (report.MilkyWay.IsActive)
+                if (_isCompact)
                 {
-                    BadgeMilkyWay.Background = tm.Accent;
-                    TxtMilkyWayBadge.Foreground = Brushes.White;
-                }
-                else if (report.MilkyWay.IsFuture && report.MilkyWay.IsQualityPositive)
-                {
-                    BadgeMilkyWay.Background = tm.ButtonActiveBackground;
-                    TxtMilkyWayBadge.Foreground = tm.ButtonActiveForeground;
+                    BadgeMilkyWay.Background = Brushes.Transparent;
+                    BadgeMilkyWay.BorderBrush = Brushes.Transparent;
+                    BadgeMilkyWay.BorderThickness = new Thickness(0);
+                    BadgeMilkyWay.Padding = new Thickness(0);
+                    BadgeMilkyWay.HorizontalAlignment = HorizontalAlignment.Left;
+                    Grid.SetRow(BadgeMilkyWay, 1);
+                    Grid.SetColumn(BadgeMilkyWay, 0);
+                    Grid.SetColumnSpan(BadgeMilkyWay, 2);
+                    TxtMilkyWayBadge.Foreground = tm.TextPrimary;
                 }
                 else
                 {
-                    BadgeMilkyWay.Background = tm.ButtonInactiveBackground;
-                    TxtMilkyWayBadge.Foreground = tm.TextMuted;
+                    Grid.SetRow(BadgeMilkyWay, 0);
+                    Grid.SetColumn(BadgeMilkyWay, 1);
+                    Grid.SetColumnSpan(BadgeMilkyWay, 1);
+                    BadgeMilkyWay.HorizontalAlignment = HorizontalAlignment.Right;
+                    BadgeMilkyWay.BorderThickness = new Thickness(1);
+                    BadgeMilkyWay.Padding = new Thickness(8, 2, 8, 2);
+                    BadgeMilkyWay.CornerRadius = new CornerRadius(8);
+                    if (report.MilkyWay.IsActive)
+                    {
+                        BadgeMilkyWay.Background = tm.Accent;
+                        TxtMilkyWayBadge.Foreground = Brushes.White;
+                    }
+                    else if (report.MilkyWay.IsFuture && report.MilkyWay.IsQualityPositive)
+                    {
+                        BadgeMilkyWay.Background = tm.ButtonActiveBackground;
+                        TxtMilkyWayBadge.Foreground = tm.ButtonActiveForeground;
+                    }
+                    else
+                    {
+                        BadgeMilkyWay.Background = tm.ButtonInactiveBackground;
+                        TxtMilkyWayBadge.Foreground = tm.TextMuted;
+                    }
                 }
             }
         }
@@ -456,6 +849,7 @@ public partial class CelestialInfoControl : UserControl
             {
                 var card = cardsToOrder[i].Card;
                 if (card == null) continue;
+                card.VerticalAlignment = VerticalAlignment.Top;
                 card.Margin = (i == cardsToOrder.Count - 1)
                     ? new Thickness(0, 0, 0, 4)
                     : new Thickness(0, 0, 0, 8);
@@ -468,6 +862,7 @@ public partial class CelestialInfoControl : UserControl
         {
             if (TxtSeasonTitle != null) TxtSeasonTitle.Text = $"{report.SeasonMarker.CurrentSeason}: {report.SeasonMarker.NextMarkerName}";
             if (TxtSeasonBadge != null) TxtSeasonBadge.Text = report.SeasonMarker.CountdownDisplay;
+            if (TxtSeasonBadgeInline != null) TxtSeasonBadgeInline.Text = $"  •  {report.SeasonMarker.CountdownDisplay}";
             if (TxtSeasonDate != null) TxtSeasonDate.Text = report.SeasonMarker.NextMarkerDateDisplay;
             if (TxtSeasonTrend != null) TxtSeasonTrend.Text = report.SeasonMarker.TrendDescription;
             if (TxtDesktopSeasonDesc != null) TxtDesktopSeasonDesc.Text = report.SeasonMarker.Description;
@@ -478,15 +873,34 @@ public partial class CelestialInfoControl : UserControl
         {
             if (TxtTrailLightWindow != null) TxtTrailLightWindow.Text = $"{report.Twilight.TrailLightWindowDisplay} ({report.Twilight.TrailLightDurationDisplay})";
             if (TxtDesktopTrailLightNote != null) TxtDesktopTrailLightNote.Text = report.Twilight.TrailLightNote;
-            if (TxtAstroDawnTime != null) TxtAstroDawnTime.Text = report.Twilight.AstroDawn?.TimeDisplay ?? "--";
-            if (TxtNauticalDawnTime != null) TxtNauticalDawnTime.Text = report.Twilight.NauticalDawn?.TimeDisplay ?? "--";
-            if (TxtCivilDawnTime != null) TxtCivilDawnTime.Text = report.Twilight.CivilDawn?.TimeDisplay ?? "--";
-            if (TxtTopoSunriseMiniTime != null) TxtTopoSunriseMiniTime.Text = report.Twilight.MountainSunrise?.TimeDisplay ?? "--";
 
-            if (TxtTopoSunsetMiniTime != null) TxtTopoSunsetMiniTime.Text = report.Twilight.MountainSunset?.TimeDisplay ?? "--";
-            if (TxtCivilDuskTime != null) TxtCivilDuskTime.Text = report.Twilight.CivilDusk?.TimeDisplay ?? "--";
-            if (TxtNauticalDuskTime != null) TxtNauticalDuskTime.Text = report.Twilight.NauticalDusk?.TimeDisplay ?? "--";
-            if (TxtAstroDuskTime != null) TxtAstroDuskTime.Text = report.Twilight.AstroDusk?.TimeDisplay ?? "--";
+            string astroDawn = report.Twilight.AstroDawn?.TimeDisplay ?? "--";
+            string nauticalDawn = report.Twilight.NauticalDawn?.TimeDisplay ?? "--";
+            string civilDawn = report.Twilight.CivilDawn?.TimeDisplay ?? "--";
+            string mountainSunrise = report.Twilight.MountainSunrise?.TimeDisplay ?? "--";
+
+            if (TxtAstroDawnTime != null) TxtAstroDawnTime.Text = astroDawn;
+            if (TxtAstroDawnTimeMobile != null) TxtAstroDawnTimeMobile.Text = astroDawn;
+            if (TxtNauticalDawnTime != null) TxtNauticalDawnTime.Text = nauticalDawn;
+            if (TxtNauticalDawnTimeMobile != null) TxtNauticalDawnTimeMobile.Text = nauticalDawn;
+            if (TxtCivilDawnTime != null) TxtCivilDawnTime.Text = civilDawn;
+            if (TxtCivilDawnTimeMobile != null) TxtCivilDawnTimeMobile.Text = civilDawn;
+            if (TxtTopoSunriseMiniTime != null) TxtTopoSunriseMiniTime.Text = mountainSunrise;
+            if (TxtTopoSunriseMiniTimeMobile != null) TxtTopoSunriseMiniTimeMobile.Text = mountainSunrise;
+
+            string mountainSunset = report.Twilight.MountainSunset?.TimeDisplay ?? "--";
+            string civilDusk = report.Twilight.CivilDusk?.TimeDisplay ?? "--";
+            string nauticalDusk = report.Twilight.NauticalDusk?.TimeDisplay ?? "--";
+            string astroDusk = report.Twilight.AstroDusk?.TimeDisplay ?? "--";
+
+            if (TxtTopoSunsetMiniTime != null) TxtTopoSunsetMiniTime.Text = mountainSunset;
+            if (TxtTopoSunsetMiniTimeMobile != null) TxtTopoSunsetMiniTimeMobile.Text = mountainSunset;
+            if (TxtCivilDuskTime != null) TxtCivilDuskTime.Text = civilDusk;
+            if (TxtCivilDuskTimeMobile != null) TxtCivilDuskTimeMobile.Text = civilDusk;
+            if (TxtNauticalDuskTime != null) TxtNauticalDuskTime.Text = nauticalDusk;
+            if (TxtNauticalDuskTimeMobile != null) TxtNauticalDuskTimeMobile.Text = nauticalDusk;
+            if (TxtAstroDuskTime != null) TxtAstroDuskTime.Text = astroDusk;
+            if (TxtAstroDuskTimeMobile != null) TxtAstroDuskTimeMobile.Text = astroDusk;
 
             if (TxtTwilightNoteSunrise != null) TxtTwilightNoteSunrise.Text = $"• Mountain Sunrise: {report.Twilight.MountainSunrise?.Note ?? "--"}";
             if (TxtTwilightNoteSunset != null) TxtTwilightNoteSunset.Text = $"• Mountain Sunset: {report.Twilight.MountainSunset?.Note ?? "--"}";
@@ -499,10 +913,14 @@ public partial class CelestialInfoControl : UserControl
         WindowCelestialEvent? ev,
         TextBlock titleText,
         TextBlock topoTimeText,
+        TextBlock? topoTimeTextMobile,
         TextBlock topoAzText,
+        TextBlock? topoAzTextMobile,
         TextBlock topoTagText,
         TextBlock standardText,
+        TextBlock? standardTextMobile,
         TextBlock shiftText,
+        TextBlock? shiftTextMobile,
         Border badgeBorder,
         TextBlock badgeText)
     {
@@ -511,10 +929,14 @@ public partial class CelestialInfoControl : UserControl
         if (ev == null || !ev.HasEvent)
         {
             topoTimeText.Text = "None found";
+            if (topoTimeTextMobile != null) topoTimeTextMobile.Text = "None found";
             topoAzText.Text = "--";
+            if (topoAzTextMobile != null) topoAzTextMobile.Text = "--";
             topoTagText.Visibility = Visibility.Collapsed;
             standardText.Text = "Standard: None";
+            if (standardTextMobile != null) standardTextMobile.Text = "Standard: None";
             shiftText.Text = "No crossing";
+            if (shiftTextMobile != null) shiftTextMobile.Text = "No crossing";
             badgeBorder.Visibility = Visibility.Collapsed;
             return;
         }
@@ -523,25 +945,60 @@ public partial class CelestialInfoControl : UserControl
 
         // Topo displays
         topoTimeText.Text = ev.TopoTimeDisplay;
-        topoAzText.Text = $"{ev.TopoAzimuthDisplay}  •  {ev.TopoElevationDisplay}";
+        if (topoTimeTextMobile != null) topoTimeTextMobile.Text = ev.TopoTimeDisplay;
+
+        string azDisplay = $"{ev.TopoAzimuthDisplay}  •  {ev.TopoElevationDisplay}";
+        topoAzText.Text = azDisplay;
+        if (topoAzTextMobile != null) topoAzTextMobile.Text = azDisplay;
 
         // Standard comparison
-        standardText.Text = $"Standard: {ev.AstroTimeDisplay}";
+        string stdDisplay = $"Standard: {ev.AstroTimeDisplay}";
+        standardText.Text = stdDisplay;
+        if (standardTextMobile != null) standardTextMobile.Text = stdDisplay;
+
         shiftText.Text = ev.TopoShiftDisplay;
+        if (shiftTextMobile != null) shiftTextMobile.Text = ev.TopoShiftDisplay;
 
         // Countdown / Past Badge
         badgeBorder.Visibility = Visibility.Visible;
-        if (ev.IsFuture)
+        string countdown = ev.TimeUntilDisplay ?? string.Empty;
+        if (countdown.StartsWith("⏳ ")) countdown = countdown.Substring(2).TrimStart();
+        if (countdown.StartsWith("in ", StringComparison.OrdinalIgnoreCase)) countdown = "In " + countdown.Substring(3);
+
+        if (_isCompact)
         {
-            badgeText.Text = $"⏳ {ev.TimeUntilDisplay}";
-            badgeBorder.Background = tm.ButtonActiveBackground;
-            badgeText.Foreground = tm.ButtonActiveForeground;
+            badgeText.Text = countdown;
+            badgeBorder.Background = Brushes.Transparent;
+            badgeBorder.BorderBrush = Brushes.Transparent;
+            badgeBorder.BorderThickness = new Thickness(0);
+            badgeBorder.Padding = new Thickness(0);
+            badgeBorder.HorizontalAlignment = HorizontalAlignment.Left;
+            Grid.SetRow(badgeBorder, 1);
+            Grid.SetColumn(badgeBorder, 0);
+            Grid.SetColumnSpan(badgeBorder, 2);
+            badgeText.Foreground = tm.TextPrimary;
         }
         else
         {
-            badgeText.Text = $"✓ {ev.TimeUntilDisplay}";
-            badgeBorder.Background = tm.ButtonInactiveBackground;
-            badgeText.Foreground = tm.TextMuted;
+            Grid.SetRow(badgeBorder, 0);
+            Grid.SetColumn(badgeBorder, 1);
+            Grid.SetColumnSpan(badgeBorder, 1);
+            badgeBorder.HorizontalAlignment = HorizontalAlignment.Right;
+            badgeBorder.BorderThickness = new Thickness(1);
+            badgeBorder.Padding = new Thickness(8, 2, 8, 2);
+            badgeBorder.CornerRadius = new CornerRadius(8);
+            if (ev.IsFuture)
+            {
+                badgeText.Text = countdown;
+                badgeBorder.Background = tm.ButtonActiveBackground;
+                badgeText.Foreground = tm.ButtonActiveForeground;
+            }
+            else
+            {
+                badgeText.Text = $"✓ {countdown}";
+                badgeBorder.Background = tm.ButtonInactiveBackground;
+                badgeText.Foreground = tm.TextMuted;
+            }
         }
     }
 
@@ -549,8 +1006,11 @@ public partial class CelestialInfoControl : UserControl
         PhotographyWindowItem? item,
         Border card,
         TextBlock timeText,
+        TextBlock? timeTextMobile,
         TextBlock subText,
+        TextBlock? subTextMobile,
         TextBlock? directSunText,
+        TextBlock? directSunTextMobile,
         TextBlock? descText,
         Border badgeBorder,
         TextBlock badgeText)
@@ -565,25 +1025,63 @@ public partial class CelestialInfoControl : UserControl
 
         card.Visibility = Visibility.Visible;
         timeText.Text = item.TimeWindowDisplay;
+        if (timeTextMobile != null) timeTextMobile.Text = item.TimeWindowDisplay;
+
         subText.Text = item.SubTitle;
+        if (subTextMobile != null) subTextMobile.Text = item.SubTitle;
+
         if (directSunText != null) directSunText.Text = item.DirectSunDisplay;
+        if (directSunTextMobile != null) directSunTextMobile.Text = item.DirectSunDisplay;
+
         if (descText != null) descText.Text = item.Description;
 
-        badgeText.Text = item.CountdownDisplay;
-        if (item.IsActive)
+        string countdown = item.CountdownDisplay ?? string.Empty;
+        if (countdown.StartsWith("⏳ "))
         {
-            badgeBorder.Background = tm.Accent;
-            badgeText.Foreground = Brushes.White;
+            countdown = countdown.Substring(2).TrimStart();
         }
-        else if (item.IsFuture)
+        if (countdown.StartsWith("in ", StringComparison.OrdinalIgnoreCase))
         {
-            badgeBorder.Background = tm.ButtonActiveBackground;
-            badgeText.Foreground = tm.ButtonActiveForeground;
+            countdown = "In " + countdown.Substring(3);
+        }
+        badgeText.Text = countdown;
+
+        if (_isCompact)
+        {
+            badgeBorder.Background = Brushes.Transparent;
+            badgeBorder.BorderBrush = Brushes.Transparent;
+            badgeBorder.BorderThickness = new Thickness(0);
+            badgeBorder.Padding = new Thickness(0);
+            badgeBorder.HorizontalAlignment = HorizontalAlignment.Left;
+            Grid.SetRow(badgeBorder, 1);
+            Grid.SetColumn(badgeBorder, 0);
+            Grid.SetColumnSpan(badgeBorder, 2);
+            badgeText.Foreground = tm.TextPrimary;
         }
         else
         {
-            badgeBorder.Background = tm.ButtonInactiveBackground;
-            badgeText.Foreground = tm.TextMuted;
+            Grid.SetRow(badgeBorder, 0);
+            Grid.SetColumn(badgeBorder, 1);
+            Grid.SetColumnSpan(badgeBorder, 1);
+            badgeBorder.HorizontalAlignment = HorizontalAlignment.Right;
+            badgeBorder.BorderThickness = new Thickness(1);
+            badgeBorder.Padding = new Thickness(8, 2, 8, 2);
+            badgeBorder.CornerRadius = new CornerRadius(8);
+            if (item.IsActive)
+            {
+                badgeBorder.Background = tm.Accent;
+                badgeText.Foreground = Brushes.White;
+            }
+            else if (item.IsFuture)
+            {
+                badgeBorder.Background = tm.ButtonActiveBackground;
+                badgeText.Foreground = tm.ButtonActiveForeground;
+            }
+            else
+            {
+                badgeBorder.Background = tm.ButtonInactiveBackground;
+                badgeText.Foreground = tm.TextMuted;
+            }
         }
     }
 
@@ -685,7 +1183,10 @@ public partial class CelestialInfoControl : UserControl
         TextBlock?[] prominentTimes = [
             TxtSunriseTopoTime, TxtSunsetTopoTime, TxtMoonriseTopoTime, TxtMoonsetTopoTime,
             TxtSolarNoonTime, TxtMorningBlueTime, TxtMorningGoldenTime,
-            TxtEveningGoldenTime, TxtEveningBlueTime, TxtMilkyWayWindow, TxtSeasonDate
+            TxtEveningGoldenTime, TxtEveningBlueTime, TxtMilkyWayWindow, TxtSeasonDate,
+            TxtSunriseTopoTimeMobile, TxtSunsetTopoTimeMobile, TxtMoonriseTopoTimeMobile, TxtMoonsetTopoTimeMobile,
+            TxtSolarNoonTimeMobile, TxtMorningBlueTimeMobile, TxtMorningGoldenTimeMobile,
+            TxtEveningGoldenTimeMobile, TxtEveningBlueTimeMobile, TxtMilkyWayWindowMobile, TxtSeasonBadgeInline
         ];
         foreach (var pt in prominentTimes)
         {
@@ -696,8 +1197,15 @@ public partial class CelestialInfoControl : UserControl
         TextBlock?[] secondaryTexts = [
             TxtSunriseTopoAz, TxtSunsetTopoAz, TxtMoonriseTopoAz, TxtMoonsetTopoAz,
             TxtSolarNoonElevation, TxtSeasonTrend, TxtTrailLightWindow,
-            TxtMilkyWayPeak, TxtMorningBlueSub, TxtMorningGoldenSub,
-            TxtEveningGoldenSub, TxtEveningBlueSub
+            TxtMilkyWayPeak, TxtMilkyWayClearance, TxtMilkyWayMoon,
+            TxtMorningBlueSub, TxtMorningGoldenSub,
+            TxtEveningGoldenSub, TxtEveningBlueSub,
+            TxtSunriseTopoAzMobile, TxtSunsetTopoAzMobile, TxtMoonriseTopoAzMobile, TxtMoonsetTopoAzMobile,
+            TxtSolarNoonElevationMobile, TxtMorningBlueSubMobile, TxtMorningGoldenSubMobile,
+            TxtEveningGoldenSubMobile, TxtEveningBlueSubMobile,
+            TxtMilkyWayPeakMobile, TxtMilkyWayClearanceMobile, TxtMilkyWayMoonMobile,
+            TxtAstroDawnLabelMobile, TxtNauticalDawnLabelMobile, TxtCivilDawnLabelMobile,
+            TxtCivilDuskLabelMobile, TxtNauticalDuskLabelMobile, TxtAstroDuskLabelMobile
         ];
         foreach (var st in secondaryTexts)
         {
@@ -705,7 +1213,10 @@ public partial class CelestialInfoControl : UserControl
         }
 
         // Standards & Shifts
-        TextBlock?[] standards = [TxtSunriseStandard, TxtSunsetStandard, TxtMoonriseStandard, TxtMoonsetStandard];
+        TextBlock?[] standards = [
+            TxtSunriseStandard, TxtSunsetStandard, TxtMoonriseStandard, TxtMoonsetStandard,
+            TxtSunriseStandardMobile, TxtSunsetStandardMobile, TxtMoonriseStandardMobile, TxtMoonsetStandardMobile
+        ];
         foreach (var s in standards)
         {
             if (s != null) s.Foreground = tm.TextMuted;
@@ -713,7 +1224,9 @@ public partial class CelestialInfoControl : UserControl
 
         TextBlock?[] shifts = [
             TxtSunriseShift, TxtSunsetShift, TxtMoonriseShift, TxtMoonsetShift,
-            TxtMorningGoldenDirect, TxtEveningGoldenDirect
+            TxtMorningGoldenDirect, TxtEveningGoldenDirect,
+            TxtSunriseShiftMobile, TxtSunsetShiftMobile, TxtMoonriseShiftMobile, TxtMoonsetShiftMobile,
+            TxtMorningGoldenDirectMobile, TxtEveningGoldenDirectMobile
         ];
         foreach (var sh in shifts)
         {
@@ -721,7 +1234,7 @@ public partial class CelestialInfoControl : UserControl
         }
 
         // Additional Card Sub-Borders
-        Border?[] subBoxes = [DaylightCompareBox, TrailLightBanner];
+        Border?[] subBoxes = [DaylightCompareBox, TrailLightBanner, MilkyWayDetailsBox];
         foreach (var sb in subBoxes)
         {
             if (sb != null)
@@ -733,17 +1246,22 @@ public partial class CelestialInfoControl : UserControl
 
         // Accent Highlights
         if (TxtTopoDaylight != null) TxtTopoDaylight.Foreground = tm.Accent;
+        if (TxtTopoDaylightMobile != null) TxtTopoDaylightMobile.Foreground = tm.Accent;
         if (TxtTopoSunriseMiniTime != null) TxtTopoSunriseMiniTime.Foreground = tm.Accent;
+        if (TxtTopoSunriseMiniTimeMobile != null) TxtTopoSunriseMiniTimeMobile.Foreground = tm.Accent;
         if (TxtTopoSunsetMiniTime != null) TxtTopoSunsetMiniTime.Foreground = tm.Accent;
+        if (TxtTopoSunsetMiniTimeMobile != null) TxtTopoSunsetMiniTimeMobile.Foreground = tm.Accent;
         if (TxtTopoSunriseHeader != null) TxtTopoSunriseHeader.Foreground = tm.Accent;
+        if (TxtTopoSunriseHeaderMobile != null) TxtTopoSunriseHeaderMobile.Foreground = tm.Accent;
         if (TxtTopoSunsetHeader != null) TxtTopoSunsetHeader.Foreground = tm.Accent;
+        if (TxtTopoSunsetHeaderMobile != null) TxtTopoSunsetHeaderMobile.Foreground = tm.Accent;
 
         // Muted Descriptions
         TextBlock?[] mutedTexts = [
             TxtFlatDaylight, TxtTopoLost, TxtDaylightTrend,
+            TxtFlatDaylightMobile, TxtTopoLostMobile, TxtDaylightTrendMobile,
             TxtDesktopSeasonDesc, TxtDesktopTrailLightNote,
             TxtTwilightNoteSunrise, TxtTwilightNoteSunset,
-            TxtMilkyWayClearance, TxtMilkyWayMoon,
             TxtMorningBlueDesc, TxtEveningBlueDesc
         ];
         foreach (var mt in mutedTexts)
@@ -754,11 +1272,46 @@ public partial class CelestialInfoControl : UserControl
         // Progression Times
         TextBlock?[] progTimes = [
             TxtAstroDawnTime, TxtNauticalDawnTime, TxtCivilDawnTime,
-            TxtCivilDuskTime, TxtNauticalDuskTime, TxtAstroDuskTime
+            TxtCivilDuskTime, TxtNauticalDuskTime, TxtAstroDuskTime,
+            TxtAstroDawnTimeMobile, TxtNauticalDawnTimeMobile, TxtCivilDawnTimeMobile,
+            TxtCivilDuskTimeMobile, TxtNauticalDuskTimeMobile, TxtAstroDuskTimeMobile
         ];
         foreach (var pt in progTimes)
         {
             if (pt != null) pt.Foreground = tm.TextPrimary;
+        }
+
+        // All Timeline Badges styling
+        Border?[] allBadges = [
+            BadgeSunrise, BadgeSunset, BadgeMoonrise, BadgeMoonset,
+            BadgeSolarNoon, BadgeMorningBlue, BadgeMorningGolden,
+            BadgeEveningGolden, BadgeEveningBlue, BadgeMilkyWay
+        ];
+        TextBlock?[] allBadgeTexts = [
+            TxtSunriseBadge, TxtSunsetBadge, TxtMoonriseBadge, TxtMoonsetBadge,
+            TxtSolarNoonBadge, TxtMorningBlueBadge, TxtMorningGoldenBadge,
+            TxtEveningGoldenBadge, TxtEveningBlueBadge, TxtMilkyWayBadge
+        ];
+
+        if (_isCompact)
+        {
+            foreach (var b in allBadges)
+            {
+                if (b != null)
+                {
+                    b.Background = Brushes.Transparent;
+                    b.BorderBrush = Brushes.Transparent;
+                    b.BorderThickness = new Thickness(0);
+                    b.Padding = new Thickness(0);
+                }
+            }
+            foreach (var bt in allBadgeTexts)
+            {
+                if (bt != null)
+                {
+                    bt.Foreground = tm.TextPrimary;
+                }
+            }
         }
 
         // Season Badge
@@ -768,15 +1321,45 @@ public partial class CelestialInfoControl : UserControl
             if (TxtSeasonBadge != null) TxtSeasonBadge.Foreground = tm.TextSecondary;
         }
 
-        // Milky Way Badge
-        if (BadgeMilkyWay != null)
+        // Milky Way Badge (when not compact)
+        if (!_isCompact && BadgeMilkyWay != null && TxtMilkyWayBadge != null)
         {
-            bool isQualityPositive = _lastReport?.MilkyWay?.IsQualityPositive ?? false;
-            BadgeMilkyWay.Background = isQualityPositive ? tm.ButtonActiveBackground : tm.ButtonInactiveBackground;
-            if (TxtMilkyWayBadge != null)
+            if (_lastReport?.MilkyWay != null)
             {
-                TxtMilkyWayBadge.Foreground = isQualityPositive ? tm.ButtonActiveForeground : tm.TextMuted;
+                if (_lastReport.MilkyWay.IsActive)
+                {
+                    BadgeMilkyWay.Background = tm.Accent;
+                    TxtMilkyWayBadge.Foreground = Brushes.White;
+                }
+                else if (_lastReport.MilkyWay.IsFuture && _lastReport.MilkyWay.IsQualityPositive)
+                {
+                    BadgeMilkyWay.Background = tm.ButtonActiveBackground;
+                    TxtMilkyWayBadge.Foreground = tm.ButtonActiveForeground;
+                }
+                else
+                {
+                    BadgeMilkyWay.Background = tm.ButtonInactiveBackground;
+                    TxtMilkyWayBadge.Foreground = tm.TextMuted;
+                }
             }
+            else
+            {
+                BadgeMilkyWay.Background = tm.ButtonInactiveBackground;
+                TxtMilkyWayBadge.Foreground = tm.TextMuted;
+            }
+        }
+
+        // Milky Way Status
+        if (TxtMilkyWayStatus != null)
+        {
+            bool isQualityPositive = _lastReport?.MilkyWay?.IsQualityPositive ?? true;
+            var mwColor = !isQualityPositive
+                ? tm.TextMuted
+                : (isDark
+                    ? new SolidColorBrush(Color.FromArgb(255, 165, 180, 252))
+                    : new SolidColorBrush(Color.FromArgb(255, 79, 70, 229)));
+            TxtMilkyWayStatus.Foreground = mwColor;
+            if (TxtMilkyWayStatusMobile != null) TxtMilkyWayStatusMobile.Foreground = mwColor;
         }
 
         // Close and Refresh buttons

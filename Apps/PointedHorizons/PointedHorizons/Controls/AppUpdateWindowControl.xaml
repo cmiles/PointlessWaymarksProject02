@@ -26,7 +26,7 @@
 
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Text="🚀" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                        <TextBlock x:Name="HeaderTitleText" Text="{Binding UpdateWindowTitle, FallbackValue='Pointed Horizons Updates'}" FontWeight="Bold" FontSize="14" Foreground="{StaticResource TextHeadingBrush}" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="HeaderTitleText" Text="{Binding UpdateWindowTitle, FallbackValue='Pointed Horizons Updates'}" FontWeight="Bold" FontSize="14" Foreground="{StaticResource TextHeadingBrush}" VerticalAlignment="Center" TextWrapping="Wrap"/>
                     </StackPanel>
 
                     <Button x:Name="BtnCloseHeader" Grid.Column="1" Content="✕" Command="{Binding CloseUpdateWindowCommand}" Click="Dismiss_Click"
@@ -84,10 +84,18 @@
                     <Border x:Name="InfoCardBorder" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,0,12"
                             Visibility="{Binding UpdateInstallerInfoVisibility, FallbackValue='Visible'}">
                         <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                <TextBlock x:Name="InfoPackageLabelText" Text="Package: " FontSize="11" Foreground="{StaticResource TextMutedBrush}"/>
-                                <TextBlock x:Name="InfoPackageValueText" Text="{Binding UpdateInstallerFileName, FallbackValue='PointlessWaymarks-PointedHorizonsWin-Setup.exe'}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource HyperlinkBrush}"/>
-                            </StackPanel>
+                            <Grid x:Name="PackageInfoGrid" Margin="0,0,0,4">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition x:Name="ColPackageLabel" Width="Auto" />
+                                    <ColumnDefinition x:Name="ColPackageValue" Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Name="InfoPackageLabelText" Grid.Row="0" Grid.Column="0" Text="Package: " FontSize="11" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Top" Margin="0,0,4,0"/>
+                                <TextBlock x:Name="InfoPackageValueText" Grid.Row="0" Grid.Column="1" Text="{Binding UpdateInstallerFileName, FallbackValue='PointlessWaymarks-PointedHorizonsWin-Setup.exe'}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource HyperlinkBrush}" TextWrapping="Wrap"/>
+                            </Grid>
                             <TextBlock x:Name="InfoExplanationText" Text="{Binding UpdatePackageInstructionText, FallbackValue='Click Update Now to download and run the installer.'}"
                                        FontSize="10" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap"/>
                         </StackPanel>
@@ -107,15 +115,19 @@
                     <Border x:Name="ProgressCardBorder" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource SkyAccentBrush}" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,8"
                             Visibility="{Binding DownloadSectionVisibility, FallbackValue='Collapsed'}">
                         <StackPanel>
-                            <Grid Margin="0,0,0,6">
+                            <Grid x:Name="ProgressInfoGrid" Margin="0,0,0,6">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition x:Name="ColProgressStatus" Width="*" />
+                                    <ColumnDefinition x:Name="ColProgressPercent" Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="ProgressStatusText" Text="{Binding DownloadOperationStatus, FallbackValue='Downloading...'}" 
-                                           FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource SkyAccentBrush}"/>
-                                <TextBlock x:Name="ProgressPercentText" Grid.Column="1" Text="{Binding UpdateDownloadProgressText, FallbackValue='0%'}" 
-                                           FontSize="11" FontWeight="Bold" Foreground="{StaticResource SkyAccentBrush}"/>
+                                <TextBlock x:Name="ProgressStatusText" Grid.Row="0" Grid.Column="0" Text="{Binding DownloadOperationStatus, FallbackValue='Downloading...'}" 
+                                           FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource SkyAccentBrush}" TextWrapping="Wrap"/>
+                                <TextBlock x:Name="ProgressPercentText" Grid.Row="0" Grid.Column="1" Text="{Binding UpdateDownloadProgressText, FallbackValue='0%'}" 
+                                           FontSize="11" FontWeight="Bold" Foreground="{StaticResource SkyAccentBrush}" TextWrapping="Wrap" TextAlignment="Right"/>
                             </Grid>
 
                             <!-- Smooth Progress Bar -->
@@ -143,24 +155,27 @@
             </ScrollViewer>
 
             <!-- Action Buttons Footer -->
-            <Border x:Name="FooterBorder" Grid.Row="2" Background="{StaticResource SubtleCardBackgroundBrush}" CornerRadius="0,0,9,9" Padding="16,12" 
+            <Border x:Name="FooterBorder" Grid.Row="2" Background="{StaticResource SubtleCardBackgroundBrush}" CornerRadius="0,0,9,9" Padding="14,10" 
                     BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,1,0,0">
-                <Grid>
+                <Grid x:Name="FooterButtonsGrid">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
                     <!-- Later / Not Now -->
-                    <Button x:Name="BtnDismiss" Grid.Column="0" Content="{Binding UpdateDismissButtonText, FallbackValue='Close'}" Command="{Binding CloseUpdateWindowCommand}" Click="Dismiss_Click"
-                            IsEnabled="{Binding IsNotDownloadingUpdate}"
+                    <Button x:Name="BtnDismiss" Grid.Row="0" Grid.Column="0" Content="{Binding UpdateDismissButtonText, FallbackValue='Close'}" Command="{Binding CloseUpdateWindowCommand}" Click="Dismiss_Click"
+                            IsEnabled="{Binding IsNotDownloadingUpdate}" HorizontalAlignment="Left"
                             Padding="12,6" FontSize="11" FontWeight="SemiBold" Cursor="Hand"/>
 
                     <!-- Update Now -->
-                    <Button x:Name="BtnUpdate" Grid.Column="2" Content="{Binding UpdateActionButtonText, FallbackValue='Download &amp; Install Now'}" 
+                    <Button x:Name="BtnUpdate" Grid.Row="0" Grid.Column="1" Content="{Binding UpdateActionButtonText, FallbackValue='Download &amp; Install Now'}" 
                             Command="{Binding StartUpdateCommand}" Click="UpdateNow_Click"
-                            IsEnabled="{Binding IsNotDownloadingUpdate}"
+                            IsEnabled="{Binding IsNotDownloadingUpdate}" HorizontalAlignment="Right"
                             Visibility="{Binding UpdateButtonVisibility, FallbackValue='Visible'}"
                             Padding="14,6" FontSize="11" FontWeight="Bold" Cursor="Hand"
                             ToolTipService.ToolTip="Download and install the latest version"/>

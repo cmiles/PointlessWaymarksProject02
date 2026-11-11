@@ -1,0 +1,214 @@
+<UserControl x:Class="PointedHorizons.Controls.AboutControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:PointedHorizons.Controls">
+
+    <Border x:Name="MainBorder" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1.5" CornerRadius="10"
+            Margin="0,4,0,20">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <Border x:Name="HeaderBorder" Grid.Row="0" Background="{StaticResource SubtleCardBackgroundBrush}" CornerRadius="9,9,0,0" Padding="20,16" 
+                    BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="ℹ️" FontSize="18" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock x:Name="TxtAboutTitle" Text="About Pointed Horizons" FontWeight="Bold" FontSize="16" Foreground="{StaticResource TextHeadingBrush}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Content -->
+            <StackPanel Grid.Row="1" Background="{StaticResource AppBackgroundBrush}" Padding="22,18">
+                <!-- Top Info Card -->
+                <Border x:Name="CardTopInfo" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="18,16" Margin="0,0,0,16">
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock x:Name="TxtBioText1" Text="Topo Maps, offline PMTiles support, GPS Tracking, Sun/Moon/Sunset Times and Ray Traced Horizons with labeled Peaks. Pointed Horizons a mashup of features that I have found useful using a combination of Garmin, Backcountry Navigator, Gaia, OnX, CalTopo, OruxNG and PeakFinder over the past 20 years during my hiking, running and adventures in the Southwest United States. Built with C#/.NET using OpenSilver with code generation and assistance from Google's Gemini in Antigravity."
+                                   FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" Margin="0,0,0,14" LineHeight="18"/>
+                        <TextBlock x:Name="TxtBioText2" Text="App written and maintained by Charles Miles. A long time hiker, runner, photographer and explorer in Southern Arizona with over two decades of experience in software development, data management, and inventory control. I run the Thermo Fisher Unity Lab Services Vendor Managed Inventory program at Roche Tissue Diagnostics and am pursuing an AAS in Health Information Technology at Pima Community College to expand my skills into healthcare. I can be found outside in the Rincon Valley southeast of Tucson when not studying."
+                                   FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" Margin="0,0,0,16" LineHeight="18"/>
+                        <controls:WrapPanel Orientation="Horizontal">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,20,6">
+                                <HyperlinkButton Content="Resume - Charles Miles" NavigateUri="https://cmiles.info/Posts/Career/resume/resume.html" TargetName="_blank"
+                                                 Click="Hyperlink_Click"
+                                                 FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource HyperlinkBrush}" 
+                                                 Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,0,20,6">
+                                <TextBlock Text="Personal Website: " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                <HyperlinkButton Content="cmiles.info" NavigateUri="https://cmiles.info/" TargetName="_blank"
+                                                 Click="Hyperlink_Click"
+                                                 FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource HyperlinkBrush}" 
+                                                 Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,0,20,6">
+                                <TextBlock Text="Photography: " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                <HyperlinkButton Content="Pointless Waymarks" NavigateUri="https://pointlesswaymarks.com/" TargetName="_blank"
+                                                 Click="Hyperlink_Click"
+                                                 FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource HyperlinkBrush}" 
+                                                 Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                <TextBlock Text="LinkedIn: " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                <HyperlinkButton Content="Charles Miles" NavigateUri="https://www.linkedin.com/in/charlesamiles/" TargetName="_blank"
+                                                 Click="Hyperlink_Click"
+                                                 FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource HyperlinkBrush}" 
+                                                 Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </controls:WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Packages Section Header -->
+                <TextBlock x:Name="TxtHeadingPackages" Text="PACKAGES &amp; CORE TECHNOLOGIES" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" Margin="2,0,0,10"/>
+
+                <!-- Package 1: OpenSilver -->
+                <Border x:Name="CardPackageOpenSilver" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="16,12" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock x:Name="TxtPkg1Title" Text="OpenSilver" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                        <TextBlock x:Name="TxtPkg1Desc" Text="Open-source framework enabling modern XAML and C# execution via WebAssembly and HTML5 in any modern browser."
+                                   FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                        <HyperlinkButton Content="opensilver.net ↗" NavigateUri="https://opensilver.net" TargetName="_blank"
+                                         Click="Hyperlink_Click" FontSize="11" Foreground="{StaticResource HyperlinkBrush}" HorizontalAlignment="Left" Margin="0,8,0,0" Cursor="Hand" Padding="0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Package 2: MapLibre GL JS -->
+                <Border x:Name="CardPackageMapLibre" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="16,12" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock x:Name="TxtPkg2Title" Text="MapLibre GL JS" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                        <TextBlock x:Name="TxtPkg2Desc" Text="High-performance open-source mapping engine powering interactive vector and raster PMTiles maps, 3D terrain rendering, and GPS track visualization."
+                                   FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                        <HyperlinkButton Content="maplibre.org ↗" NavigateUri="https://maplibre.org" TargetName="_blank"
+                                         Click="Hyperlink_Click" FontSize="11" Foreground="{StaticResource HyperlinkBrush}" HorizontalAlignment="Left" Margin="0,8,0,0" Cursor="Hand" Padding="0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Package 3: PMTiles & Protomaps -->
+                <Border x:Name="CardPackagePmTiles" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="16,12" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock x:Name="TxtPkgPmTilesTitle" Text="PMTiles &amp; Protomaps" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                        <TextBlock x:Name="TxtPkgPmTilesDesc" Text="Cloud-optimized, single-file archive format for map tile pyramids created by Brandon Liu (Protomaps). Enables vector base maps, contours, hillshading, and 3D terrain elevation DEMs to be loaded directly from local storage or cloud object stores using HTTP range requests without requiring a map server."
+                                   FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                        <controls:WrapPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <HyperlinkButton Content="protomaps.com ↗" NavigateUri="https://protomaps.com/" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="{StaticResource HyperlinkBrush}" Margin="0,0,16,0" Cursor="Hand" Padding="0"/>
+                            <HyperlinkButton Content="docs.protomaps.com/pmtiles ↗" NavigateUri="https://docs.protomaps.com/pmtiles/" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="{StaticResource HyperlinkBrush}" Margin="0,0,16,0" Cursor="Hand" Padding="0"/>
+                            <HyperlinkButton Content="github.com/protomaps/PMTiles ↗" NavigateUri="https://github.com/protomaps/PMTiles" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="{StaticResource HyperlinkBrush}" Cursor="Hand" Padding="0"/>
+                        </controls:WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Package 4: Viewfinder Panoramas & Celestial Algorithms -->
+                <Border x:Name="CardPackageDem" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="16,12" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock x:Name="TxtPkg3Title" Text="Viewfinder Panoramas &amp; Solar/Lunar Algorithms" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                        <TextBlock x:Name="TxtPkg3Desc" Text="Digital elevation models from Jonathan de Ferranti's Viewfinder Panoramas (covering global mountain topographies and void-filled SRTM/DEM data) combined with astronomical algorithms to calculate true topographic horizon silhouettes and ridge-clearing celestial times."
+                                   FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                        <HyperlinkButton Content="viewfinderpanoramas.org ↗" NavigateUri="https://viewfinderpanoramas.org/" TargetName="_blank"
+                                         Click="Hyperlink_Click" FontSize="11" Foreground="{StaticResource HyperlinkBrush}" HorizontalAlignment="Left" Margin="0,8,0,0" Cursor="Hand" Padding="0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Map Layers & Providers Section Header -->
+                <TextBlock x:Name="TxtHeadingMapLayers" Text="MAP DATA, BASEMAPS &amp; OVERLAYS" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" Margin="2,6,0,10"/>
+
+                <!-- Layer: OpenStreetMap -->
+                <Border x:Name="CardLayerOsm" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="16,12" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock x:Name="TxtLayerOsmTitle" Text="OpenStreetMap (OSM)" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                        <TextBlock x:Name="TxtLayerOsmDesc" Text="The free, collaborative open map database built by millions of contributors worldwide. Powers the Streets map layer and provides foundational open data for roads, trails, paths, waterways, land use, and backcountry points of interest. Licensed under the Open Data Commons Open Database License (ODbL)."
+                                   FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                        <controls:WrapPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <HyperlinkButton Content="openstreetmap.org ↗" NavigateUri="https://www.openstreetmap.org/" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="{StaticResource HyperlinkBrush}" Margin="0,0,16,0" Cursor="Hand" Padding="0"/>
+                            <HyperlinkButton Content="wiki.openstreetmap.org ↗" NavigateUri="https://wiki.openstreetmap.org/" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="{StaticResource HyperlinkBrush}" Margin="0,0,16,0" Cursor="Hand" Padding="0"/>
+                            <HyperlinkButton Content="ODbL License ↗" NavigateUri="https://opendatacommons.org/licenses/odbl/" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="{StaticResource HyperlinkBrush}" Cursor="Hand" Padding="0"/>
+                        </controls:WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Layer: OpenTopoMap -->
+                <Border x:Name="CardLayerOpenTopo" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="16,12" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock x:Name="TxtLayerOpenTopoTitle" Text="OpenTopoMap" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                        <TextBlock x:Name="TxtLayerOpenTopoDesc" Text="Free topographic map project created by Stefan Erhardt that renders OpenStreetMap vector data combined with SRTM elevation contours into classic official-style topographic maps featuring clear elevation lines, hillshade relief, and marked hiking paths. Licensed under CC-BY-SA."
+                                   FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                        <HyperlinkButton Content="opentopomap.org ↗" NavigateUri="https://opentopomap.org/" TargetName="_blank"
+                                         Click="Hyperlink_Click" FontSize="11" Foreground="{StaticResource HyperlinkBrush}" HorizontalAlignment="Left" Margin="0,8,0,0" Cursor="Hand" Padding="0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Layer: Esri ArcGIS Online -->
+                <Border x:Name="CardLayerEsri" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="16,12" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock x:Name="TxtLayerEsriTitle" Text="Esri World Topographic, Imagery &amp; Reference" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                        <TextBlock x:Name="TxtLayerEsriDesc" Text="High-resolution worldwide satellite and aerial photography (World Imagery), comprehensive global topographic maps with shaded relief and land cover (World Topo Map), and international road, boundary, and place name reference overlays (Hybrid) provided via Esri ArcGIS Online."
+                                   FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                        <controls:WrapPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <HyperlinkButton Content="esri.com/arcgis-online ↗" NavigateUri="https://www.esri.com/en-us/arcgis/products/arcgis-online/overview" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="{StaticResource HyperlinkBrush}" Margin="0,0,16,0" Cursor="Hand" Padding="0"/>
+                            <HyperlinkButton Content="livingatlas.arcgis.com ↗" NavigateUri="https://livingatlas.arcgis.com/en/home/" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="{StaticResource HyperlinkBrush}" Cursor="Hand" Padding="0"/>
+                        </controls:WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Layer: USGS Topo Quads -->
+                <Border x:Name="CardLayerUsgs" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="16,12" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock x:Name="TxtLayerUsgsTitle" Text="USGS Scanned Topo Quads (USA Topo Maps)" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                        <TextBlock x:Name="TxtLayerUsgsDesc" Text="The National Map historical and contemporary 1:24,000 scale 7.5-minute topographic quadrangles from the United States Geological Survey (USGS). Delivers classic hand-drawn and digital USGS contour maps with detailed geographic names, benchmarks, elevation spot heights, and Public Land Survey System (PLSS) section lines."
+                                   FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                        <controls:WrapPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <HyperlinkButton Content="usgs.gov/national-map ↗" NavigateUri="https://www.usgs.gov/programs/national-geospatial-program/national-map" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="{StaticResource HyperlinkBrush}" Margin="0,0,16,0" Cursor="Hand" Padding="0"/>
+                            <HyperlinkButton Content="usgs.gov/topographic-maps ↗" NavigateUri="https://www.usgs.gov/programs/national-geospatial-program/topographic-maps" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="{StaticResource HyperlinkBrush}" Cursor="Hand" Padding="0"/>
+                        </controls:WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Layer: Public Lands & PAD-US -->
+                <Border x:Name="CardLayerPadUs" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="16,12" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock x:Name="TxtLayerPadUsTitle" Text="Public Lands &amp; Protected Areas (PAD-US / BLM)" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextHeadingBrush}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                        <TextBlock x:Name="TxtLayerPadUsDesc" Text="National Surface Management Agency (SMA) and Protected Areas Database of the United States (PAD-US) mapping public land management boundaries and open spaces across the US, including Bureau of Land Management (BLM), US Forest Service (USFS), National Park Service (NPS), US Fish &amp; Wildlife (USFWS), state trust lands, and wilderness designations."
+                                   FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                        <controls:WrapPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <HyperlinkButton Content="blm.gov/services/gis-data ↗" NavigateUri="https://www.blm.gov/services/geospatial/GIS-Data-in-BLM" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="{StaticResource HyperlinkBrush}" Margin="0,0,16,0" Cursor="Hand" Padding="0"/>
+                            <HyperlinkButton Content="usgs.gov/pad-us ↗" NavigateUri="https://www.usgs.gov/programs/gap-analysis-project/pad-us" TargetName="_blank"
+                                             Click="Hyperlink_Click" FontSize="11" Foreground="{StaticResource HyperlinkBrush}" Cursor="Hand" Padding="0"/>
+                        </controls:WrapPanel>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+
+            <!-- Window Footer -->
+            <Border x:Name="FooterBorder" Grid.Row="2" Background="{StaticResource SubtleCardBackgroundBrush}" CornerRadius="0,0,9,9" Padding="18,12" 
+                    BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,1,0,0">
+                <TextBlock x:Name="TxtFooter" Text="Pointless Waymarks Project" FontSize="11" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+            </Border>
+        </Grid>
+        
+    </Border>
+</UserControl>
+

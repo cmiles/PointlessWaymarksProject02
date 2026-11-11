@@ -36,6 +36,25 @@ public partial class FullScreenMapControl : UserControl
     public event EventHandler? OpenTracksPageRequested;
     public event EventHandler? SearchLocationRequested;
 
+    public bool IsRecordingActive => _isRecordingActive;
+    public bool IsGpsActive => _isGpsActive;
+    public string CurrentGpsStatusText => _currentGpsStatusText;
+    private string _currentGpsStatusText = "GPS Ready";
+
+    public event EventHandler<bool>? RecordingStateChanged;
+    public event EventHandler<bool>? GpsStateChanged;
+    public event EventHandler<string>? GpsStatusChanged;
+
+    public void ToggleRecording()
+    {
+        BtnToggleRecording_Click(this, new RoutedEventArgs());
+    }
+
+    public void ToggleGps()
+    {
+        BtnToggleGps_Click(this, new RoutedEventArgs());
+    }
+
     private double _lastPointerLat = 32.2226;
     private double _lastPointerLon = -110.9747;
     private bool _hasPointerPlaced;
@@ -121,6 +140,67 @@ public partial class FullScreenMapControl : UserControl
         };
 
         LeafletScrollIsolationHelper.ProtectControl(this, MapContainer);
+
+        if (HamburgerPanel != null)
+        {
+            HamburgerPanel.MouseWheel += (s, e) =>
+            {
+                if (HamburgerScrollViewer != null)
+                {
+                    HamburgerScrollViewer.ScrollToVerticalOffset(HamburgerScrollViewer.VerticalOffset - (e.Delta / 2.0));
+                    e.Handled = true;
+                }
+            };
+        }
+        if (HamburgerScrollViewer != null)
+        {
+            HamburgerScrollViewer.MouseWheel += (s, e) =>
+            {
+                HamburgerScrollViewer.ScrollToVerticalOffset(HamburgerScrollViewer.VerticalOffset - (e.Delta / 2.0));
+                e.Handled = true;
+            };
+        }
+        if (TracksOverlayPanel != null)
+        {
+            TracksOverlayPanel.MouseWheel += (s, e) =>
+            {
+                if (TracksOverlayScrollViewer != null)
+                {
+                    TracksOverlayScrollViewer.ScrollToVerticalOffset(TracksOverlayScrollViewer.VerticalOffset - (e.Delta / 2.0));
+                    e.Handled = true;
+                }
+            };
+        }
+        if (TracksOverlayScrollViewer != null)
+        {
+            TracksOverlayScrollViewer.MouseWheel += (s, e) =>
+            {
+                TracksOverlayScrollViewer.ScrollToVerticalOffset(TracksOverlayScrollViewer.VerticalOffset - (e.Delta / 2.0));
+                e.Handled = true;
+            };
+        }
+    }
+
+    private void AttachWheelIsolation(FrameworkElement? element)
+    {
+        if (element == null) return;
+        try
+        {
+            object div = Interop.GetDiv(element);
+            if (div != null)
+            {
+                Interop.ExecuteJavaScriptVoid(@"
+                    (function(d) {
+                        if (!d || d._wheelIsolated) return;
+                        d._wheelIsolated = true;
+                        d.addEventListener('wheel', function(e) {
+                            e.stopPropagation();
+                        }, { passive: false });
+                    })($0);
+                ", div);
+            }
+        }
+        catch { }
     }
 
     private void FullScreenMapControl_Loaded(object sender, RoutedEventArgs e)
@@ -141,6 +221,8 @@ public partial class FullScreenMapControl : UserControl
         SetBaseLayer(_currentBaseLayer);
         _ = CheckCrashRecoveryAndRefreshTracksAsync();
         UpdateResponsiveLayout(ActualWidth, ActualHeight);
+        AttachWheelIsolation(HamburgerPanel);
+        AttachWheelIsolation(TracksOverlayPanel);
     }
 
     private bool _isSmallScreen;
@@ -162,12 +244,12 @@ public partial class FullScreenMapControl : UserControl
 
         if (isSmall)
         {
-            // On a small screen, move all buttons and info along top of map to hamburger,
-            // leaving only the Hamburger on top-left and the Track Location icon button on top-right.
-            // Current Location button is moved to the hamburger menu.
+            // On a small screen, move secondary buttons and info along top of map to hamburger,
+            // leaving only the Hamburger on top-left, and on top-right two icon buttons stacked vertically:
+            // 1. Center on current location (top)
+            // 2. Track location (bottom)
             if (CoordsBadgeBorder != null) CoordsBadgeBorder.Visibility = Visibility.Collapsed;
             if (BtnDrawRoute != null) BtnDrawRoute.Visibility = Visibility.Collapsed;
-            if (BtnCurrentLocation != null) BtnCurrentLocation.Visibility = Visibility.Collapsed;
             if (BtnToggle3d != null) BtnToggle3d.Visibility = Visibility.Collapsed;
             if (BtnResetView != null) BtnResetView.Visibility = Visibility.Collapsed;
 
@@ -182,14 +264,36 @@ public partial class FullScreenMapControl : UserControl
                 BtnHamburger.FontSize = 22;
             }
 
-            // Make Track Location map icon button double size (x2 touch target) on mobile
+            if (TopRightControlsPanel != null)
+            {
+                TopRightControlsPanel.Orientation = Orientation.Vertical;
+                TopRightControlsPanel.Margin = new Thickness(0, 14, 10, 0);
+            }
+
+            // Top-right button 1: Center on Current Location (icon only, stacked on top)
+            if (BtnCurrentLocation != null)
+            {
+                BtnCurrentLocation.Visibility = Visibility.Visible;
+                BtnCurrentLocation.Content = "📍";
+                BtnCurrentLocation.MinHeight = 48;
+                BtnCurrentLocation.MinWidth = 48;
+                BtnCurrentLocation.Padding = new Thickness(12, 8, 12, 8);
+                BtnCurrentLocation.FontSize = 20;
+                BtnCurrentLocation.Margin = new Thickness(0, 0, 0, 8);
+                ToolTipService.SetToolTip(BtnCurrentLocation, "Center map on current GPS location");
+            }
+
+            // Top-right button 2: Track Location (icon only, stacked below)
             if (BtnMapTrackLocation != null)
             {
                 BtnMapTrackLocation.Visibility = Visibility.Visible;
+                BtnMapTrackLocation.Content = "🎯";
+                BtnMapTrackLocation.Margin = new Thickness(0);
                 BtnMapTrackLocation.MinHeight = 48;
                 BtnMapTrackLocation.MinWidth = 48;
                 BtnMapTrackLocation.Padding = new Thickness(12, 8, 12, 8);
                 BtnMapTrackLocation.FontSize = 20;
+                ToolTipService.SetToolTip(BtnMapTrackLocation, "Toggle Track Location: keep map centered on your moving GPS location");
             }
 
             // Location & Elevation info is presented in hamburger menu
@@ -203,19 +307,29 @@ public partial class FullScreenMapControl : UserControl
                 BtnMenuCurrentLocation.Visibility = Visibility.Visible;
             }
 
+            if (LiveRecordingBar != null)
+            {
+                LiveRecordingBar.Margin = new Thickness(0, 0, 0, 12);
+                LiveRecordingBar.Padding = new Thickness(12, 7, 12, 7);
+            }
+
             if (HamburgerPanel != null)
             {
                 HamburgerPanel.HorizontalAlignment = HorizontalAlignment.Stretch;
+                HamburgerPanel.VerticalAlignment = VerticalAlignment.Stretch;
                 HamburgerPanel.Width = double.NaN;
-                HamburgerPanel.Margin = new Thickness(14, 68, 14, 10);
+                HamburgerPanel.Height = double.NaN;
+                HamburgerPanel.Margin = new Thickness(10, 10, 10, 10);
             }
             if (HamburgerScrollViewer != null)
             {
-                HamburgerScrollViewer.MaxHeight = Math.Max(200, height - 130);
+                HamburgerScrollViewer.MaxHeight = Math.Max(200, height - 70);
             }
             if (SaveWaypointDialog != null)
             {
-                SaveWaypointDialog.Width = Math.Min(340, width - 28);
+                SaveWaypointDialog.Width = Math.Min(380, width - 16);
+                SaveWaypointDialog.VerticalAlignment = VerticalAlignment.Top;
+                SaveWaypointDialog.Margin = new Thickness(0, Math.Max(16, (height > 600 ? 52 : 28)), 0, 0);
             }
         }
         else
@@ -240,22 +354,34 @@ public partial class FullScreenMapControl : UserControl
                 BtnHamburger.FontSize = 16;
             }
 
+            if (TopRightControlsPanel != null)
+            {
+                TopRightControlsPanel.Orientation = Orientation.Horizontal;
+                TopRightControlsPanel.Margin = new Thickness(0, 14, 14, 0);
+            }
+
             if (BtnCurrentLocation != null)
             {
                 BtnCurrentLocation.Visibility = Visibility.Visible;
                 BtnCurrentLocation.Content = "📍 Current Location";
                 BtnCurrentLocation.MinHeight = 32;
+                BtnCurrentLocation.MinWidth = 0;
                 BtnCurrentLocation.Padding = new Thickness(12, 6, 12, 6);
+                BtnCurrentLocation.FontSize = 11;
                 BtnCurrentLocation.Margin = new Thickness(0, 0, 8, 0);
+                ToolTipService.SetToolTip(BtnCurrentLocation, "Center on current GPS position and move pointer (if not tracking)");
             }
 
             if (BtnMapTrackLocation != null)
             {
                 BtnMapTrackLocation.Visibility = Visibility.Visible;
+                BtnMapTrackLocation.Content = "🎯";
+                BtnMapTrackLocation.Margin = new Thickness(0, 0, 8, 0);
                 BtnMapTrackLocation.MinHeight = 32;
                 BtnMapTrackLocation.MinWidth = 36;
                 BtnMapTrackLocation.Padding = new Thickness(10, 6, 10, 6);
                 BtnMapTrackLocation.FontSize = 14;
+                ToolTipService.SetToolTip(BtnMapTrackLocation, "Toggle Track Location: keep map centered on your moving GPS location");
             }
 
             if (BtnResetView != null)
@@ -276,10 +402,18 @@ public partial class FullScreenMapControl : UserControl
                 BtnMenuCurrentLocation.Visibility = Visibility.Visible;
             }
 
+            if (LiveRecordingBar != null)
+            {
+                LiveRecordingBar.Margin = new Thickness(0, 0, 0, 16);
+                LiveRecordingBar.Padding = new Thickness(14, 8, 14, 8);
+            }
+
             if (HamburgerPanel != null)
             {
                 HamburgerPanel.HorizontalAlignment = HorizontalAlignment.Left;
+                HamburgerPanel.VerticalAlignment = VerticalAlignment.Top;
                 HamburgerPanel.Width = 472;
+                HamburgerPanel.Height = double.NaN;
                 HamburgerPanel.Margin = new Thickness(14, 56, 0, 14);
                 HamburgerPanel.MaxHeight = Math.Max(400, height - 70);
             }
@@ -291,6 +425,8 @@ public partial class FullScreenMapControl : UserControl
             if (SaveWaypointDialog != null)
             {
                 SaveWaypointDialog.Width = 380;
+                SaveWaypointDialog.VerticalAlignment = VerticalAlignment.Center;
+                SaveWaypointDialog.Margin = new Thickness(0);
             }
         }
     }
@@ -361,7 +497,7 @@ public partial class FullScreenMapControl : UserControl
         try
         {
             Interop.ExecuteJavaScriptVoid(@"
-                (function(container, initLat, initLon, movedCb, trackCb, editWptCb, pmtilesSupported, isMetric, isDark) {
+                (function(container, initLat, initLon, movedCb, trackCb, editWptCb, pmtilesSupported, isMetric, isDark, baseLayer) {
                     function tryInit() {
                         if (typeof window.fullScreenMap === 'undefined' || typeof window.maplibregl === 'undefined') {
                             setTimeout(tryInit, 50);
@@ -371,9 +507,10 @@ public partial class FullScreenMapControl : UserControl
                         window.fullScreenMap.init(container, {
                             lat: initLat,
                             lon: initLon,
-                            zoom: 12,
+                            zoom: 13,
                             isMetric: isMetric,
-                            isDark: isDark
+                            isDark: isDark,
+                            baseLayer: baseLayer
                         }, function(lat, lon) {
                             if (movedCb) movedCb(lat, lon);
                         }, function(trackId) {
@@ -388,8 +525,8 @@ public partial class FullScreenMapControl : UserControl
                         }
                     }
                     tryInit();
-                })($0, $1, $2, $3, $4, $5, $6, $7, $8);
-            ", div, _lastPointerLat, _lastPointerLon, onPointerMoved, onTrackClicked, onEditWaypoint, pmtilesSupported, isMetric, isDark);
+                })($0, $1, $2, $3, $4, $5, $6, $7, $8, $9);
+            ", div, _lastPointerLat, _lastPointerLon, onPointerMoved, onTrackClicked, onEditWaypoint, pmtilesSupported, isMetric, isDark, _currentBaseLayer);
 
             _isInitialized = true;
             UpdateElevationDisplay(_lastPointerLat, _lastPointerLon);
@@ -786,7 +923,19 @@ public partial class FullScreenMapControl : UserControl
         {
             CoordsBadgeBorder.Background = tm.MapOverlayBackground;
             CoordsBadgeBorder.BorderBrush = tm.MapOverlayBorder;
+            CoordsBadgeBorder.Opacity = 0.88;
         }
+
+        if (LiveRecordingBar != null)
+        {
+            LiveRecordingBar.Background = tm.MapOverlayBackground;
+            LiveRecordingBar.BorderBrush = tm.MapOverlayBorder;
+            LiveRecordingBar.Opacity = 0.90;
+        }
+        if (LiveRecDivider != null) LiveRecDivider.Background = tm.MapOverlayBorder;
+        if (TxtLiveRecordingTime != null) TxtLiveRecordingTime.Foreground = tm.TextPrimary;
+        if (TxtLiveRecordingDist != null) TxtLiveRecordingDist.Foreground = tm.TextPrimary;
+        if (TxtLiveRecInfoIcon != null) TxtLiveRecInfoIcon.Foreground = tm.TextSecondary;
 
         if (CrashRecoveryNotice != null)
         {
@@ -870,6 +1019,7 @@ public partial class FullScreenMapControl : UserControl
             BtnHamburger.Background = tm.ButtonInactiveBackground;
             BtnHamburger.BorderBrush = tm.ButtonInactiveBorder;
             BtnHamburger.Foreground = tm.TextPrimary;
+            BtnHamburger.Opacity = 0.88;
         }
 
         if (BtnCurrentLocation != null)
@@ -877,6 +1027,12 @@ public partial class FullScreenMapControl : UserControl
             BtnCurrentLocation.Background = tm.ButtonInactiveBackground;
             BtnCurrentLocation.BorderBrush = tm.ButtonInactiveBorder;
             BtnCurrentLocation.Foreground = tm.Accent;
+            BtnCurrentLocation.Opacity = 0.88;
+        }
+
+        if (BtnMapTrackLocation != null)
+        {
+            BtnMapTrackLocation.Opacity = 0.88;
         }
 
         if (BtnMenuCurrentLocation != null)
@@ -891,6 +1047,7 @@ public partial class FullScreenMapControl : UserControl
             BtnToggle3d.Background = _is3dActive ? tm.ButtonActiveBackground : tm.ButtonInactiveBackground;
             BtnToggle3d.BorderBrush = _is3dActive ? tm.ButtonActiveBorder : tm.ButtonInactiveBorder;
             BtnToggle3d.Foreground = _is3dActive ? tm.ButtonActiveForeground : tm.TextPrimary;
+            BtnToggle3d.Opacity = 0.88;
         }
 
         if (BtnMenuToggle3d != null)
@@ -912,6 +1069,7 @@ public partial class FullScreenMapControl : UserControl
             BtnResetView.Background = tm.ButtonInactiveBackground;
             BtnResetView.BorderBrush = tm.ButtonInactiveBorder;
             BtnResetView.Foreground = tm.TextPrimary;
+            BtnResetView.Opacity = 0.88;
         }
 
         if (BtnMenuResetView != null)
@@ -926,6 +1084,7 @@ public partial class FullScreenMapControl : UserControl
             BtnDrawRoute.Background = _isRouteDrawingActive ? tm.ButtonActiveBackground : tm.ButtonInactiveBackground;
             BtnDrawRoute.BorderBrush = _isRouteDrawingActive ? tm.ButtonActiveBorder : tm.ButtonInactiveBorder;
             BtnDrawRoute.Foreground = _isRouteDrawingActive ? tm.ButtonActiveForeground : tm.TextPrimary;
+            BtnDrawRoute.Opacity = 0.88;
         }
 
         if (BtnOpenTracksLibrary != null)
@@ -1200,7 +1359,22 @@ public partial class FullScreenMapControl : UserControl
 
         if (BtnConfirmSaveWaypoint != null) BtnConfirmSaveWaypoint.Content = "Save Waypoint";
 
-        if (SaveWaypointDialog != null) SaveWaypointDialog.Visibility = Visibility.Visible;
+        if (SaveWaypointDialog != null)
+        {
+            if (_isSmallScreen)
+            {
+                SaveWaypointDialog.Width = Math.Min(380, ActualWidth > 0 ? ActualWidth - 16 : 380);
+                SaveWaypointDialog.VerticalAlignment = VerticalAlignment.Top;
+                SaveWaypointDialog.Margin = new Thickness(0, Math.Max(16, (ActualHeight > 600 ? 52 : 28)), 0, 0);
+            }
+            else
+            {
+                SaveWaypointDialog.Width = 380;
+                SaveWaypointDialog.VerticalAlignment = VerticalAlignment.Center;
+                SaveWaypointDialog.Margin = new Thickness(0);
+            }
+            SaveWaypointDialog.Visibility = Visibility.Visible;
+        }
         if (SaveWaypointBackdrop != null) SaveWaypointBackdrop.Visibility = Visibility.Visible;
     }
 
@@ -1266,7 +1440,22 @@ public partial class FullScreenMapControl : UserControl
 
         if (BtnConfirmSaveWaypoint != null) BtnConfirmSaveWaypoint.Content = "Save Changes";
 
-        if (SaveWaypointDialog != null) SaveWaypointDialog.Visibility = Visibility.Visible;
+        if (SaveWaypointDialog != null)
+        {
+            if (_isSmallScreen)
+            {
+                SaveWaypointDialog.Width = Math.Min(380, ActualWidth > 0 ? ActualWidth - 16 : 380);
+                SaveWaypointDialog.VerticalAlignment = VerticalAlignment.Top;
+                SaveWaypointDialog.Margin = new Thickness(0, Math.Max(16, (ActualHeight > 600 ? 52 : 28)), 0, 0);
+            }
+            else
+            {
+                SaveWaypointDialog.Width = 380;
+                SaveWaypointDialog.VerticalAlignment = VerticalAlignment.Center;
+                SaveWaypointDialog.Margin = new Thickness(0);
+            }
+            SaveWaypointDialog.Visibility = Visibility.Visible;
+        }
         if (SaveWaypointBackdrop != null) SaveWaypointBackdrop.Visibility = Visibility.Visible;
     }
 
@@ -1522,10 +1711,34 @@ public partial class FullScreenMapControl : UserControl
             TxtGpsIndicator.Text = "🟢 GPS Active";
             TxtGpsIndicator.Foreground = ThemeManager.Current.Accent;
         }
+        _currentGpsStatusText = "GPS Active";
+        GpsStatusChanged?.Invoke(this, _currentGpsStatusText);
+
+        // Immediately notify map that GPS is active so icon switches immediately
+        try
+        {
+            Interop.ExecuteJavaScriptVoid(@"
+                if (window.fullScreenMap && window.fullScreenMap.setGpsActive) {
+                    window.fullScreenMap.setGpsActive(true);
+                }
+            ");
+
+            if (_lastGpsPos != null)
+            {
+                Interop.ExecuteJavaScriptVoid(@"
+                    if (window.fullScreenMap && window.fullScreenMap.updateLivePosition) {
+                        window.fullScreenMap.updateLivePosition($0, $1, $2, $3, $4);
+                    }
+                ", _lastGpsPos.Latitude, _lastGpsPos.Longitude, _lastGpsPos.AccuracyM, _isTrackLocationActive, _lastHeading);
+            }
+        }
+        catch { }
 
         GeolocationService.StartTracking(
             onUpdate: (pos) =>
             {
+                if (!_isGpsActive) return;
+
                 double? currentHeading = pos.Heading;
                 if (!currentHeading.HasValue && _lastGpsPos != null)
                 {
@@ -1544,6 +1757,8 @@ public partial class FullScreenMapControl : UserControl
                 _lastGpsPos = pos;
                 Dispatcher.BeginInvoke(() =>
                 {
+                    if (!_isGpsActive) return;
+
                     try
                     {
                         Interop.ExecuteJavaScriptVoid(@"
@@ -1560,12 +1775,15 @@ public partial class FullScreenMapControl : UserControl
                         {
                             TxtGpsIndicator.Text = $"🟡 Coarse Fix ±{pos.AccuracyM:F0}m";
                             TxtGpsIndicator.Foreground = new SolidColorBrush(Color.FromArgb(255, 234, 179, 8)); // Amber
+                            _currentGpsStatusText = $"Coarse Fix ±{pos.AccuracyM:F0}m";
                         }
                         else
                         {
                             TxtGpsIndicator.Text = $"🟢 GPS ±{pos.AccuracyM:F0}m";
                             TxtGpsIndicator.Foreground = ThemeManager.Current.Accent;
+                            _currentGpsStatusText = $"GPS ±{pos.AccuracyM:F0}m";
                         }
+                        GpsStatusChanged?.Invoke(this, _currentGpsStatusText);
                     }
 
                     // If recording is active, append track point
@@ -1577,12 +1795,16 @@ public partial class FullScreenMapControl : UserControl
             },
             onError: (err) =>
             {
+                if (!_isGpsActive) return;
                 Dispatcher.BeginInvoke(() =>
                 {
+                    if (!_isGpsActive) return;
                     if (TxtGpsIndicator != null)
                     {
                         TxtGpsIndicator.Text = "GPS Lost";
                         TxtGpsIndicator.Foreground = new SolidColorBrush(Colors.Red);
+                        _currentGpsStatusText = "GPS Lost";
+                        GpsStatusChanged?.Invoke(this, _currentGpsStatusText);
                     }
                 });
             }
@@ -1604,6 +1826,9 @@ public partial class FullScreenMapControl : UserControl
         try
         {
             Interop.ExecuteJavaScriptVoid(@"
+                if (window.fullScreenMap && window.fullScreenMap.setGpsActive) {
+                    window.fullScreenMap.setGpsActive(false);
+                }
                 if (window.fullScreenMap && window.fullScreenMap.stopLiveTracking) {
                     window.fullScreenMap.stopLiveTracking();
                 }
@@ -1619,6 +1844,8 @@ public partial class FullScreenMapControl : UserControl
             TxtGpsIndicator.Text = "GPS Off";
             TxtGpsIndicator.Foreground = ThemeManager.Current.TextSecondary;
         }
+        _currentGpsStatusText = "GPS Off";
+        GpsStatusChanged?.Invoke(this, _currentGpsStatusText);
     }
 
     private void BtnToggleTrackLocation_Click(object sender, RoutedEventArgs e)
@@ -1690,6 +1917,8 @@ public partial class FullScreenMapControl : UserControl
             BtnToggleGps.Foreground = tm.ButtonInactiveForeground;
             ToolTipService.SetToolTip(BtnToggleGps, "Toggle GPS hardware receiver and position tracking");
         }
+
+        GpsStateChanged?.Invoke(this, _isGpsActive);
     }
 
     private void UpdateTrackLocationButtonsState()
@@ -1716,6 +1945,7 @@ public partial class FullScreenMapControl : UserControl
 
         if (BtnMapTrackLocation != null)
         {
+            BtnMapTrackLocation.Opacity = 0.88;
             if (_isTrackLocationActive)
             {
                 BtnMapTrackLocation.Background = tm.ButtonActiveBackground;
@@ -1839,6 +2069,9 @@ public partial class FullScreenMapControl : UserControl
                 if (window.fullScreenMap && window.fullScreenMap.clearTrack) {
                     window.fullScreenMap.clearTrack();
                 }
+                if (window.fullScreenMap && window.fullScreenMap.setRecordingState) {
+                    window.fullScreenMap.setRecordingState(true);
+                }
             ");
         }
         catch { }
@@ -1896,6 +2129,19 @@ public partial class FullScreenMapControl : UserControl
         // Stopping Track recording turns off GPS automatically
         StopGps(force: true);
 
+        try
+        {
+            Interop.ExecuteJavaScriptVoid(@"
+                if (window.fullScreenMap && window.fullScreenMap.hideElevationProfile) {
+                    window.fullScreenMap.hideElevationProfile();
+                }
+                if (window.fullScreenMap && window.fullScreenMap.setRecordingState) {
+                    window.fullScreenMap.setRecordingState(false);
+                }
+            ");
+        }
+        catch { }
+
         UpdateRecordingButtonState();
         UpdateRecordingDisplay();
     }
@@ -1916,11 +2162,16 @@ public partial class FullScreenMapControl : UserControl
                 ? (pos.Timestamp - _lastPointRecordedTime).TotalSeconds
                 : 999;
 
-            // Enforce configured power saver interval and 15m drift filter
+            // Enforce configured power saver interval.
+            // Note: Do not drop points when stationary (d < 15m) so continuous track points are
+            // preserved for photo geotagging even during stops.
             if (timeSec < GeolocationService.PowerSaverIntervalSeconds) return;
-            if (d < 0.015) return;
 
-            _totalRecordedDistanceKm += d;
+            // Only accumulate distance if movement exceeds minimal GPS jitter (~2m)
+            if (d >= 0.002)
+            {
+                _totalRecordedDistanceKm += d;
+            }
         }
 
         _recordedPoints.Add(pos);
@@ -1940,9 +2191,9 @@ public partial class FullScreenMapControl : UserControl
         {
             Interop.ExecuteJavaScriptVoid(@"
                 if (window.fullScreenMap && window.fullScreenMap.addTrackPoint) {
-                    window.fullScreenMap.addTrackPoint($0, $1);
+                    window.fullScreenMap.addTrackPoint($0, $1, $2);
                 }
-            ", pos.Latitude, pos.Longitude);
+            ", pos.Latitude, pos.Longitude, pos.AltitudeM ?? 0);
         }
         catch { }
 
@@ -1951,8 +2202,6 @@ public partial class FullScreenMapControl : UserControl
 
     private void UpdateRecordingDisplay()
     {
-        if (TxtRecordingStats == null) return;
-
         TimeSpan elapsed = _recordingStartTime.HasValue
             ? DateTime.UtcNow - _recordingStartTime.Value
             : TimeSpan.Zero;
@@ -1962,8 +2211,58 @@ public partial class FullScreenMapControl : UserControl
             ? $"{_totalRecordedDistanceKm:F2} km"
             : $"{_totalRecordedDistanceKm * 0.621371:F2} mi";
 
-        string prefix = _isRecordingActive ? "🔴 " : "";
-        TxtRecordingStats.Text = $"{prefix}Points: {_recordedPoints.Count} | {distStr} | {elapsed:mm\\:ss}";
+        string timeStr = elapsed.TotalHours >= 1
+            ? $"{(int)elapsed.TotalHours}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}"
+            : $"{elapsed.Minutes:D2}:{elapsed.Seconds:D2}";
+
+        if (TxtRecordingStats != null)
+        {
+            if (_isRecordingActive)
+            {
+                TxtRecordingStats.Text = $"🔴 Points: {_recordedPoints.Count} | {distStr} | {timeStr}";
+                TxtRecordingStats.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                TxtRecordingStats.Text = string.Empty;
+                TxtRecordingStats.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        if (TxtLiveRecordingTime != null)
+        {
+            TxtLiveRecordingTime.Text = timeStr;
+        }
+
+        if (TxtLiveRecordingDist != null)
+        {
+            TxtLiveRecordingDist.Text = distStr;
+        }
+
+        if (LiveRecordingBar != null)
+        {
+            LiveRecordingBar.Visibility = _isRecordingActive ? Visibility.Visible : Visibility.Collapsed;
+        }
+    }
+
+    private void LiveRecordingBar_Click(object sender, RoutedEventArgs e)
+    {
+        ShowActiveRecordingTrackInfo();
+    }
+
+    public void ShowActiveRecordingTrackInfo()
+    {
+        try
+        {
+            Interop.ExecuteJavaScriptVoid(@"
+                if (window.fullScreenMap && window.fullScreenMap.toggleElevationProfile) {
+                    window.fullScreenMap.toggleElevationProfile('active_gps_track');
+                } else if (window.fullScreenMap && window.fullScreenMap.showElevationProfile) {
+                    window.fullScreenMap.showElevationProfile('active_gps_track');
+                }
+            ");
+        }
+        catch { }
     }
 
     private void UpdateRecordingButtonState()
@@ -1985,6 +2284,8 @@ public partial class FullScreenMapControl : UserControl
             BtnToggleRecording.BorderBrush = tm.ButtonInactiveBorder;
             BtnToggleRecording.Foreground = tm.ButtonInactiveForeground;
         }
+
+        RecordingStateChanged?.Invoke(this, _isRecordingActive);
     }
 
     private void BtnClearTrack_Click(object sender, RoutedEventArgs e)
@@ -1998,6 +2299,9 @@ public partial class FullScreenMapControl : UserControl
             Interop.ExecuteJavaScriptVoid(@"
                 if (window.fullScreenMap && window.fullScreenMap.clearTrack) {
                     window.fullScreenMap.clearTrack();
+                }
+                if (window.fullScreenMap && window.fullScreenMap.setRecordingState) {
+                    window.fullScreenMap.setRecordingState(true);
                 }
             ");
         }
@@ -2414,8 +2718,36 @@ public partial class FullScreenMapControl : UserControl
 
     public const string LastLayerStorageKey = "pointedhorizons_last_map_layer";
 
+    private static string GetLastLayerFilePath()
+    {
+        try
+        {
+            string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            return Path.Combine(appData, "PointedHorizons", "last_map_layer.txt");
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
     public static string LoadLastUsedBaseLayer()
     {
+        try
+        {
+            string localFilePath = GetLastLayerFilePath();
+            if (!string.IsNullOrEmpty(localFilePath) && File.Exists(localFilePath))
+            {
+                string saved = File.ReadAllText(localFilePath).Trim().ToLowerInvariant();
+                if (!string.IsNullOrWhiteSpace(saved))
+                {
+                    if (saved == "pmtiles" && !OfflineDataService.IsPmTilesSupported) return "topo";
+                    return saved;
+                }
+            }
+        }
+        catch { }
+
         try
         {
             object? val = Interop.ExecuteJavaScript("localStorage.getItem($0)", LastLayerStorageKey);
@@ -2435,6 +2767,21 @@ public partial class FullScreenMapControl : UserControl
         try
         {
             Interop.ExecuteJavaScriptVoid("localStorage.setItem($0, $1)", LastLayerStorageKey, layerName);
+        }
+        catch { }
+
+        try
+        {
+            string localFilePath = GetLastLayerFilePath();
+            if (!string.IsNullOrEmpty(localFilePath))
+            {
+                string? dir = Path.GetDirectoryName(localFilePath);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+                File.WriteAllText(localFilePath, layerName);
+            }
         }
         catch { }
     }

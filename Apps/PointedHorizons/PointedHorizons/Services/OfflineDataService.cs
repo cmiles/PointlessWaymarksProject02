@@ -111,7 +111,21 @@ public static class OfflineDataService
         get
         {
             EnsureSettingsLoaded();
-            return _selectedStyleFile;
+            if (_selectedStyleFile == null)
+            {
+                var available = GetAvailableStyleFiles();
+                var defaultStyle = available.FirstOrDefault(f => f.Equals("topo_style.json", StringComparison.OrdinalIgnoreCase))
+                                ?? available.FirstOrDefault(f => f.Equals("arizona_style.json", StringComparison.OrdinalIgnoreCase));
+                if (defaultStyle != null)
+                {
+                    _selectedStyleFile = defaultStyle;
+                }
+                else
+                {
+                    _selectedStyleFile = "";
+                }
+            }
+            return string.IsNullOrWhiteSpace(_selectedStyleFile) ? null : _selectedStyleFile;
         }
         set => SetSelectedStyleFile(value);
     }
@@ -121,10 +135,10 @@ public static class OfflineDataService
     /// </summary>
     public static void SetSelectedStyleFile(string? fileName)
     {
-        string? normalized = string.IsNullOrWhiteSpace(fileName) ? null : fileName.Trim();
-        if (normalized != null && normalized.StartsWith("(", StringComparison.Ordinal))
+        string? normalized = string.IsNullOrWhiteSpace(fileName) ? "" : fileName.Trim();
+        if (normalized.StartsWith("(", StringComparison.Ordinal))
         {
-            normalized = null;
+            normalized = "";
         }
 
         if (!string.Equals(_selectedStyleFile, normalized, StringComparison.OrdinalIgnoreCase))
@@ -132,7 +146,7 @@ public static class OfflineDataService
             _selectedStyleFile = normalized;
             try
             {
-                SetLocalStorageItem(SettingsStorageKey + "_style", _selectedStyleFile ?? "");
+                SetLocalStorageItem(SettingsStorageKey + "_style", _selectedStyleFile);
             }
             catch { }
 
@@ -682,14 +696,15 @@ public static class OfflineDataService
     public static string? GetSelectedStyleJson()
     {
         if (!IsPmTilesSupported) return null;
-        if (string.IsNullOrWhiteSpace(_selectedStyleFile)) return null;
+        string? styleFile = SelectedStyleFile;
+        if (string.IsNullOrWhiteSpace(styleFile)) return null;
 
         try
         {
-            string? path = ResolvePmTileFilePath(_selectedStyleFile);
+            string? path = ResolvePmTileFilePath(styleFile);
             if (string.IsNullOrEmpty(path))
             {
-                path = Path.Combine(PmTilesDirectory, _selectedStyleFile);
+                path = Path.Combine(PmTilesDirectory, styleFile);
             }
             if (File.Exists(path))
             {
@@ -738,13 +753,14 @@ public static class OfflineDataService
             order = l.Order
         }).ToList();
 
+        string? styleFile = SelectedStyleFile;
         string? styleJson = GetSelectedStyleJson();
 
         return new
         {
             layers = layers,
-            styleFileName = _selectedStyleFile,
-            styleUrl = !string.IsNullOrEmpty(_selectedStyleFile) ? LocalTileServer.GetPmTileUrl(_selectedStyleFile) : null,
+            styleFileName = styleFile,
+            styleUrl = !string.IsNullOrEmpty(styleFile) ? LocalTileServer.GetPmTileUrl(styleFile) : null,
             styleJson = styleJson,
             tileServerBase = LocalTileServer.GetBaseUrl()
         };
@@ -985,7 +1001,7 @@ public static class OfflineDataService
         try
         {
             string? savedStyle = GetLocalStorageItem(SettingsStorageKey + "_style");
-            if (!string.IsNullOrWhiteSpace(savedStyle))
+            if (savedStyle != null)
             {
                 _selectedStyleFile = savedStyle.Trim();
             }

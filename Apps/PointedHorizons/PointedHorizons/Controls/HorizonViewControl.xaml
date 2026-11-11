@@ -10,8 +10,8 @@
         <!-- Canvas Host Container for PeakFinder Horizon -->
         <Border x:Name="CanvasContainer" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent" />
 
-        <!-- Top Right Quick Toolbar (Compass, Focal Length, Menu) -->
-        <Border x:Name="QuickToolbarBorder" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,10,12,0"
+        <!-- Bottom Right Quick Toolbar (Compass, Focal Length, Reset Pitch, Menu) -->
+        <Border x:Name="QuickToolbarBorder" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,12,12"
                 BorderThickness="1" CornerRadius="20" Padding="8,4">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <!-- Integrated Compass Rose / Azimuth Display -->
@@ -66,6 +66,12 @@
 
                 <Border x:Name="ToolbarDivider" Width="1" Margin="4,2" Height="14" VerticalAlignment="Center"/>
 
+                <!-- Reset Pitch Button (Level Horizon 0° - visible on both large and small screens) -->
+                <Button x:Name="BtnResetPitch" Content="🎯" Click="BtnResetPitch_Click"
+                        Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
+                        FontSize="11" FontWeight="Bold"
+                        ToolTipService.ToolTip="Reset Pitch to Level (0° tilt)" />
+
                 <!-- Horizon Settings Hamburger Button -->
                 <Button x:Name="BtnHorizonMenu" Content="☰" Click="BtnHorizonMenu_Click"
                         Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
@@ -75,23 +81,29 @@
         </Border>
 
         <!-- Floating Horizon Settings Menu Dropdown Panel -->
-        <Border x:Name="HorizonMenuPanel" HorizontalAlignment="Right" VerticalAlignment="Top"
-                Margin="0,48,12,0" Width="440" MaxHeight="520" Visibility="Collapsed"
+        <Border x:Name="HorizonMenuPanel" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Margin="0,0,12,54" Width="440" MaxHeight="520" Visibility="Collapsed"
                 BorderThickness="1" CornerRadius="12" Padding="14,12">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <StackPanel Orientation="Vertical">
-                    <!-- Header -->
-                    <Grid Margin="0,0,0,10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock x:Name="TxtHorizonMenuTitle" Text="🌄 Horizon Settings" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" />
-                        <Button x:Name="BtnCloseHorizonMenu" Grid.Column="1" Content="✕" Click="BtnCloseHorizonMenu_Click"
-                                Style="{StaticResource PillButtonStyle}" Padding="6,2" FontSize="11" />
-                    </Grid>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-                    <Border x:Name="HorizonMenuDivider1" Height="1" Margin="0,0,0,10" />
+                <!-- Header (Title & Close Button) -->
+                <Grid Grid.Row="0" Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="TxtHorizonMenuTitle" Text="🌄 Horizon Settings" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" />
+                    <Button x:Name="BtnCloseHorizonMenu" Grid.Column="1" Content="✕" Click="BtnCloseHorizonMenu_Click"
+                            Style="{StaticResource PillButtonStyle}" Padding="6,2" FontSize="11" />
+                </Grid>
+
+                <ScrollViewer x:Name="HorizonMenuScrollViewer" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="Transparent">
+                    <StackPanel Orientation="Vertical" Background="Transparent">
+                        <Border x:Name="HorizonMenuDivider1" Height="1" Margin="0,0,0,10" />
 
                     <!-- Observer & Aim Location -->
                     <TextBlock x:Name="TxtHorizonSectionLocation" Text="OBSERVER &amp; AIM LOCATION" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
@@ -220,6 +232,7 @@
                             Padding="8,5" Margin="0,0,0,2" FontSize="10.5" FontWeight="SemiBold" />
                 </StackPanel>
             </ScrollViewer>
+            </Grid>
         </Border>
     </Grid>
 </UserControl>

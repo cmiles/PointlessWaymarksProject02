@@ -94,7 +94,7 @@
     function computeBearing(lat1, lon1, lat2, lon2) {
         const y = Math.sin(toRad(lon2 - lon1)) * Math.cos(toRad(lat2));
         const x = Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
-                  Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(toRad(lon2 - lon1));
+            Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(toRad(lon2 - lon1));
         return normalizeAngle(toDeg(Math.atan2(y, x)));
     }
 
@@ -197,8 +197,8 @@
                 element: handleEl,
                 draggable: true
             })
-            .setLngLat([tipPos[1], tipPos[0]])
-            .addTo(map);
+                .setLngLat([tipPos[1], tipPos[0]])
+                .addTo(map);
 
             arrowHandleMarker.on('dragstart', function () {
                 isInteractingWithHandle = true;
@@ -289,6 +289,9 @@
 
         if (map && typeof map.getTerrain === 'function' && map.getTerrain()) {
             try { map.setTerrain(null); } catch (e) { }
+        }
+        if (map && typeof map.setSky === 'function') {
+            try { map.setSky(null); } catch (e) { }
         }
         activeTerrainSourceId = null;
     }
@@ -408,23 +411,23 @@
                     if (!resolvedUrl) {
                         if (sCopy.type === 'vector') {
                             const vec = enabledLayers.find(l => !consumedFileNames.has(l.fileName) && !l.fileName.toLowerCase().includes('hillshade') && !l.fileName.toLowerCase().includes('raster')) ||
-                                        enabledLayers.find(l => !l.fileName.toLowerCase().includes('hillshade') && !l.fileName.toLowerCase().includes('raster')) ||
-                                        enabledLayers[0];
+                                enabledLayers.find(l => !l.fileName.toLowerCase().includes('hillshade') && !l.fileName.toLowerCase().includes('raster')) ||
+                                enabledLayers[0];
                             if (vec) {
                                 resolvedUrl = `pmtiles://${vec.url}`;
                                 consumedFileNames.add(vec.fileName);
                             }
                         } else if (sCopy.type === 'raster') {
                             const ras = enabledLayers.find(l => !consumedFileNames.has(l.fileName) && (l.fileName.toLowerCase().includes('hillshade') || l.fileName.toLowerCase().includes('raster'))) ||
-                                        enabledLayers.find(l => l.fileName.toLowerCase().includes('hillshade') || l.fileName.toLowerCase().includes('raster')) ||
-                                        enabledLayers[0];
+                                enabledLayers.find(l => l.fileName.toLowerCase().includes('hillshade') || l.fileName.toLowerCase().includes('raster')) ||
+                                enabledLayers[0];
                             if (ras) {
                                 resolvedUrl = `pmtiles://${ras.url}`;
                                 consumedFileNames.add(ras.fileName);
                             }
                         } else if (sCopy.type === 'raster-dem') {
                             const dem = enabledLayers.find(l => !consumedFileNames.has(l.fileName) && (l.fileName.toLowerCase().includes('terrain') || l.fileName.toLowerCase().includes('dem') || l.fileName.toLowerCase().includes('rgb'))) ||
-                                        enabledLayers.find(l => l.fileName.toLowerCase().includes('terrain') || l.fileName.toLowerCase().includes('dem') || l.fileName.toLowerCase().includes('rgb'));
+                                enabledLayers.find(l => l.fileName.toLowerCase().includes('terrain') || l.fileName.toLowerCase().includes('dem') || l.fileName.toLowerCase().includes('rgb'));
                             if (dem) {
                                 resolvedUrl = `pmtiles://${dem.url}`;
                                 consumedFileNames.add(dem.fileName);
@@ -464,6 +467,17 @@
                 }
             }
 
+            // Apply sky from style root if specified
+            if (styleObj.sky && typeof map.setSky === 'function') {
+                try {
+                    map.setSky(styleObj.sky);
+                } catch (skyErr) {
+                    console.warn("[PointedMap] Error applying root sky property:", skyErr);
+                }
+            }
+
+            const validMapLibreLayerTypes = ['fill', 'line', 'symbol', 'circle', 'heatmap', 'fill-extrusion', 'raster', 'hillshade', 'background'];
+
             // Add style layers
             for (const lDef of styleObj.layers) {
                 if (!lDef || !lDef.id) continue;
@@ -472,8 +486,29 @@
                     lCopy.layout = lCopy.layout || {};
                     lCopy.layout.visibility = (selectedBaseLayer === 'pmtiles') ? 'visible' : 'none';
 
-                    if (lCopy.source && !map.getSource(lCopy.source)) {
+                    // If layer is type 'sky', apply it via map.setSky instead of attempting map.addLayer
+                    if (lCopy.type === 'sky') {
+                        if (typeof map.setSky === 'function') {
+                            try {
+                                map.setSky(lCopy.paint || {});
+                            } catch (skyErr) {
+                                console.warn("[PointedMap] Error applying sky layer paint via setSky:", skyErr);
+                            }
+                        }
                         continue;
+                    }
+
+                    // Skip any layer types unsupported by MapLibre (e.g. Mapbox custom types like 'model', 'slot', etc.)
+                    if (!validMapLibreLayerTypes.includes(lCopy.type)) {
+                        console.warn("[PointedMap] Skipping unsupported layer type:", lCopy.id, lCopy.type);
+                        continue;
+                    }
+
+                    // All MapLibre layers except 'background' require an existing source
+                    if (lCopy.type !== 'background') {
+                        if (!lCopy.source || !map.getSource(lCopy.source)) {
+                            continue;
+                        }
                     }
 
                     // Remove unsupported paint properties that cause MapLibre validator errors
@@ -1228,8 +1263,8 @@
             element: observerEl,
             draggable: true
         })
-        .setLngLat([currentLon, currentLat])
-        .addTo(map);
+            .setLngLat([currentLon, currentLat])
+            .addTo(map);
 
         observerMarker.on('dragstart', function () {
             isInteractingWithObserver = true;

@@ -620,7 +620,7 @@ public static class CelestialService
         ev.TimeDifference = ev.IsFuture ? (effectiveTime.Value - referenceTime) : (referenceTime - effectiveTime.Value);
 
         string durationStr = FormatDuration(ev.TimeDifference);
-        ev.TimeUntilDisplay = ev.IsFuture ? $"in {durationStr}" : $"{durationStr} ago";
+        ev.TimeUntilDisplay = ev.IsFuture ? $"In {durationStr}" : $"{durationStr} ago";
 
         if (bestTopo != null)
         {
@@ -985,12 +985,12 @@ public static class CelestialService
             string dayPfx = GetDayPrefix(mCivDawn.Value, refTime);
             bool isActive = refTime >= mCivDawn.Value && refTime <= mRiseMinus4.Value;
             bool isFuture = refTime < mCivDawn.Value;
-            string countdown = isActive ? "● Active Now" : (isFuture ? $"⏳ in {FormatDuration(mCivDawn.Value - refTime)}" : "✓ Passed");
+            string countdown = isActive ? "● Active Now" : (isFuture ? $"In {FormatDuration(mCivDawn.Value - refTime)}" : "✓ Passed");
 
             report.MorningBlue = new PhotographyWindowItem
             {
                 Id = "MorningBlue",
-                Title = "MORNING BLUE HOUR",
+                Title = "Morning Blue Hour",
                 Icon = "🌌",
                 StartTime = mCivDawn.Value,
                 EndTime = mRiseMinus4.Value,
@@ -1016,7 +1016,7 @@ public static class CelestialService
             string dayPfx = GetDayPrefix(mRiseMinus4.Value, refTime);
             bool isActive = refTime >= mRiseMinus4.Value && refTime <= mRisePlus6.Value;
             bool isFuture = refTime < mRiseMinus4.Value;
-            string countdown = isActive ? "● Active Now" : (isFuture ? $"⏳ in {FormatDuration(mRiseMinus4.Value - refTime)}" : "✓ Passed");
+            string countdown = isActive ? "● Active Now" : (isFuture ? $"In {FormatDuration(mRiseMinus4.Value - refTime)}" : "✓ Passed");
 
             string directSun = "Direct sun unobstructed by terrain";
             if (topoSunriseEvent?.TopoEvent != null)
@@ -1035,7 +1035,7 @@ public static class CelestialService
             report.MorningGolden = new PhotographyWindowItem
             {
                 Id = "MorningGolden",
-                Title = "MORNING GOLDEN HOUR",
+                Title = "Morning Golden Hour",
                 Icon = "🌅",
                 StartTime = mRiseMinus4.Value,
                 EndTime = mRisePlus6.Value,
@@ -1079,7 +1079,7 @@ public static class CelestialService
             string dayPfx = GetDayPrefix(eSetPlus6.Value, refTime);
             bool isActive = refTime >= eSetPlus6.Value && refTime <= eSetMinus4.Value;
             bool isFuture = refTime < eSetPlus6.Value;
-            string countdown = isActive ? "● Active Now" : (isFuture ? $"⏳ in {FormatDuration(eSetPlus6.Value - refTime)}" : "✓ Passed");
+            string countdown = isActive ? "● Active Now" : (isFuture ? $"In {FormatDuration(eSetPlus6.Value - refTime)}" : "✓ Passed");
 
             string directSun = "Direct sun unobstructed by terrain";
             if (topoSunsetEvent?.TopoEvent != null)
@@ -1098,7 +1098,7 @@ public static class CelestialService
             report.EveningGolden = new PhotographyWindowItem
             {
                 Id = "EveningGolden",
-                Title = "EVENING GOLDEN HOUR",
+                Title = "Evening Golden Hour",
                 Icon = "🌇",
                 StartTime = eSetPlus6.Value,
                 EndTime = eSetMinus4.Value,
@@ -1127,12 +1127,12 @@ public static class CelestialService
             string dayPfx = GetDayPrefix(eSetMinus4.Value, refTime);
             bool isActive = refTime >= eSetMinus4.Value && refTime <= eCivDusk.Value;
             bool isFuture = refTime < eSetMinus4.Value;
-            string countdown = isActive ? "● Active Now" : (isFuture ? $"⏳ in {FormatDuration(eSetMinus4.Value - refTime)}" : "✓ Passed");
+            string countdown = isActive ? "● Active Now" : (isFuture ? $"In {FormatDuration(eSetMinus4.Value - refTime)}" : "✓ Passed");
 
             report.EveningBlue = new PhotographyWindowItem
             {
                 Id = "EveningBlue",
-                Title = "EVENING BLUE HOUR",
+                Title = "Evening Blue Hour",
                 Icon = "🌌",
                 StartTime = eSetMinus4.Value,
                 EndTime = eCivDusk.Value,
@@ -1230,7 +1230,7 @@ public static class CelestialService
         }
         else if (refTime < bestNoonTime)
         {
-            report.NoonCountdownDisplay = $"⏳ in {FormatDuration(bestNoonTime - refTime)}";
+            report.NoonCountdownDisplay = $"In {FormatDuration(bestNoonTime - refTime)}";
         }
         else
         {
@@ -1460,8 +1460,8 @@ public static class CelestialService
             }
             else if (isFuture)
             {
-                report.QualityBadge = $"⏳ in {FormatDuration(winStart.Value - refTime)}";
-                report.CountdownDisplay = $"⏳ in {FormatDuration(winStart.Value - refTime)}";
+                report.QualityBadge = $"In {FormatDuration(winStart.Value - refTime)}";
+                report.CountdownDisplay = $"In {FormatDuration(winStart.Value - refTime)}";
             }
             else
             {

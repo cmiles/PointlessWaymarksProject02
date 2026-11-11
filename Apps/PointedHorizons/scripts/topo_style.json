@@ -1,6 +1,7 @@
 {
   "version": 8,
   "name": "Universal Topo & Hiking 3D",
+  "zoom": 13,
   "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
   "sources": {
     "base": {
@@ -27,15 +28,11 @@
     "source": "terrain",
     "exaggeration": 1.25
   },
+  "sky": {
+    "sky-color": "#88c6fc",
+    "horizon-color": "#f5f2eb"
+  },
   "layers": [
-    {
-      "id": "sky",
-      "type": "sky",
-      "paint": {
-        "sky-color": "#88c6fc",
-        "horizon-color": "#f5f2eb"
-      }
-    },
     {
       "id": "background",
       "type": "background",
@@ -365,7 +362,7 @@
       "type": "line",
       "source": "contours",
       "source-layer": "contours",
-      "minzoom": 10.5,
+      "minzoom": 8.5,
       "filter": [
         "!=",
         [
@@ -396,7 +393,7 @@
       "type": "line",
       "source": "contours",
       "source-layer": "contours",
-      "minzoom": 9,
+      "minzoom": 7.0,
       "filter": [
         "==",
         [
@@ -427,7 +424,7 @@
       "type": "line",
       "source": "base",
       "source-layer": "roads",
-      "minzoom": 9.5,
+      "minzoom": 7.0,
       "filter": [
         "in",
         [
@@ -464,7 +461,7 @@
       "type": "line",
       "source": "base",
       "source-layer": "roads",
-      "minzoom": 9.5,
+      "minzoom": 7.0,
       "filter": [
         "in",
         [
@@ -575,7 +572,7 @@
       "type": "line",
       "source": "base",
       "source-layer": "roads",
-      "minzoom": 8.5,
+      "minzoom": 0,
       "filter": [
         "==",
         [
@@ -585,7 +582,7 @@
         "track"
       ],
       "paint": {
-        "line-color": "#795548",
+        "line-color": "#8d5b4c",
         "line-width": [
           "interpolate",
           [
@@ -594,16 +591,18 @@
           [
             "zoom"
           ],
-          8.5,
-          0.8,
-          11,
-          1.4,
+          6,
+          0.9,
+          10,
+          1.3,
+          12,
+          1.8,
           14,
-          2.2
+          2.4
         ],
         "line-dasharray": [
-          6,
-          3
+          5,
+          2.5
         ]
       }
     },
@@ -612,7 +611,7 @@
       "type": "line",
       "source": "base",
       "source-layer": "roads",
-      "minzoom": 10,
+      "minzoom": 0,
       "filter": [
         "all",
         [
@@ -651,7 +650,7 @@
         ]
       ],
       "paint": {
-        "line-color": "#a8a29e",
+        "line-color": "#e65100",
         "line-width": [
           "interpolate",
           [
@@ -660,14 +659,18 @@
           [
             "zoom"
           ],
+          6,
+          0.8,
           10,
-          0.7,
+          1.1,
+          12,
+          1.5,
           14,
-          1.3
+          2.0
         ],
         "line-dasharray": [
-          1.5,
-          2.5
+          2,
+          2
         ]
       }
     },
@@ -676,7 +679,7 @@
       "type": "line",
       "source": "base",
       "source-layer": "roads",
-      "minzoom": 8.5,
+      "minzoom": 0,
       "filter": [
         "all",
         [
@@ -735,12 +738,14 @@
           [
             "zoom"
           ],
-          8.5,
-          0.9,
-          11,
-          1.5,
+          6,
+          1.0,
+          10,
+          1.4,
+          12,
+          1.8,
           14,
-          2.4
+          2.5
         ],
         "line-dasharray": [
           3,
@@ -753,7 +758,7 @@
       "type": "symbol",
       "source": "base",
       "source-layer": "roads",
-      "minzoom": 11,
+      "minzoom": 0,
       "filter": [
         "all",
         [
@@ -803,18 +808,22 @@
           [
             "zoom"
           ],
+          8,
+          8.5,
           11,
-          9,
+          9.5,
+          12,
+          10.5,
           14,
-          11
+          12.0
         ],
         "text-letter-spacing": 0.05,
-        "symbol-spacing": 300
+        "symbol-spacing": 250
       },
       "paint": {
         "text-color": "#b71c1c",
         "text-halo-color": "rgba(255, 255, 255, 0.95)",
-        "text-halo-width": 1.5
+        "text-halo-width": 2.0
       }
     },
     {
@@ -836,7 +845,7 @@
       "type": "symbol",
       "source": "contours",
       "source-layer": "contours",
-      "minzoom": 11,
+      "minzoom": 9.0,
       "filter": [
         "==",
         [
@@ -1071,7 +1080,7 @@
       "type": "circle",
       "source": "base",
       "source-layer": "pois",
-      "minzoom": 8.5,
+      "minzoom": 0,
       "filter": [
         "any",
         [
@@ -1125,10 +1134,12 @@
           [
             "zoom"
           ],
-          8.5,
-          6.0,
+          6,
+          5.0,
+          10,
+          7.5,
           12,
-          9.5
+          10.0
         ],
         "circle-color": "#2e7d32",
         "circle-stroke-width": 1.5,
@@ -1140,7 +1151,7 @@
       "type": "symbol",
       "source": "base",
       "source-layer": "pois",
-      "minzoom": 8.5,
+      "minzoom": 0,
       "filter": [
         "any",
         [
@@ -1198,8 +1209,10 @@
           [
             "zoom"
           ],
-          8.5,
-          7.0,
+          6,
+          5.5,
+          10,
+          7.5,
           12,
           9.5
         ],
@@ -1214,7 +1227,7 @@
       "type": "symbol",
       "source": "base",
       "source-layer": "pois",
-      "minzoom": 10.5,
+      "minzoom": 0,
       "filter": [
         "all",
         [
@@ -1247,7 +1260,7 @@
                 "get",
                 "kind"
               ],
-                "information"
+              "information"
             ],
             [
               "in",
@@ -1282,10 +1295,14 @@
           [
             "zoom"
           ],
-          10.5,
-          9.0,
-          13,
-          11.0
+          8,
+          8.5,
+          10,
+          9.5,
+          12,
+          11.0,
+          14,
+          12.5
         ],
         "text-anchor": "top",
         "text-offset": [
@@ -1297,7 +1314,7 @@
       "paint": {
         "text-color": "#1b5e20",
         "text-halo-color": "rgba(255, 255, 255, 0.95)",
-        "text-halo-width": 1.5
+        "text-halo-width": 2.0
       }
     },
     {
@@ -1308,14 +1325,32 @@
       "minzoom": 9.5,
       "filter": [
         "any",
-        ["==", ["get", "kind"], "viewpoint"],
-        ["==", ["get", "kind_detail"], "viewpoint"]
+        [
+          "==",
+          [
+            "get",
+            "kind"
+          ],
+          "viewpoint"
+        ],
+        [
+          "==",
+          [
+            "get",
+            "kind_detail"
+          ],
+          "viewpoint"
+        ]
       ],
       "paint": {
         "circle-radius": [
           "interpolate",
-          ["linear"],
-          ["zoom"],
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
           9.5,
           5.5,
           12,
@@ -1334,16 +1369,36 @@
       "minzoom": 9.5,
       "filter": [
         "any",
-        ["==", ["get", "kind"], "viewpoint"],
-        ["==", ["get", "kind_detail"], "viewpoint"]
+        [
+          "==",
+          [
+            "get",
+            "kind"
+          ],
+          "viewpoint"
+        ],
+        [
+          "==",
+          [
+            "get",
+            "kind_detail"
+          ],
+          "viewpoint"
+        ]
       ],
       "layout": {
         "text-field": "V",
-        "text-font": ["Noto Sans Bold"],
+        "text-font": [
+          "Noto Sans Bold"
+        ],
         "text-size": [
           "interpolate",
-          ["linear"],
-          ["zoom"],
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
           9.5,
           7.0,
           12,
@@ -1363,27 +1418,56 @@
       "minzoom": 11,
       "filter": [
         "all",
-        ["has", "name"],
+        [
+          "has",
+          "name"
+        ],
         [
           "any",
-          ["==", ["get", "kind"], "viewpoint"],
-          ["==", ["get", "kind_detail"], "viewpoint"]
+          [
+            "==",
+            [
+              "get",
+              "kind"
+            ],
+            "viewpoint"
+          ],
+          [
+            "==",
+            [
+              "get",
+              "kind_detail"
+            ],
+            "viewpoint"
+          ]
         ]
       ],
       "layout": {
-        "text-field": ["get", "name"],
-        "text-font": ["Noto Sans Bold"],
+        "text-field": [
+          "get",
+          "name"
+        ],
+        "text-font": [
+          "Noto Sans Bold"
+        ],
         "text-size": [
           "interpolate",
-          ["linear"],
-          ["zoom"],
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
           11,
           8.5,
           13,
           10.0
         ],
         "text-anchor": "top",
-        "text-offset": [0, 1.0],
+        "text-offset": [
+          0,
+          1.0
+        ],
         "text-max-width": 10
       },
       "paint": {
@@ -1400,14 +1484,32 @@
       "minzoom": 9.5,
       "filter": [
         "any",
-        ["==", ["get", "kind"], "waterfall"],
-        ["==", ["get", "kind_detail"], "waterfall"]
+        [
+          "==",
+          [
+            "get",
+            "kind"
+          ],
+          "waterfall"
+        ],
+        [
+          "==",
+          [
+            "get",
+            "kind_detail"
+          ],
+          "waterfall"
+        ]
       ],
       "paint": {
         "circle-radius": [
           "interpolate",
-          ["linear"],
-          ["zoom"],
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
           9.5,
           5.0,
           12,
@@ -1426,16 +1528,36 @@
       "minzoom": 9.5,
       "filter": [
         "any",
-        ["==", ["get", "kind"], "waterfall"],
-        ["==", ["get", "kind_detail"], "waterfall"]
+        [
+          "==",
+          [
+            "get",
+            "kind"
+          ],
+          "waterfall"
+        ],
+        [
+          "==",
+          [
+            "get",
+            "kind_detail"
+          ],
+          "waterfall"
+        ]
       ],
       "layout": {
         "text-field": "WF",
-        "text-font": ["Noto Sans Bold"],
+        "text-font": [
+          "Noto Sans Bold"
+        ],
         "text-size": [
           "interpolate",
-          ["linear"],
-          ["zoom"],
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
           9.5,
           6.5,
           12,
@@ -1455,27 +1577,56 @@
       "minzoom": 11,
       "filter": [
         "all",
-        ["has", "name"],
+        [
+          "has",
+          "name"
+        ],
         [
           "any",
-          ["==", ["get", "kind"], "waterfall"],
-          ["==", ["get", "kind_detail"], "waterfall"]
+          [
+            "==",
+            [
+              "get",
+              "kind"
+            ],
+            "waterfall"
+          ],
+          [
+            "==",
+            [
+              "get",
+              "kind_detail"
+            ],
+            "waterfall"
+          ]
         ]
       ],
       "layout": {
-        "text-field": ["get", "name"],
-        "text-font": ["Noto Sans Bold"],
+        "text-field": [
+          "get",
+          "name"
+        ],
+        "text-font": [
+          "Noto Sans Bold"
+        ],
         "text-size": [
           "interpolate",
-          ["linear"],
-          ["zoom"],
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
           11,
           8.5,
           13,
           10.0
         ],
         "text-anchor": "top",
-        "text-offset": [0, 0.9],
+        "text-offset": [
+          0,
+          0.9
+        ],
         "text-max-width": 10
       },
       "paint": {
@@ -1494,17 +1645,63 @@
         "any",
         [
           "all",
-          ["in", ["get", "kind"], ["literal", ["tower", "observation_tower"]]],
-          ["in", ["get", "kind_detail"], ["literal", ["observation", "lookout", "fire_lookout", "tower"]]]
+          [
+            "in",
+            [
+              "get",
+              "kind"
+            ],
+            [
+              "literal",
+              [
+                "tower",
+                "observation_tower"
+              ]
+            ]
+          ],
+          [
+            "in",
+            [
+              "get",
+              "kind_detail"
+            ],
+            [
+              "literal",
+              [
+                "observation",
+                "lookout",
+                "fire_lookout",
+                "tower"
+              ]
+            ]
+          ]
         ],
-        ["==", ["get", "kind_detail"], "lookout"],
-        ["==", ["get", "kind_detail"], "fire_lookout"]
+        [
+          "==",
+          [
+            "get",
+            "kind_detail"
+          ],
+          "lookout"
+        ],
+        [
+          "==",
+          [
+            "get",
+            "kind_detail"
+          ],
+          "fire_lookout"
+        ]
       ],
       "paint": {
         "circle-radius": [
           "interpolate",
-          ["linear"],
-          ["zoom"],
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
           9.5,
           5.5,
           12,
@@ -1525,19 +1722,67 @@
         "any",
         [
           "all",
-          ["in", ["get", "kind"], ["literal", ["tower", "observation_tower"]]],
-          ["in", ["get", "kind_detail"], ["literal", ["observation", "lookout", "fire_lookout", "tower"]]]
+          [
+            "in",
+            [
+              "get",
+              "kind"
+            ],
+            [
+              "literal",
+              [
+                "tower",
+                "observation_tower"
+              ]
+            ]
+          ],
+          [
+            "in",
+            [
+              "get",
+              "kind_detail"
+            ],
+            [
+              "literal",
+              [
+                "observation",
+                "lookout",
+                "fire_lookout",
+                "tower"
+              ]
+            ]
+          ]
         ],
-        ["==", ["get", "kind_detail"], "lookout"],
-        ["==", ["get", "kind_detail"], "fire_lookout"]
+        [
+          "==",
+          [
+            "get",
+            "kind_detail"
+          ],
+          "lookout"
+        ],
+        [
+          "==",
+          [
+            "get",
+            "kind_detail"
+          ],
+          "fire_lookout"
+        ]
       ],
       "layout": {
         "text-field": "T",
-        "text-font": ["Noto Sans Bold"],
+        "text-font": [
+          "Noto Sans Bold"
+        ],
         "text-size": [
           "interpolate",
-          ["linear"],
-          ["zoom"],
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
           9.5,
           7.0,
           12,
@@ -1557,32 +1802,89 @@
       "minzoom": 11,
       "filter": [
         "all",
-        ["has", "name"],
+        [
+          "has",
+          "name"
+        ],
         [
           "any",
           [
             "all",
-            ["in", ["get", "kind"], ["literal", ["tower", "observation_tower"]]],
-            ["in", ["get", "kind_detail"], ["literal", ["observation", "lookout", "fire_lookout", "tower"]]]
+            [
+              "in",
+              [
+                "get",
+                "kind"
+              ],
+              [
+                "literal",
+                [
+                  "tower",
+                  "observation_tower"
+                ]
+              ]
+            ],
+            [
+              "in",
+              [
+                "get",
+                "kind_detail"
+              ],
+              [
+                "literal",
+                [
+                  "observation",
+                  "lookout",
+                  "fire_lookout",
+                  "tower"
+                ]
+              ]
+            ]
           ],
-          ["==", ["get", "kind_detail"], "lookout"],
-          ["==", ["get", "kind_detail"], "fire_lookout"]
+          [
+            "==",
+            [
+              "get",
+              "kind_detail"
+            ],
+            "lookout"
+          ],
+          [
+            "==",
+            [
+              "get",
+              "kind_detail"
+            ],
+            "fire_lookout"
+          ]
         ]
       ],
       "layout": {
-        "text-field": ["get", "name"],
-        "text-font": ["Noto Sans Bold"],
+        "text-field": [
+          "get",
+          "name"
+        ],
+        "text-font": [
+          "Noto Sans Bold"
+        ],
         "text-size": [
           "interpolate",
-          ["linear"],
-          ["zoom"],
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
           11,
           8.5,
           13,
           10.0
         ],
         "text-anchor": "top",
-        "text-offset": [0, 0.9],
+        "text-offset": [
+          0,
+          0.9
+        ],
         "text-max-width": 10
       },
       "paint": {
@@ -1599,14 +1901,46 @@
       "minzoom": 10.5,
       "filter": [
         "any",
-        ["in", ["get", "kind"], ["literal", ["spring", "drinking_water", "water_point"]]],
-        ["in", ["get", "kind_detail"], ["literal", ["spring", "drinking_water", "water_point"]]]
+        [
+          "in",
+          [
+            "get",
+            "kind"
+          ],
+          [
+            "literal",
+            [
+              "spring",
+              "drinking_water",
+              "water_point"
+            ]
+          ]
+        ],
+        [
+          "in",
+          [
+            "get",
+            "kind_detail"
+          ],
+          [
+            "literal",
+            [
+              "spring",
+              "drinking_water",
+              "water_point"
+            ]
+          ]
+        ]
       ],
       "paint": {
         "circle-radius": [
           "interpolate",
-          ["linear"],
-          ["zoom"],
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
           10.5,
           5.0,
           13,
@@ -1625,16 +1959,50 @@
       "minzoom": 10.5,
       "filter": [
         "any",
-        ["in", ["get", "kind"], ["literal", ["spring", "drinking_water", "water_point"]]],
-        ["in", ["get", "kind_detail"], ["literal", ["spring", "drinking_water", "water_point"]]]
+        [
+          "in",
+          [
+            "get",
+            "kind"
+          ],
+          [
+            "literal",
+            [
+              "spring",
+              "drinking_water",
+              "water_point"
+            ]
+          ]
+        ],
+        [
+          "in",
+          [
+            "get",
+            "kind_detail"
+          ],
+          [
+            "literal",
+            [
+              "spring",
+              "drinking_water",
+              "water_point"
+            ]
+          ]
+        ]
       ],
       "layout": {
         "text-field": "W",
-        "text-font": ["Noto Sans Bold"],
+        "text-font": [
+          "Noto Sans Bold"
+        ],
         "text-size": [
           "interpolate",
-          ["linear"],
-          ["zoom"],
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
           10.5,
           6.5,
           13,
@@ -1654,19 +2022,58 @@
       "minzoom": 11.5,
       "filter": [
         "all",
-        ["has", "name"],
+        [
+          "has",
+          "name"
+        ],
         [
           "any",
-          ["in", ["get", "kind"], ["literal", ["spring", "drinking_water", "water_point"]]],
-          ["in", ["get", "kind_detail"], ["literal", ["spring", "drinking_water", "water_point"]]]
+          [
+            "in",
+            [
+              "get",
+              "kind"
+            ],
+            [
+              "literal",
+              [
+                "spring",
+                "drinking_water",
+                "water_point"
+              ]
+            ]
+          ],
+          [
+            "in",
+            [
+              "get",
+              "kind_detail"
+            ],
+            [
+              "literal",
+              [
+                "spring",
+                "drinking_water",
+                "water_point"
+              ]
+            ]
+          ]
         ]
       ],
       "layout": {
-        "text-field": ["get", "name"],
-        "text-font": ["Noto Sans Regular"],
+        "text-field": [
+          "get",
+          "name"
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
         "text-size": 9.5,
         "text-anchor": "top",
-        "text-offset": [0, 0.8],
+        "text-offset": [
+          0,
+          0.8
+        ],
         "text-max-width": 10
       },
       "paint": {
@@ -1683,14 +2090,44 @@
       "minzoom": 9.5,
       "filter": [
         "any",
-        ["in", ["get", "kind"], ["literal", ["camp_site", "caravan_site"]]],
-        ["in", ["get", "kind_detail"], ["literal", ["camp_site", "caravan_site"]]]
+        [
+          "in",
+          [
+            "get",
+            "kind"
+          ],
+          [
+            "literal",
+            [
+              "camp_site",
+              "caravan_site"
+            ]
+          ]
+        ],
+        [
+          "in",
+          [
+            "get",
+            "kind_detail"
+          ],
+          [
+            "literal",
+            [
+              "camp_site",
+              "caravan_site"
+            ]
+          ]
+        ]
       ],
       "paint": {
         "circle-radius": [
           "interpolate",
-          ["linear"],
-          ["zoom"],
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
           9.5,
           5.5,
           12,
@@ -1709,16 +2146,48 @@
       "minzoom": 9.5,
       "filter": [
         "any",
-        ["in", ["get", "kind"], ["literal", ["camp_site", "caravan_site"]]],
-        ["in", ["get", "kind_detail"], ["literal", ["camp_site", "caravan_site"]]]
+        [
+          "in",
+          [
+            "get",
+            "kind"
+          ],
+          [
+            "literal",
+            [
+              "camp_site",
+              "caravan_site"
+            ]
+          ]
+        ],
+        [
+          "in",
+          [
+            "get",
+            "kind_detail"
+          ],
+          [
+            "literal",
+            [
+              "camp_site",
+              "caravan_site"
+            ]
+          ]
+        ]
       ],
       "layout": {
         "text-field": "C",
-        "text-font": ["Noto Sans Bold"],
+        "text-font": [
+          "Noto Sans Bold"
+        ],
         "text-size": [
           "interpolate",
-          ["linear"],
-          ["zoom"],
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
           9.5,
           7.0,
           12,
@@ -1738,27 +2207,68 @@
       "minzoom": 11,
       "filter": [
         "all",
-        ["has", "name"],
+        [
+          "has",
+          "name"
+        ],
         [
           "any",
-          ["in", ["get", "kind"], ["literal", ["camp_site", "caravan_site"]]],
-          ["in", ["get", "kind_detail"], ["literal", ["camp_site", "caravan_site"]]]
+          [
+            "in",
+            [
+              "get",
+              "kind"
+            ],
+            [
+              "literal",
+              [
+                "camp_site",
+                "caravan_site"
+              ]
+            ]
+          ],
+          [
+            "in",
+            [
+              "get",
+              "kind_detail"
+            ],
+            [
+              "literal",
+              [
+                "camp_site",
+                "caravan_site"
+              ]
+            ]
+          ]
         ]
       ],
       "layout": {
-        "text-field": ["get", "name"],
-        "text-font": ["Noto Sans Bold"],
+        "text-field": [
+          "get",
+          "name"
+        ],
+        "text-font": [
+          "Noto Sans Bold"
+        ],
         "text-size": [
           "interpolate",
-          ["linear"],
-          ["zoom"],
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
           11,
           8.5,
           13,
           10.0
         ],
         "text-anchor": "top",
-        "text-offset": [0, 1.0],
+        "text-offset": [
+          0,
+          1.0
+        ],
         "text-max-width": 11
       },
       "paint": {
@@ -1775,14 +2285,46 @@
       "minzoom": 9.5,
       "filter": [
         "any",
-        ["in", ["get", "kind"], ["literal", ["shelter", "wilderness_hut", "alpine_hut"]]],
-        ["in", ["get", "kind_detail"], ["literal", ["shelter", "wilderness_hut", "alpine_hut"]]]
+        [
+          "in",
+          [
+            "get",
+            "kind"
+          ],
+          [
+            "literal",
+            [
+              "shelter",
+              "wilderness_hut",
+              "alpine_hut"
+            ]
+          ]
+        ],
+        [
+          "in",
+          [
+            "get",
+            "kind_detail"
+          ],
+          [
+            "literal",
+            [
+              "shelter",
+              "wilderness_hut",
+              "alpine_hut"
+            ]
+          ]
+        ]
       ],
       "paint": {
         "circle-radius": [
           "interpolate",
-          ["linear"],
-          ["zoom"],
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
           9.5,
           5.5,
           12,
@@ -1801,16 +2343,50 @@
       "minzoom": 9.5,
       "filter": [
         "any",
-        ["in", ["get", "kind"], ["literal", ["shelter", "wilderness_hut", "alpine_hut"]]],
-        ["in", ["get", "kind_detail"], ["literal", ["shelter", "wilderness_hut", "alpine_hut"]]]
+        [
+          "in",
+          [
+            "get",
+            "kind"
+          ],
+          [
+            "literal",
+            [
+              "shelter",
+              "wilderness_hut",
+              "alpine_hut"
+            ]
+          ]
+        ],
+        [
+          "in",
+          [
+            "get",
+            "kind_detail"
+          ],
+          [
+            "literal",
+            [
+              "shelter",
+              "wilderness_hut",
+              "alpine_hut"
+            ]
+          ]
+        ]
       ],
       "layout": {
         "text-field": "S",
-        "text-font": ["Noto Sans Bold"],
+        "text-font": [
+          "Noto Sans Bold"
+        ],
         "text-size": [
           "interpolate",
-          ["linear"],
-          ["zoom"],
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
           9.5,
           7.0,
           12,
@@ -1830,27 +2406,70 @@
       "minzoom": 11,
       "filter": [
         "all",
-        ["has", "name"],
+        [
+          "has",
+          "name"
+        ],
         [
           "any",
-          ["in", ["get", "kind"], ["literal", ["shelter", "wilderness_hut", "alpine_hut"]]],
-          ["in", ["get", "kind_detail"], ["literal", ["shelter", "wilderness_hut", "alpine_hut"]]]
+          [
+            "in",
+            [
+              "get",
+              "kind"
+            ],
+            [
+              "literal",
+              [
+                "shelter",
+                "wilderness_hut",
+                "alpine_hut"
+              ]
+            ]
+          ],
+          [
+            "in",
+            [
+              "get",
+              "kind_detail"
+            ],
+            [
+              "literal",
+              [
+                "shelter",
+                "wilderness_hut",
+                "alpine_hut"
+              ]
+            ]
+          ]
         ]
       ],
       "layout": {
-        "text-field": ["get", "name"],
-        "text-font": ["Noto Sans Bold"],
+        "text-field": [
+          "get",
+          "name"
+        ],
+        "text-font": [
+          "Noto Sans Bold"
+        ],
         "text-size": [
           "interpolate",
-          ["linear"],
-          ["zoom"],
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
           11,
           8.5,
           13,
           10.0
         ],
         "text-anchor": "top",
-        "text-offset": [0, 0.9],
+        "text-offset": [
+          0,
+          0.9
+        ],
         "text-max-width": 10
       },
       "paint": {
@@ -1867,14 +2486,46 @@
       "minzoom": 9,
       "filter": [
         "any",
-        ["in", ["get", "kind"], ["literal", ["saddle", "pass", "mountain_pass"]]],
-        ["in", ["get", "kind_detail"], ["literal", ["saddle", "pass", "mountain_pass"]]]
+        [
+          "in",
+          [
+            "get",
+            "kind"
+          ],
+          [
+            "literal",
+            [
+              "saddle",
+              "pass",
+              "mountain_pass"
+            ]
+          ]
+        ],
+        [
+          "in",
+          [
+            "get",
+            "kind_detail"
+          ],
+          [
+            "literal",
+            [
+              "saddle",
+              "pass",
+              "mountain_pass"
+            ]
+          ]
+        ]
       ],
       "paint": {
         "circle-radius": [
           "interpolate",
-          ["linear"],
-          ["zoom"],
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
           9,
           5.5,
           12,
@@ -1893,16 +2544,50 @@
       "minzoom": 9,
       "filter": [
         "any",
-        ["in", ["get", "kind"], ["literal", ["saddle", "pass", "mountain_pass"]]],
-        ["in", ["get", "kind_detail"], ["literal", ["saddle", "pass", "mountain_pass"]]]
+        [
+          "in",
+          [
+            "get",
+            "kind"
+          ],
+          [
+            "literal",
+            [
+              "saddle",
+              "pass",
+              "mountain_pass"
+            ]
+          ]
+        ],
+        [
+          "in",
+          [
+            "get",
+            "kind_detail"
+          ],
+          [
+            "literal",
+            [
+              "saddle",
+              "pass",
+              "mountain_pass"
+            ]
+          ]
+        ]
       ],
       "layout": {
         "text-field": ")(",
-        "text-font": ["Noto Sans Bold"],
+        "text-font": [
+          "Noto Sans Bold"
+        ],
         "text-size": [
           "interpolate",
-          ["linear"],
-          ["zoom"],
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
           9,
           7.0,
           12,
@@ -1922,27 +2607,70 @@
       "minzoom": 10,
       "filter": [
         "all",
-        ["has", "name"],
+        [
+          "has",
+          "name"
+        ],
         [
           "any",
-          ["in", ["get", "kind"], ["literal", ["saddle", "pass", "mountain_pass"]]],
-          ["in", ["get", "kind_detail"], ["literal", ["saddle", "pass", "mountain_pass"]]]
+          [
+            "in",
+            [
+              "get",
+              "kind"
+            ],
+            [
+              "literal",
+              [
+                "saddle",
+                "pass",
+                "mountain_pass"
+              ]
+            ]
+          ],
+          [
+            "in",
+            [
+              "get",
+              "kind_detail"
+            ],
+            [
+              "literal",
+              [
+                "saddle",
+                "pass",
+                "mountain_pass"
+              ]
+            ]
+          ]
         ]
       ],
       "layout": {
-        "text-field": ["get", "name"],
-        "text-font": ["Noto Sans Bold"],
+        "text-field": [
+          "get",
+          "name"
+        ],
+        "text-font": [
+          "Noto Sans Bold"
+        ],
         "text-size": [
           "interpolate",
-          ["linear"],
-          ["zoom"],
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
           10,
           8.5,
           13,
           10.0
         ],
         "text-anchor": "top",
-        "text-offset": [0, 0.8],
+        "text-offset": [
+          0,
+          0.8
+        ],
         "text-max-width": 10
       },
       "paint": {
@@ -1956,12 +2684,33 @@
       "type": "circle",
       "source": "base",
       "source-layer": "pois",
-      "minzoom": 11.5,
+      "minzoom": 0,
       "filter": [
         "any",
-        ["==", ["get", "kind"], "ford"],
-        ["==", ["get", "kind_detail"], "ford"],
-        ["==", ["get", "ford"], "yes"]
+        [
+          "==",
+          [
+            "get",
+            "kind"
+          ],
+          "ford"
+        ],
+        [
+          "==",
+          [
+            "get",
+            "kind_detail"
+          ],
+          "ford"
+        ],
+        [
+          "==",
+          [
+            "get",
+            "ford"
+          ],
+          "yes"
+        ]
       ],
       "paint": {
         "circle-radius": 7,
@@ -1975,16 +2724,39 @@
       "type": "symbol",
       "source": "base",
       "source-layer": "pois",
-      "minzoom": 11.5,
+      "minzoom": 0,
       "filter": [
         "any",
-        ["==", ["get", "kind"], "ford"],
-        ["==", ["get", "kind_detail"], "ford"],
-        ["==", ["get", "ford"], "yes"]
+        [
+          "==",
+          [
+            "get",
+            "kind"
+          ],
+          "ford"
+        ],
+        [
+          "==",
+          [
+            "get",
+            "kind_detail"
+          ],
+          "ford"
+        ],
+        [
+          "==",
+          [
+            "get",
+            "ford"
+          ],
+          "yes"
+        ]
       ],
       "layout": {
         "text-field": "F",
-        "text-font": ["Noto Sans Bold"],
+        "text-font": [
+          "Noto Sans Bold"
+        ],
         "text-size": 8.5,
         "text-allow-overlap": false
       },
@@ -1997,11 +2769,39 @@
       "type": "circle",
       "source": "base",
       "source-layer": "pois",
-      "minzoom": 13,
+      "minzoom": 0,
       "filter": [
         "any",
-        ["in", ["get", "kind"], ["literal", ["gate", "lift_gate", "cattle_grid"]]],
-        ["in", ["get", "kind_detail"], ["literal", ["gate", "lift_gate", "cattle_grid"]]]
+        [
+          "in",
+          [
+            "get",
+            "kind"
+          ],
+          [
+            "literal",
+            [
+              "gate",
+              "lift_gate",
+              "cattle_grid"
+            ]
+          ]
+        ],
+        [
+          "in",
+          [
+            "get",
+            "kind_detail"
+          ],
+          [
+            "literal",
+            [
+              "gate",
+              "lift_gate",
+              "cattle_grid"
+            ]
+          ]
+        ]
       ],
       "paint": {
         "circle-radius": 6,
@@ -2015,15 +2815,45 @@
       "type": "symbol",
       "source": "base",
       "source-layer": "pois",
-      "minzoom": 13,
+      "minzoom": 0,
       "filter": [
         "any",
-        ["in", ["get", "kind"], ["literal", ["gate", "lift_gate", "cattle_grid"]]],
-        ["in", ["get", "kind_detail"], ["literal", ["gate", "lift_gate", "cattle_grid"]]]
+        [
+          "in",
+          [
+            "get",
+            "kind"
+          ],
+          [
+            "literal",
+            [
+              "gate",
+              "lift_gate",
+              "cattle_grid"
+            ]
+          ]
+        ],
+        [
+          "in",
+          [
+            "get",
+            "kind_detail"
+          ],
+          [
+            "literal",
+            [
+              "gate",
+              "lift_gate",
+              "cattle_grid"
+            ]
+          ]
+        ]
       ],
       "layout": {
         "text-field": "G",
-        "text-font": ["Noto Sans Bold"],
+        "text-font": [
+          "Noto Sans Bold"
+        ],
         "text-size": 7.5,
         "text-allow-overlap": false
       },
@@ -2036,11 +2866,25 @@
       "type": "circle",
       "source": "base",
       "source-layer": "pois",
-      "minzoom": 12.5,
+      "minzoom": 9.0,
       "filter": [
         "any",
-        ["==", ["get", "kind"], "toilets"],
-        ["==", ["get", "kind_detail"], "toilets"]
+        [
+          "==",
+          [
+            "get",
+            "kind"
+          ],
+          "toilets"
+        ],
+        [
+          "==",
+          [
+            "get",
+            "kind_detail"
+          ],
+          "toilets"
+        ]
       ],
       "paint": {
         "circle-radius": 7,
@@ -2054,15 +2898,31 @@
       "type": "symbol",
       "source": "base",
       "source-layer": "pois",
-      "minzoom": 12.5,
+      "minzoom": 9.0,
       "filter": [
         "any",
-        ["==", ["get", "kind"], "toilets"],
-        ["==", ["get", "kind_detail"], "toilets"]
+        [
+          "==",
+          [
+            "get",
+            "kind"
+          ],
+          "toilets"
+        ],
+        [
+          "==",
+          [
+            "get",
+            "kind_detail"
+          ],
+          "toilets"
+        ]
       ],
       "layout": {
         "text-field": "WC",
-        "text-font": ["Noto Sans Bold"],
+        "text-font": [
+          "Noto Sans Bold"
+        ],
         "text-size": 7.5,
         "text-allow-overlap": false
       },
