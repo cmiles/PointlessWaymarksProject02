@@ -79,6 +79,7 @@ namespace PointedHorizons.Services
 
         /// <summary>
         /// Collects candidate directories where the application binary and installer marker files may reside.
+        /// Prioritizes Environment.ProcessPath to correctly locate the install folder in single-file self-extracting executables.
         /// </summary>
         public static List<string> GetProbeDirectories()
         {
@@ -91,15 +92,19 @@ namespace PointedHorizons.Services
                 {
                     string path = rawPath.Trim('"', ' ');
                     string? dir = Directory.Exists(path) ? path : Path.GetDirectoryName(path);
-                    if (!string.IsNullOrWhiteSpace(dir) && Directory.Exists(dir) && !dirs.Contains(dir, StringComparer.OrdinalIgnoreCase))
+                    if (!string.IsNullOrWhiteSpace(dir))
                     {
-                        dirs.Add(dir);
+                        dir = dir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                        if (Directory.Exists(dir) && !dirs.Contains(dir, StringComparer.OrdinalIgnoreCase))
+                        {
+                            dirs.Add(dir);
+                        }
                     }
                 }
                 catch { }
             }
 
-            // 1. Process Path
+            // 1. Process Path (essential for .NET single-file self-extracting executables where BaseDirectory points to %TEMP%\.net)
             try
             {
                 TryAddDir(Environment.ProcessPath);
@@ -122,40 +127,69 @@ namespace PointedHorizons.Services
             }
             catch { }
 
-            // 4. AppDomain.CurrentDomain.BaseDirectory
+            // 4. AppDomain.CurrentDomain.BaseDirectory and subfolders
             try
             {
                 TryAddDir(AppDomain.CurrentDomain.BaseDirectory);
+                TryAddDir(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot"));
             }
             catch { }
 
-            // 5. Current Working Directory
+            // 5. Current Working Directory and subfolders
             try
             {
                 TryAddDir(Directory.GetCurrentDirectory());
+                TryAddDir(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"));
             }
             catch { }
 
-            // 6. Platform-specific user documents folders
+            // 6. Entry and Executing Assembly locations (if available)
             try
             {
-                string docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                if (!string.IsNullOrEmpty(docs))
+                TryAddDir(Assembly.GetEntryAssembly()?.Location);
+                TryAddDir(Assembly.GetExecutingAssembly()?.Location);
+            }
+            catch { }
+
+            // 7. Known Windows installation directory fallbacks (useful when running from IDE/Debug or portable mode)
+            try
+            {
+                string localApp = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                if (!string.IsNullOrEmpty(localApp))
                 {
-                    TryAddDir(Path.Combine(docs, "PointedHorizons"));
+                    TryAddDir(Path.Combine(localApp, "Programs", "PointlessWaymarksPointedHorizonsWin"));
+                }
+                string progFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                if (!string.IsNullOrEmpty(progFiles))
+                {
+                    TryAddDir(Path.Combine(progFiles, "PointlessWaymarksPointedHorizonsWin"));
                 }
             }
             catch { }
 
-            try
+            // 8. Mobile/Android specific user documents folders
+            if (IsAndroidPlatform)
             {
-                string personal = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-                if (!string.IsNullOrEmpty(personal))
+                try
                 {
-                    TryAddDir(Path.Combine(personal, "PointedHorizons"));
+                    string docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                    if (!string.IsNullOrEmpty(docs))
+                    {
+                        TryAddDir(Path.Combine(docs, "PointedHorizons"));
+                    }
                 }
+                catch { }
+
+                try
+                {
+                    string personal = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+                    if (!string.IsNullOrEmpty(personal))
+                    {
+                        TryAddDir(Path.Combine(personal, "PointedHorizons"));
+                    }
+                }
+                catch { }
             }
-            catch { }
 
             return dirs;
         }

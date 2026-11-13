@@ -42,6 +42,7 @@ public partial class FullScreenMapControl : UserControl
     private string _currentGpsStatusText = "GPS Ready";
 
     public event EventHandler<bool>? RecordingStateChanged;
+    public event EventHandler<RecordedTrack>? TrackRecovered;
     public event EventHandler<bool>? GpsStateChanged;
     public event EventHandler<string>? GpsStatusChanged;
 
@@ -884,6 +885,7 @@ public partial class FullScreenMapControl : UserControl
                     CrashRecoveryNotice.Visibility = Visibility.Visible;
                     TxtRecoveryMsg.Text = $"⚠️ Restored '{recovered.Name}' ({recovered.Points.Count} pts) from previous session";
                 }
+                TrackRecovered?.Invoke(this, recovered);
             }
         }
         catch (Exception ex)

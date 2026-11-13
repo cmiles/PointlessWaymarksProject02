@@ -142,11 +142,11 @@ public partial class HorizonViewControl : UserControl
             BtnHorizonMenu.Foreground = tm.TextPrimary;
         }
 
-        if (BtnResetPitch != null)
+        if (BtnToolbarCurrentLocation != null)
         {
-            BtnResetPitch.Background = tm.ButtonInactiveBackground;
-            BtnResetPitch.BorderBrush = tm.ButtonInactiveBorder;
-            BtnResetPitch.Foreground = tm.TextPrimary;
+            BtnToolbarCurrentLocation.Background = tm.ButtonInactiveBackground;
+            BtnToolbarCurrentLocation.BorderBrush = tm.ButtonInactiveBorder;
+            BtnToolbarCurrentLocation.Foreground = tm.TextPrimary;
         }
 
         if (HorizonMenuPanel != null)
@@ -249,9 +249,48 @@ public partial class HorizonViewControl : UserControl
         {
             QuickToolbarBorder.Visibility = Visibility.Visible;
         }
-        if (HorizonMenuPanel != null)
+
+        if (isCompact)
         {
-            if (isCompact)
+            if (BtnCompass != null)
+            {
+                BtnCompass.MinHeight = 44;
+                BtnCompass.Padding = new Thickness(12, 8, 12, 8);
+                BtnCompass.FontSize = 13.5;
+            }
+            if (TxtCompassIcon != null) TxtCompassIcon.FontSize = 14;
+            if (TxtCompassHeading != null) TxtCompassHeading.FontSize = 13.5;
+
+            if (BtnToolbarCurrentLocation != null)
+            {
+                BtnToolbarCurrentLocation.MinHeight = 44;
+                BtnToolbarCurrentLocation.MinWidth = 44;
+                BtnToolbarCurrentLocation.Padding = new Thickness(10, 8, 10, 8);
+                BtnToolbarCurrentLocation.FontSize = 16;
+            }
+
+            if (BtnHorizonMenu != null)
+            {
+                BtnHorizonMenu.MinHeight = 44;
+                BtnHorizonMenu.MinWidth = 44;
+                BtnHorizonMenu.Padding = new Thickness(10, 8, 10, 8);
+                BtnHorizonMenu.FontSize = 17;
+            }
+
+            if (CompassDivider != null)
+            {
+                CompassDivider.Height = 24;
+                CompassDivider.Margin = new Thickness(6, 2, 6, 2);
+            }
+
+            if (QuickToolbarBorder != null)
+            {
+                QuickToolbarBorder.CornerRadius = new CornerRadius(24);
+                QuickToolbarBorder.Padding = new Thickness(6, 4, 6, 4);
+                QuickToolbarBorder.Margin = new Thickness(0, 0, 10, 10);
+            }
+
+            if (HorizonMenuPanel != null)
             {
                 // Mobile: vertically fill the screen like the main map hamburger menu
                 HorizonMenuPanel.HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -261,7 +300,64 @@ public partial class HorizonViewControl : UserControl
                 HorizonMenuPanel.Margin = new Thickness(10, 10, 10, 10);
                 HorizonMenuPanel.MaxHeight = double.PositiveInfinity;
             }
-            else
+            if (HorizonMenuScrollViewer != null)
+            {
+                HorizonMenuScrollViewer.VerticalAlignment = VerticalAlignment.Stretch;
+                HorizonMenuScrollViewer.MaxHeight = double.PositiveInfinity;
+            }
+
+            if (BtnCloseHorizonMenu != null) { BtnCloseHorizonMenu.MinHeight = 38; BtnCloseHorizonMenu.MinWidth = 38; BtnCloseHorizonMenu.FontSize = 14; }
+            if (BtnHorizonCurrentLocation != null) { BtnHorizonCurrentLocation.MinHeight = 44; BtnHorizonCurrentLocation.Padding = new Thickness(10, 10, 10, 10); BtnHorizonCurrentLocation.FontSize = 12.5; }
+            if (BtnHorizonLocationFromMainMap != null) { BtnHorizonLocationFromMainMap.MinHeight = 44; BtnHorizonLocationFromMainMap.Padding = new Thickness(10, 10, 10, 10); BtnHorizonLocationFromMainMap.FontSize = 12.5; }
+            if (BtnMenuFov15 != null) { BtnMenuFov15.MinHeight = 40; BtnMenuFov15.Padding = new Thickness(12, 8, 12, 8); BtnMenuFov15.FontSize = 12; }
+            if (BtnMenuFov35 != null) { BtnMenuFov35.MinHeight = 40; BtnMenuFov35.Padding = new Thickness(12, 8, 12, 8); BtnMenuFov35.FontSize = 12; }
+            if (BtnMenuFov50 != null) { BtnMenuFov50.MinHeight = 40; BtnMenuFov50.Padding = new Thickness(12, 8, 12, 8); BtnMenuFov50.FontSize = 12; }
+            if (BtnMenuFov90 != null) { BtnMenuFov90.MinHeight = 40; BtnMenuFov90.Padding = new Thickness(12, 8, 12, 8); BtnMenuFov90.FontSize = 12; }
+            if (BtnMenuRefreshHorizon != null) { BtnMenuRefreshHorizon.MinHeight = 44; BtnMenuRefreshHorizon.Padding = new Thickness(10, 10, 10, 10); BtnMenuRefreshHorizon.FontSize = 12.5; }
+            if (BtnMenuSnapNorth != null) { BtnMenuSnapNorth.MinHeight = 44; BtnMenuSnapNorth.Padding = new Thickness(10, 10, 10, 10); BtnMenuSnapNorth.FontSize = 12.5; }
+            if (BtnMenuToggleTheme != null) { BtnMenuToggleTheme.MinHeight = 44; BtnMenuToggleTheme.Padding = new Thickness(10, 10, 10, 10); BtnMenuToggleTheme.FontSize = 12.5; }
+        }
+        else
+        {
+            if (BtnCompass != null)
+            {
+                BtnCompass.MinHeight = 0;
+                BtnCompass.Padding = new Thickness(8, 3, 8, 3);
+                BtnCompass.FontSize = 11;
+            }
+            if (TxtCompassIcon != null) TxtCompassIcon.FontSize = 11;
+            if (TxtCompassHeading != null) TxtCompassHeading.FontSize = 11;
+
+            if (BtnToolbarCurrentLocation != null)
+            {
+                BtnToolbarCurrentLocation.MinHeight = 0;
+                BtnToolbarCurrentLocation.MinWidth = 0;
+                BtnToolbarCurrentLocation.Padding = new Thickness(7, 3, 7, 3);
+                BtnToolbarCurrentLocation.FontSize = 11;
+            }
+
+            if (BtnHorizonMenu != null)
+            {
+                BtnHorizonMenu.MinHeight = 0;
+                BtnHorizonMenu.MinWidth = 0;
+                BtnHorizonMenu.Padding = new Thickness(7, 3, 7, 3);
+                BtnHorizonMenu.FontSize = 13;
+            }
+
+            if (CompassDivider != null)
+            {
+                CompassDivider.Height = 14;
+                CompassDivider.Margin = new Thickness(4, 2, 4, 2);
+            }
+
+            if (QuickToolbarBorder != null)
+            {
+                QuickToolbarBorder.CornerRadius = new CornerRadius(20);
+                QuickToolbarBorder.Padding = new Thickness(8, 4, 8, 4);
+                QuickToolbarBorder.Margin = new Thickness(0, 0, 12, 12);
+            }
+
+            if (HorizonMenuPanel != null)
             {
                 // Desktop: lower right floating panel above the toolbar
                 HorizonMenuPanel.HorizontalAlignment = HorizontalAlignment.Right;
@@ -269,16 +365,28 @@ public partial class HorizonViewControl : UserControl
                 HorizonMenuPanel.Width = 440;
                 HorizonMenuPanel.Height = double.NaN;
                 HorizonMenuPanel.Margin = new Thickness(0, 0, 12, 54);
-                HorizonMenuPanel.MaxHeight = Math.Max(400, ActualHeight - 70);
+                HorizonMenuPanel.MaxHeight = 520;
             }
-        }
-        if (HorizonMenuScrollViewer != null)
-        {
-            HorizonMenuScrollViewer.MaxHeight = isCompact ? Math.Max(200, ActualHeight - 80) : Math.Max(350, ActualHeight - 130);
+            if (HorizonMenuScrollViewer != null)
+            {
+                HorizonMenuScrollViewer.VerticalAlignment = VerticalAlignment.Stretch;
+                HorizonMenuScrollViewer.MaxHeight = 440;
+            }
+
+            if (BtnCloseHorizonMenu != null) { BtnCloseHorizonMenu.MinHeight = 0; BtnCloseHorizonMenu.MinWidth = 0; BtnCloseHorizonMenu.FontSize = 11; }
+            if (BtnHorizonCurrentLocation != null) { BtnHorizonCurrentLocation.MinHeight = 0; BtnHorizonCurrentLocation.Padding = new Thickness(8, 5, 8, 5); BtnHorizonCurrentLocation.FontSize = 10.5; }
+            if (BtnHorizonLocationFromMainMap != null) { BtnHorizonLocationFromMainMap.MinHeight = 0; BtnHorizonLocationFromMainMap.Padding = new Thickness(8, 5, 8, 5); BtnHorizonLocationFromMainMap.FontSize = 10.5; }
+            if (BtnMenuFov15 != null) { BtnMenuFov15.MinHeight = 0; BtnMenuFov15.Padding = new Thickness(9, 4, 9, 4); BtnMenuFov15.FontSize = 10; }
+            if (BtnMenuFov35 != null) { BtnMenuFov35.MinHeight = 0; BtnMenuFov35.Padding = new Thickness(9, 4, 9, 4); BtnMenuFov35.FontSize = 10; }
+            if (BtnMenuFov50 != null) { BtnMenuFov50.MinHeight = 0; BtnMenuFov50.Padding = new Thickness(9, 4, 9, 4); BtnMenuFov50.FontSize = 10; }
+            if (BtnMenuFov90 != null) { BtnMenuFov90.MinHeight = 0; BtnMenuFov90.Padding = new Thickness(9, 4, 9, 4); BtnMenuFov90.FontSize = 10; }
+            if (BtnMenuRefreshHorizon != null) { BtnMenuRefreshHorizon.MinHeight = 0; BtnMenuRefreshHorizon.Padding = new Thickness(8, 5, 8, 5); BtnMenuRefreshHorizon.FontSize = 10.5; }
+            if (BtnMenuSnapNorth != null) { BtnMenuSnapNorth.MinHeight = 0; BtnMenuSnapNorth.Padding = new Thickness(8, 5, 8, 5); BtnMenuSnapNorth.FontSize = 10.5; }
+            if (BtnMenuToggleTheme != null) { BtnMenuToggleTheme.MinHeight = 0; BtnMenuToggleTheme.Padding = new Thickness(8, 5, 8, 5); BtnMenuToggleTheme.FontSize = 10.5; }
         }
     }
 
-    private void BtnResetPitch_Click(object sender, RoutedEventArgs e)
+    private void ResetPitch()
     {
         try
         {
@@ -292,6 +400,11 @@ public partial class HorizonViewControl : UserControl
         {
             System.Diagnostics.Debug.WriteLine($"[HorizonView] Reset pitch error: {ex.Message}");
         }
+    }
+
+    private void BtnResetPitch_Click(object sender, RoutedEventArgs e)
+    {
+        ResetPitch();
     }
 
     private void Vm_ViewParametersChanged(double? azimuth, double? fov)
@@ -345,6 +458,23 @@ public partial class HorizonViewControl : UserControl
         if (ViewModel != null)
         {
             ViewModel.Azimuth = 0.0;
+        }
+        ResetPitch();
+    }
+
+    private async void BtnToolbarCurrentLocation_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel == null) return;
+        ViewModel.StatusMessage = "Acquiring current GPS location...";
+        var pos = await GeolocationService.GetCurrentPositionAsync(timeoutSeconds: 8);
+        if (pos != null)
+        {
+            ViewModel.SetLocation(pos.Latitude, pos.Longitude, "Current Location", panMap: true);
+            ViewModel.StatusMessage = $"Aim Map & Horizon moved to GPS: {pos.Latitude:F4}°, {pos.Longitude:F4}° (±{pos.AccuracyM:F0}m)";
+        }
+        else
+        {
+            ViewModel.StatusMessage = "GPS location unavailable or permission denied.";
         }
     }
 
@@ -619,6 +749,7 @@ public partial class HorizonViewControl : UserControl
         {
             ViewModel.Azimuth = 0.0;
         }
+        ResetPitch();
         BtnCloseHorizonMenu_Click(sender, e);
     }
 

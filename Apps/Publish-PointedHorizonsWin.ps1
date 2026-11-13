@@ -25,12 +25,22 @@ dotnet publish $projectPath -c Release -r win-x64 --self-contained true `
     -p:DebugSymbols=false `
     -o $targetDir
 
-# 4. Copy the icon to the publish target directory
+# 4. Copy the icon and write version marker to the publish target directory
 if (Test-Path $iconPath) {
     Write-Host "Copying app.ico to publish target..." -ForegroundColor Cyan
     Copy-Item -Path $iconPath -Destination $targetDir -Force
 } else {
     Write-Host "Warning: app.ico not found at $iconPath" -ForegroundColor Red
+}
+
+Write-Host "Writing PublishVersion marker to publish target..." -ForegroundColor Cyan
+Set-Content -Path "$targetDir\PublishVersion--$version.txt" -Value $version
+
+# Also update wwwroot in project so local builds/debug have a version file
+$photinoWwwroot = ".\PointedHorizons\PointedHorizons.Photino\wwwroot"
+if (Test-Path $photinoWwwroot) {
+    Remove-Item -Path "$photinoWwwroot\PublishVersion--*.txt" -Force -ErrorAction SilentlyContinue
+    Set-Content -Path "$photinoWwwroot\PublishVersion--$version.txt" -Value $version
 }
 
 # 5. Compile the Inno Setup Installer with Version definition

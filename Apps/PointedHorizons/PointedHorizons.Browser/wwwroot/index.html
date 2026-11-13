@@ -1,11 +1,23 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Pointed Horizons</title>
-    <meta name="description" content="Interactive mountain skyline horizon panorama generator, topography analysis, and GPS trail routing." />
-    <base href="/" />
+    <meta name="description"
+        content="Interactive mountain skyline horizon panorama generator, topography analysis, and GPS trail routing." />
+    <base href="/PointedHorizons/" />
+    <script>
+        (function () {
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                if (!window.location.pathname.startsWith('/PointedHorizons')) {
+                    const baseEl = document.querySelector('base');
+                    if (baseEl) baseEl.setAttribute('href', '/');
+                }
+            }
+        })();
+    </script>
     <meta name="theme-color" content="#070A10" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -33,6 +45,7 @@
     <script src="js/pointed-map.js"></script>
     <script src="js/fullscreen-map.js"></script>
 </head>
+
 <body>
     <div id="app">
         <div class="loading-indicator-wrapper">
@@ -57,13 +70,14 @@
             </div>
         </div>
     </div>
-    <div id="opensilver-root" style="position: relative; width: 100%; height: 100%; overflow-x: hidden; overflow-y: hidden"></div>
+    <div id="opensilver-root"
+        style="position: relative; width: 100%; height: 100%; overflow-x: hidden; overflow-y: hidden"></div>
 
     <script>
         (function () {
             const script = document.createElement('script');
             script.setAttribute('type', 'application/javascript');
-            script.setAttribute('src', 'libs/opensilver.js?date=' + new Date().toISOString());
+            script.setAttribute('src', 'libs/OpenSilver.js?date=' + new Date().toISOString());
             script.addEventListener('load', function () {
                 const scriptWebAssembly = document.createElement('script');
                 scriptWebAssembly.setAttribute('type', 'application/javascript');
@@ -74,4 +88,5 @@
         })();
     </script>
 </body>
+
 </html>

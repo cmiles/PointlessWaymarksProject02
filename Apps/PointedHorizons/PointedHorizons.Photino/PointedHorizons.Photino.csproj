@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <OutputType>Exe</OutputType>
+        <OutputType>WinExe</OutputType>
         <TargetFramework>net10.0</TargetFramework>
         <Platforms>AnyCPU</Platforms>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -35,6 +35,9 @@
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
         <None Update="app.ico">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="PublishVersion--*.txt">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>

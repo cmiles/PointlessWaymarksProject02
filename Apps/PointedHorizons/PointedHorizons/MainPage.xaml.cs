@@ -24,7 +24,7 @@ public partial class MainPage : Page
     private bool _isRecordButtonPressed;
     private bool _isGpsLongPressTriggered;
     private bool _isGpsButtonPressed;
-    private bool _hasInitializedRecordingState;
+    private bool? _lastRecordingState;
 
     public MainViewModel ViewModel { get; }
 
@@ -70,16 +70,24 @@ public partial class MainPage : Page
         {
             FullScreenMapControlView.ConfigurePmTilesRequested += (s, e) => ShowPmTilesModal();
             FullScreenMapControlView.OpenTracksPageRequested += (s, e) => SwitchTab("Tracks");
+            FullScreenMapControlView.TrackRecovered += (s, track) =>
+            {
+                Dispatcher.BeginInvoke(() =>
+                {
+                    ShowTrackActionToast($"Previous track '{track.Name}' stopped and saved", "⏹️");
+                });
+            };
             FullScreenMapControlView.RecordingStateChanged += (s, isRecording) =>
             {
                 Dispatcher.BeginInvoke(() =>
                 {
                     UpdateTitleBarButtonsState();
-                    if (_hasInitializedRecordingState)
+                    // Only show notification when the state actually transitions from a known prior state
+                    if (_lastRecordingState.HasValue && _lastRecordingState.Value != isRecording)
                     {
                         ShowTrackActionToast(isRecording ? "Track recording started" : "Track recording stopped and saved", isRecording ? "⏺️" : "⏹️");
                     }
-                    _hasInitializedRecordingState = true;
+                    _lastRecordingState = isRecording;
                 });
             };
             FullScreenMapControlView.GpsStateChanged += (s, e) => Dispatcher.BeginInvoke(UpdateTitleBarButtonsState);
@@ -179,7 +187,7 @@ public partial class MainPage : Page
         UpdateResponsiveLayout(ActualWidth, ActualHeight);
         UpdateUnitsButtonsTheme(ViewModel.IsDarkTheme);
         UpdateTitleBarButtonsState();
-        _hasInitializedRecordingState = true;
+        _lastRecordingState = FullScreenMapControlView?.IsRecordingActive ?? false;
 
         // 1. Make the full screen map the first page on launch
         SwitchTab("FullScreenMap");
@@ -329,11 +337,12 @@ public partial class MainPage : Page
             if (BtnNavPageAbout != null) { BtnNavPageAbout.MinHeight = 48; BtnNavPageAbout.Padding = new Thickness(14, 12, 14, 12); BtnNavPageAbout.FontSize = 14.5; }
             if (BtnCloseCompactNav != null) { BtnCloseCompactNav.MinHeight = 36; BtnCloseCompactNav.MinWidth = 36; BtnCloseCompactNav.FontSize = 14; }
 
-            // Display toast notifications lower on small screen so hands don't cover them
+            // Display toast notifications center screen
             if (TrackActionToast != null)
             {
-                TrackActionToast.VerticalAlignment = VerticalAlignment.Bottom;
-                TrackActionToast.Margin = new Thickness(0, 0, 0, 90);
+                TrackActionToast.HorizontalAlignment = HorizontalAlignment.Center;
+                TrackActionToast.VerticalAlignment = VerticalAlignment.Center;
+                TrackActionToast.Margin = new Thickness(0);
             }
 
             // Content button in Horizon view: Twice as big
@@ -342,6 +351,10 @@ public partial class MainPage : Page
                 BtnRefresh.MinHeight = 44;
                 BtnRefresh.Padding = new Thickness(14, 8, 14, 8);
                 BtnRefresh.FontSize = 13;
+            }
+            if (SplitBarBorder != null)
+            {
+                SplitBarBorder.Height = double.NaN;
             }
 
             // Application options buttons: Twice as big on mobile
@@ -473,8 +486,14 @@ public partial class MainPage : Page
 
             if (TrackActionToast != null)
             {
-                TrackActionToast.VerticalAlignment = VerticalAlignment.Top;
-                TrackActionToast.Margin = new Thickness(0, 58, 0, 0);
+                TrackActionToast.HorizontalAlignment = HorizontalAlignment.Center;
+                TrackActionToast.VerticalAlignment = VerticalAlignment.Center;
+                TrackActionToast.Margin = new Thickness(0);
+            }
+
+            if (SplitBarBorder != null)
+            {
+                SplitBarBorder.Height = 36;
             }
 
             if (BtnUnitFeet != null) { BtnUnitFeet.MinHeight = 0; BtnUnitFeet.Padding = new Thickness(12, 5, 12, 5); BtnUnitFeet.FontSize = 11; }

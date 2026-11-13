@@ -2610,7 +2610,6 @@
                     <span id="ph-ep-color-dot" style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #3B82F6; flex-shrink: 0;"></span>
                     <span id="ph-ep-title" style="font-size: 13px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Track Profile</span>
                     <span id="ph-ep-badge" style="font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.12); color: #94A3B8;">GPX</span>
-                    <button id="ph-ep-refresh-btn" style="display: none; background: rgba(59, 130, 246, 0.20); border: 1px solid rgba(59, 130, 246, 0.40); color: #60A5FA; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 600; cursor: pointer; align-items: center; gap: 4px;" title="Refresh live GPS track stats and profile">🔄 Refresh</button>
                 </div>
                 <button id="ph-ep-close-btn" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #F8FAFC; border-radius: 6px; width: 24px; height: 24px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; padding: 0;" title="Close elevation profile">✕</button>
             </div>
@@ -2634,16 +2633,6 @@
             closeBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 window.fullScreenMap.hideElevationProfile();
-            });
-        }
-
-        const refreshBtn = card.querySelector('#ph-ep-refresh-btn');
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (currentProfileTrack && currentProfileTrack.id === 'active_gps_track') {
-                    window.fullScreenMap.showElevationProfile('active_gps_track');
-                }
             });
         }
 
@@ -3015,13 +3004,9 @@
         if (colorDot) colorDot.style.background = color;
 
         const isLiveGps = track.id === 'active_gps_track';
-        const refreshBtn = profileCardElement.querySelector('#ph-ep-refresh-btn');
         if (badgeEl) {
             badgeEl.textContent = track.format || "GPX";
             badgeEl.style.display = isLiveGps ? 'none' : 'inline-block';
-        }
-        if (refreshBtn) {
-            refreshBtn.style.display = isLiveGps ? 'inline-flex' : 'none';
         }
 
         if (distEl) {
@@ -3096,13 +3081,6 @@
             if (badge) {
                 badge.style.background = isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)';
                 badge.style.color = isDarkMode ? '#94A3B8' : '#475569';
-            }
-
-            const refreshBtn = profileCardElement.querySelector('#ph-ep-refresh-btn');
-            if (refreshBtn) {
-                refreshBtn.style.background = isDarkMode ? 'rgba(59, 130, 246, 0.20)' : 'rgba(59, 130, 246, 0.12)';
-                refreshBtn.style.border = isDarkMode ? '1px solid rgba(59, 130, 246, 0.40)' : '1px solid rgba(59, 130, 246, 0.35)';
-                refreshBtn.style.color = isDarkMode ? '#60A5FA' : '#2563EB';
             }
 
             const statsRow = profileCardElement.querySelector('#ph-ep-stats-row');

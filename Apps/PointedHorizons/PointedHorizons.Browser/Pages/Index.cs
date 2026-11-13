@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
 using System.Threading.Tasks;
 using OpenSilver.WebAssembly;
@@ -6,8 +6,13 @@ using OpenSilver.WebAssembly;
 namespace PointedHorizons.Browser.Pages
 {
     [Route("/")]
+    [Route("/index.html")]
+    [Route("/index.htm")]
+    [Route("/{*path}")]
     public class Index : ComponentBase
     {
+        [Parameter]
+        public string Path { get; set; } = "";
         protected override void BuildRenderTree(RenderTreeBuilder __builder)
         {
         }

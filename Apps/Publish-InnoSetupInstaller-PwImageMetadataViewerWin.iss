@@ -36,7 +36,7 @@ Type: files; Name: "{app}\PublishVersion--*.txt"
 Source: {#MyAppFilesSource}; DestDir: "{app}\"; Flags: recursesubdirs ignoreversion;
 
 [Icons]
-Name: "{app}\app.icon"; Filename: "{app}\{#MyAppExeName}";
+Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\app.ico";pExeName}";
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "Launch application"; Flags: postinstall nowait skipifsilent
