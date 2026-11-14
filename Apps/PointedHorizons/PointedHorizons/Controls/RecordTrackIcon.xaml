@@ -1,0 +1,35 @@
+<UserControl x:Class="PointedHorizons.Controls.RecordTrackIcon"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Viewbox x:Name="IconViewbox" Width="20" Height="20" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Grid Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <!-- Winding GPS Hiking Trail / Route Line -->
+            <Path x:Name="TrailPath"
+                  Data="M 4,19.5 C 7,19.5 7.5,12.5 11.5,12.5 C 14.5,12.5 15.5,16.5 18,13.5 L 19.5,7.5"
+                  Stroke="#10B981" StrokeThickness="2.2"
+                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+
+            <!-- Trail Start Breadcrumb Dot -->
+            <Ellipse x:Name="StartDot" Width="4.5" Height="4.5"
+                     Margin="1.75,17.25,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+                     Fill="#10B981" Stroke="#FFFFFF" StrokeThickness="0.8" />
+
+            <!-- Intermediate Trail Waypoint Breadcrumb -->
+            <Ellipse x:Name="MidDot" Width="3.5" Height="3.5"
+                     Margin="9.75,10.75,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+                     Fill="#10B981" />
+
+            <!-- Active GPS Track Head Target Reticle -->
+            <Ellipse x:Name="TargetRing" Width="9" Height="9"
+                     Margin="15,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+                     Stroke="#10B981" StrokeThickness="1.2" />
+
+            <!-- Core Recording Position Dot -->
+            <Ellipse x:Name="RecordDot" Width="4.5" Height="4.5"
+                     Margin="17.25,5.25,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+                     Fill="#10B981" Stroke="#FFFFFF" StrokeThickness="0.6" />
+        </Grid>
+    </Viewbox>
+</UserControl>
+

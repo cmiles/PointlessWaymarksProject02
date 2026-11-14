@@ -102,7 +102,7 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock x:Name="TxtMenuTitle" Text="🧭 Aim Map Settings" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" />
+                        <TextBlock x:Name="TxtMenuTitle" Text="🧭 View Map Settings" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" />
                         <Button x:Name="BtnCloseMenu" Grid.Column="1" Content="✕" Click="BtnCloseMenu_Click"
                                 Style="{StaticResource PillButtonStyle}" Padding="6,2" FontSize="11" />
                     </Grid>
@@ -179,7 +179,7 @@
                     <Button x:Name="BtnMenuPositionFromMainMap" Content="🎯 Position from Main Map" Click="BtnPositionFromMainMap_Click"
                             Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
                             Padding="8,5" Margin="0,2,0,4" FontSize="10" FontWeight="Bold"
-                            ToolTipService.ToolTip="Set the Aim Map viewpoint and Horizon location to the Main Map location (GPS fix, marker, or center)" />
+                            ToolTipService.ToolTip="Set the View Map viewpoint and Horizon location to the Main Map location (GPS fix, marker, or center)" />
                     <Button x:Name="BtnMenuMyLocation" Content="📍 Move to My GPS Location" Click="BtnMyLocation_Click"
                             Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
                             Padding="8,5" Margin="0,2,0,4" FontSize="10" FontWeight="SemiBold" />

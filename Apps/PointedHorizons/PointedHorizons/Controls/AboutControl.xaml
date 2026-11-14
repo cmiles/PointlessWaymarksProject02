@@ -3,18 +3,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:PointedHorizons.Controls">
 
-    <Border x:Name="MainBorder" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1.5" CornerRadius="10"
-            Margin="0,4,0,20">
+    <Border x:Name="MainBorder" Background="Transparent" BorderThickness="0" Margin="0,4,0,20">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <!-- Header -->
-            <Border x:Name="HeaderBorder" Grid.Row="0" Background="{StaticResource SubtleCardBackgroundBrush}" CornerRadius="9,9,0,0" Padding="20,16" 
-                    BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,0,0,1">
+            <Border x:Name="HeaderBorder" Grid.Row="0" Background="{StaticResource SubtleCardBackgroundBrush}" CornerRadius="8" Padding="18,14" Margin="0,0,0,16"
+                    BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -28,43 +26,51 @@
             </Border>
 
             <!-- Content -->
-            <StackPanel Grid.Row="1" Background="{StaticResource AppBackgroundBrush}" Padding="22,18">
+            <StackPanel Grid.Row="1" Background="Transparent" Padding="0">
                 <!-- Top Info Card -->
                 <Border x:Name="CardTopInfo" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="18,16" Margin="0,0,0,16">
                     <StackPanel Orientation="Vertical">
                         <TextBlock x:Name="TxtBioText1" Text="Topo Maps, offline PMTiles support, GPS Tracking, Sun/Moon/Sunset Times and Ray Traced Horizons with labeled Peaks. Pointed Horizons a mashup of features that I have found useful using a combination of Garmin, Backcountry Navigator, Gaia, OnX, CalTopo, OruxNG and PeakFinder over the past 20 years during my hiking, running and adventures in the Southwest United States. Built with C#/.NET using OpenSilver with code generation and assistance from Google's Gemini in Antigravity."
-                                   FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" Margin="0,0,0,14" LineHeight="18"/>
+                                   FontSize="14" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" Margin="0,0,0,14" LineHeight="22"/>
                         <TextBlock x:Name="TxtBioText2" Text="App written and maintained by Charles Miles. A long time hiker, runner, photographer and explorer in Southern Arizona with over two decades of experience in software development, data management, and inventory control. I run the Thermo Fisher Unity Lab Services Vendor Managed Inventory program at Roche Tissue Diagnostics and am pursuing an AAS in Health Information Technology at Pima Community College to expand my skills into healthcare. I can be found outside in the Rincon Valley southeast of Tucson when not studying."
-                                   FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" Margin="0,0,0,16" LineHeight="18"/>
+                                   FontSize="14" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" Margin="0,0,0,16" LineHeight="22"/>
                         <controls:WrapPanel Orientation="Horizontal">
                             <StackPanel Orientation="Horizontal" Margin="0,0,20,6">
                                 <HyperlinkButton Content="Resume - Charles Miles" NavigateUri="https://cmiles.info/Posts/Career/resume/resume.html" TargetName="_blank"
                                                  Click="Hyperlink_Click"
-                                                 FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource HyperlinkBrush}" 
+                                                 FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource HyperlinkBrush}" 
                                                  Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
                             </StackPanel>
 
                             <StackPanel Orientation="Horizontal" Margin="0,0,20,6">
-                                <TextBlock Text="Personal Website: " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Text="Personal Website: " FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                                 <HyperlinkButton Content="cmiles.info" NavigateUri="https://cmiles.info/" TargetName="_blank"
                                                  Click="Hyperlink_Click"
-                                                 FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource HyperlinkBrush}" 
+                                                 FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource HyperlinkBrush}" 
                                                  Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
                             </StackPanel>
 
                             <StackPanel Orientation="Horizontal" Margin="0,0,20,6">
-                                <TextBlock Text="Photography: " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Text="Photography: " FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                                 <HyperlinkButton Content="Pointless Waymarks" NavigateUri="https://pointlesswaymarks.com/" TargetName="_blank"
                                                  Click="Hyperlink_Click"
-                                                 FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource HyperlinkBrush}" 
+                                                 FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource HyperlinkBrush}" 
+                                                 Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,0,20,6">
+                                <TextBlock Text="Source Code: " FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                <HyperlinkButton Content="PointlessWaymarksProject02" NavigateUri="https://github.com/cmiles/PointlessWaymarksProject02" TargetName="_blank"
+                                                 Click="Hyperlink_Click"
+                                                 FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource HyperlinkBrush}" 
                                                  Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
                             </StackPanel>
 
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                <TextBlock Text="LinkedIn: " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Text="LinkedIn: " FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                                 <HyperlinkButton Content="Charles Miles" NavigateUri="https://www.linkedin.com/in/charlesamiles/" TargetName="_blank"
                                                  Click="Hyperlink_Click"
-                                                 FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource HyperlinkBrush}" 
+                                                 FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource HyperlinkBrush}" 
                                                  Padding="0" Margin="0" Cursor="Hand" VerticalAlignment="Center"/>
                             </StackPanel>
                         </controls:WrapPanel>
@@ -201,14 +207,7 @@
                 </Border>
 
             </StackPanel>
-
-            <!-- Window Footer -->
-            <Border x:Name="FooterBorder" Grid.Row="2" Background="{StaticResource SubtleCardBackgroundBrush}" CornerRadius="0,0,9,9" Padding="18,12" 
-                    BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,1,0,0">
-                <TextBlock x:Name="TxtFooter" Text="Pointless Waymarks Project" FontSize="11" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" VerticalAlignment="Center"/>
-            </Border>
         </Grid>
-        
     </Border>
 </UserControl>
 

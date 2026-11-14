@@ -275,26 +275,32 @@ public partial class FullScreenMapControl : UserControl
             if (BtnCurrentLocation != null)
             {
                 BtnCurrentLocation.Visibility = Visibility.Visible;
-                BtnCurrentLocation.Content = "📍";
                 BtnCurrentLocation.MinHeight = 48;
                 BtnCurrentLocation.MinWidth = 48;
                 BtnCurrentLocation.Padding = new Thickness(12, 8, 12, 8);
-                BtnCurrentLocation.FontSize = 20;
                 BtnCurrentLocation.Margin = new Thickness(0, 0, 0, 8);
                 ToolTipService.SetToolTip(BtnCurrentLocation, "Center map on current GPS location");
+            }
+            if (TxtCurrentLocationLabel != null) TxtCurrentLocationLabel.Visibility = Visibility.Collapsed;
+            if (IconCurrentLocation != null)
+            {
+                IconCurrentLocation.Margin = new Thickness(0);
+                IconCurrentLocation.ApplySize(20);
             }
 
             // Top-right button 2: Track Location (icon only, stacked below)
             if (BtnMapTrackLocation != null)
             {
                 BtnMapTrackLocation.Visibility = Visibility.Visible;
-                BtnMapTrackLocation.Content = "🎯";
                 BtnMapTrackLocation.Margin = new Thickness(0);
                 BtnMapTrackLocation.MinHeight = 48;
                 BtnMapTrackLocation.MinWidth = 48;
                 BtnMapTrackLocation.Padding = new Thickness(12, 8, 12, 8);
-                BtnMapTrackLocation.FontSize = 20;
                 ToolTipService.SetToolTip(BtnMapTrackLocation, "Toggle Track Location: keep map centered on your moving GPS location");
+            }
+            if (IconMapTrackLocation != null)
+            {
+                IconMapTrackLocation.ApplySize(20);
             }
 
             // Location & Elevation info is presented in hamburger menu
@@ -364,25 +370,32 @@ public partial class FullScreenMapControl : UserControl
             if (BtnCurrentLocation != null)
             {
                 BtnCurrentLocation.Visibility = Visibility.Visible;
-                BtnCurrentLocation.Content = "📍 Current Location";
                 BtnCurrentLocation.MinHeight = 32;
                 BtnCurrentLocation.MinWidth = 0;
-                BtnCurrentLocation.Padding = new Thickness(12, 6, 12, 6);
+                BtnCurrentLocation.Padding = new Thickness(10, 6, 12, 6);
                 BtnCurrentLocation.FontSize = 11;
                 BtnCurrentLocation.Margin = new Thickness(0, 0, 8, 0);
                 ToolTipService.SetToolTip(BtnCurrentLocation, "Center on current GPS position and move pointer (if not tracking)");
+            }
+            if (TxtCurrentLocationLabel != null) TxtCurrentLocationLabel.Visibility = Visibility.Visible;
+            if (IconCurrentLocation != null)
+            {
+                IconCurrentLocation.Margin = new Thickness(0, 0, 6, 0);
+                IconCurrentLocation.ApplySize(16);
             }
 
             if (BtnMapTrackLocation != null)
             {
                 BtnMapTrackLocation.Visibility = Visibility.Visible;
-                BtnMapTrackLocation.Content = "🎯";
                 BtnMapTrackLocation.Margin = new Thickness(0, 0, 8, 0);
                 BtnMapTrackLocation.MinHeight = 32;
                 BtnMapTrackLocation.MinWidth = 36;
-                BtnMapTrackLocation.Padding = new Thickness(10, 6, 10, 6);
-                BtnMapTrackLocation.FontSize = 14;
+                BtnMapTrackLocation.Padding = new Thickness(8, 6, 8, 6);
                 ToolTipService.SetToolTip(BtnMapTrackLocation, "Toggle Track Location: keep map centered on your moving GPS location");
+            }
+            if (IconMapTrackLocation != null)
+            {
+                IconMapTrackLocation.ApplySize(18);
             }
 
             if (BtnResetView != null)
@@ -1899,12 +1912,12 @@ public partial class FullScreenMapControl : UserControl
         {
             if (_isRecordingActive)
             {
-                BtnToggleGps.Content = "🛰️ GPS: ON (Recording Active)";
+                if (TxtToggleGps != null) TxtToggleGps.Text = "GPS: ON (Recording Active)";
                 ToolTipService.SetToolTip(BtnToggleGps, "GPS is required while recording a track. Stop track recording to turn off GPS.");
             }
             else
             {
-                BtnToggleGps.Content = "🛰️ GPS: ON";
+                if (TxtToggleGps != null) TxtToggleGps.Text = "GPS: ON";
                 ToolTipService.SetToolTip(BtnToggleGps, "Toggle GPS hardware receiver and position tracking");
             }
             BtnToggleGps.Background = tm.ButtonActiveBackground;
@@ -1913,7 +1926,7 @@ public partial class FullScreenMapControl : UserControl
         }
         else
         {
-            BtnToggleGps.Content = "🛰️ GPS: OFF";
+            if (TxtToggleGps != null) TxtToggleGps.Text = "GPS: OFF";
             BtnToggleGps.Background = tm.ButtonInactiveBackground;
             BtnToggleGps.BorderBrush = tm.ButtonInactiveBorder;
             BtnToggleGps.Foreground = tm.ButtonInactiveForeground;
@@ -1927,18 +1940,31 @@ public partial class FullScreenMapControl : UserControl
     {
         var tm = ThemeManager.Current;
 
+        if (TxtToggleTrackLocation != null)
+        {
+            TxtToggleTrackLocation.Text = _isTrackLocationActive ? "Track Location: ON" : "Track Location: OFF";
+        }
+
+        if (IconMenuTrackLocation != null)
+        {
+            IconMenuTrackLocation.IsTracking = _isTrackLocationActive;
+        }
+
+        if (IconMapTrackLocation != null)
+        {
+            IconMapTrackLocation.IsTracking = _isTrackLocationActive;
+        }
+
         if (BtnToggleTrackLocation != null)
         {
             if (_isTrackLocationActive)
             {
-                BtnToggleTrackLocation.Content = "🎯 Track Location: ON";
                 BtnToggleTrackLocation.Background = tm.ButtonActiveBackground;
                 BtnToggleTrackLocation.BorderBrush = tm.ButtonActiveBorder;
                 BtnToggleTrackLocation.Foreground = tm.ButtonActiveForeground;
             }
             else
             {
-                BtnToggleTrackLocation.Content = "🎯 Track Location: OFF";
                 BtnToggleTrackLocation.Background = tm.ButtonInactiveBackground;
                 BtnToggleTrackLocation.BorderBrush = tm.ButtonInactiveBorder;
                 BtnToggleTrackLocation.Foreground = tm.ButtonInactiveForeground;
@@ -2274,14 +2300,16 @@ public partial class FullScreenMapControl : UserControl
 
         if (_isRecordingActive)
         {
-            BtnToggleRecording.Content = "⏹️ Stop Recording";
+            if (TxtToggleRecording != null) TxtToggleRecording.Text = "Stop Recording";
+            if (IconMenuRecordTrack != null) IconMenuRecordTrack.IsRecording = true;
             BtnToggleRecording.Background = new SolidColorBrush(Color.FromArgb(255, 239, 68, 68)); // Red-500
             BtnToggleRecording.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 220, 38, 38));
             BtnToggleRecording.Foreground = new SolidColorBrush(Colors.White);
         }
         else
         {
-            BtnToggleRecording.Content = "⏺️ Record Track";
+            if (TxtToggleRecording != null) TxtToggleRecording.Text = "Record Track";
+            if (IconMenuRecordTrack != null) IconMenuRecordTrack.IsRecording = false;
             BtnToggleRecording.Background = tm.ButtonInactiveBackground;
             BtnToggleRecording.BorderBrush = tm.ButtonInactiveBorder;
             BtnToggleRecording.Foreground = tm.ButtonInactiveForeground;

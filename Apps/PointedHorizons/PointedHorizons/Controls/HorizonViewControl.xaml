@@ -3,6 +3,7 @@
               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
               xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+              xmlns:controls="clr-namespace:PointedHorizons.Controls"
               mc:Ignorable="d"
               d:DesignHeight="350" d:DesignWidth="900">
 
@@ -67,16 +68,31 @@
                 <Border x:Name="ToolbarDivider" Width="1" Margin="4,2" Height="14" VerticalAlignment="Center"/>
 
                 <!-- Current Location Button (Acquire GPS & set viewpoint - visible on both large and small screens) -->
-                <Button x:Name="BtnToolbarCurrentLocation" Content="📍" Click="BtnToolbarCurrentLocation_Click"
-                        Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
-                        FontSize="11" FontWeight="Bold"
-                        ToolTipService.ToolTip="Acquire current GPS location and set Horizon viewpoint" />
+                <Button x:Name="BtnToolbarCurrentLocation" Click="BtnToolbarCurrentLocation_Click"
+                        Style="{StaticResource PillButtonStyle}" Padding="7,4" Margin="2"
+                        ToolTipService.ToolTip="Acquire current GPS location and set Horizon viewpoint">
+                    <controls:CurrentLocationIcon x:Name="IconToolbarCurrentLocation" IconSize="16" />
+                </Button>
 
                 <!-- Horizon Settings Hamburger Button -->
                 <Button x:Name="BtnHorizonMenu" Content="☰" Click="BtnHorizonMenu_Click"
                         Style="{StaticResource PillButtonStyle}" Padding="7,3" Margin="2"
                         FontSize="13" FontWeight="Bold"
                         ToolTipService.ToolTip="Open Horizon Settings &amp; Sun/Moon Data" />
+            </StackPanel>
+        </Border>
+
+        <!-- Horizon Busy / Working Overlay (GPS retrieval, 360° panorama ray tracing, redrawing) -->
+        <Border x:Name="HorizonBusyIndicator" HorizontalAlignment="Center" VerticalAlignment="Center"
+                Visibility="Collapsed" CornerRadius="12" Padding="20,16" BorderThickness="1.5"
+                Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}">
+            <StackPanel Orientation="Vertical" Width="240" HorizontalAlignment="Center">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+                    <TextBlock x:Name="TxtHorizonBusyIcon" Text="⏳" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <TextBlock x:Name="TxtHorizonBusyTitle" Text="Calculating Horizon..." FontWeight="Bold" FontSize="13" VerticalAlignment="Center" Foreground="{StaticResource TextPrimaryBrush}" />
+                </StackPanel>
+                <ProgressBar x:Name="HorizonBusyProgressBar" IsIndeterminate="True" Height="4" Margin="0,0,0,8" />
+                <TextBlock x:Name="TxtHorizonBusySub" Text="Please wait while the scene renders" FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}" TextAlignment="Center" TextWrapping="Wrap" />
             </StackPanel>
         </Border>
 
@@ -107,14 +123,24 @@
 
                     <!-- Observer & Aim Location -->
                     <TextBlock x:Name="TxtHorizonSectionLocation" Text="OBSERVER &amp; AIM LOCATION" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
-                    <Button x:Name="BtnHorizonCurrentLocation" Content="📍 Current Location" Click="BtnHorizonCurrentLocation_Click"
+                    <Button x:Name="BtnHorizonCurrentLocation" Click="BtnHorizonCurrentLocation_Click"
                             Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
-                            Padding="8,5" Margin="0,2,0,4" FontSize="10.5" FontWeight="SemiBold"
-                            ToolTipService.ToolTip="Acquire current GPS position and set the Aim Map &amp; Horizon viewpoint" />
-                    <Button x:Name="BtnHorizonLocationFromMainMap" Content="🎯 Location from Main Map" Click="BtnHorizonLocationFromMainMap_Click"
+                            Padding="8,5" Margin="0,2,0,4"
+                            ToolTipService.ToolTip="Acquire current GPS position and set the View Map &amp; Horizon viewpoint">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <controls:CurrentLocationIcon IconSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Current Location" FontSize="10.5" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="BtnHorizonLocationFromMainMap" Click="BtnHorizonLocationFromMainMap_Click"
                             Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
-                            Padding="8,5" Margin="0,2,0,6" FontSize="10.5" FontWeight="SemiBold"
-                            ToolTipService.ToolTip="Set the Aim Map &amp; Horizon viewpoint from the Main Map (GPS fix, marker, or center)" />
+                            Padding="8,5" Margin="0,2,0,6"
+                            ToolTipService.ToolTip="Set the View Map &amp; Horizon viewpoint from the Main Map (GPS fix, marker, or center)">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <controls:TrackLocationIcon IconSize="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Location from Main Map" FontSize="10.5" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                     <Border x:Name="HorizonMenuDividerLoc" Height="1" Margin="0,2,0,8" />
 
                     <!-- Field of View / Focal Length Presets -->

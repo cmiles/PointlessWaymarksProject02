@@ -1209,7 +1209,8 @@
                         width: 29px !important;
                         height: 29px !important;
                     }
-                    .maplibregl-ctrl button .maplibregl-ctrl-icon {
+                    .maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon,
+                    .maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon {
                         transform: scale(1.0) !important;
                         transform-origin: center center !important;
                     }
@@ -1222,15 +1223,45 @@
                         width: 58px !important;
                         height: 58px !important;
                     }
-                    .maplibregl-ctrl button .maplibregl-ctrl-icon {
+                    .maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon,
+                    .maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon {
                         transform: scale(1.8) !important;
                         transform-origin: center center !important;
+                    }
+                }
+
+                /* Prominent, crisp compass needle pointing to True North */
+                .maplibregl-ctrl button.maplibregl-ctrl-compass .maplibregl-ctrl-icon {
+                    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' viewBox='0 0 29 29'%3E%3Cpolygon points='14.5,3.5 19,14 14.5,11.5 10,14' fill='%23EF4444'/%3E%3Cpolygon points='14.5,25.5 19,15 14.5,17.5 10,15' fill='%2394A3B8'/%3E%3Ccircle cx='14.5' cy='14.5' r='1.8' fill='%231E293B'/%3E%3C/svg%3E") !important;
+                    background-position: center !important;
+                    background-repeat: no-repeat !important;
+                    background-size: contain !important;
+                    transform-origin: center center !important;
+                    transition: transform 0.08s ease-out;
+                }
+                @media (max-width: 767px) {
+                    .maplibregl-ctrl button.maplibregl-ctrl-compass .maplibregl-ctrl-icon {
+                        background-size: 38px 38px !important;
                     }
                 }
             `;
             document.head.appendChild(navStyle);
         }
         map.addControl(new window.maplibregl.NavigationControl({ showCompass: true, visualizePitch: true }), 'bottom-right');
+
+        const syncPointedCompass = () => {
+            const compassIcon = container.querySelector('.maplibregl-ctrl-compass .maplibregl-ctrl-icon');
+            if (compassIcon) {
+                const b = map.getBearing();
+                const p = map.getPitch();
+                compassIcon.style.transform = `rotate(${-b}deg) rotateX(${p}deg)`;
+            }
+        };
+        map.on('rotate', syncPointedCompass);
+        map.on('pitch', syncPointedCompass);
+        map.on('move', syncPointedCompass);
+        map.on('load', syncPointedCompass);
+        syncPointedCompass();
 
         // Observer Pin Icon - Centered on Coordinate
         const observerEl = document.createElement('div');

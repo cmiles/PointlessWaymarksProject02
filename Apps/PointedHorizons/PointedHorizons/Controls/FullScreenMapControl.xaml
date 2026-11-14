@@ -3,6 +3,7 @@
               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
               xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+              xmlns:controls="clr-namespace:PointedHorizons.Controls"
               mc:Ignorable="d"
               d:DesignHeight="700" d:DesignWidth="1100">
 
@@ -32,17 +33,22 @@
 
         <!-- Top-Right Floating Controls: Current Location, Track Location, Route Builder, 3D & Reset Buttons -->
         <StackPanel x:Name="TopRightControlsPanel" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,14,0">
-            <Button x:Name="BtnCurrentLocation" Content="📍 Current Location" Click="BtnCurrentLocation_Click"
-                    Style="{StaticResource PillButtonStyle}"
-                    Padding="12,6" Margin="0,0,8,0" Opacity="0.88"
-                    FontSize="11" FontWeight="SemiBold"
-                    ToolTipService.ToolTip="Center on current GPS position and move pointer (if not tracking)" />
-
-            <Button x:Name="BtnMapTrackLocation" Content="🎯" Click="BtnMapTrackLocation_Click"
+            <Button x:Name="BtnCurrentLocation" Click="BtnCurrentLocation_Click"
                     Style="{StaticResource PillButtonStyle}"
                     Padding="10,6" Margin="0,0,8,0" Opacity="0.88"
-                    FontSize="14" FontWeight="Bold"
-                    ToolTipService.ToolTip="Toggle Track Location: keep map centered on your moving GPS location" />
+                    ToolTipService.ToolTip="Center on current GPS position and move pointer (if not tracking)">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <controls:CurrentLocationIcon x:Name="IconCurrentLocation" IconSize="16" Margin="0,0,6,0" VerticalAlignment="Center" />
+                    <TextBlock x:Name="TxtCurrentLocationLabel" Text="Current Location" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+
+            <Button x:Name="BtnMapTrackLocation" Click="BtnMapTrackLocation_Click"
+                    Style="{StaticResource PillButtonStyle}"
+                    Padding="8,6" Margin="0,0,8,0" Opacity="0.88"
+                    ToolTipService.ToolTip="Toggle Track Location: keep map centered on your moving GPS location">
+                <controls:TrackLocationIcon x:Name="IconMapTrackLocation" IconSize="18" VerticalAlignment="Center" />
+            </Button>
 
             <Button x:Name="BtnDrawRoute" Content="✏️ Draw Route" Click="BtnDrawRoute_Click"
                     Style="{StaticResource PillButtonStyle}"
@@ -247,10 +253,15 @@
                     <TextBlock x:Name="TxtSectionGps" Text="GPS &amp; LOCATION TRACKING" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
 
                     <!-- One-time Current Location button moved to hamburger (especially on mobile) -->
-                    <Button x:Name="BtnMenuCurrentLocation" Content="📍 Current Location" Click="BtnMenuCurrentLocation_Click"
-                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
-                            MinHeight="48" Padding="10,12" Margin="0,2,0,4" FontSize="12.5" FontWeight="Bold"
-                            ToolTipService.ToolTip="Center the map on current GPS location once" />
+                    <Button x:Name="BtnMenuCurrentLocation" Click="BtnMenuCurrentLocation_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                            MinHeight="48" Padding="12,10" Margin="0,2,0,4"
+                            ToolTipService.ToolTip="Center the map on current GPS location once">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <controls:CurrentLocationIcon IconSize="18" Margin="0,0,10,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Current Location" FontSize="12.5" FontWeight="Bold" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
 
                     <!-- Mark Waypoint button -->
                     <Button x:Name="BtnMarkWaypoint" Content="📌 Mark Waypoint" Click="BtnMarkWaypoint_Click"
@@ -259,22 +270,37 @@
                             ToolTipService.ToolTip="Acquire current GPS location and save a waypoint to waypoints.gpx" />
 
                     <!-- GPS Receiver Toggle (GPS On / GPS Off) -->
-                    <Button x:Name="BtnToggleGps" Content="🛰️ GPS: OFF" Click="BtnToggleGps_Click"
-                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
-                            MinHeight="48" Padding="10,12" Margin="0,2,0,4" FontSize="12.5" FontWeight="Bold"
-                            ToolTipService.ToolTip="Toggle GPS hardware receiver and position tracking" />
+                    <Button x:Name="BtnToggleGps" Click="BtnToggleGps_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                            MinHeight="48" Padding="12,10" Margin="0,2,0,4"
+                            ToolTipService.ToolTip="Toggle GPS hardware receiver and position tracking">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <controls:GpsIcon x:Name="IconMenuGps" IconSize="22" Margin="0,0,10,0" VerticalAlignment="Center" />
+                            <TextBlock x:Name="TxtToggleGps" Text="GPS: OFF" FontSize="12.5" FontWeight="Bold" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
 
                     <!-- Track Location Toggle (Auto-follow on map) -->
-                    <Button x:Name="BtnToggleTrackLocation" Content="🎯 Track Location: OFF" Click="BtnToggleTrackLocation_Click"
-                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
-                            MinHeight="48" Padding="10,12" Margin="0,2,0,4" FontSize="12.5" FontWeight="Bold"
-                            ToolTipService.ToolTip="Automatically keep the map centered on your moving GPS location" />
+                    <Button x:Name="BtnToggleTrackLocation" Click="BtnToggleTrackLocation_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                            MinHeight="48" Padding="12,10" Margin="0,2,0,4"
+                            ToolTipService.ToolTip="Automatically keep the map centered on your moving GPS location">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <controls:TrackLocationIcon x:Name="IconMenuTrackLocation" IconSize="18" Margin="0,0,10,0" VerticalAlignment="Center" />
+                            <TextBlock x:Name="TxtToggleTrackLocation" Text="Track Location: OFF" FontSize="12.5" FontWeight="Bold" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
 
                     <!-- Record Track Option (Inside GPS & Location Tracking) -->
-                    <Button x:Name="BtnToggleRecording" Content="⏺️ Record Track" Click="BtnToggleRecording_Click"
-                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
-                            MinHeight="48" Padding="10,12" Margin="0,2,0,4" FontSize="12.5" FontWeight="Bold"
-                            ToolTipService.ToolTip="Record GPS breadcrumb trail to track database and GPX storage" />
+                    <Button x:Name="BtnToggleRecording" Click="BtnToggleRecording_Click"
+                            Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                            MinHeight="48" Padding="12,10" Margin="0,2,0,4"
+                            ToolTipService.ToolTip="Record GPS breadcrumb trail to track database and GPX storage">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <controls:RecordTrackIcon x:Name="IconMenuRecordTrack" IconSize="18" Margin="0,0,10,0" VerticalAlignment="Center" />
+                            <TextBlock x:Name="TxtToggleRecording" Text="Record Track" FontSize="12.5" FontWeight="Bold" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                     <TextBlock x:Name="TxtRecordingStats" Text="Points: 0 | Distance: 0.00 km | 00:00" FontSize="10" FontWeight="SemiBold" Margin="2,0,0,10" />
 
                     <Border x:Name="MenuDividerPower" Height="1" Margin="0,0,0,10" />
@@ -321,10 +347,10 @@
 
                     <!-- 5. View & Camera Controls -->
                     <TextBlock x:Name="TxtSectionViews" Text="VIEW &amp; AIM CONTROLS" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
-                    <Button x:Name="BtnMenuSetAimLocation" Content="🎯 Set AIM to Map Location" Click="BtnMenuSetAimLocation_Click"
+                    <Button x:Name="BtnMenuSetAimLocation" Content="🎯 Set View to Map Location" Click="BtnMenuSetAimLocation_Click"
                             Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
                             MinHeight="48" Padding="10,12" Margin="0,2,0,4" FontSize="12.5" FontWeight="Bold"
-                            ToolTipService.ToolTip="Set the AIM Map and Horizon viewpoint to the current GPS fix if tracking, map marker if placed, or current map center" />
+                            ToolTipService.ToolTip="Set the View Map and Horizon viewpoint to the current GPS fix if tracking, map marker if placed, or current map center" />
                     <Button x:Name="BtnMenuToggle3d" Content="🏔️ Toggle 3D Perspective" Click="BtnMenuToggle3d_Click"
                             Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch"
                             MinHeight="48" Padding="10,12" Margin="0,2,0,4" FontSize="12.5" FontWeight="Bold"

@@ -36,25 +36,18 @@ public partial class AboutControl : UserControl
 
         if (MainBorder != null)
         {
-            MainBorder.Background = tm.HeaderBackground;
-            MainBorder.BorderBrush = tm.HeaderBorder;
+            MainBorder.Background = new SolidColorBrush(Colors.Transparent);
+            MainBorder.BorderBrush = null;
+            MainBorder.BorderThickness = new Thickness(0);
         }
 
         if (HeaderBorder != null)
         {
             HeaderBorder.Background = tm.ButtonInactiveBackground;
-            HeaderBorder.BorderBrush = tm.HeaderBorder;
+            HeaderBorder.BorderBrush = tm.ButtonInactiveBorder;
         }
 
         if (TxtAboutTitle != null) TxtAboutTitle.Foreground = tm.TextPrimary;
-
-        if (FooterBorder != null)
-        {
-            FooterBorder.Background = tm.ButtonInactiveBackground;
-            FooterBorder.BorderBrush = tm.HeaderBorder;
-        }
-
-        if (TxtFooter != null) TxtFooter.Foreground = tm.TextMuted;
 
         Border?[] cards = [
             CardTopInfo,

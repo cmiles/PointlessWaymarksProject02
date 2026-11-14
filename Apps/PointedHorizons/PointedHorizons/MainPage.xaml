@@ -33,18 +33,18 @@
                 <!-- Main View Tabs (Full Screen Map is FIRST; On small screens: Aim Map is BEFORE Horizon) -->
                 <Border x:Name="TabsBorder" Grid.Column="1" HorizontalAlignment="Left" BorderThickness="1" CornerRadius="16" Padding="3" VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal">
-                        <!-- 1. Full Screen Map Tab (First tab) -->
-                        <Button x:Name="BtnTabMap" Content="🗺️ Full Screen Map" Click="BtnTabMap_Click"
+                        <!-- 1. Map Tab (First tab) -->
+                        <Button x:Name="BtnTabMap" Content="🗺️ Map" Click="BtnTabMap_Click"
                                 Style="{StaticResource PillButtonStyle}" Padding="10,4" Margin="1"
-                                FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="Interactive full-screen map with GPS tracking, recording and tools" />
+                                FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="Interactive map with GPS tracking, recording and tools" />
 
                         <!-- 2. Sun & Moon Times Tab (Dedicated page after Main Map) -->
                         <Button x:Name="BtnTabCelestial" Content="☀️ Sun &amp; Moon" Click="BtnTabCelestial_Click"
                                 Style="{StaticResource PillButtonStyle}" Padding="10,4" Margin="1"
                                 FontSize="11" FontWeight="SemiBold" ToolTipService.ToolTip="Topography-compensated sun and moon rise/set times" />
 
-                        <!-- 3. Aim Map Tab (Before Horizon page on small screens; collapsed on large screen) -->
-                        <Button x:Name="BtnTabAimMap" Content="🧭 Aim Map" Click="BtnTabAimMap_Click"
+                        <!-- 3. View Map Tab (Before Horizon page on small screens; collapsed on large screen) -->
+                        <Button x:Name="BtnTabAimMap" Content="🧭 View Map" Click="BtnTabAimMap_Click"
                                 Style="{StaticResource PillButtonStyle}" Padding="10,4" Margin="1"
                                 FontSize="11" FontWeight="SemiBold" Visibility="Collapsed"
                                 ToolTipService.ToolTip="Observer location, direction cone, and horizon targeting map" />
@@ -73,19 +73,23 @@
 
                 <!-- Compact Page Navigation Selector (Small Screens) -->
                 <Border x:Name="CompactNavBorder" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="6,0,8,0" Visibility="Collapsed">
-                    <Button x:Name="BtnCompactNav" Content="🗺️ Full Screen Map ▾" Click="BtnCompactNav_Click"
+                    <Button x:Name="BtnCompactNav" Content="🗺️ Map ▾" Click="BtnCompactNav_Click"
                             Style="{StaticResource PillButtonStyle}" Padding="12,8" Margin="0"
-                            FontSize="13.5" FontWeight="Bold" ToolTipService.ToolTip="Switch between Map, Celestial, Aim, Horizon, Gpx Files, and Options" />
+                            FontSize="13.5" FontWeight="Bold" ToolTipService.ToolTip="Switch between Map, Celestial, View Map, Horizon, Gpx Files, and Options" />
                 </Border>
 
                 <!-- Right Side: GPS On/Off and Record Track Icon Buttons (Present on ALL pages) -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button x:Name="BtnTitleToggleGps" Content="🛰️" Click="BtnTitleToggleGps_Click"
-                            Style="{StaticResource PillButtonStyle}" Margin="0,0,8,0" Padding="12,4" MinWidth="44"
-                            FontSize="13" ToolTipService.ToolTip="Toggle GPS hardware receiver: Long press to turn on/off GPS" />
-                    <Button x:Name="BtnTitleRecordTrack" Content="⏺️" Click="BtnTitleRecordTrack_Click"
-                            Style="{StaticResource PillButtonStyle}" Margin="0" Padding="12,4" MinWidth="44"
-                            FontSize="13" ToolTipService.ToolTip="Record Track: Long press to start recording GPS track" />
+                    <Button x:Name="BtnTitleToggleGps" Click="BtnTitleToggleGps_Click"
+                            Style="{StaticResource PillButtonStyle}" Margin="0,0,8,0" Padding="5,2" MinWidth="44"
+                            ToolTipService.ToolTip="Toggle GPS hardware receiver: Long press to turn on/off GPS">
+                        <controls:GpsIcon x:Name="IconTitleGps" IconSize="26" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Button>
+                    <Button x:Name="BtnTitleRecordTrack" Click="BtnTitleRecordTrack_Click"
+                            Style="{StaticResource PillButtonStyle}" Margin="0" Padding="8,4" MinWidth="44"
+                            ToolTipService.ToolTip="Record Track: Long press to start recording GPS track">
+                        <controls:RecordTrackIcon x:Name="IconTitleRecordTrack" IconSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
@@ -272,13 +276,13 @@
 
                 <Border x:Name="CompactNavDivider" Height="1" Margin="0,2,0,8" />
 
-                <Button x:Name="BtnNavPageMap" Content="🗺️ Full Screen Map" Click="BtnNavPageMap_Click"
+                <Button x:Name="BtnNavPageMap" Content="🗺️ Map" Click="BtnNavPageMap_Click"
                         Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                         Padding="10,7" Margin="0,2" FontSize="11" FontWeight="SemiBold" />
                 <Button x:Name="BtnNavPageCelestial" Content="☀️ Sun &amp; Moon" Click="BtnNavPageCelestial_Click"
                         Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                         Padding="10,7" Margin="0,2" FontSize="11" FontWeight="SemiBold" />
-                <Button x:Name="BtnNavPageAimMap" Content="🧭 Aim Map" Click="BtnNavPageAimMap_Click"
+                <Button x:Name="BtnNavPageAimMap" Content="🧭 View Map" Click="BtnNavPageAimMap_Click"
                         Style="{StaticResource PillButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                         Padding="10,7" Margin="0,2" FontSize="11" FontWeight="SemiBold" />
                 <Button x:Name="BtnNavPageHorizon" Content="🌄 Horizon View" Click="BtnNavPageHorizon_Click"

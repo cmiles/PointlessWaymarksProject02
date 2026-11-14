@@ -323,6 +323,24 @@
         attachCompassClickListener();
         map.on('load', attachCompassClickListener);
 
+        const syncCompassOrientation = () => {
+            const container = map.getContainer ? map.getContainer() : mapContainerElement;
+            if (container) {
+                const compassIcon = container.querySelector('.maplibregl-ctrl-compass .maplibregl-ctrl-icon');
+                if (compassIcon) {
+                    const b = map.getBearing();
+                    const p = map.getPitch();
+                    compassIcon.style.transform = `rotate(${-b}deg) rotateX(${p}deg)`;
+                }
+            }
+        };
+
+        map.on('rotate', syncCompassOrientation);
+        map.on('pitch', syncCompassOrientation);
+        map.on('move', syncCompassOrientation);
+        map.on('load', syncCompassOrientation);
+        syncCompassOrientation();
+
         // If the user manually drags the map with mouse or touches screen, cancel the reset lock
         map.on('dragstart', function (e) {
             if (e && e.originalEvent && isResettingNorth) {
@@ -1307,17 +1325,17 @@
 
                         if (isDemRole) {
                             matchedLayer = enabledLayers.find(l => !consumedFileNames.has(l.fileName) && (l.fileName.toLowerCase().includes('terrain') || l.fileName.toLowerCase().includes('dem') || l.fileName.toLowerCase().includes('rgb'))) ||
-                                           enabledLayers.find(l => l.fileName.toLowerCase().includes('terrain') || l.fileName.toLowerCase().includes('dem') || l.fileName.toLowerCase().includes('rgb'));
+                                enabledLayers.find(l => l.fileName.toLowerCase().includes('terrain') || l.fileName.toLowerCase().includes('dem') || l.fileName.toLowerCase().includes('rgb'));
                         } else if (isHillshadeRole) {
                             matchedLayer = enabledLayers.find(l => !consumedFileNames.has(l.fileName) && (l.fileName.toLowerCase().includes('hillshade') || l.fileName.toLowerCase().includes('shade'))) ||
-                                           enabledLayers.find(l => l.fileName.toLowerCase().includes('hillshade') || l.fileName.toLowerCase().includes('shade'));
+                                enabledLayers.find(l => l.fileName.toLowerCase().includes('hillshade') || l.fileName.toLowerCase().includes('shade'));
                         } else if (isContourRole) {
                             matchedLayer = enabledLayers.find(l => !consumedFileNames.has(l.fileName) && l.fileName.toLowerCase().includes('contour')) ||
-                                           enabledLayers.find(l => l.fileName.toLowerCase().includes('contour'));
+                                enabledLayers.find(l => l.fileName.toLowerCase().includes('contour'));
                         } else if (isBaseRole) {
                             matchedLayer = enabledLayers.find(l => !consumedFileNames.has(l.fileName) && (l.fileName.toLowerCase().includes('base') || l.fileName.toLowerCase().includes('osm') || l.fileName.toLowerCase().includes('map')) && !l.fileName.toLowerCase().includes('contour') && !l.fileName.toLowerCase().includes('hillshade')) ||
-                                           enabledLayers.find(l => !consumedFileNames.has(l.fileName) && !l.fileName.toLowerCase().includes('contour') && !l.fileName.toLowerCase().includes('hillshade') && !l.fileName.toLowerCase().includes('raster') && !l.fileName.toLowerCase().includes('terrain') && !l.fileName.toLowerCase().includes('dem')) ||
-                                           enabledLayers.find(l => !l.fileName.toLowerCase().includes('contour') && !l.fileName.toLowerCase().includes('hillshade') && !l.fileName.toLowerCase().includes('raster'));
+                                enabledLayers.find(l => !consumedFileNames.has(l.fileName) && !l.fileName.toLowerCase().includes('contour') && !l.fileName.toLowerCase().includes('hillshade') && !l.fileName.toLowerCase().includes('raster') && !l.fileName.toLowerCase().includes('terrain') && !l.fileName.toLowerCase().includes('dem')) ||
+                                enabledLayers.find(l => !l.fileName.toLowerCase().includes('contour') && !l.fileName.toLowerCase().includes('hillshade') && !l.fileName.toLowerCase().includes('raster'));
                         }
 
                         if (matchedLayer) {
@@ -1460,7 +1478,7 @@
                                 lCopy['source-layer'] = availableVectorLayers[0];
                             } else {
                                 const matchingVl = availableVectorLayers.find(v => v.toLowerCase() === lCopy['source-layer'].toLowerCase()) ||
-                                                   availableVectorLayers.find(v => v.toLowerCase().includes('contour') && lCopy['source-layer'].toLowerCase().includes('contour'));
+                                    availableVectorLayers.find(v => v.toLowerCase().includes('contour') && lCopy['source-layer'].toLowerCase().includes('contour'));
                                 if (matchingVl) {
                                     lCopy['source-layer'] = matchingVl;
                                 }
@@ -1955,9 +1973,9 @@
             className: 'ph-waypoint-custom-popup ' + (isDarkMode ? 'ph-dark' : 'ph-light'),
             maxWidth: '320px'
         })
-        .setLngLat([lon, lat])
-        .setHTML(html)
-        .addTo(map);
+            .setLngLat([lon, lat])
+            .setHTML(html)
+            .addTo(map);
     }
 
     window.fullScreenMap.setEditWaypointCallback = function (cb) {
@@ -2024,7 +2042,7 @@
 
             // Fast bounding box intersection test against buffered viewport
             const overlaps = (t.maxLon >= minViewLon && t.minLon <= maxViewLon &&
-                              t.maxLat >= minViewLat && t.minLat <= maxViewLat);
+                t.maxLat >= minViewLat && t.minLat <= maxViewLat);
             if (!overlaps) continue;
 
             // 1. Regular Track Line
@@ -2176,7 +2194,7 @@
             const lat1 = p1[1] * Math.PI / 180;
             const lat2 = p2[1] * Math.PI / 180;
             const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                      Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+                Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             dist += 6371 * c;
         }
@@ -2538,7 +2556,8 @@
                         width: 29px !important;
                         height: 29px !important;
                     }
-                    .maplibregl-ctrl button .maplibregl-ctrl-icon {
+                    .maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon,
+                    .maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon {
                         transform: scale(1.0) !important;
                         transform-origin: center center !important;
                     }
@@ -2551,9 +2570,25 @@
                         width: 58px !important;
                         height: 58px !important;
                     }
-                    .maplibregl-ctrl button .maplibregl-ctrl-icon {
+                    .maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon,
+                    .maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon {
                         transform: scale(1.8) !important;
                         transform-origin: center center !important;
+                    }
+                }
+
+                /* Prominent, crisp compass needle pointing to True North */
+                .maplibregl-ctrl button.maplibregl-ctrl-compass .maplibregl-ctrl-icon {
+                    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' viewBox='0 0 29 29'%3E%3Cpolygon points='14.5,3.5 19,14 14.5,11.5 10,14' fill='%23EF4444'/%3E%3Cpolygon points='14.5,25.5 19,15 14.5,17.5 10,15' fill='%2394A3B8'/%3E%3Ccircle cx='14.5' cy='14.5' r='1.8' fill='%231E293B'/%3E%3C/svg%3E") !important;
+                    background-position: center !important;
+                    background-repeat: no-repeat !important;
+                    background-size: contain !important;
+                    transform-origin: center center !important;
+                    transition: transform 0.08s ease-out;
+                }
+                @media (max-width: 767px) {
+                    .maplibregl-ctrl button.maplibregl-ctrl-compass .maplibregl-ctrl-icon {
+                        background-size: 38px 38px !important;
                     }
                 }
             `;

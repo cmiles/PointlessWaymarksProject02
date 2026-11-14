@@ -27,7 +27,7 @@ public class LocationTrackingService : Service, ILocationListener
 
     public override StartCommandResult OnStartCommand(Intent? intent, StartCommandFlags flags, int startId)
     {
-        var notification = BuildNotification("Pointed Horizons", "Recording GPS track in background...");
+        var notification = BuildNotification("Pointed Horizons", "Using GPS in background...");
         if (Build.VERSION.SdkInt >= BuildVersionCodes.Q)
         {
             StartForeground(NotificationId, notification, ForegroundService.TypeLocation);
@@ -146,9 +146,9 @@ public class LocationTrackingService : Service, ILocationListener
     {
         if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
         {
-            var channel = new NotificationChannel(ChannelId, "Track Recording", NotificationImportance.Low)
+            var channel = new NotificationChannel(ChannelId, "GPS Location", NotificationImportance.Low)
             {
-                Description = "Ongoing notification while recording GPS tracks in the background"
+                Description = "Ongoing notification while using GPS in the background"
             };
             var nm = GetSystemService(NotificationService) as NotificationManager;
             nm?.CreateNotificationChannel(channel);

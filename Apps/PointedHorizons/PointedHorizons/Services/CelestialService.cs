@@ -620,7 +620,7 @@ public static class CelestialService
         ev.TimeDifference = ev.IsFuture ? (effectiveTime.Value - referenceTime) : (referenceTime - effectiveTime.Value);
 
         string durationStr = FormatDuration(ev.TimeDifference);
-        ev.TimeUntilDisplay = ev.IsFuture ? $"In {durationStr}" : $"{durationStr} ago";
+        ev.TimeUntilDisplay = ev.IsFuture ? $"+ {durationStr}" : $"{durationStr} ago";
 
         if (bestTopo != null)
         {
@@ -985,7 +985,7 @@ public static class CelestialService
             string dayPfx = GetDayPrefix(mCivDawn.Value, refTime);
             bool isActive = refTime >= mCivDawn.Value && refTime <= mRiseMinus4.Value;
             bool isFuture = refTime < mCivDawn.Value;
-            string countdown = isActive ? "● Active Now" : (isFuture ? $"In {FormatDuration(mCivDawn.Value - refTime)}" : "✓ Passed");
+            string countdown = isActive ? "● Active Now" : (isFuture ? $"+ {FormatDuration(mCivDawn.Value - refTime)}" : "✓ Passed");
 
             report.MorningBlue = new PhotographyWindowItem
             {
@@ -1016,7 +1016,7 @@ public static class CelestialService
             string dayPfx = GetDayPrefix(mRiseMinus4.Value, refTime);
             bool isActive = refTime >= mRiseMinus4.Value && refTime <= mRisePlus6.Value;
             bool isFuture = refTime < mRiseMinus4.Value;
-            string countdown = isActive ? "● Active Now" : (isFuture ? $"In {FormatDuration(mRiseMinus4.Value - refTime)}" : "✓ Passed");
+            string countdown = isActive ? "● Active Now" : (isFuture ? $"+ {FormatDuration(mRiseMinus4.Value - refTime)}" : "✓ Passed");
 
             string directSun = "Direct sun unobstructed by terrain";
             if (topoSunriseEvent?.TopoEvent != null)
@@ -1079,7 +1079,7 @@ public static class CelestialService
             string dayPfx = GetDayPrefix(eSetPlus6.Value, refTime);
             bool isActive = refTime >= eSetPlus6.Value && refTime <= eSetMinus4.Value;
             bool isFuture = refTime < eSetPlus6.Value;
-            string countdown = isActive ? "● Active Now" : (isFuture ? $"In {FormatDuration(eSetPlus6.Value - refTime)}" : "✓ Passed");
+            string countdown = isActive ? "● Active Now" : (isFuture ? $"+ {FormatDuration(eSetPlus6.Value - refTime)}" : "✓ Passed");
 
             string directSun = "Direct sun unobstructed by terrain";
             if (topoSunsetEvent?.TopoEvent != null)
@@ -1127,7 +1127,7 @@ public static class CelestialService
             string dayPfx = GetDayPrefix(eSetMinus4.Value, refTime);
             bool isActive = refTime >= eSetMinus4.Value && refTime <= eCivDusk.Value;
             bool isFuture = refTime < eSetMinus4.Value;
-            string countdown = isActive ? "● Active Now" : (isFuture ? $"In {FormatDuration(eSetMinus4.Value - refTime)}" : "✓ Passed");
+            string countdown = isActive ? "● Active Now" : (isFuture ? $"+ {FormatDuration(eSetMinus4.Value - refTime)}" : "✓ Passed");
 
             report.EveningBlue = new PhotographyWindowItem
             {
@@ -1230,7 +1230,7 @@ public static class CelestialService
         }
         else if (refTime < bestNoonTime)
         {
-            report.NoonCountdownDisplay = $"In {FormatDuration(bestNoonTime - refTime)}";
+            report.NoonCountdownDisplay = $"+ {FormatDuration(bestNoonTime - refTime)}";
         }
         else
         {
@@ -1460,8 +1460,8 @@ public static class CelestialService
             }
             else if (isFuture)
             {
-                report.QualityBadge = $"In {FormatDuration(winStart.Value - refTime)}";
-                report.CountdownDisplay = $"In {FormatDuration(winStart.Value - refTime)}";
+                report.QualityBadge = $"+ {FormatDuration(winStart.Value - refTime)}";
+                report.CountdownDisplay = $"+ {FormatDuration(winStart.Value - refTime)}";
             }
             else
             {
@@ -1576,7 +1576,7 @@ public static class CelestialService
             CurrentSeason = currentSeason,
             NextMarkerName = markerName,
             NextMarkerDateDisplay = nextLocal.ToString("dddd, MMM d, yyyy"),
-            CountdownDisplay = daysUntil == 0 ? "Today!" : daysUntil == 1 ? "Tomorrow" : $"in {daysUntil} days",
+            CountdownDisplay = daysUntil == 0 ? "Today!" : daysUntil == 1 ? "Tomorrow" : $"+ {daysUntil} days",
             Description = desc,
             TrendDescription = trend
         };

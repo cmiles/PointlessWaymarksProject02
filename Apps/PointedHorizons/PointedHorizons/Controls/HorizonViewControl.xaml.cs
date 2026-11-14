@@ -12,6 +12,8 @@ public partial class HorizonViewControl : UserControl
 {
     private bool _isInitialized;
     private bool _isEditingFocalLength;
+    private bool _isRetrievingGps;
+    private bool _isRedrawingScene;
     private MainViewModel? ViewModel => DataContext as MainViewModel;
 
     public HorizonViewControl()
@@ -88,7 +90,15 @@ public partial class HorizonViewControl : UserControl
 
     public void Redraw()
     {
+        _isRedrawingScene = true;
+        UpdateBusyState();
         RenderScene();
+        Dispatcher.BeginInvoke(async () =>
+        {
+            await System.Threading.Tasks.Task.Delay(350);
+            _isRedrawingScene = false;
+            UpdateBusyState();
+        });
     }
 
     private void HorizonViewControl_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -97,14 +107,64 @@ public partial class HorizonViewControl : UserControl
         {
             oldVm.HorizonUpdated -= Vm_HorizonUpdated;
             oldVm.ViewParametersChanged -= Vm_ViewParametersChanged;
+            oldVm.PropertyChanged -= Vm_PropertyChanged;
         }
 
         if (e.NewValue is MainViewModel newVm)
         {
             newVm.HorizonUpdated += Vm_HorizonUpdated;
             newVm.ViewParametersChanged += Vm_ViewParametersChanged;
+            newVm.PropertyChanged += Vm_PropertyChanged;
             UpdateFovButtons(newVm.FieldOfView);
             RenderScene();
+            UpdateBusyState();
+        }
+    }
+
+    private void Vm_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainViewModel.IsBusy) || e.PropertyName == nameof(MainViewModel.StatusMessage))
+        {
+            Dispatcher.BeginInvoke(UpdateBusyState);
+        }
+    }
+
+    public void UpdateBusyState()
+    {
+        if (HorizonBusyIndicator == null) return;
+
+        var tm = ThemeManager.Current;
+        HorizonBusyIndicator.Background = tm.MapOverlayBackground;
+        HorizonBusyIndicator.BorderBrush = tm.MapOverlayBorder;
+        if (TxtHorizonBusyTitle != null) TxtHorizonBusyTitle.Foreground = tm.TextPrimary;
+        if (TxtHorizonBusySub != null) TxtHorizonBusySub.Foreground = tm.TextSecondary;
+
+        if (_isRetrievingGps)
+        {
+            if (TxtHorizonBusyIcon != null) TxtHorizonBusyIcon.Text = "🛰️";
+            if (TxtHorizonBusyTitle != null) TxtHorizonBusyTitle.Text = "Acquiring GPS Position...";
+            if (TxtHorizonBusySub != null) TxtHorizonBusySub.Text = "Waiting for satellite location fix...";
+            HorizonBusyIndicator.Visibility = Visibility.Visible;
+        }
+        else if (_isRedrawingScene)
+        {
+            if (TxtHorizonBusyIcon != null) TxtHorizonBusyIcon.Text = "🌄";
+            if (TxtHorizonBusyTitle != null) TxtHorizonBusyTitle.Text = "Redrawing Horizon...";
+            if (TxtHorizonBusySub != null) TxtHorizonBusySub.Text = "Re-rendering terrain canvas...";
+            HorizonBusyIndicator.Visibility = Visibility.Visible;
+        }
+        else if (ViewModel != null && ViewModel.IsBusy)
+        {
+            if (TxtHorizonBusyIcon != null) TxtHorizonBusyIcon.Text = "🌄";
+            if (TxtHorizonBusyTitle != null) TxtHorizonBusyTitle.Text = "Calculating Horizon...";
+            if (TxtHorizonBusySub != null) TxtHorizonBusySub.Text = !string.IsNullOrWhiteSpace(ViewModel.StatusMessage)
+                ? ViewModel.StatusMessage
+                : "Ray tracing 360° terrain panorama and peaks...";
+            HorizonBusyIndicator.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            HorizonBusyIndicator.Visibility = Visibility.Collapsed;
         }
     }
 
@@ -229,6 +289,7 @@ public partial class HorizonViewControl : UserControl
         }
 
         UpdateFovButtons(ViewModel?.FieldOfView ?? 54.39);
+        UpdateBusyState();
     }
 
     public void SetCompactMode(bool isCompact)
@@ -266,7 +327,10 @@ public partial class HorizonViewControl : UserControl
                 BtnToolbarCurrentLocation.MinHeight = 44;
                 BtnToolbarCurrentLocation.MinWidth = 44;
                 BtnToolbarCurrentLocation.Padding = new Thickness(10, 8, 10, 8);
-                BtnToolbarCurrentLocation.FontSize = 16;
+            }
+            if (IconToolbarCurrentLocation != null)
+            {
+                IconToolbarCurrentLocation.ApplySize(20);
             }
 
             if (BtnHorizonMenu != null)
@@ -332,8 +396,11 @@ public partial class HorizonViewControl : UserControl
             {
                 BtnToolbarCurrentLocation.MinHeight = 0;
                 BtnToolbarCurrentLocation.MinWidth = 0;
-                BtnToolbarCurrentLocation.Padding = new Thickness(7, 3, 7, 3);
-                BtnToolbarCurrentLocation.FontSize = 11;
+                BtnToolbarCurrentLocation.Padding = new Thickness(7, 4, 7, 4);
+            }
+            if (IconToolbarCurrentLocation != null)
+            {
+                IconToolbarCurrentLocation.ApplySize(16);
             }
 
             if (BtnHorizonMenu != null)
@@ -465,16 +532,26 @@ public partial class HorizonViewControl : UserControl
     private async void BtnToolbarCurrentLocation_Click(object sender, RoutedEventArgs e)
     {
         if (ViewModel == null) return;
-        ViewModel.StatusMessage = "Acquiring current GPS location...";
-        var pos = await GeolocationService.GetCurrentPositionAsync(timeoutSeconds: 8);
-        if (pos != null)
+        _isRetrievingGps = true;
+        UpdateBusyState();
+        try
         {
-            ViewModel.SetLocation(pos.Latitude, pos.Longitude, "Current Location", panMap: true);
-            ViewModel.StatusMessage = $"Aim Map & Horizon moved to GPS: {pos.Latitude:F4}°, {pos.Longitude:F4}° (±{pos.AccuracyM:F0}m)";
+            ViewModel.StatusMessage = "Acquiring current GPS location...";
+            var pos = await GeolocationService.GetCurrentPositionAsync(timeoutSeconds: 8);
+            if (pos != null)
+            {
+                ViewModel.SetLocation(pos.Latitude, pos.Longitude, "Current Location", panMap: true);
+                ViewModel.StatusMessage = $"Aim Map & Horizon moved to GPS: {pos.Latitude:F4}°, {pos.Longitude:F4}° (±{pos.AccuracyM:F0}m)";
+            }
+            else
+            {
+                ViewModel.StatusMessage = "GPS location unavailable or permission denied.";
+            }
         }
-        else
+        finally
         {
-            ViewModel.StatusMessage = "GPS location unavailable or permission denied.";
+            _isRetrievingGps = false;
+            UpdateBusyState();
         }
     }
 
@@ -738,9 +815,16 @@ public partial class HorizonViewControl : UserControl
 
     private void BtnMenuRefreshHorizon_Click(object sender, RoutedEventArgs e)
     {
+        _isRedrawingScene = true;
+        UpdateBusyState();
         RenderScene();
-        Redraw();
         BtnCloseHorizonMenu_Click(sender, e);
+        Dispatcher.BeginInvoke(async () =>
+        {
+            await System.Threading.Tasks.Task.Delay(350);
+            _isRedrawingScene = false;
+            UpdateBusyState();
+        });
     }
 
     private void BtnMenuSnapNorth_Click(object sender, RoutedEventArgs e)
@@ -765,16 +849,26 @@ public partial class HorizonViewControl : UserControl
     {
         BtnCloseHorizonMenu_Click(sender, e);
         if (ViewModel == null) return;
-        ViewModel.StatusMessage = "Acquiring current GPS location...";
-        var pos = await GeolocationService.GetCurrentPositionAsync(timeoutSeconds: 8);
-        if (pos != null)
+        _isRetrievingGps = true;
+        UpdateBusyState();
+        try
         {
-            ViewModel.SetLocation(pos.Latitude, pos.Longitude, "Current Location", panMap: true);
-            ViewModel.StatusMessage = $"Aim Map & Horizon moved to GPS: {pos.Latitude:F4}°, {pos.Longitude:F4}° (±{pos.AccuracyM:F0}m)";
+            ViewModel.StatusMessage = "Acquiring current GPS location...";
+            var pos = await GeolocationService.GetCurrentPositionAsync(timeoutSeconds: 8);
+            if (pos != null)
+            {
+                ViewModel.SetLocation(pos.Latitude, pos.Longitude, "Current Location", panMap: true);
+                ViewModel.StatusMessage = $"Aim Map & Horizon moved to GPS: {pos.Latitude:F4}°, {pos.Longitude:F4}° (±{pos.AccuracyM:F0}m)";
+            }
+            else
+            {
+                ViewModel.StatusMessage = "GPS location unavailable or permission denied.";
+            }
         }
-        else
+        finally
         {
-            ViewModel.StatusMessage = "GPS location unavailable or permission denied.";
+            _isRetrievingGps = false;
+            UpdateBusyState();
         }
     }
 

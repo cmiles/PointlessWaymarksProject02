@@ -17,51 +17,7 @@ public static class HorizonRayTracer
     private const double RefractionK = 0.14; // Standard atmospheric refraction
     private static readonly double EffectiveEarthRadiusM = EarthRadiusM / (1.0 - RefractionK);
 
-    // Well-known summits dictionary for auto-labeling when in vicinity
-    private static readonly List<(string Name, double Lat, double Lon, double ElevationM)> KnownPeaks =
-    [
-        // Pacific Northwest / Rainier
-        ("Mount Rainier", 46.8529, -121.7604, 4392),
-        ("Little Tahoma Peak", 46.8517, -121.7139, 3395),
-        ("Mount Adams", 46.2024, -121.4909, 3743),
-        ("Mount St. Helens", 46.1912, -122.1944, 2549),
-        ("Mount Hood", 45.3735, -121.6959, 3429),
 
-        // Southwest / Arizona / Santa Catalina Mountains & Rincons
-        ("Mount Lemmon", 32.4431, -110.7884, 2791),
-        ("Mount Kimball", 32.3683, -110.8753, 2212),
-        ("Cathedral Rock", 32.3667, -110.8917, 2420),
-        ("Pusch Peak", 32.3556, -110.9500, 1634),
-        ("Baboquivari Peak", 31.7844, -111.5978, 2356),
-        ("Mica Mountain", 32.2178, -110.5433, 2641),
-        ("Rincon Peak", 32.1217, -110.5244, 2588),
-        ("Tanque Verde Ridge", 32.1850, -110.6500, 2100),
-        ("Spud Rock", 32.2217, -110.5639, 2619),
-        ("Wasson Peak", 32.2744, -111.1444, 1429),
-        ("Humphreys Peak", 35.3464, -111.6780, 3852),
-        ("Agassiz Peak", 35.3267, -111.6778, 3766),
-
-        // Colorado Rockies
-        ("Pikes Peak", 38.8405, -105.0442, 4302),
-        ("Mount Elbert", 39.1178, -106.4454, 4401),
-        ("Mount Massive", 39.1875, -106.4757, 4398),
-        ("Longs Peak", 40.2550, -105.6151, 4346),
-        ("Mount Evans", 39.5883, -105.6438, 4348),
-
-        // California / Sierra Nevada
-        ("Mount Whitney", 36.5786, -118.2920, 4421),
-        ("Half Dome", 37.7459, -119.5332, 2694),
-        ("El Capitan", 37.7340, -119.6377, 2307),
-        ("Mount Dana", 37.8997, -119.2211, 3981),
-        ("Mount Shasta", 41.4092, -122.1949, 4322),
-
-        // Alps / Europe
-        ("Matterhorn", 45.9765, 7.6586, 4478),
-        ("Mont Blanc", 45.8326, 6.8652, 4809),
-        ("Jungfrau", 46.5368, 7.9626, 4158),
-        ("Eiger", 46.5775, 8.0053, 3967),
-        ("Dufourspitze", 45.9369, 7.8668, 4634)
-    ];
 
     /// <summary>
     /// Renders a horizon scene from observer coordinates and viewing direction.
@@ -82,8 +38,8 @@ public static class HorizonRayTracer
 
         var profilePoints = new List<HorizonProfilePoint>(rayCount);
 
-        // 8 depth layers for multi-ridge perspective shading (PeakFinder signature aesthetic)
-        const int numLayers = 8;
+        // 14 depth layers for multi-ridge perspective shading (rich topography aesthetic)
+        const int numLayers = 14;
         var layers = new List<HorizonProfilePoint>[numLayers];
         for (int l = 0; l < numLayers; l++)
         {
@@ -160,14 +116,20 @@ public static class HorizonRayTracer
 
                     int band = d switch
                     {
-                        <= 2500 => 0,
-                        <= 6000 => 1,
-                        <= 11000 => 2,
-                        <= 18000 => 3,
-                        <= 28000 => 4,
-                        <= 42000 => 5,
-                        <= 58000 => 6,
-                        _ => 7
+                        <= 1500 => 0,   // Immediate Foreground (<1.5 km)
+                        <= 3000 => 1,   // Near Foreground (1.5-3 km)
+                        <= 5000 => 2,   // Close Ridges (3-5 km)
+                        <= 8000 => 3,   // Near Midground (5-8 km)
+                        <= 12000 => 4,  // Inner Midground (8-12 km)
+                        <= 17000 => 5,  // Midground (12-17 km)
+                        <= 23000 => 6,  // Outer Midground (17-23 km)
+                        <= 30000 => 7,  // Near Far Range (23-30 km)
+                        <= 39000 => 8,  // Far Range (30-39 km)
+                        <= 50000 => 9,  // Distant Range (39-50 km)
+                        <= 64000 => 10, // Distant Mountains (50-64 km)
+                        <= 80000 => 11, // Far Skyline (64-80 km)
+                        <= 100000 => 12,// Outer Skyline (80-100 km)
+                        _ => 13         // Deep Skyline (>100 km)
                     };
 
                     if (altAngle > maxAngleBands[band])
@@ -219,22 +181,22 @@ public static class HorizonRayTracer
             }
         }
 
-        // Peak and High Point Detection using DEM companion .peaks.json files
-        var activeCandidatePeaks = candidatePeaks ?? DemService.GetLoadedPeaksForTiles(usedTiles);
-        var peaks = DetectPeaks(profilePoints, observerLat, observerLon, eyeElevationM, maxDistanceKm, activeCandidatePeaks);
-
-        sw.Stop();
-
         string[] bandLabels =
         [
-            "Foreground (<2.5 km)",
-            "Near Ridges (2.5-6 km)",
-            "Inner Midground (6-11 km)",
-            "Midground (11-18 km)",
-            "Outer Midground (18-28 km)",
-            "Far Range (28-42 km)",
-            "Distant Mountains (42-58 km)",
-            "Distant Skyline (>58 km)"
+            "Immediate Foreground (<1.5 km)",
+            "Near Foreground (1.5-3 km)",
+            "Close Ridges (3-5 km)",
+            "Near Midground (5-8 km)",
+            "Inner Midground (8-12 km)",
+            "Midground (12-17 km)",
+            "Outer Midground (17-23 km)",
+            "Near Far Range (23-30 km)",
+            "Far Range (30-39 km)",
+            "Distant Range (39-50 km)",
+            "Distant Mountains (50-64 km)",
+            "Far Skyline (64-80 km)",
+            "Outer Skyline (80-100 km)",
+            "Deep Skyline (>100 km)"
         ];
 
         var ridgeLayersList = new List<HorizonRidgeLayer>(numLayers);
@@ -247,6 +209,12 @@ public static class HorizonRayTracer
                 Points = layers[l]
             });
         }
+
+        // Peak and High Point Detection using DEM companion .peaks.json files & intermediate ridge maxima
+        var activeCandidatePeaks = candidatePeaks ?? DemService.GetLoadedPeaksForTiles(usedTiles);
+        var peaks = DetectPeaks(profilePoints, observerLat, observerLon, eyeElevationM, maxDistanceKm, activeCandidatePeaks, ridgeLayersList);
+
+        sw.Stop();
 
         return new HorizonSceneData
         {
@@ -266,7 +234,8 @@ public static class HorizonRayTracer
     }
 
     /// <summary>
-    /// Identifies prominent summits and high points along the skyline profile using DEM companion .peaks.json files.
+    /// Identifies all visible points from the companion peak/point files (.peaks.json).
+    /// Draws labels for all visible points regardless of whether they are a local maxima or intermediate point or not.
     /// </summary>
     private static List<HorizonPeak> DetectPeaks(
         List<HorizonProfilePoint> points,
@@ -274,199 +243,113 @@ public static class HorizonRayTracer
         double observerLon,
         double eyeElevationM,
         double maxDistanceKm,
-        IReadOnlyList<DemPeakRecord>? candidatePeaks)
+        IReadOnlyList<DemPeakRecord>? candidatePeaks,
+        IReadOnlyList<HorizonRidgeLayer>? ridgeLayers = null)
     {
-        var rawPeaks = new List<HorizonPeak>();
-        if (points.Count < 5) return rawPeaks;
+        var visiblePeaks = new List<HorizonPeak>();
+        if (points.Count < 5) return visiblePeaks;
 
-        // 1. Detect local maxima along the ray-traced skyline profile
-        int window = Math.Max(4, points.Count / 70);
+        // Collect all distinct named candidate points from the companion peak/point files
+        var allCandidates = new List<DemPeakRecord>();
+        var seenKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        for (int i = 0; i < points.Count; i++)
-        {
-            var p = points[i];
-            if (p.DistanceKm < 0.2) continue; // Ignore immediate observer bump
-
-            bool isLocalMax = true;
-            double leftMin = p.AltitudeAngle;
-            double rightMin = p.AltitudeAngle;
-
-            for (int w = 1; w <= window; w++)
-            {
-                int leftIdx = (i - w + points.Count) % points.Count;
-                int rightIdx = (i + w) % points.Count;
-
-                if (points[leftIdx].AltitudeAngle >= p.AltitudeAngle ||
-                    points[rightIdx].AltitudeAngle >= p.AltitudeAngle)
-                {
-                    isLocalMax = false;
-                    break;
-                }
-                leftMin = Math.Min(leftMin, points[leftIdx].AltitudeAngle);
-                rightMin = Math.Min(rightMin, points[rightIdx].AltitudeAngle);
-            }
-
-            if (!isLocalMax) continue;
-
-            double prominenceAngle = p.AltitudeAngle - Math.Max(leftMin, rightMin);
-            // Must have noticeable visual prominence above neighboring saddles
-            if (prominenceAngle < 0.08) continue;
-
-            // Attempt to match with companion .peaks.json summits or fallback known summits
-            var match = FindMatchingPeak(p.Lat, p.Lon, p.ElevationM, candidatePeaks);
-            string peakName = match?.Name ?? $"Summit {Math.Round(p.ElevationM):N0}m";
-            double peakElev = match?.ElevationM ?? p.ElevationM;
-
-            rawPeaks.Add(new HorizonPeak
-            {
-                Name = peakName,
-                ElevationM = Math.Round(peakElev, 0),
-                DistanceKm = Math.Round(p.DistanceKm, 1),
-                Azimuth = Math.Round(p.Azimuth, 1),
-                AltitudeAngle = Math.Round(p.AltitudeAngle, 2),
-                ProminenceM = Math.Round(prominenceAngle * (p.DistanceKm * 1000.0 * Math.PI / 180.0), 0),
-                Lat = p.Lat,
-                Lon = p.Lon,
-                IsSkyline = true
-            });
-        }
-
-        // 2. Add companion peaks: both skyline summits and unobstructed midground/foreground summits
         if (candidatePeaks != null && candidatePeaks.Count > 0)
         {
-            double cosObsLat = Math.Cos(observerLat * Math.PI / 180.0);
-
-            for (int c = 0; c < candidatePeaks.Count; c++)
+            for (int i = 0; i < candidatePeaks.Count; i++)
             {
-                var cand = candidatePeaks[c];
-                if (string.IsNullOrWhiteSpace(cand.Name)) continue;
+                var p = candidatePeaks[i];
+                if (string.IsNullOrWhiteSpace(p.Name)) continue;
+                if (p.Name.StartsWith("Ridge ", StringComparison.OrdinalIgnoreCase) ||
+                    p.Name.StartsWith("Summit ", StringComparison.OrdinalIgnoreCase)) continue;
 
-                double dLat = (cand.Lat - observerLat) * 111.32;
-                double dLon = (cand.Lon - observerLon) * 111.32 * cosObsLat;
-                double distKm = Math.Sqrt(dLat * dLat + dLon * dLon);
-
-                if (distKm < 0.6 || distKm > maxDistanceKm) continue;
-
-                double az = CalculateBearing(observerLat, observerLon, cand.Lat, cand.Lon);
-                double skylineAlt = InterpolateSkylineAltitude(points, az);
-
-                // Calculate visual altitude angle with Earth curvature and atmospheric refraction
-                double dM = distKm * 1000.0;
-                double curDrop = (dM * dM) / (2.0 * EffectiveEarthRadiusM);
-                double candAltAngle = Math.Atan2(cand.Ele - eyeElevationM - curDrop, dM) * (180.0 / Math.PI);
-
-                // A. Skyline Summit: sits right at or slightly above the skyline silhouette
-                if (candAltAngle >= skylineAlt - 0.25)
+                string key = $"{p.Name.Trim()}_{Math.Round(p.Lat, 4)}_{Math.Round(p.Lon, 4)}";
+                if (seenKeys.Add(key))
                 {
-                    rawPeaks.Add(new HorizonPeak
+                    allCandidates.Add(p);
+                }
+            }
+        }
+
+        if (allCandidates.Count == 0) return visiblePeaks;
+
+        double cosObsLat = Math.Cos(observerLat * Math.PI / 180.0);
+
+        // Evaluate visibility for every point in the peak/point file
+        for (int c = 0; c < allCandidates.Count; c++)
+        {
+            var cand = allCandidates[c];
+
+            double dLat = (cand.Lat - observerLat) * 111.32;
+            double dLon = (cand.Lon - observerLon) * 111.32 * cosObsLat;
+            double distKm = Math.Sqrt(dLat * dLat + dLon * dLon);
+
+            // Skip if observer is right on the feature (< 100m) or beyond horizon max distance
+            if (distKm < 0.1 || distKm > maxDistanceKm) continue;
+
+            double az = CalculateBearing(observerLat, observerLon, cand.Lat, cand.Lon);
+            double skylineAlt = InterpolateSkylineAltitude(points, az);
+
+            // Determine elevation of the feature
+            double targetElev = cand.Ele > 0 ? cand.Ele : (DemService.GetElevation(cand.Lat, cand.Lon) ?? 0);
+            if (targetElev <= 0) continue;
+
+            // Calculate visual altitude angle accounting for Earth curvature and refraction
+            double dM = distKm * 1000.0;
+            double curDrop = (dM * dM) / (2.0 * EffectiveEarthRadiusM);
+            double candAltAngle = Math.Atan2(targetElev - eyeElevationM - curDrop, dM) * (180.0 / Math.PI);
+
+            // 1. Skyline visibility: point sits at or above the skyline silhouette
+            bool isSkyline = candAltAngle >= skylineAlt - 0.25;
+
+            // 2. Line of sight visibility: if below the skyline, verify no closer terrain blocks the view
+            bool isVisible = isSkyline || IsPeakLineOfSightClear(observerLat, observerLon, eyeElevationM, cand.Lat, cand.Lon, targetElev, candAltAngle, dM);
+
+            if (isVisible)
+            {
+                // Prevent duplicate markers if a summit is cataloged multiple times within close proximity
+                var existing = visiblePeaks.FirstOrDefault(v =>
+                    v.Name.Equals(cand.Name.Trim(), StringComparison.OrdinalIgnoreCase) &&
+                    (Math.Abs(v.DistanceKm - distKm) < 1.5 || AngularDistance(v.Azimuth, az) < 0.5));
+
+                if (existing != null)
+                {
+                    if (targetElev > existing.ElevationM)
                     {
-                        Name = cand.Name,
-                        ElevationM = Math.Round(cand.Ele, 0),
+                        visiblePeaks.Remove(existing);
+                        visiblePeaks.Add(new HorizonPeak
+                        {
+                            Name = cand.Name.Trim(),
+                            ElevationM = Math.Round(targetElev, 0),
+                            DistanceKm = Math.Round(distKm, 1),
+                            Azimuth = Math.Round(az, 1),
+                            AltitudeAngle = Math.Round(isSkyline ? Math.Max(candAltAngle, skylineAlt) : candAltAngle, 2),
+                            ProminenceM = 0,
+                            Lat = cand.Lat,
+                            Lon = cand.Lon,
+                            IsSkyline = isSkyline
+                        });
+                    }
+                }
+                else
+                {
+                    visiblePeaks.Add(new HorizonPeak
+                    {
+                        Name = cand.Name.Trim(),
+                        ElevationM = Math.Round(targetElev, 0),
                         DistanceKm = Math.Round(distKm, 1),
                         Azimuth = Math.Round(az, 1),
-                        AltitudeAngle = Math.Round(Math.Max(candAltAngle, skylineAlt), 2),
+                        AltitudeAngle = Math.Round(isSkyline ? Math.Max(candAltAngle, skylineAlt) : candAltAngle, 2),
                         ProminenceM = 0,
                         Lat = cand.Lat,
                         Lon = cand.Lon,
-                        IsSkyline = true
-                    });
-                }
-                // B. Midground / Foreground Summit: sits below the skyline profile.
-                // Perform a fast targeted line-of-sight test to verify no closer terrain obstructs it.
-                else if (IsPeakLineOfSightClear(observerLat, observerLon, eyeElevationM, cand.Lat, cand.Lon, cand.Ele, candAltAngle, dM))
-                {
-                    rawPeaks.Add(new HorizonPeak
-                    {
-                        Name = cand.Name,
-                        ElevationM = Math.Round(cand.Ele, 0),
-                        DistanceKm = Math.Round(distKm, 1),
-                        Azimuth = Math.Round(az, 1),
-                        AltitudeAngle = Math.Round(candAltAngle, 2),
-                        ProminenceM = 0,
-                        Lat = cand.Lat,
-                        Lon = cand.Lon,
-                        IsSkyline = false
+                        IsSkyline = isSkyline
                     });
                 }
             }
         }
 
-        // 3. Deduplicate peaks with balanced allocation:
-        // Prioritize named summits and ensure visible midground summits are retained
-        // alongside prominent skyline peaks (up to 48 skyline + up to 24 midground, overall cap 72).
-        var filteredPeaks = new List<HorizonPeak>();
-
-        bool Collides(HorizonPeak peak) =>
-            filteredPeaks.Any(existing =>
-                AngularDistance(existing.Azimuth, peak.Azimuth) < 1.6 &&
-                (Math.Abs(existing.AltitudeAngle - peak.AltitudeAngle) < 0.7 ||
-                 Math.Abs(existing.DistanceKm - peak.DistanceKm) < 3.5));
-
-        const int maxTotal = 72;
-        int skylineCount = 0;
-        int midgroundCount = 0;
-
-        // Pass 1: Named Skyline Summits (initial target up to 48)
-        foreach (var peak in rawPeaks
-            .Where(p => p.IsSkyline && IsNamedSummit(p.Name))
-            .OrderByDescending(p => p.AltitudeAngle)
-            .ThenByDescending(p => p.ElevationM))
-        {
-            if (skylineCount >= 48) break;
-            if (!Collides(peak))
-            {
-                filteredPeaks.Add(peak);
-                skylineCount++;
-            }
-        }
-
-        // Pass 2: Named Visible Midground Summits (up to 24)
-        foreach (var peak in rawPeaks
-            .Where(p => !p.IsSkyline && IsNamedSummit(p.Name))
-            .OrderByDescending(p => p.AltitudeAngle)
-            .ThenByDescending(p => p.ElevationM))
-        {
-            if (midgroundCount >= 24 || filteredPeaks.Count >= maxTotal) break;
-            if (!Collides(peak))
-            {
-                filteredPeaks.Add(peak);
-                midgroundCount++;
-            }
-        }
-
-        // Pass 3: Fill any remaining capacity with remaining named skyline peaks
-        if (filteredPeaks.Count < maxTotal)
-        {
-            foreach (var peak in rawPeaks
-                .Where(p => p.IsSkyline && IsNamedSummit(p.Name))
-                .OrderByDescending(p => p.AltitudeAngle)
-                .ThenByDescending(p => p.ElevationM))
-            {
-                if (filteredPeaks.Count >= maxTotal) break;
-                if (!filteredPeaks.Contains(peak) && !Collides(peak))
-                {
-                    filteredPeaks.Add(peak);
-                }
-            }
-        }
-
-        // Pass 4: Profile Local Maxima (unnamed generic summits for areas with few/no named peaks)
-        if (filteredPeaks.Count < 36)
-        {
-            foreach (var peak in rawPeaks
-                .Where(p => p.IsSkyline && !IsNamedSummit(p.Name))
-                .OrderByDescending(p => p.ProminenceM)
-                .ThenByDescending(p => p.AltitudeAngle))
-            {
-                if (filteredPeaks.Count >= 48) break;
-                if (!Collides(peak))
-                {
-                    filteredPeaks.Add(peak);
-                }
-            }
-        }
-
-        return filteredPeaks.OrderBy(p => p.Azimuth).ToList();
+        // Return all visible points from the peak/point files sorted around the 360° horizon
+        return visiblePeaks.OrderBy(p => p.Azimuth).ToList();
     }
 
     /// <summary>
@@ -509,66 +392,6 @@ public static class HorizonRayTracer
         }
 
         return true; // Direct line of sight is clear
-    }
-
-    private static bool IsNamedSummit(string? name) =>
-        !string.IsNullOrWhiteSpace(name) && !name.StartsWith("Summit ", StringComparison.OrdinalIgnoreCase);
-
-    private static (string Name, double ElevationM)? FindMatchingPeak(
-        double lat,
-        double lon,
-        double elevM,
-        IReadOnlyList<DemPeakRecord>? candidatePeaks)
-    {
-        (string Name, double ElevationM)? bestMatch = null;
-        double bestScore = double.MaxValue;
-
-        if (candidatePeaks != null && candidatePeaks.Count > 0)
-        {
-            for (int i = 0; i < candidatePeaks.Count; i++)
-            {
-                var p = candidatePeaks[i];
-                if (string.IsNullOrWhiteSpace(p.Name)) continue;
-
-                double dLat = (lat - p.Lat) * 111.32;
-                double dLon = (lon - p.Lon) * 111.32 * Math.Cos(lat * Math.PI / 180.0);
-                double distKm = Math.Sqrt(dLat * dLat + dLon * dLon);
-
-                if (distKm > 3.0) continue;
-
-                double elevDiff = (p.Ele > 0 && elevM > 0) ? Math.Abs(elevM - p.Ele) : 0.0;
-                if (elevDiff > 250) continue;
-
-                double score = distKm + (elevDiff / 100.0);
-                if (score < bestScore)
-                {
-                    bestScore = score;
-                    bestMatch = (p.Name, p.Ele > 0 ? p.Ele : elevM);
-                }
-            }
-
-            if (bestMatch.HasValue) return bestMatch;
-        }
-
-        // Fallback to built-in KnownPeaks dictionary if not matched in companion peaks
-        foreach (var (name, kLat, kLon, kElev) in KnownPeaks)
-        {
-            double dLat = (lat - kLat) * 111.32;
-            double dLon = (lon - kLon) * 111.32 * Math.Cos(lat * Math.PI / 180.0);
-            double distKm = Math.Sqrt(dLat * dLat + dLon * dLon);
-
-            if (distKm < 3.0 && Math.Abs(elevM - kElev) < 250)
-            {
-                double score = distKm + Math.Abs(elevM - kElev) / 100.0;
-                if (score < bestScore)
-                {
-                    bestScore = score;
-                    bestMatch = (name, kElev);
-                }
-            }
-        }
-
-        return bestMatch;
     }
 
     private static double CalculateBearing(double lat1, double lon1, double lat2, double lon2)

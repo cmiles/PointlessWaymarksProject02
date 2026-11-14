@@ -176,7 +176,7 @@ public partial class CelestialInfoControl : UserControl
         // Card Line 1 Titles & Icons: largest text on mobile (FontSize 15.5 bold)
         double titleSize = isCompact ? 15.5 : 11.0;
         double iconSize = isCompact ? 15.5 : 13.0;
-        double badgeSize = isCompact ? 15.5 : 10.0;
+        double badgeSize = isCompact ? 15.5 : 12.5;
 
         TextBlock?[] titles = [
             TxtSunriseTitle, TxtSunsetTitle, TxtMoonriseTitle, TxtMoonsetTitle,
@@ -232,7 +232,7 @@ public partial class CelestialInfoControl : UserControl
                     Grid.SetColumn(b, 0);
                     Grid.SetColumnSpan(b, 2);
                     b.HorizontalAlignment = HorizontalAlignment.Left;
-                    b.Margin = new Thickness(0, 2, 0, 4);
+                    b.Margin = new Thickness(9, 2, 0, 4);
                     b.Background = Brushes.Transparent;
                     b.BorderBrush = Brushes.Transparent;
                     b.BorderThickness = new Thickness(0);
@@ -306,8 +306,8 @@ public partial class CelestialInfoControl : UserControl
                     Grid.SetColumnSpan(b, 1);
                     b.HorizontalAlignment = HorizontalAlignment.Right;
                     b.Margin = new Thickness(0, 0, 0, 0);
-                    b.BorderThickness = new Thickness(1);
-                    b.Padding = new Thickness(8, 2, 8, 2);
+                    b.BorderThickness = new Thickness(1.5);
+                    b.Padding = new Thickness(10, 4, 10, 4);
                     b.CornerRadius = new CornerRadius(8);
                 }
             }
@@ -656,7 +656,7 @@ public partial class CelestialInfoControl : UserControl
             if (TxtSolarNoonElevationMobile != null) TxtSolarNoonElevationMobile.Text = $"Max Elevation: {report.SolarNoon.MaxElevationDisplay}";
             string noonCountdown = report.SolarNoon.NoonCountdownDisplay ?? string.Empty;
             if (noonCountdown.StartsWith("⏳ ")) noonCountdown = noonCountdown.Substring(2).TrimStart();
-            if (noonCountdown.StartsWith("in ", StringComparison.OrdinalIgnoreCase)) noonCountdown = "In " + noonCountdown.Substring(3);
+            if (noonCountdown.StartsWith("in ", StringComparison.OrdinalIgnoreCase)) noonCountdown = "+ " + noonCountdown.Substring(3);
             if (TxtSolarNoonBadge != null) TxtSolarNoonBadge.Text = noonCountdown;
 
             if (BadgeSolarNoon != null && TxtSolarNoonBadge != null)
@@ -669,6 +669,7 @@ public partial class CelestialInfoControl : UserControl
                     BadgeSolarNoon.BorderThickness = new Thickness(0);
                     BadgeSolarNoon.Padding = new Thickness(0);
                     BadgeSolarNoon.HorizontalAlignment = HorizontalAlignment.Left;
+                    BadgeSolarNoon.Margin = new Thickness(9, 2, 0, 4);
                     Grid.SetRow(BadgeSolarNoon, 1);
                     Grid.SetColumn(BadgeSolarNoon, 0);
                     Grid.SetColumnSpan(BadgeSolarNoon, 2);
@@ -680,8 +681,9 @@ public partial class CelestialInfoControl : UserControl
                     Grid.SetColumn(BadgeSolarNoon, 1);
                     Grid.SetColumnSpan(BadgeSolarNoon, 1);
                     BadgeSolarNoon.HorizontalAlignment = HorizontalAlignment.Right;
-                    BadgeSolarNoon.BorderThickness = new Thickness(1);
-                    BadgeSolarNoon.Padding = new Thickness(8, 2, 8, 2);
+                    BadgeSolarNoon.Margin = new Thickness(0);
+                    BadgeSolarNoon.BorderThickness = new Thickness(1.5);
+                    BadgeSolarNoon.Padding = new Thickness(10, 4, 10, 4);
                     BadgeSolarNoon.CornerRadius = new CornerRadius(8);
                     if (report.SolarNoon.IsNoonActive)
                     {
@@ -719,13 +721,13 @@ public partial class CelestialInfoControl : UserControl
 
             string mwCountdown = report.MilkyWay.CountdownDisplay ?? string.Empty;
             if (mwCountdown.StartsWith("⏳ ")) mwCountdown = mwCountdown.Substring(2).TrimStart();
-            if (mwCountdown.StartsWith("in ", StringComparison.OrdinalIgnoreCase)) mwCountdown = "In " + mwCountdown.Substring(3);
+            if (mwCountdown.StartsWith("in ", StringComparison.OrdinalIgnoreCase)) mwCountdown = "+ " + mwCountdown.Substring(3);
 
             string mwBadge = _isCompact
                 ? (string.IsNullOrEmpty(mwCountdown) ? report.MilkyWay.QualityBadge : mwCountdown)
                 : report.MilkyWay.QualityBadge;
             if (mwBadge.StartsWith("⏳ ")) mwBadge = mwBadge.Substring(2).TrimStart();
-            if (mwBadge.StartsWith("in ", StringComparison.OrdinalIgnoreCase)) mwBadge = "In " + mwBadge.Substring(3);
+            if (mwBadge.StartsWith("in ", StringComparison.OrdinalIgnoreCase)) mwBadge = "+ " + mwBadge.Substring(3);
             if (TxtMilkyWayBadge != null) TxtMilkyWayBadge.Text = mwBadge;
 
             if (TxtMilkyWayWindow != null) TxtMilkyWayWindow.Text = report.MilkyWay.WindowDisplay;
@@ -791,6 +793,7 @@ public partial class CelestialInfoControl : UserControl
                     BadgeMilkyWay.BorderThickness = new Thickness(0);
                     BadgeMilkyWay.Padding = new Thickness(0);
                     BadgeMilkyWay.HorizontalAlignment = HorizontalAlignment.Left;
+                    BadgeMilkyWay.Margin = new Thickness(9, 2, 0, 4);
                     Grid.SetRow(BadgeMilkyWay, 1);
                     Grid.SetColumn(BadgeMilkyWay, 0);
                     Grid.SetColumnSpan(BadgeMilkyWay, 2);
@@ -802,8 +805,9 @@ public partial class CelestialInfoControl : UserControl
                     Grid.SetColumn(BadgeMilkyWay, 1);
                     Grid.SetColumnSpan(BadgeMilkyWay, 1);
                     BadgeMilkyWay.HorizontalAlignment = HorizontalAlignment.Right;
-                    BadgeMilkyWay.BorderThickness = new Thickness(1);
-                    BadgeMilkyWay.Padding = new Thickness(8, 2, 8, 2);
+                    BadgeMilkyWay.Margin = new Thickness(0);
+                    BadgeMilkyWay.BorderThickness = new Thickness(1.5);
+                    BadgeMilkyWay.Padding = new Thickness(10, 4, 10, 4);
                     BadgeMilkyWay.CornerRadius = new CornerRadius(8);
                     if (report.MilkyWay.IsActive)
                     {
@@ -963,7 +967,7 @@ public partial class CelestialInfoControl : UserControl
         badgeBorder.Visibility = Visibility.Visible;
         string countdown = ev.TimeUntilDisplay ?? string.Empty;
         if (countdown.StartsWith("⏳ ")) countdown = countdown.Substring(2).TrimStart();
-        if (countdown.StartsWith("in ", StringComparison.OrdinalIgnoreCase)) countdown = "In " + countdown.Substring(3);
+        if (countdown.StartsWith("in ", StringComparison.OrdinalIgnoreCase)) countdown = "+ " + countdown.Substring(3);
 
         if (_isCompact)
         {
@@ -973,6 +977,7 @@ public partial class CelestialInfoControl : UserControl
             badgeBorder.BorderThickness = new Thickness(0);
             badgeBorder.Padding = new Thickness(0);
             badgeBorder.HorizontalAlignment = HorizontalAlignment.Left;
+            badgeBorder.Margin = new Thickness(9, 2, 0, 4);
             Grid.SetRow(badgeBorder, 1);
             Grid.SetColumn(badgeBorder, 0);
             Grid.SetColumnSpan(badgeBorder, 2);
@@ -984,19 +989,22 @@ public partial class CelestialInfoControl : UserControl
             Grid.SetColumn(badgeBorder, 1);
             Grid.SetColumnSpan(badgeBorder, 1);
             badgeBorder.HorizontalAlignment = HorizontalAlignment.Right;
-            badgeBorder.BorderThickness = new Thickness(1);
-            badgeBorder.Padding = new Thickness(8, 2, 8, 2);
+            badgeBorder.Margin = new Thickness(0);
+            badgeBorder.BorderThickness = new Thickness(1.5);
+            badgeBorder.Padding = new Thickness(10, 4, 10, 4);
             badgeBorder.CornerRadius = new CornerRadius(8);
             if (ev.IsFuture)
             {
                 badgeText.Text = countdown;
                 badgeBorder.Background = tm.ButtonActiveBackground;
+                badgeBorder.BorderBrush = tm.Accent;
                 badgeText.Foreground = tm.ButtonActiveForeground;
             }
             else
             {
                 badgeText.Text = $"✓ {countdown}";
                 badgeBorder.Background = tm.ButtonInactiveBackground;
+                badgeBorder.BorderBrush = tm.ButtonInactiveBorder;
                 badgeText.Foreground = tm.TextMuted;
             }
         }
@@ -1042,7 +1050,7 @@ public partial class CelestialInfoControl : UserControl
         }
         if (countdown.StartsWith("in ", StringComparison.OrdinalIgnoreCase))
         {
-            countdown = "In " + countdown.Substring(3);
+            countdown = "+ " + countdown.Substring(3);
         }
         badgeText.Text = countdown;
 
@@ -1053,6 +1061,7 @@ public partial class CelestialInfoControl : UserControl
             badgeBorder.BorderThickness = new Thickness(0);
             badgeBorder.Padding = new Thickness(0);
             badgeBorder.HorizontalAlignment = HorizontalAlignment.Left;
+            badgeBorder.Margin = new Thickness(9, 2, 0, 4);
             Grid.SetRow(badgeBorder, 1);
             Grid.SetColumn(badgeBorder, 0);
             Grid.SetColumnSpan(badgeBorder, 2);
@@ -1064,22 +1073,26 @@ public partial class CelestialInfoControl : UserControl
             Grid.SetColumn(badgeBorder, 1);
             Grid.SetColumnSpan(badgeBorder, 1);
             badgeBorder.HorizontalAlignment = HorizontalAlignment.Right;
-            badgeBorder.BorderThickness = new Thickness(1);
-            badgeBorder.Padding = new Thickness(8, 2, 8, 2);
+            badgeBorder.Margin = new Thickness(0);
+            badgeBorder.BorderThickness = new Thickness(1.5);
+            badgeBorder.Padding = new Thickness(10, 4, 10, 4);
             badgeBorder.CornerRadius = new CornerRadius(8);
             if (item.IsActive)
             {
                 badgeBorder.Background = tm.Accent;
+                badgeBorder.BorderBrush = tm.Accent;
                 badgeText.Foreground = Brushes.White;
             }
             else if (item.IsFuture)
             {
                 badgeBorder.Background = tm.ButtonActiveBackground;
+                badgeBorder.BorderBrush = tm.Accent;
                 badgeText.Foreground = tm.ButtonActiveForeground;
             }
             else
             {
                 badgeBorder.Background = tm.ButtonInactiveBackground;
+                badgeBorder.BorderBrush = tm.ButtonInactiveBorder;
                 badgeText.Foreground = tm.TextMuted;
             }
         }

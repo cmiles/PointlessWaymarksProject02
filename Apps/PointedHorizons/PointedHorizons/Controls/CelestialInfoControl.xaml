@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:PointedHorizons.Controls"
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="500">
 
@@ -56,7 +57,10 @@
                             Style="{StaticResource PillButtonStyle}" Margin="0,0,3,0" Padding="8,6"
                             HorizontalAlignment="Stretch"
                             ToolTipService.ToolTip="Acquire current satellite GPS coordinates">
-                        <TextBlock x:Name="TxtOptionGps" Text="📍 Current Location" FontSize="11" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" />
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <controls:CurrentLocationIcon IconSize="15" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock x:Name="TxtOptionGps" Text="Current Location" FontSize="11" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" />
+                        </StackPanel>
                     </Button>
 
                     <Button x:Name="BtnOptionMap" Grid.Row="0" Grid.Column="1" Click="BtnOptionMap_Click"
@@ -90,7 +94,7 @@
                                     Cursor="Hand" MouseLeftButtonDown="BtnOptionGps_Click">
                                 <StackPanel Orientation="Vertical">
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                        <TextBlock Text="📍" FontSize="15" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                        <controls:CurrentLocationIcon IconSize="18" Margin="0,0,8,0" VerticalAlignment="Center" />
                                         <TextBlock x:Name="TxtBigGpsTitle" Text="Current Location" FontSize="12.5" FontWeight="Bold" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <TextBlock x:Name="TxtBigGpsSub" Text="Acquires live satellite GPS coordinates from your device and calculates topography compensation at your physical location."
@@ -193,7 +197,7 @@
                                                         <TextBlock x:Name="TxtSunriseTitle" Text="Sunrise" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" TextWrapping="Wrap" />
                                                     </StackPanel>
                                                     <Border x:Name="BadgeSunrise" Grid.Row="0" Grid.Column="1" CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
-                                                        <TextBlock x:Name="TxtSunriseBadge" Text="In 3h 15m" FontSize="10" FontWeight="Bold" TextWrapping="Wrap" />
+                                                        <TextBlock x:Name="TxtSunriseBadge" Text="+ 3h 15m" FontSize="10" FontWeight="Bold" TextWrapping="Wrap" />
                                                     </Border>
                                                 </Grid>
 
@@ -245,7 +249,7 @@
                                                         <TextBlock x:Name="TxtSunsetTitle" Text="Sunset" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" TextWrapping="Wrap" />
                                                     </StackPanel>
                                                     <Border x:Name="BadgeSunset" Grid.Row="0" Grid.Column="1" CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
-                                                        <TextBlock x:Name="TxtSunsetBadge" Text="In 10h 42m" FontSize="10" FontWeight="Bold" TextWrapping="Wrap" />
+                                                        <TextBlock x:Name="TxtSunsetBadge" Text="+ 10h 42m" FontSize="10" FontWeight="Bold" TextWrapping="Wrap" />
                                                     </Border>
                                                 </Grid>
 
@@ -349,7 +353,7 @@
                                                         <TextBlock x:Name="TxtMoonsetTitle" Text="Moonset" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" TextWrapping="Wrap" />
                                                     </StackPanel>
                                                     <Border x:Name="BadgeMoonset" Grid.Row="0" Grid.Column="1" CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
-                                                        <TextBlock x:Name="TxtMoonsetBadge" Text="In 8h 20m" FontSize="10" FontWeight="Bold" TextWrapping="Wrap" />
+                                                        <TextBlock x:Name="TxtMoonsetBadge" Text="+ 8h 20m" FontSize="10" FontWeight="Bold" TextWrapping="Wrap" />
                                                     </Border>
                                                 </Grid>
 
@@ -401,7 +405,7 @@
                                                         <TextBlock x:Name="TxtDaylightTitle" Text="Solar Noon Culmination" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" TextWrapping="Wrap" />
                                                     </StackPanel>
                                                     <Border x:Name="BadgeSolarNoon" Grid.Row="0" Grid.Column="1" CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
-                                                        <TextBlock x:Name="TxtSolarNoonBadge" Text="In 3h 40m" FontSize="10" FontWeight="Bold" TextWrapping="Wrap" />
+                                                        <TextBlock x:Name="TxtSolarNoonBadge" Text="+ 3h 40m" FontSize="10" FontWeight="Bold" TextWrapping="Wrap" />
                                                     </Border>
                                                 </Grid>
 
@@ -459,7 +463,7 @@
                                                         <TextBlock x:Name="TxtMorningBlueTitle" Text="Morning Blue Hour" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" TextWrapping="Wrap" />
                                                     </StackPanel>
                                                     <Border x:Name="BadgeMorningBlue" Grid.Row="0" Grid.Column="1" CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
-                                                        <TextBlock x:Name="TxtMorningBlueBadge" Text="In 2h 10m" FontSize="10" FontWeight="Bold" TextWrapping="Wrap" />
+                                                        <TextBlock x:Name="TxtMorningBlueBadge" Text="+ 2h 10m" FontSize="10" FontWeight="Bold" TextWrapping="Wrap" />
                                                     </Border>
                                                 </Grid>
 
@@ -505,7 +509,7 @@
                                                         <TextBlock x:Name="TxtMorningGoldenTitle" Text="Morning Golden Hour" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" TextWrapping="Wrap" />
                                                     </StackPanel>
                                                     <Border x:Name="BadgeMorningGolden" Grid.Row="0" Grid.Column="1" CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
-                                                        <TextBlock x:Name="TxtMorningGoldenBadge" Text="In 2h 40m" FontSize="10" FontWeight="Bold" TextWrapping="Wrap" />
+                                                        <TextBlock x:Name="TxtMorningGoldenBadge" Text="+ 2h 40m" FontSize="10" FontWeight="Bold" TextWrapping="Wrap" />
                                                     </Border>
                                                 </Grid>
 
@@ -552,7 +556,7 @@
                                                         <TextBlock x:Name="TxtEveningGoldenTitle" Text="Evening Golden Hour" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" TextWrapping="Wrap" />
                                                     </StackPanel>
                                                     <Border x:Name="BadgeEveningGolden" Grid.Row="0" Grid.Column="1" CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
-                                                        <TextBlock x:Name="TxtEveningGoldenBadge" Text="In 8h 15m" FontSize="10" FontWeight="Bold" TextWrapping="Wrap" />
+                                                        <TextBlock x:Name="TxtEveningGoldenBadge" Text="+ 8h 15m" FontSize="10" FontWeight="Bold" TextWrapping="Wrap" />
                                                     </Border>
                                                 </Grid>
 
@@ -599,7 +603,7 @@
                                                         <TextBlock x:Name="TxtEveningBlueTitle" Text="Evening Blue Hour" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" TextWrapping="Wrap" />
                                                     </StackPanel>
                                                     <Border x:Name="BadgeEveningBlue" Grid.Row="0" Grid.Column="1" CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
-                                                        <TextBlock x:Name="TxtEveningBlueBadge" Text="In 9h 30m" FontSize="10" FontWeight="Bold" TextWrapping="Wrap" />
+                                                        <TextBlock x:Name="TxtEveningBlueBadge" Text="+ 9h 30m" FontSize="10" FontWeight="Bold" TextWrapping="Wrap" />
                                                     </Border>
                                                 </Grid>
 
@@ -645,7 +649,7 @@
                                                         <TextBlock x:Name="TxtMilkyWayTitle" Text="Milky Way &amp; Galactic Center" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" TextWrapping="Wrap" />
                                                     </StackPanel>
                                                     <Border x:Name="BadgeMilkyWay" Grid.Row="0" Grid.Column="1" CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
-                                                        <TextBlock x:Name="TxtMilkyWayBadge" Text="In 8h 20m" FontSize="10" FontWeight="Bold" TextWrapping="Wrap" />
+                                                        <TextBlock x:Name="TxtMilkyWayBadge" Text="+ 8h 20m" FontSize="10" FontWeight="Bold" TextWrapping="Wrap" />
                                                     </Border>
                                                 </Grid>
 
@@ -843,12 +847,12 @@
                                                     <TextBlock x:Name="TxtSeasonTitle" Text="Winter Solstice" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" TextWrapping="Wrap" />
                                                 </StackPanel>
                                                 <Border x:Name="BadgeSeason" Grid.Column="1" CornerRadius="8" Padding="8,2" VerticalAlignment="Center">
-                                                    <TextBlock x:Name="TxtSeasonBadge" Text="in 43 days" FontSize="10" FontWeight="Bold" TextWrapping="Wrap" />
+                                                    <TextBlock x:Name="TxtSeasonBadge" Text="+ 43 days" FontSize="10" FontWeight="Bold" TextWrapping="Wrap" />
                                                 </Border>
                                             </Grid>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
                                                 <TextBlock x:Name="TxtSeasonDate" Text="Monday, Dec 21, 2026" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                                <TextBlock x:Name="TxtSeasonBadgeInline" Text="  •  in 43 days" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Visibility="Collapsed" TextWrapping="Wrap" />
+                                                <TextBlock x:Name="TxtSeasonBadgeInline" Text="  •  + 43 days" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Visibility="Collapsed" TextWrapping="Wrap" />
                                             </StackPanel>
                                             <TextBlock x:Name="TxtSeasonTrend" Text="Days currently decreasing; daylight begins lengthening after this milestone." FontSize="10" FontWeight="SemiBold" Margin="0,0,0,4" TextWrapping="Wrap" />
                                             <TextBlock x:Name="TxtDesktopSeasonDesc" Text="Shortest day and longest night of the year; solar arc begins rising northwards afterwards." FontSize="9.5" Opacity="0.8" TextWrapping="Wrap" />

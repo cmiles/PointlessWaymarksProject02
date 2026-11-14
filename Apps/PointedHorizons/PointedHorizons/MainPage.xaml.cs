@@ -295,13 +295,14 @@ public partial class MainPage : Page
                 BtnTitleRecordTrack.MinWidth = 56;
                 BtnTitleRecordTrack.Padding = new Thickness(14, 8, 14, 8);
                 BtnTitleRecordTrack.FontSize = 18;
+                if (IconTitleRecordTrack != null) IconTitleRecordTrack.IconSize = 22;
             }
             if (BtnTitleToggleGps != null)
             {
                 BtnTitleToggleGps.MinHeight = 44;
                 BtnTitleToggleGps.MinWidth = 56;
-                BtnTitleToggleGps.Padding = new Thickness(14, 8, 14, 8);
-                BtnTitleToggleGps.FontSize = 18;
+                BtnTitleToggleGps.Padding = new Thickness(6, 3, 6, 3);
+                if (IconTitleGps != null) IconTitleGps.IconSize = 34;
             }
 
             // Page choice button: Finger friendly on small screen mobile, sized to never collide with action buttons
@@ -431,13 +432,14 @@ public partial class MainPage : Page
                 BtnTitleRecordTrack.MinWidth = 44;
                 BtnTitleRecordTrack.Padding = new Thickness(12, 4, 12, 4);
                 BtnTitleRecordTrack.FontSize = 13.5;
+                if (IconTitleRecordTrack != null) IconTitleRecordTrack.IconSize = 18;
             }
             if (BtnTitleToggleGps != null)
             {
                 BtnTitleToggleGps.MinHeight = 32;
                 BtnTitleToggleGps.MinWidth = 44;
-                BtnTitleToggleGps.Padding = new Thickness(12, 4, 12, 4);
-                BtnTitleToggleGps.FontSize = 13.5;
+                BtnTitleToggleGps.Padding = new Thickness(5, 2, 5, 2);
+                if (IconTitleGps != null) IconTitleGps.IconSize = 26;
             }
 
             CloseCompactNav();
@@ -445,7 +447,7 @@ public partial class MainPage : Page
             // Tab button labels and availability (when header tabs are visible on large screens)
             if (BtnTabMap != null)
             {
-                BtnTabMap.Content = "🗺️ Full Screen Map";
+                BtnTabMap.Content = "🗺️ Map";
             }
             if (BtnTabCelestial != null)
             {
@@ -729,9 +731,9 @@ public partial class MainPage : Page
 
         BtnCompactNav.Content = _currentTab switch
         {
-            "FullScreenMap" => isVeryCompact ? "🗺️ Map ▾" : "🗺️ Full Screen Map ▾",
+            "FullScreenMap" => "🗺️ Map ▾",
             "Celestial" => isVeryCompact ? "☀️ Sun/Moon ▾" : "☀️ Sun & Moon ▾",
-            "HorizonMap" => isVeryCompact ? "🧭 Aim ▾" : "🧭 Aim Map ▾",
+            "HorizonMap" => isVeryCompact ? "🧭 View ▾" : "🧭 View Map ▾",
             "Horizon" => isVeryCompact ? "🌄 Horizon ▾" : "🌄 Horizon View ▾",
             "Tracks" => isVeryCompact ? "📁 GPX ▾" : "📁 Gpx Files ▾",
             "Options" => "⚙️ Options ▾",
@@ -1070,7 +1072,11 @@ public partial class MainPage : Page
             }
             else
             {
-                BtnTitleRecordTrack.Content = "⏺️";
+                if (IconTitleRecordTrack != null)
+                {
+                    IconTitleRecordTrack.IsRecording = false;
+                    BtnTitleRecordTrack.Content = IconTitleRecordTrack;
+                }
                 BtnTitleRecordTrack.Background = tm.ButtonInactiveBackground;
                 BtnTitleRecordTrack.BorderBrush = tm.ButtonInactiveBorder;
                 BtnTitleRecordTrack.Foreground = tm.TextPrimary;
@@ -1081,10 +1087,14 @@ public partial class MainPage : Page
         // 2. GPS On/Off Button
         if (BtnTitleToggleGps != null)
         {
+            if (IconTitleGps != null)
+            {
+                BtnTitleToggleGps.Content = IconTitleGps;
+            }
+
             if (isRecording)
             {
                 // GPS must stay ON while track recording is active
-                BtnTitleToggleGps.Content = "🛰️";
                 BtnTitleToggleGps.Background = tm.ButtonActiveBackground;
                 BtnTitleToggleGps.BorderBrush = tm.ButtonActiveBorder;
                 BtnTitleToggleGps.Foreground = tm.ButtonActiveForeground;
@@ -1093,7 +1103,6 @@ public partial class MainPage : Page
             }
             else if (isGps)
             {
-                BtnTitleToggleGps.Content = "🛰️";
                 BtnTitleToggleGps.Background = tm.ButtonActiveBackground;
                 BtnTitleToggleGps.BorderBrush = tm.ButtonActiveBorder;
                 BtnTitleToggleGps.Foreground = tm.ButtonActiveForeground;
@@ -1102,7 +1111,6 @@ public partial class MainPage : Page
             }
             else
             {
-                BtnTitleToggleGps.Content = "🛰️";
                 BtnTitleToggleGps.Background = tm.ButtonInactiveBackground;
                 BtnTitleToggleGps.BorderBrush = tm.ButtonInactiveBorder;
                 BtnTitleToggleGps.Foreground = tm.ButtonInactiveForeground;

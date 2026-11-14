@@ -433,10 +433,10 @@
                         const lPts = ridgeLayers[lIdx].points || ridgeLayers[lIdx].Points || [];
                         if (lPts.length < 2) continue;
 
-                        const isClose = lIdx <= 2;
-                        const isMid = lIdx > 2 && lIdx <= 5;
+                        const isClose = lIdx <= 4;
+                        const isMid = lIdx > 4 && lIdx <= 9;
                         const strokeColor = isClose ? ridgeStrokePrimary : (isMid ? ridgeStrokeSecondary : (isDark ? '#64748B' : '#71717A'));
-                        const lineW = isClose ? 1.5 : (isMid ? 1.2 : 1.0);
+                        const lineW = isClose ? 1.5 : (isMid ? 1.2 : 0.95);
 
                         ctx.save();
 
@@ -537,7 +537,9 @@
                         if (px === null || px < -40 || px > width + 40) return;
 
                         const peakAlt = peak.altitudeAngle ?? peak.AltitudeAngle ?? 0;
-                        const peakName = peak.name ?? peak.Name ?? 'Summit';
+                        const peakName = (peak.name ?? peak.Name ?? '').trim();
+                        // Only label named peaks from peak/point files - ignore any synthetic ridges or summits
+                        if (!peakName || peakName.startsWith('Ridge ') || peakName.startsWith('Summit ')) return;
                         const peakElevM = peak.elevationM ?? peak.ElevationM ?? 0;
                         const peakElevFt = peak.elevationFt ?? peak.ElevationFt ?? (peakElevM * 3.28084);
                         const peakDistKm = peak.distanceKm ?? peak.DistanceKm ?? 0;
@@ -583,9 +585,12 @@
                     rawVisible.sort((a, b) => a.px - b.px);
 
                     // Vertical tier levels (top of badge Y coordinate)
-                    // Each tier is separated by 35px (giving 6px clear vertical gap between 29px badges)
+                    // Each tier is separated by 34px (giving 5px clear vertical gap between 29px badges)
                     const maxAllowedY = Math.max(65, height - 35);
-                    const candidateTiers = [28, 63, 98, 133, 168].filter(y => y + 29 <= maxAllowedY);
+                    const candidateTiers = [];
+                    for (let y = 28; y + 29 <= maxAllowedY && candidateTiers.length < 8; y += 34) {
+                        candidateTiers.push(y);
+                    }
                     if (candidateTiers.length === 0) candidateTiers.push(28);
 
                     const padX = 7;
@@ -910,6 +915,8 @@
                     if (!hoveredPeak) {
                         for (let i = 0; i < peaks360.length; i++) {
                             const p = peaks360[i];
+                            const pName = (p.name ?? p.Name ?? '').trim();
+                            if (!pName || pName.startsWith('Ridge ') || pName.startsWith('Summit ')) continue;
                             const pAz = p.azimuth ?? p.Azimuth ?? 0;
                             const px = azToX(pAz);
                             if (px === null || px < -20 || px > width + 20) continue;
@@ -948,12 +955,26 @@
                         ctx.arc(hpx, hpy, 7, 0, Math.PI * 2);
                         ctx.stroke();
 
-                        // Highlight badge border if hovering over or near badge
+                        // Highlight badge border & ensure inner text is 100% readable on both dark & light modes
                         if (hoveredPeak.badge) {
                             const hb = hoveredPeak.badge;
+                            // Crisp solid background (no bleed-through, fully legible)
+                            ctx.fillStyle = isDark ? '#1E293B' : '#FFFFFF';
                             ctx.strokeStyle = accentColor;
-                            ctx.lineWidth = 1.8;
+                            ctx.lineWidth = 2.0;
                             drawRoundRect(ctx, hb.badgeX, hb.badgeY, hb.badgeW, hb.badgeH, 6);
+
+                            // Re-render text on top with high contrast:
+                            // Title: Pure White on dark, Deep Navy/Slate on light
+                            ctx.font = 'bold 11px Inter, -apple-system, sans-serif';
+                            ctx.textAlign = 'center';
+                            ctx.fillStyle = isDark ? '#FFFFFF' : '#0F172A';
+                            ctx.fillText(hb.peakName, hb.textCenterX, hb.badgeY + 13);
+
+                            // Subtitle: Muted light slate on dark, dark slate on light
+                            ctx.font = '9px Inter, -apple-system, sans-serif';
+                            ctx.fillStyle = isDark ? '#CBD5E1' : '#475569';
+                            ctx.fillText(hb.subStr, hb.textCenterX, hb.badgeY + 24);
                         }
                         ctx.restore();
 
@@ -961,8 +982,19 @@
                         tooltip.style.backgroundColor = isDark ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.98)';
                         tooltip.style.color = isDark ? '#F8FAFC' : '#18181B';
                         tooltip.style.border = `1px solid ${accentColor}`;
-                        tooltip.style.left = `${Math.min(window.innerWidth - 240, rect.left + hpx + 12)}px`;
-                        tooltip.style.top = `${Math.max(10, rect.top + Math.min(hpy, height - 90))}px`;
+
+                        // Tooltip positioning: When hovering the badge, place below the badge so it doesn't obstruct it.
+                        // When hovering near the summit dot, place near the summit dot.
+                        if (hoveredPeak.badge) {
+                            const hb = hoveredPeak.badge;
+                            const tipX = Math.max(10, Math.min(window.innerWidth - 240, rect.left + hb.badgeX));
+                            const tipY = Math.min(window.innerHeight - 100, rect.top + hb.badgeY + hb.badgeH + 8);
+                            tooltip.style.left = `${tipX}px`;
+                            tooltip.style.top = `${tipY}px`;
+                        } else {
+                            tooltip.style.left = `${Math.min(window.innerWidth - 240, rect.left + hpx + 12)}px`;
+                            tooltip.style.top = `${Math.max(10, rect.top + Math.min(hpy, height - 90))}px`;
+                        }
 
                         const elevText = isMetric
                             ? `${Math.round(hpElevM).toLocaleString()} m`
