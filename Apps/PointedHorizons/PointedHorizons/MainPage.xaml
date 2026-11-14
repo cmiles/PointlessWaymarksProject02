@@ -229,6 +229,29 @@
                             </StackPanel>
                         </Border>
 
+                        <!-- Card 5: MapTiler API Key -->
+                        <Border x:Name="CardOptionsMapTiler" BorderThickness="1" CornerRadius="12" Padding="18,14" Margin="0,0,0,14">
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock x:Name="TxtSectionMapTiler" Text="🗺️ MAPTILER API KEY" FontSize="11" FontWeight="Bold" Margin="0,0,0,4" />
+                                <TextBlock x:Name="TxtMapTilerHelp" Text="Enter your MapTiler Cloud API key to enable live weather overlays (temperature, wind, radar, rain &amp; snow, cloud cover, and pressure) on the map."
+                                           FontSize="10.5" Opacity="0.8" Margin="0,0,0,10" TextWrapping="Wrap" />
+                                <Grid x:Name="GridMapTilerInput" Margin="0,0,0,6" MaxWidth="500" HorizontalAlignment="Stretch">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition x:Name="RowMapTilerInput" Height="Auto" />
+                                        <RowDefinition x:Name="RowMapTilerBtn" Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition x:Name="ColMapTilerInput" Width="*" />
+                                        <ColumnDefinition x:Name="ColMapTilerBtn" Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="TxtMapTilerApiKeyInput" Grid.Row="0" Grid.Column="0" FontSize="12" Padding="8,6" VerticalAlignment="Center" />
+                                    <Button x:Name="BtnSaveMapTilerApiKey" Grid.Row="0" Grid.Column="1" Content="Save API Key" Click="BtnSaveMapTilerApiKey_Click"
+                                            Style="{StaticResource PillButtonStyle}" Margin="8,0,0,0" Padding="14,6" FontSize="11.5" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                </Grid>
+                                <TextBlock x:Name="TxtMapTilerConfigStatus" Text="" FontSize="10.5" Margin="0,4,0,0" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+
                         <!-- Card 5: Updates -->
                         <Border x:Name="CardOptionsUpdates" BorderThickness="1" CornerRadius="12" Padding="18,14" Margin="0,0,0,24">
                             <StackPanel Orientation="Vertical">

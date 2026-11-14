@@ -30,6 +30,12 @@ public partial class FullScreenMapControl : UserControl
     private DispatcherTimer? _recordingTimer;
     private string _currentBaseLayer = "topo";
     private bool _isPadUsVisible;
+    private bool _isWeatherTempVisible;
+    private bool _isWeatherWindVisible;
+    private bool _isWeatherRadarVisible;
+    private bool _isWeatherPrecipVisible;
+    private bool _isWeatherCloudVisible;
+    private bool _isWeatherPressureVisible;
     private RecordedTrack? _currentTrack;
 
     public event EventHandler? ConfigurePmTilesRequested;
@@ -139,6 +145,32 @@ public partial class FullScreenMapControl : UserControl
         {
             Dispatcher.BeginInvoke(UpdatePmTilesLayers);
         };
+
+        if (!MapTilerService.IsConfigured)
+        {
+            MapTilerService.TurnOffAllOverlays();
+            _isWeatherTempVisible = false;
+            _isWeatherWindVisible = false;
+            _isWeatherRadarVisible = false;
+            _isWeatherPrecipVisible = false;
+            _isWeatherCloudVisible = false;
+            _isWeatherPressureVisible = false;
+        }
+        else
+        {
+            _isWeatherTempVisible = MapTilerService.GetOverlayVisible("temperature");
+            _isWeatherWindVisible = MapTilerService.GetOverlayVisible("wind");
+            _isWeatherRadarVisible = MapTilerService.GetOverlayVisible("radar");
+            _isWeatherPrecipVisible = MapTilerService.GetOverlayVisible("precipitation");
+            _isWeatherCloudVisible = MapTilerService.GetOverlayVisible("clouds");
+            _isWeatherPressureVisible = MapTilerService.GetOverlayVisible("pressure");
+        }
+
+        MapTilerService.ApiKeyChanged += (s, e) =>
+        {
+            Dispatcher.BeginInvoke(OnMapTilerApiKeyChanged);
+        };
+        UpdateMapTilerState();
 
         LeafletScrollIsolationHelper.ProtectControl(this, MapContainer);
 
@@ -2705,6 +2737,126 @@ public partial class FullScreenMapControl : UserControl
         UpdateLayerButtons();
     }
 
+    private void BtnToggleWeatherTemp_Click(object sender, RoutedEventArgs e)
+    {
+        _isWeatherTempVisible = !_isWeatherTempVisible;
+        MapTilerService.SetOverlayVisible("temperature", _isWeatherTempVisible);
+        SendWeatherOverlayVisibility("temperature", _isWeatherTempVisible);
+        UpdateWeatherButtons();
+    }
+
+    private void BtnToggleWeatherWind_Click(object sender, RoutedEventArgs e)
+    {
+        _isWeatherWindVisible = !_isWeatherWindVisible;
+        MapTilerService.SetOverlayVisible("wind", _isWeatherWindVisible);
+        SendWeatherOverlayVisibility("wind", _isWeatherWindVisible);
+        UpdateWeatherButtons();
+    }
+
+    private void BtnToggleWeatherRadar_Click(object sender, RoutedEventArgs e)
+    {
+        _isWeatherRadarVisible = !_isWeatherRadarVisible;
+        MapTilerService.SetOverlayVisible("radar", _isWeatherRadarVisible);
+        SendWeatherOverlayVisibility("radar", _isWeatherRadarVisible);
+        UpdateWeatherButtons();
+    }
+
+    private void BtnToggleWeatherPrecip_Click(object sender, RoutedEventArgs e)
+    {
+        _isWeatherPrecipVisible = !_isWeatherPrecipVisible;
+        MapTilerService.SetOverlayVisible("precipitation", _isWeatherPrecipVisible);
+        SendWeatherOverlayVisibility("precipitation", _isWeatherPrecipVisible);
+        UpdateWeatherButtons();
+    }
+
+    private void BtnToggleWeatherCloud_Click(object sender, RoutedEventArgs e)
+    {
+        _isWeatherCloudVisible = !_isWeatherCloudVisible;
+        MapTilerService.SetOverlayVisible("clouds", _isWeatherCloudVisible);
+        SendWeatherOverlayVisibility("clouds", _isWeatherCloudVisible);
+        UpdateWeatherButtons();
+    }
+
+    private void BtnToggleWeatherPressure_Click(object sender, RoutedEventArgs e)
+    {
+        _isWeatherPressureVisible = !_isWeatherPressureVisible;
+        MapTilerService.SetOverlayVisible("pressure", _isWeatherPressureVisible);
+        SendWeatherOverlayVisibility("pressure", _isWeatherPressureVisible);
+        UpdateWeatherButtons();
+    }
+
+    private void SendWeatherOverlayVisibility(string overlayType, bool visible)
+    {
+        try
+        {
+            Interop.ExecuteJavaScriptVoid(@"
+                if (window.fullScreenMap && window.fullScreenMap.setWeatherOverlayVisible) {
+                    window.fullScreenMap.setWeatherOverlayVisible($0, $1);
+                }
+            ", overlayType, visible);
+        }
+        catch { }
+    }
+
+    private void OnMapTilerApiKeyChanged()
+    {
+        // When the API key changes in the options during runtime, turn off all weather layers
+        _isWeatherTempVisible = false;
+        _isWeatherWindVisible = false;
+        _isWeatherRadarVisible = false;
+        _isWeatherPrecipVisible = false;
+        _isWeatherCloudVisible = false;
+        _isWeatherPressureVisible = false;
+
+        UpdateMapTilerState();
+    }
+
+    public void UpdateMapTilerState()
+    {
+        bool isConfigured = MapTilerService.IsConfigured;
+        if (MenuWeatherSection != null)
+        {
+            MenuWeatherSection.Visibility = isConfigured ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        try
+        {
+            Interop.ExecuteJavaScriptVoid(@"
+                if (window.fullScreenMap && window.fullScreenMap.setMapTilerApiKey) {
+                    window.fullScreenMap.setMapTilerApiKey($0);
+                }
+            ", MapTilerService.ApiKey ?? "");
+        }
+        catch { }
+
+        UpdateWeatherButtons();
+    }
+
+    private void UpdateWeatherButtons()
+    {
+        var tm = ThemeManager.Current;
+
+        void StyleWeatherBtn(Button? btn, string title, string emoji, bool active)
+        {
+            if (btn == null) return;
+            btn.Content = $"{emoji} {title}: {(active ? "ON" : "OFF")}";
+            btn.Background = active ? tm.ButtonActiveBackground : tm.ButtonInactiveBackground;
+            btn.BorderBrush = active ? tm.ButtonActiveBorder : tm.ButtonInactiveBorder;
+            btn.Foreground = active ? tm.ButtonActiveForeground : tm.ButtonInactiveForeground;
+            btn.FontWeight = active ? FontWeights.Bold : FontWeights.SemiBold;
+        }
+
+        StyleWeatherBtn(BtnToggleWeatherTemp, "Temperature", "🌡️", _isWeatherTempVisible);
+        StyleWeatherBtn(BtnToggleWeatherWind, "Wind", "💨", _isWeatherWindVisible);
+        StyleWeatherBtn(BtnToggleWeatherRadar, "Radar", "📡", _isWeatherRadarVisible);
+        StyleWeatherBtn(BtnToggleWeatherPrecip, "Rain & Snow", "🌧️", _isWeatherPrecipVisible);
+        StyleWeatherBtn(BtnToggleWeatherCloud, "Cloud Cover", "☁️", _isWeatherCloudVisible);
+        StyleWeatherBtn(BtnToggleWeatherPressure, "Pressure", "⏱️", _isWeatherPressureVisible);
+
+        if (TxtSectionWeather != null) TxtSectionWeather.Foreground = tm.TextSecondary;
+        if (MenuDividerWeather != null) MenuDividerWeather.Background = tm.HeaderBorder;
+    }
+
     private void BtnLayerPmTiles_Click(object sender, RoutedEventArgs e)
     {
         if (!OfflineDataService.IsPmTilesSupported) return;
@@ -2882,6 +3034,8 @@ public partial class FullScreenMapControl : UserControl
             BtnConfigurePmTiles.BorderBrush = tm.ButtonInactiveBorder;
             BtnConfigurePmTiles.Foreground = tm.TextPrimary;
         }
+
+        UpdateWeatherButtons();
     }
 
     private static double DistanceKm(double lat1, double lon1, double lat2, double lon2)

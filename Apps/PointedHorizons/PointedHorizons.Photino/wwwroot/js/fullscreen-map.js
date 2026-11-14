@@ -935,6 +935,7 @@
                 map.setLayoutProperty('padus-layer', 'visibility', isPadUsVisible ? 'visible' : 'none');
             }
             refreshImportedTracksInView();
+            syncWeatherLayers();
             window.fullScreenMap.resize();
         });
     };
@@ -1184,6 +1185,77 @@
         activeTerrainSourceId = null;
     }
 
+    const WEATHER_LAYER_OVERLAY_TYPES = ['temperature', 'clouds', 'precipitation', 'pressure', 'radar', 'wind'];
+
+    function getTrackAnchorLayer() {
+        if (!map) return undefined;
+        const candidates = [
+            'imported-tracks-casing',
+            'route-draft-casing',
+            'live-accuracy-fill',
+            'gps-track-line',
+            'current-position-marker'
+        ];
+        for (let i = 0; i < candidates.length; i++) {
+            if (map.getLayer(candidates[i])) return candidates[i];
+        }
+        return undefined;
+    }
+
+    function getPmTilesAnchorLayer() {
+        if (!map) return undefined;
+        if (map.getLayer('padus-layer')) return 'padus-layer';
+        for (let i = 0; i < WEATHER_LAYER_OVERLAY_TYPES.length; i++) {
+            const wid = 'maptiler-weather-' + WEATHER_LAYER_OVERLAY_TYPES[i];
+            if (map.getLayer(wid)) return wid;
+        }
+        return getTrackAnchorLayer();
+    }
+
+    function ensureOverlayLayerPositions() {
+        if (!map || !isLoaded) return;
+        const trackAnchor = getTrackAnchorLayer();
+
+        // 1. Move padus-layer to be immediately before trackAnchor
+        if (map.getLayer('padus-layer')) {
+            try {
+                if (trackAnchor && map.getLayer(trackAnchor)) {
+                    map.moveLayer('padus-layer', trackAnchor);
+                } else {
+                    map.moveLayer('padus-layer');
+                }
+            } catch (e) {
+                console.warn("[FullScreenMap] Error positioning padus-layer:", e);
+            }
+        }
+
+        // 2. Move each active weather layer to be immediately before trackAnchor.
+        // Moving after padus-layer guarantees weather layers are rendered ON TOP of
+        // padus-layer and ON TOP of all PMTiles basemap layers, while remaining underneath user tracks and GPS location markers.
+        WEATHER_LAYER_OVERLAY_TYPES.forEach(type => {
+            const layerId = 'maptiler-weather-' + type;
+            if (map.getLayer(layerId)) {
+                try {
+                    if (trackAnchor && map.getLayer(trackAnchor)) {
+                        map.moveLayer(layerId, trackAnchor);
+                    } else {
+                        map.moveLayer(layerId);
+                    }
+                } catch (e) {
+                    console.warn("[FullScreenMap] Error positioning weather layer " + layerId + ":", e);
+                }
+            }
+        });
+
+        if (map && map.triggerRepaint) {
+            map.triggerRepaint();
+        }
+    }
+
+    function ensurePadUsLayerPosition() {
+        ensureOverlayLayerPositions();
+    }
+
     window.fullScreenMap.setPmTilesLayers = async function (config) {
         if (window.fullScreenMap && window.fullScreenMap.isPmTilesSupported === false) {
             clearPmTilesLayers();
@@ -1242,14 +1314,8 @@
             }
         }
 
-        // Anchor layer beneath which PMTiles are rendered (so UI overlays like live accuracy, drawn route, imported tracks, and PAD-US public lands overlay stay on top)
-        const anchorLayer = map.getLayer('padus-layer')
-            ? 'padus-layer'
-            : (map.getLayer('imported-tracks-casing')
-                ? 'imported-tracks-casing'
-                : (map.getLayer('route-draft-casing')
-                    ? 'route-draft-casing'
-                    : (map.getLayer('live-accuracy-fill') ? 'live-accuracy-fill' : undefined)));
+        // Anchor layer beneath which PMTiles are rendered (so weather overlays, PAD-US public lands, and UI overlays stay on top)
+        const anchorLayer = getPmTilesAnchorLayer();
 
         // Track PMTile files consumed by style sources
         const consumedFileNames = new Set();
@@ -1672,33 +1738,305 @@
         }
     };
 
-    function ensurePadUsLayerPosition() {
-        if (!map || !map.getLayer('padus-layer')) return;
-        const trackAnchor = map.getLayer('imported-tracks-casing')
-            ? 'imported-tracks-casing'
-            : (map.getLayer('route-draft-casing')
-                ? 'route-draft-casing'
-                : (map.getLayer('live-accuracy-fill') ? 'live-accuracy-fill' : undefined));
-        try {
-            if (trackAnchor && map.getLayer(trackAnchor)) {
-                map.moveLayer('padus-layer', trackAnchor);
-            } else {
-                map.moveLayer('padus-layer');
-            }
-        } catch (e) {
-            console.warn("[FullScreenMap] Error positioning padus-layer:", e);
-        }
-    }
-
     window.fullScreenMap.setPadUsVisible = function (visible) {
         isPadUsVisible = !!visible;
         if (map && map.getLayer('padus-layer')) {
             map.setLayoutProperty('padus-layer', 'visibility', isPadUsVisible ? 'visible' : 'none');
             map.setPaintProperty('padus-layer', 'raster-opacity', 0.35);
             if (isPadUsVisible) {
-                ensurePadUsLayerPosition();
+                ensureOverlayLayerPositions();
             }
         }
+    };
+
+    // MapTiler Weather API Overlays Support
+    let maptilerApiKey = '';
+    try {
+        const _savedKey = localStorage.getItem('pointedhorizons_maptiler_apikey');
+        if (_savedKey) maptilerApiKey = _savedKey.trim();
+    } catch (e) { }
+
+    const activeWeatherLayers = {}; // type -> layerInstance
+    const weatherLayerVisibility = {
+        temperature: false,
+        wind: false,
+        radar: false,
+        precipitation: false,
+        clouds: false,
+        pressure: false
+    };
+
+    try {
+        if (maptilerApiKey) {
+            Object.keys(weatherLayerVisibility).forEach(k => {
+                const v = localStorage.getItem('pointedhorizons_weather_' + k);
+                if (v === 'true') weatherLayerVisibility[k] = true;
+            });
+        } else {
+            // If API key is blank when the program starts, turn off all weather layers
+            Object.keys(weatherLayerVisibility).forEach(k => {
+                weatherLayerVisibility[k] = false;
+                try { localStorage.setItem('pointedhorizons_weather_' + k, 'false'); } catch (e) { }
+            });
+        }
+    } catch (e) { }
+
+    function ensureMapTilerSdkCompat() {
+        if (!map) return;
+        if (!map.getSdkConfig) {
+            map.getSdkConfig = function () {
+                return { apiKey: maptilerApiKey };
+            };
+        }
+        if (!map.getMaptilerSessionId) {
+            map.getMaptilerSessionId = function () {
+                return "";
+            };
+        }
+        if (!map.isGlobeProjection) {
+            map.isGlobeProjection = function () {
+                return false;
+            };
+        }
+        if (!map.telemetry) {
+            map.telemetry = {
+                registerModule: function () { },
+                track: function () { }
+            };
+        }
+        if (typeof window !== 'undefined') {
+            window.maptilersdk = window.maptilersdk || {};
+            window.maptilersdk.config = window.maptilersdk.config || {};
+            if (maptilerApiKey) {
+                window.maptilersdk.config.apiKey = maptilerApiKey;
+            }
+        }
+    }
+
+    function getWeatherAnchorLayer() {
+        return getTrackAnchorLayer();
+    }
+
+    function wrapWeatherLayerForMapLibre(layerInstance) {
+        if (!layerInstance) return layerInstance;
+
+        // MapLibre passes (gl, customLayerMatrix) where matrix is a 16-element Float32Array.
+        // MapTiler Weather SDK expects matrix.defaultProjectionData.mainMatrix.
+        const origPrerender = layerInstance.prerender;
+        if (typeof origPrerender === 'function') {
+            layerInstance.prerender = function (gl, matrix) {
+                let wrappedMatrix = matrix;
+                if (matrix && !matrix.defaultProjectionData) {
+                    const mainMat = (matrix.length !== undefined) ? Array.from(matrix) : matrix;
+                    wrappedMatrix = {
+                        defaultProjectionData: {
+                            mainMatrix: mainMat
+                        }
+                    };
+                }
+                try {
+                    return origPrerender.call(this, gl, wrappedMatrix);
+                } catch (e) {
+                    // Prevent WebGL/shader error from breaking MapLibre's render loop
+                    return undefined;
+                }
+            };
+        }
+
+        const origRender = layerInstance.render;
+        if (typeof origRender === 'function') {
+            layerInstance.render = function (gl, matrix) {
+                let wrappedMatrix = matrix;
+                if (matrix && !matrix.defaultProjectionData) {
+                    const mainMat = (matrix.length !== undefined) ? Array.from(matrix) : matrix;
+                    wrappedMatrix = {
+                        defaultProjectionData: {
+                            mainMatrix: mainMat
+                        }
+                    };
+                }
+                try {
+                    return origRender.call(this, gl, wrappedMatrix);
+                } catch (e) {
+                    // Prevent WebGL/shader error from breaking MapLibre's render loop
+                    return undefined;
+                }
+            };
+        }
+
+        return layerInstance;
+    }
+
+    function createWeatherLayerInstance(type) {
+        if (typeof window === 'undefined' || !window.maptilerweather) {
+            console.warn('[FullScreenMap] maptilerweather library is not available');
+            return null;
+        }
+
+        const mw = window.maptilerweather;
+        switch (type.toLowerCase()) {
+            case 'temperature':
+            case 'temp':
+                return new mw.TemperatureLayer({
+                    id: 'maptiler-weather-temperature',
+                    opacity: 0.7
+                });
+            case 'wind':
+                return new mw.WindLayer({
+                    id: 'maptiler-weather-wind',
+                    colorramp: (mw.ColorRamp && mw.ColorRamp.builtin && mw.ColorRamp.builtin.NULL) ? mw.ColorRamp.builtin.NULL : undefined,
+                    color: [255, 255, 255, 60],
+                    fastColor: [255, 255, 255, 255]
+                });
+            case 'radar':
+                return new mw.RadarLayer({
+                    id: 'maptiler-weather-radar',
+                    opacity: 0.8
+                });
+            case 'precipitation':
+            case 'rain_snow':
+            case 'precip':
+                return new mw.PrecipitationLayer({
+                    id: 'maptiler-weather-precipitation',
+                    opacity: 0.8
+                });
+            case 'clouds':
+            case 'cloud':
+            case 'cloud_cover':
+                return new mw.RadarLayer({
+                    id: 'maptiler-weather-clouds',
+                    colorramp: mw.ColorRamp.builtin.RADAR_CLOUD,
+                    opacity: 0.8
+                });
+            case 'pressure':
+                return new mw.PressureLayer({
+                    id: 'maptiler-weather-pressure',
+                    opacity: 0.7
+                });
+            default:
+                console.warn('[FullScreenMap] Unknown weather overlay type:', type);
+                return null;
+        }
+    }
+
+    async function applyWeatherLayer(type, isVisible) {
+        if (!map || !isLoaded) return;
+        ensureMapTilerSdkCompat();
+
+        const layerId = 'maptiler-weather-' + (type === 'precipitation' ? 'precipitation' : (type === 'clouds' ? 'clouds' : type));
+
+        if (!isVisible || !maptilerApiKey) {
+            if (map.getLayer(layerId)) {
+                try {
+                    map.removeLayer(layerId);
+                } catch (e) {
+                    console.warn('[FullScreenMap] Error removing weather layer ' + layerId + ':', e);
+                }
+            }
+            if (activeWeatherLayers[type]) {
+                delete activeWeatherLayers[type];
+            }
+            if (map.triggerRepaint) {
+                map.triggerRepaint();
+            }
+            return;
+        }
+
+        if (map.getLayer(layerId)) {
+            return;
+        }
+
+        if (typeof window === 'undefined' || !window.maptilerweather) {
+            console.warn('[FullScreenMap] maptilerweather library not loaded yet');
+            return;
+        }
+
+        try {
+            const rawLayer = createWeatherLayerInstance(type);
+            if (!rawLayer) return;
+            const layerInstance = wrapWeatherLayerForMapLibre(rawLayer);
+
+            const beforeId = getWeatherAnchorLayer();
+            if (beforeId && map.getLayer(beforeId)) {
+                map.addLayer(layerInstance, beforeId);
+            } else {
+                map.addLayer(layerInstance);
+            }
+
+            if (layerInstance.animateByFactor) {
+                try {
+                    layerInstance.animateByFactor(3600);
+                } catch (e) { }
+            }
+
+            activeWeatherLayers[type] = layerInstance;
+            ensureOverlayLayerPositions();
+            if (map.triggerRepaint) {
+                map.triggerRepaint();
+            }
+        } catch (e) {
+            console.warn('[FullScreenMap] Error adding weather overlay ' + type + ':', e);
+        }
+    }
+
+    function syncWeatherLayers() {
+        if (!map || !isLoaded) return;
+        ensureMapTilerSdkCompat();
+        Object.keys(weatherLayerVisibility).forEach(type => {
+            applyWeatherLayer(type, weatherLayerVisibility[type]);
+        });
+        ensureOverlayLayerPositions();
+    }
+
+    window.fullScreenMap.turnOffAllWeatherOverlays = function () {
+        Object.keys(weatherLayerVisibility).forEach(type => {
+            weatherLayerVisibility[type] = false;
+            try { localStorage.setItem('pointedhorizons_weather_' + type, 'false'); } catch (e) { }
+            applyWeatherLayer(type, false);
+        });
+        if (map && map.triggerRepaint) {
+            map.triggerRepaint();
+        }
+    };
+
+    window.fullScreenMap.setMapTilerApiKey = function (key) {
+        const trimmed = (key || '').trim();
+        const changed = (trimmed !== maptilerApiKey);
+        maptilerApiKey = trimmed;
+        try {
+            if (maptilerApiKey) {
+                localStorage.setItem('pointedhorizons_maptiler_apikey', maptilerApiKey);
+            } else {
+                localStorage.removeItem('pointedhorizons_maptiler_apikey');
+            }
+        } catch (e) { }
+
+        ensureMapTilerSdkCompat();
+        if (changed) {
+            // If the API key changes in the options during runtime, turn off all weather layers
+            window.fullScreenMap.turnOffAllWeatherOverlays();
+        }
+    };
+
+    window.fullScreenMap.setWeatherOverlayVisible = function (type, visible) {
+        if (!type) return;
+        let norm = type.toLowerCase();
+        if (norm === 'rain_snow') norm = 'precipitation';
+        if (norm === 'cloud_cover') norm = 'clouds';
+        weatherLayerVisibility[norm] = !!visible;
+        try {
+            localStorage.setItem('pointedhorizons_weather_' + norm, visible ? 'true' : 'false');
+        } catch (e) { }
+
+        applyWeatherLayer(norm, !!visible);
+    };
+
+    window.fullScreenMap.getWeatherOverlayVisible = function (type) {
+        if (!type) return false;
+        let norm = type.toLowerCase();
+        if (norm === 'rain_snow') norm = 'precipitation';
+        if (norm === 'cloud_cover') norm = 'clouds';
+        return !!weatherLayerVisibility[norm];
     };
 
     window.fullScreenMap.setBaseLayer = async function (layerName) {
@@ -1742,10 +2080,10 @@
                     map.setLayoutProperty(id, 'visibility', 'visible');
                 }
             });
-            ensurePadUsLayerPosition();
             if (map.getLayer('padus-layer')) {
                 map.setLayoutProperty('padus-layer', 'visibility', isPadUsVisible ? 'visible' : 'none');
             }
+            ensureOverlayLayerPositions();
             return;
         }
 
@@ -1769,6 +2107,10 @@
             if (map.getLayer('hybrid-reference-layer')) map.setLayoutProperty('hybrid-reference-layer', 'visibility', 'visible');
         } else {
             if (map.getLayer('topo-layer')) map.setLayoutProperty('topo-layer', 'visibility', 'visible');
+        }
+        ensureOverlayLayerPositions();
+        if (map && map.triggerRepaint) {
+            map.triggerRepaint();
         }
     };
 

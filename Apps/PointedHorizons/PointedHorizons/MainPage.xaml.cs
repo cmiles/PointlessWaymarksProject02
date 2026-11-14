@@ -233,6 +233,12 @@ public partial class MainPage : Page
         };
         UpdateGeoNamesConfigDisplay();
 
+        MapTilerService.ApiKeyChanged += (s, ev) =>
+        {
+            Dispatcher.BeginInvoke(UpdateMapTilerConfigDisplay);
+        };
+        UpdateMapTilerConfigDisplay();
+
         // Check for application updates silently on startup (Photino and Android)
         if (!OperatingSystem.IsBrowser())
         {
@@ -364,6 +370,7 @@ public partial class MainPage : Page
             if (BtnOpenPmTilesConfig != null) { BtnOpenPmTilesConfig.MinHeight = 48; BtnOpenPmTilesConfig.Padding = new Thickness(10, 12, 10, 12); BtnOpenPmTilesConfig.FontSize = 12.5; BtnOpenPmTilesConfig.HorizontalAlignment = HorizontalAlignment.Stretch; }
             if (BtnToggleAppTheme != null) { BtnToggleAppTheme.MinHeight = 48; BtnToggleAppTheme.Padding = new Thickness(10, 12, 10, 12); BtnToggleAppTheme.FontSize = 12.5; BtnToggleAppTheme.HorizontalAlignment = HorizontalAlignment.Stretch; }
             if (BtnSaveGeoNamesUsername != null) { BtnSaveGeoNamesUsername.MinHeight = 44; BtnSaveGeoNamesUsername.Padding = new Thickness(12, 8, 12, 8); BtnSaveGeoNamesUsername.FontSize = 12.5; }
+            if (BtnSaveMapTilerApiKey != null) { BtnSaveMapTilerApiKey.MinHeight = 44; BtnSaveMapTilerApiKey.Padding = new Thickness(12, 8, 12, 8); BtnSaveMapTilerApiKey.FontSize = 12.5; }
             if (BtnCheckUpdates != null) { BtnCheckUpdates.MinHeight = 48; BtnCheckUpdates.Padding = new Thickness(10, 12, 10, 12); BtnCheckUpdates.FontSize = 12.5; BtnCheckUpdates.HorizontalAlignment = HorizontalAlignment.Stretch; }
 
             if (GridGeoNamesInput != null && TxtGeoNamesUsernameInput != null && BtnSaveGeoNamesUsername != null)
@@ -378,6 +385,20 @@ public partial class MainPage : Page
                 Grid.SetColumnSpan(BtnSaveGeoNamesUsername, 2);
                 BtnSaveGeoNamesUsername.Margin = new Thickness(0, 0, 0, 0);
                 BtnSaveGeoNamesUsername.HorizontalAlignment = HorizontalAlignment.Stretch;
+            }
+
+            if (GridMapTilerInput != null && TxtMapTilerApiKeyInput != null && BtnSaveMapTilerApiKey != null)
+            {
+                Grid.SetRow(TxtMapTilerApiKeyInput, 0);
+                Grid.SetColumn(TxtMapTilerApiKeyInput, 0);
+                Grid.SetColumnSpan(TxtMapTilerApiKeyInput, 2);
+                TxtMapTilerApiKeyInput.Margin = new Thickness(0, 0, 0, 8);
+
+                Grid.SetRow(BtnSaveMapTilerApiKey, 1);
+                Grid.SetColumn(BtnSaveMapTilerApiKey, 0);
+                Grid.SetColumnSpan(BtnSaveMapTilerApiKey, 2);
+                BtnSaveMapTilerApiKey.Margin = new Thickness(0, 0, 0, 0);
+                BtnSaveMapTilerApiKey.HorizontalAlignment = HorizontalAlignment.Stretch;
             }
 
             if (OptionsPageContainer != null)
@@ -503,6 +524,7 @@ public partial class MainPage : Page
             if (BtnOpenPmTilesConfig != null) { BtnOpenPmTilesConfig.MinHeight = 0; BtnOpenPmTilesConfig.Padding = new Thickness(8, 5, 8, 5); BtnOpenPmTilesConfig.FontSize = 11; BtnOpenPmTilesConfig.HorizontalAlignment = HorizontalAlignment.Left; }
             if (BtnToggleAppTheme != null) { BtnToggleAppTheme.MinHeight = 0; BtnToggleAppTheme.Padding = new Thickness(8, 5, 8, 5); BtnToggleAppTheme.FontSize = 11; BtnToggleAppTheme.HorizontalAlignment = HorizontalAlignment.Left; }
             if (BtnSaveGeoNamesUsername != null) { BtnSaveGeoNamesUsername.MinHeight = 0; BtnSaveGeoNamesUsername.Padding = new Thickness(10, 4, 10, 4); BtnSaveGeoNamesUsername.FontSize = 10; }
+            if (BtnSaveMapTilerApiKey != null) { BtnSaveMapTilerApiKey.MinHeight = 0; BtnSaveMapTilerApiKey.Padding = new Thickness(10, 4, 10, 4); BtnSaveMapTilerApiKey.FontSize = 10; }
             if (BtnCheckUpdates != null) { BtnCheckUpdates.MinHeight = 0; BtnCheckUpdates.Padding = new Thickness(8, 5, 8, 5); BtnCheckUpdates.FontSize = 11; BtnCheckUpdates.HorizontalAlignment = HorizontalAlignment.Left; }
 
             if (GridGeoNamesInput != null && TxtGeoNamesUsernameInput != null && BtnSaveGeoNamesUsername != null)
@@ -517,6 +539,20 @@ public partial class MainPage : Page
                 Grid.SetColumnSpan(BtnSaveGeoNamesUsername, 1);
                 BtnSaveGeoNamesUsername.Margin = new Thickness(8, 0, 0, 0);
                 BtnSaveGeoNamesUsername.HorizontalAlignment = HorizontalAlignment.Left;
+            }
+
+            if (GridMapTilerInput != null && TxtMapTilerApiKeyInput != null && BtnSaveMapTilerApiKey != null)
+            {
+                Grid.SetRow(TxtMapTilerApiKeyInput, 0);
+                Grid.SetColumn(TxtMapTilerApiKeyInput, 0);
+                Grid.SetColumnSpan(TxtMapTilerApiKeyInput, 1);
+                TxtMapTilerApiKeyInput.Margin = new Thickness(0, 0, 0, 0);
+
+                Grid.SetRow(BtnSaveMapTilerApiKey, 0);
+                Grid.SetColumn(BtnSaveMapTilerApiKey, 1);
+                Grid.SetColumnSpan(BtnSaveMapTilerApiKey, 1);
+                BtnSaveMapTilerApiKey.Margin = new Thickness(8, 0, 0, 0);
+                BtnSaveMapTilerApiKey.HorizontalAlignment = HorizontalAlignment.Left;
             }
 
             if (OptionsPageContainer != null)
@@ -605,6 +641,7 @@ public partial class MainPage : Page
 
             UpdateUnitsButtonsTheme(ThemeManager.Current.IsDark);
             UpdateGeoNamesConfigDisplay();
+            UpdateMapTilerConfigDisplay();
         }
         else if (_currentTab == "About")
         {
@@ -1237,6 +1274,43 @@ public partial class MainPage : Page
         }
     }
 
+    private void UpdateMapTilerConfigDisplay()
+    {
+        bool isConfigured = MapTilerService.IsConfigured;
+        if (TxtMapTilerApiKeyInput != null)
+        {
+            TxtMapTilerApiKeyInput.Text = MapTilerService.ApiKey ?? "";
+        }
+        if (TxtMapTilerConfigStatus != null)
+        {
+            if (isConfigured)
+            {
+                string key = MapTilerService.ApiKey ?? "";
+                string masked = key.Length > 8 ? $"{key.Substring(0, 4)}...{key.Substring(key.Length - 4)}" : key;
+                TxtMapTilerConfigStatus.Text = $"Active API key configured: {masked}";
+                TxtMapTilerConfigStatus.Foreground = ThemeManager.Current.Accent;
+            }
+            else
+            {
+                TxtMapTilerConfigStatus.Text = "No API key configured. Sign up free at maptiler.com to enable weather overlays.";
+                TxtMapTilerConfigStatus.Foreground = ThemeManager.Current.TextMuted;
+            }
+        }
+        FullScreenMapControlView?.UpdateMapTilerState();
+    }
+
+    private void BtnSaveMapTilerApiKey_Click(object sender, RoutedEventArgs e)
+    {
+        string apiKey = TxtMapTilerApiKeyInput?.Text?.Trim() ?? "";
+        MapTilerService.ApiKey = apiKey;
+        UpdateMapTilerConfigDisplay();
+        if (MapTilerService.IsConfigured && TxtMapTilerConfigStatus != null)
+        {
+            TxtMapTilerConfigStatus.Text = "Saved! MapTiler weather overlays enabled in map tools menu.";
+            TxtMapTilerConfigStatus.Foreground = ThemeManager.Current.Accent;
+        }
+    }
+
     private void BtnOpenPmTilesConfig_Click(object sender, RoutedEventArgs e)
     {
         ShowPmTilesModal();
@@ -1318,6 +1392,7 @@ public partial class MainPage : Page
         StyleOptionsCard(CardOptionsOffline);
         StyleOptionsCard(CardOptionsTheme);
         StyleOptionsCard(CardOptionsGeoNames);
+        StyleOptionsCard(CardOptionsMapTiler);
         StyleOptionsCard(CardOptionsUpdates);
 
         if (TxtOptionsPageTitle != null) TxtOptionsPageTitle.Foreground = tm.TextPrimary;
@@ -1341,6 +1416,20 @@ public partial class MainPage : Page
             BtnSaveGeoNamesUsername.Background = tm.ButtonInactiveBackground;
             BtnSaveGeoNamesUsername.BorderBrush = tm.ButtonInactiveBorder;
             BtnSaveGeoNamesUsername.Foreground = tm.TextPrimary;
+        }
+        if (TxtSectionMapTiler != null) TxtSectionMapTiler.Foreground = tm.TextPrimary;
+        if (TxtMapTilerHelp != null) TxtMapTilerHelp.Foreground = tm.TextSecondary;
+        if (TxtMapTilerApiKeyInput != null)
+        {
+            TxtMapTilerApiKeyInput.Background = tm.ButtonInactiveBackground;
+            TxtMapTilerApiKeyInput.Foreground = tm.TextPrimary;
+            TxtMapTilerApiKeyInput.BorderBrush = tm.ButtonInactiveBorder;
+        }
+        if (BtnSaveMapTilerApiKey != null)
+        {
+            BtnSaveMapTilerApiKey.Background = tm.ButtonInactiveBackground;
+            BtnSaveMapTilerApiKey.BorderBrush = tm.ButtonInactiveBorder;
+            BtnSaveMapTilerApiKey.Foreground = tm.TextPrimary;
         }
         if (TxtSectionUpdates != null) TxtSectionUpdates.Foreground = tm.TextPrimary;
         if (TxtUpdatesHelp != null) TxtUpdatesHelp.Foreground = tm.TextSecondary;

@@ -249,6 +249,48 @@
                         <Border x:Name="MenuDividerSearch" Height="1" Margin="0,6,0,0" />
                     </StackPanel>
 
+                    <!-- Weather Overlays (MapTiler Weather API - visible when MapTiler API Key is configured) -->
+                    <StackPanel x:Name="MenuWeatherSection" Orientation="Vertical" Visibility="Collapsed" Margin="0,0,0,10">
+                        <TextBlock x:Name="TxtSectionWeather" Text="WEATHER OVERLAYS" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
+                        <Grid Margin="0,2,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Button x:Name="BtnToggleWeatherTemp" Grid.Column="0" Content="🌡️ Temperature: OFF" Click="BtnToggleWeatherTemp_Click"
+                                    Style="{StaticResource PillButtonStyle}" MinHeight="44" Padding="4,10" Margin="0,0,2,0" FontSize="11" FontWeight="Bold"
+                                    ToolTipService.ToolTip="Toggle temperature heatmap overlay" />
+                            <Button x:Name="BtnToggleWeatherWind" Grid.Column="1" Content="💨 Wind: OFF" Click="BtnToggleWeatherWind_Click"
+                                    Style="{StaticResource PillButtonStyle}" MinHeight="44" Padding="4,10" Margin="2,0,0,0" FontSize="11" FontWeight="Bold"
+                                    ToolTipService.ToolTip="Toggle animated wind particle flow overlay" />
+                        </Grid>
+                        <Grid Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Button x:Name="BtnToggleWeatherRadar" Grid.Column="0" Content="📡 Radar: OFF" Click="BtnToggleWeatherRadar_Click"
+                                    Style="{StaticResource PillButtonStyle}" MinHeight="44" Padding="4,10" Margin="0,0,2,0" FontSize="11" FontWeight="Bold"
+                                    ToolTipService.ToolTip="Toggle meteorological radar reflectivity overlay" />
+                            <Button x:Name="BtnToggleWeatherPrecip" Grid.Column="1" Content="🌧️ Rain &amp; Snow: OFF" Click="BtnToggleWeatherPrecip_Click"
+                                    Style="{StaticResource PillButtonStyle}" MinHeight="44" Padding="4,10" Margin="2,0,0,0" FontSize="11" FontWeight="Bold"
+                                    ToolTipService.ToolTip="Toggle precipitation (rain, snow, hail) overlay" />
+                        </Grid>
+                        <Grid Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Button x:Name="BtnToggleWeatherCloud" Grid.Column="0" Content="☁️ Cloud Cover: OFF" Click="BtnToggleWeatherCloud_Click"
+                                    Style="{StaticResource PillButtonStyle}" MinHeight="44" Padding="4,10" Margin="0,0,2,0" FontSize="11" FontWeight="Bold"
+                                    ToolTipService.ToolTip="Toggle cloud coverage overlay" />
+                            <Button x:Name="BtnToggleWeatherPressure" Grid.Column="1" Content="⏱️ Pressure: OFF" Click="BtnToggleWeatherPressure_Click"
+                                    Style="{StaticResource PillButtonStyle}" MinHeight="44" Padding="4,10" Margin="2,0,0,0" FontSize="11" FontWeight="Bold"
+                                    ToolTipService.ToolTip="Toggle sea-level atmospheric pressure overlay" />
+                        </Grid>
+                        <Border x:Name="MenuDividerWeather" Height="1" Margin="0,6,0,0" />
+                    </StackPanel>
+
                     <!-- 1. GPS Receiver & Location Tracking Options -->
                     <TextBlock x:Name="TxtSectionGps" Text="GPS &amp; LOCATION TRACKING" FontSize="10" FontWeight="Bold" Margin="0,0,0,4" />
 
